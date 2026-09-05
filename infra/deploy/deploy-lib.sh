@@ -292,11 +292,15 @@ github_command() {
 }
 
 github_create_deployment() {
-  local commit="$1" environment="$2" branch="$3" args=()
+  local commit="$1" environment="$2" branch="$3"
   github_token_available || return 2
-  [[ "$environment" == production ]] && args+=(--production-environment)
-  github_command create --commit "$commit" --environment "$environment" \
-    --description "Deploy $branch" "${args[@]}"
+  if [[ "$environment" == production ]]; then
+    github_command create --commit "$commit" --environment "$environment" \
+      --description "Deploy $branch" --production-environment
+  else
+    github_command create --commit "$commit" --environment "$environment" \
+      --description "Deploy $branch"
+  fi
 }
 
 github_deployment_status() {
