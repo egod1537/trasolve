@@ -93,6 +93,11 @@ validate_config() {
     || die "JJS_GITHUB_REPOSITORY must use owner/name format"
 }
 
+validate_frontend_build_config() {
+  [[ -n "${JJS_GOOGLE_MAPS_API_KEY:-}" ]] \
+    || die "JJS_GOOGLE_MAPS_API_KEY is required for the frontend build"
+}
+
 validate_branch() {
   local branch="$1"
   [[ -n "$branch" ]] || die "branch is required"

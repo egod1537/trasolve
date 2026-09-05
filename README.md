@@ -59,8 +59,11 @@ chmod 600 ~/.config/jjs/deploy.env
 ```
 
 `~/.config/jjs/deploy.env`의 `/Users/you`를 Mac mini의 절대 경로로 바꾸고 GitHub token,
-Cloudflare 파일 경로를 설정합니다. shell 문법으로 읽는 운영자 소유 파일이므로 신뢰할 수
-있는 내용만 넣습니다.
+Cloudflare 파일 경로, `JJS_GOOGLE_MAPS_API_KEY`를 설정합니다.
+`JJS_GOOGLE_MAPS_MAP_ID`는 별도 Map ID가 없을 때 `DEMO_MAP_ID`를 사용할 수 있습니다.
+Google Maps 브라우저 키는 Maps JavaScript API와 실제 production/preview HTTP referrer로
+제한합니다. 이 파일은 shell 문법으로 읽는 운영자 소유 파일이므로 신뢰할 수 있는 내용만
+넣고 repository에 commit하지 않습니다.
 
 ## Cloudflare Tunnel
 
@@ -135,7 +138,8 @@ SHA이고 현재 remote branch head와 일치해야 합니다. deploy script는 
 
 1. branch/slug와 exact remote SHA 검증
 2. GitHub Deployment 생성, `in_progress`, commit `pending`
-3. detached worktree 준비와 SHA-tagged frontend/backend image build
+3. detached worktree 준비, 배포 호스트의 Google Maps 설정 주입과 SHA-tagged
+   frontend/backend image build
 4. 독립 Compose project를 `--wait`로 기동하고 container health 확인
 5. branch Caddy route를 atomic 교체하고 Caddy validate/reload
 6. Caddy 경유 frontend 및 `/api/health` 확인

@@ -116,6 +116,7 @@ need_command git
 need_command docker
 need_command python3
 need_command curl
+validate_frontend_build_config
 acquire_lock "deploy-$slug"
 
 if [[ -f "$unit_dir/branch" ]]; then

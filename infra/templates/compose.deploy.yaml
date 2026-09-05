@@ -35,6 +35,8 @@ services:
       context: ${JJS_WORKTREE}
       dockerfile: infra/docker/frontend.Dockerfile
       args:
+        VITE_GOOGLE_MAPS_API_KEY: ${JJS_GOOGLE_MAPS_API_KEY:?set JJS_GOOGLE_MAPS_API_KEY}
+        VITE_GOOGLE_MAPS_MAP_ID: ${JJS_GOOGLE_MAPS_MAP_ID:-DEMO_MAP_ID}
         VITE_BUILD_CHANNEL: ${VITE_BUILD_CHANNEL:-}
         VITE_GIT_BRANCH: ${VITE_GIT_BRANCH:-}
         VITE_GIT_SHA: ${VITE_GIT_SHA:-}

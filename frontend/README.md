@@ -16,7 +16,9 @@ fallback for Advanced Markers. Restart `npm run dev` after changing the file.
 
 These are Vite build-time inputs, so a production build needs the variables
 available when Vite runs. Changing container runtime variables alone does not
-change the built client. This change does not modify the deployment infrastructure.
+change the built client. The branch deployment reads `JJS_GOOGLE_MAPS_API_KEY` and
+`JJS_GOOGLE_MAPS_MAP_ID` from the host deployment environment and passes them to
+the frontend image build.
 
 Without a key or if Google Maps fails to load, the page keeps the itinerary usable
 and shows a map connection message; it does not substitute a fake map.
