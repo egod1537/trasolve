@@ -10,9 +10,11 @@ services:
   caddy:
     image: caddy:2.10-alpine
     container_name: jjs-edge-caddy
-    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+    command: ["caddy", "run", "--config", "/etc/caddy/jjs-edge/Caddyfile", "--adapter", "caddyfile"]
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Mount the stable directory. A Git branch switch can replace a single
+      # bind-mounted file inode and leave Docker Desktop with a stale mount.
+      - ./:/etc/caddy/jjs-edge:ro
       - ${JJS_STATE_DIR:?set JJS_STATE_DIR}/routes:/etc/caddy/routes:ro
       - caddy-data:/data
       - caddy-config:/config
@@ -20,7 +22,7 @@ services:
       jjs-edge:
         aliases: [caddy]
     healthcheck:
-      test: ["CMD", "caddy", "validate", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+      test: ["CMD", "caddy", "validate", "--config", "/etc/caddy/jjs-edge/Caddyfile", "--adapter", "caddyfile"]
       interval: 15s
       timeout: 5s
       retries: 3

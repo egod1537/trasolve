@@ -237,8 +237,8 @@ edge_compose() {
 }
 
 reload_caddy() {
-  edge_compose exec -T caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null
-  edge_compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null
+  edge_compose exec -T caddy caddy validate --config /etc/caddy/jjs-edge/Caddyfile --adapter caddyfile >/dev/null
+  edge_compose exec -T caddy caddy reload --config /etc/caddy/jjs-edge/Caddyfile --adapter caddyfile >/dev/null
 }
 
 render_route() {
