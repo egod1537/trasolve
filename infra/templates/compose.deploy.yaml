@@ -1,0 +1,61 @@
+services:
+  backend:
+    image: ${JJS_BACKEND_IMAGE:?set JJS_BACKEND_IMAGE}
+    build:
+      context: ${JJS_WORKTREE:?set JJS_WORKTREE}
+      dockerfile: infra/docker/backend.Dockerfile
+      labels:
+        net.mangagaki.jjs.deployment-image: "true"
+        net.mangagaki.jjs.branch-slug: ${JJS_BRANCH_SLUG:?set JJS_BRANCH_SLUG}
+        net.mangagaki.jjs.commit: ${JJS_COMMIT_SHA:?set JJS_COMMIT_SHA}
+    container_name: jjs-${JJS_BRANCH_SLUG}-backend
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL:-}
+    networks: [jjs-edge]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 5s
+    labels:
+      net.mangagaki.jjs.branch: ${JJS_BRANCH:?set JJS_BRANCH}
+      net.mangagaki.jjs.branch-slug: ${JJS_BRANCH_SLUG}
+      net.mangagaki.jjs.commit: ${JJS_COMMIT_SHA}
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "5"}
+    restart: unless-stopped
+
+  frontend:
+    image: ${JJS_FRONTEND_IMAGE:?set JJS_FRONTEND_IMAGE}
+    build:
+      context: ${JJS_WORKTREE}
+      dockerfile: infra/docker/frontend.Dockerfile
+      labels:
+        net.mangagaki.jjs.deployment-image: "true"
+        net.mangagaki.jjs.branch-slug: ${JJS_BRANCH_SLUG}
+        net.mangagaki.jjs.commit: ${JJS_COMMIT_SHA}
+    container_name: jjs-${JJS_BRANCH_SLUG}-frontend
+    networks: [jjs-edge]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 3s
+    labels:
+      net.mangagaki.jjs.branch: ${JJS_BRANCH}
+      net.mangagaki.jjs.branch-slug: ${JJS_BRANCH_SLUG}
+      net.mangagaki.jjs.commit: ${JJS_COMMIT_SHA}
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "5"}
+    restart: unless-stopped
+
+networks:
+  jjs-edge:
+    name: jjs-edge
+    external: true

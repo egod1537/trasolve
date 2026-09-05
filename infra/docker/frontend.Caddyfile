@@ -1,0 +1,10 @@
+{
+	auto_https off
+	admin off
+}
+
+:3000 {
+	root * /srv
+	try_files {path} /index.html
+	file_server
+}

@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { API_ROUTES, type HealthResponse } from '@trasolve/shared';
 
 const port = Number(process.env.PORT ?? 3000);
+const host = process.env.HOST ?? '127.0.0.1';
 
 const server = createServer((request, response) => {
   const pathname = new URL(request.url ?? '/', 'http://localhost').pathname;
@@ -18,6 +19,6 @@ const server = createServer((request, response) => {
   response.end(JSON.stringify({ error: 'Not found' }));
 });
 
-server.listen(port, '127.0.0.1', () => {
-  console.log(`Backend: http://127.0.0.1:${port}`);
+server.listen(port, host, () => {
+  console.log(`Backend: http://${host}:${port}`);
 });
