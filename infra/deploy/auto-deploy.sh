@@ -83,6 +83,9 @@ run_once() {
 
   LOG_BRANCH=watcher
   log "event=poll state=complete"
+  rm -f "$heads_file"
+  release_lock
+  trap - EXIT
 }
 
 install_watcher() {
@@ -99,6 +102,8 @@ install_watcher() {
   line="* * * * * HOME=$HOME PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin JJS_DEPLOY_ENV_FILE=$env_q /bin/bash $script_q --once $CRON_TAG"
   printf '%s\n' "$line" >>"$next"
   crontab "$next"
+  rm -f "$current" "$next"
+  trap - EXIT
   printf 'JJS auto-deploy installed (every minute, main=%s).\n' "$AUTO_DEPLOY_MAIN"
   printf 'Log: %s\n' "$AUTO_LOG"
 }
@@ -130,6 +135,8 @@ uninstall_watcher() {
   crontab -l >"$current" 2>/dev/null || true
   grep -Fv "$CRON_TAG" "$current" >"$next" || true
   crontab "$next"
+  rm -f "$current" "$next"
+  trap - EXIT
   printf 'JJS auto-deploy removed. Existing deployments remain running.\n'
 }
 
