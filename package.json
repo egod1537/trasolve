@@ -1,0 +1,17 @@
+{
+  "name": "trasolve",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": ["frontend", "backend", "shared"],
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "predev": "npm run build -w @trasolve/shared",
+    "dev": "concurrently -k -n shared,backend,frontend \"npm run dev -w @trasolve/shared\" \"npm run dev -w @trasolve/backend\" \"npm run dev -w @trasolve/frontend\"",
+    "build": "npm run build -w @trasolve/shared && npm run build -w @trasolve/backend && npm run build -w @trasolve/frontend",
+    "typecheck": "npm run build -w @trasolve/shared && npm run typecheck --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5",
+    "typescript": "^7.0.2"
+  }
+}

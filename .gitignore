@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+
+# Deployment credentials and runtime state always live outside the repository.
+infra/edge/cloudflared/config.yml
+infra/edge/cloudflared/credentials.json

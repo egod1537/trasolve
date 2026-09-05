@@ -1,0 +1,50 @@
+name: jjs-edge
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    container_name: jjs-edge-caddy
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${JJS_STATE_DIR:?set JJS_STATE_DIR}/routes:/etc/caddy/routes:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      jjs-edge:
+        aliases: [caddy]
+    healthcheck:
+      test: ["CMD", "caddy", "validate", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    logging: *default-logging
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.8.3
+    container_name: jjs-edge-cloudflared
+    command: ["--config", "/etc/cloudflared/config.yml", "tunnel", "run"]
+    depends_on:
+      caddy:
+        condition: service_healthy
+    volumes:
+      - ${JJS_CLOUDFLARED_CONFIG_PATH:?set JJS_CLOUDFLARED_CONFIG_PATH}:/etc/cloudflared/config.yml:ro
+      - ${JJS_CLOUDFLARED_CREDENTIALS:?set JJS_CLOUDFLARED_CREDENTIALS}:/etc/cloudflared/credentials.json:ro
+    networks: [jjs-edge]
+    logging: *default-logging
+    restart: unless-stopped
+
+networks:
+  jjs-edge:
+    name: jjs-edge
+
+volumes:
+  caddy-data:
+  caddy-config:

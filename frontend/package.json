@@ -1,0 +1,20 @@
+{
+  "name": "@trasolve/frontend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {},
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@trasolve/shared": "0.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "vite": "^8.2.2"
+  }
+}

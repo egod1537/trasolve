@@ -1,0 +1,14 @@
+# Copy to ~/.config/jjs/cloudflared/config.yml and replace the tunnel UUID.
+tunnel: 00000000-0000-0000-0000-000000000000
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: jjs.mangagaki.net
+    service: http://caddy:80
+  # Cloudflare Tunnel hostname wildcards match an entire DNS label. This rule
+  # also reaches other subdomains, but Caddy only accepts generated JJS routes.
+  # Use dashboard-managed individual hostnames instead if the zone-wide
+  # wildcard is owned by another tunnel.
+  - hostname: "*.mangagaki.net"
+    service: http://caddy:80
+  - service: http_status:404

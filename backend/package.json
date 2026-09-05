@@ -1,0 +1,20 @@
+{
+  "name": "@trasolve/backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {},
+  "scripts": {
+    "dev": "tsx watch --include ../shared/dist/**/*.js src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@trasolve/shared": "0.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "tsx": "^4.23.13"
+  }
+}
