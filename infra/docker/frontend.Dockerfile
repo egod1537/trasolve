@@ -11,6 +11,16 @@ RUN npm ci
 COPY tsconfig.json ./
 COPY frontend ./frontend
 COPY shared ./shared
+
+ARG VITE_BUILD_CHANNEL
+ARG VITE_GIT_BRANCH
+ARG VITE_GIT_SHA
+ARG VITE_GIT_REPOSITORY_URL
+ENV VITE_BUILD_CHANNEL=$VITE_BUILD_CHANNEL \
+    VITE_GIT_BRANCH=$VITE_GIT_BRANCH \
+    VITE_GIT_SHA=$VITE_GIT_SHA \
+    VITE_GIT_REPOSITORY_URL=$VITE_GIT_REPOSITORY_URL
+
 RUN npm run build -w @trasolve/shared \
     && npm run build -w @trasolve/frontend
 
