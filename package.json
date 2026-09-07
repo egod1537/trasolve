@@ -8,10 +8,14 @@
     "predev": "npm run build -w @trasolve/shared",
     "dev": "concurrently -k -n shared,backend,frontend \"npm run dev -w @trasolve/shared\" \"npm run dev -w @trasolve/backend\" \"npm run dev -w @trasolve/frontend\"",
     "build": "npm run build -w @trasolve/shared && npm run build -w @trasolve/backend && npm run build -w @trasolve/frontend",
-    "typecheck": "npm run build -w @trasolve/shared && npm run typecheck --workspaces"
+    "typecheck": "npm run build -w @trasolve/shared && npm run typecheck --workspaces",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix"
   },
   "devDependencies": {
     "concurrently": "^10.0.5",
+    "oxlint": "^1.81.0",
+    "prettier": "^3.9.6",
     "typescript": "^7.0.2"
   }
 }

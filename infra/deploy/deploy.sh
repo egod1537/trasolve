@@ -22,6 +22,11 @@ validate_branch "$branch"
 slug="$(slug_for_branch "$branch")"
 hostname="$(hostname_for_slug "$branch" "$slug")"
 environment="$(environment_for_branch "$branch" "$slug")"
+if [[ "$branch" == main ]]; then
+  build_channel=production
+else
+  build_channel=preview
+fi
 deployment_url="https://$hostname"
 status_context="deploy/jjs/$slug"
 project="jjs-$slug"
@@ -111,6 +116,7 @@ need_command git
 need_command docker
 need_command python3
 need_command curl
+validate_frontend_build_config
 acquire_lock "deploy-$slug"
 
 if [[ -f "$unit_dir/branch" ]]; then
@@ -166,7 +172,11 @@ write_compose_env "$next_env" "$branch" "$slug" "$commit" "$worktree"
 ensure_edge_network
 
 log "event=docker-build commit=$commit result=started"
-docker compose --env-file "$next_env" -p "$project" -f "$DEPLOY_COMPOSE" build --pull
+VITE_BUILD_CHANNEL="$build_channel" \
+  VITE_GIT_BRANCH="$branch" \
+  VITE_GIT_SHA="$commit" \
+  VITE_GIT_REPOSITORY_URL="https://github.com/$GITHUB_REPOSITORY" \
+  docker compose --env-file "$next_env" -p "$project" -f "$DEPLOY_COMPOSE" build --pull
 log "event=docker-build commit=$commit result=success"
 
 app_update_attempted=true

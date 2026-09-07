@@ -93,6 +93,11 @@ validate_config() {
     || die "JJS_GITHUB_REPOSITORY must use owner/name format"
 }
 
+validate_frontend_build_config() {
+  [[ -n "${JJS_GOOGLE_MAPS_API_KEY:-}" ]] \
+    || die "JJS_GOOGLE_MAPS_API_KEY is required for the frontend build"
+}
+
 validate_branch() {
   local branch="$1"
   [[ -n "$branch" ]] || die "branch is required"
@@ -237,8 +242,8 @@ edge_compose() {
 }
 
 reload_caddy() {
-  edge_compose exec -T caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null
-  edge_compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null
+  edge_compose exec -T caddy caddy validate --config /etc/caddy/jjs-edge/Caddyfile --adapter caddyfile >/dev/null
+  edge_compose exec -T caddy caddy reload --config /etc/caddy/jjs-edge/Caddyfile --adapter caddyfile >/dev/null
 }
 
 render_route() {
@@ -292,11 +297,15 @@ github_command() {
 }
 
 github_create_deployment() {
-  local commit="$1" environment="$2" branch="$3" args=()
+  local commit="$1" environment="$2" branch="$3"
   github_token_available || return 2
-  [[ "$environment" == production ]] && args+=(--production-environment)
-  github_command create --commit "$commit" --environment "$environment" \
-    --description "Deploy $branch" "${args[@]}"
+  if [[ "$environment" == production ]]; then
+    github_command create --commit "$commit" --environment "$environment" \
+      --description "Deploy $branch" --production-environment
+  else
+    github_command create --commit "$commit" --environment "$environment" \
+      --description "Deploy $branch"
+  fi
 }
 
 github_deployment_status() {
