@@ -1,0 +1,158 @@
+.maps-test-page {
+  display: grid;
+  gap: 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.maps-test-page h1,
+.maps-test-page h2,
+.maps-test-page h3,
+.maps-test-page p {
+  margin: 0;
+}
+.maps-test-page header,
+.maps-test-page section,
+.maps-test-page fieldset {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.maps-test-page h2 {
+  font-size: 18px;
+}
+.maps-test-page h3 {
+  font-size: 16px;
+}
+.maps-test-workspace {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+.maps-test-controls {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.maps-test-page .maps-test-map-panel {
+  align-content: start;
+}
+.maps-test-map-panel .google-map {
+  height: 440px;
+}
+.maps-test-selections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.maps-test-selections > section,
+.maps-test-results,
+.maps-test-debug {
+  padding: 16px;
+  border: 1px solid #d9dee5;
+  border-radius: 6px;
+  background: white;
+  align-content: start;
+}
+.maps-test-data {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 0;
+}
+.maps-test-data dt {
+  color: #64748b;
+}
+.maps-test-data dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.maps-test-coordinates {
+  font-variant-numeric: tabular-nums;
+}
+.maps-test-debug-content {
+  display: grid;
+  gap: 16px;
+  padding-top: 16px;
+  min-width: 0;
+}
+.maps-test-page summary {
+  cursor: pointer;
+}
+.maps-test-page details[open] > summary {
+  margin-bottom: 12px;
+}
+.maps-test-api-status {
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #f1f5f9;
+}
+.maps-test-api-status[data-status='success'] {
+  color: #166534;
+  background: #dcfce7;
+}
+.maps-test-api-status[data-status='error'] {
+  color: #991b1b;
+  background: #fee2e2;
+}
+.maps-test-api-status[data-status='loading'] {
+  color: #1e40af;
+  background: #dbeafe;
+}
+.maps-test-page label {
+  display: grid;
+  gap: 6px;
+}
+.maps-test-page input,
+.maps-test-page select,
+.maps-test-page button {
+  padding: 8px 12px;
+  font: inherit;
+  min-width: 0;
+}
+.maps-test-page button {
+  cursor: pointer;
+}
+.maps-test-page button:disabled {
+  cursor: not-allowed;
+}
+.maps-test-page button[aria-pressed='true'] {
+  color: #fff;
+  background: #2563eb;
+}
+.maps-test-page small {
+  color: #64748b;
+  overflow-wrap: anywhere;
+}
+.maps-test-page pre {
+  overflow: auto;
+  max-height: 360px;
+  padding: 12px;
+  margin: 0;
+  background: #f1f5f9;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.maps-test-actions,
+.maps-test-page .maps-test-checkbox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 800px) {
+  .maps-test-page {
+    padding: 16px;
+  }
+  .maps-test-workspace,
+  .maps-test-selections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .maps-test-map-panel .google-map {
+    height: 360px;
+  }
+}

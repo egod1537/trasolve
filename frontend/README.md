@@ -38,6 +38,102 @@ by `order`, and are not road routes or travel-time estimates. `TripRoute.path`
 accepts coordinate arrays so a future Routes API adapter can supply the geometry
 without changing itinerary selection or marker components.
 
+## Reusable Google Maps components
+
+`src/components/google-map/GoogleMap.tsx` owns SDK initialization and cleanup
+through `src/maps/createGoogleMapRuntime.ts`. It works without itinerary data and
+has a default height of 400px. Override `style` or `className` for page layout.
+The existing `/map` view uses this component and retains its itinerary overlays,
+camera padding, and loading/error UI. Camera calculations remain in
+`src/domain/map/cameraPolicy.ts`.
+
+```tsx
+import { useRef, useState } from 'react';
+import { GoogleMap } from './components/google-map/GoogleMap';
+import { GooglePlaceSearch } from './components/google-map/GooglePlaceSearch';
+import type { GoogleMapHandle, MapPlace } from './components/google-map/types';
+
+function Example() {
+  const mapRef = useRef<GoogleMapHandle>(null);
+  const [place, setPlace] = useState<MapPlace | null>(null);
+  return (
+    <>
+      <GooglePlaceSearch onSelect={setPlace} />
+      <GoogleMap
+        ref={mapRef}
+        center={place?.location}
+        zoom={12}
+        options={{ zoomControl: true }}
+        onReady={(map) => map.setZoom(14)}
+        onMapClick={(position) => console.log(position)}
+      />
+    </>
+  );
+}
+```
+
+Public types use plain coordinates, bounds, places, and polylines, with no Google
+SDK types. `center` and `zoom` apply when their values change; user camera gestures
+are not continually overwritten. `options` applies partial option updates without
+recreating the map; use `null` to clear min/max zoom limits. Changing `mapId`
+recreates the runtime because Google does not support changing it on an existing
+map. Callback changes do not recreate the map or accumulate event listeners.
+`onReady(handle)` runs once per runtime; use it for commands that need a loaded
+map. Ref commands before readiness or after disposal have no effect.
+
+`onMapClick`, `onCenterChanged`, and `onZoomChanged` receive plain data. The ref
+supports `panTo`, `setZoom`, and `fitBounds`. `polylines` accepts coordinate paths
+and optional color, weight, and opacity; it performs no directions requests.
+For custom React overlays, children can call `useGoogleMap()` to access the
+existing `MapAdapter`, `MapOverlayHost`, and canvas ref. Children mount when the
+runtime is ready; the component owns their runtime's lifecycle.
+
+## Google Maps testbed
+
+This is a development UI for manual verification with real Google APIs, not an
+automated test suite. The repository does not maintain unit/integration test
+files, test scripts, or test-only mocks and dependencies. Validate changes with
+type checking, builds, lint, and browser interaction. The testbed has no entry
+link in the landing page or service menus.
+
+`GoogleMapsTestPage` composes the five panels in `src/components/google-maps-test/`
+and connects map/selection callbacks. `src/hooks/useDirectionsState.ts` owns route
+inputs, requests, API state, and route selection. Panels render data and forward
+events; shared Maps/Places/Routes modules and `google-maps-test.css` remain the
+same. Coordinate rendering, initial map settings, and endpoint types are shared
+within the testbed components.
+
+Open `/dev/google-maps` to search for places, inspect click coordinates and camera
+events, choose an origin/destination, and request directions. Controls and the map
+appear side by side on wide screens and stack on narrow screens. Both the last
+map click and a searched place have buttons to populate either endpoint using
+coordinates; editing the input switches back to an address request. Input hints
+show which form will be sent. Camera center and zoom are visible from map readiness
+and update through the shared component's callbacks.
+
+The page shows the Routes API state (`IDLE`, `LOADING`, `SUCCESS`, `ERROR`), route
+count, description, distance, duration, and warnings (including an explicit empty
+state). Route buttons change the displayed polyline and fit its bounds; a separate
+button can fit the selected route again after panning. The collapsible Debug area
+shows the last submitted request, route coordinates, event logs, and Raw Response
+JSON in scrollable panels. This JSON is an SDK snapshot, not the underlying HTTP
+response. Empty route results and API failures are displayed separately.
+
+The testbed additionally needs **Places API (New)** and **Routes API** enabled on
+the browser key's Google Cloud project and allowed by its API restrictions.
+Keep the same HTTP referrer restrictions used for Maps JavaScript API. These
+features make real Google API requests. No backend endpoint or extra key is used.
+
+`GooglePlaceSearch` uses the new `PlaceAutocompleteElement` and returns a
+`MapPlace` through `onSelect`. `src/maps/googleDirections.ts` independently calls
+`Route.computeRoutes`, returning plain routes and a JSON snapshot. Its request
+supports address/coordinate endpoints, travel mode, intermediate waypoints, and
+alternative routes; the testbed exposes travel mode and alternative-route controls.
+Search and routing SDK libraries load only when their feature is used.
+
+References: [Place Autocomplete](https://developers.google.com/maps/documentation/javascript/place-autocomplete-new),
+[Routes](https://developers.google.com/maps/documentation/javascript/routes/get-a-route).
+
 Manual checks with a configured key: open `/map`, select a place in the sidebar,
 click a marker, collapse its Day then select that marker again, select a Day,
 and use “전체 일정 보기”. Verify markers remain clear of the panel, and that dragging,

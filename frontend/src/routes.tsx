@@ -3,6 +3,7 @@ import { useApiHealth } from './hooks/useApiHealth';
 import { LandingPage } from './pages/LandingPage';
 
 const MapPage = lazy(() => import('./pages/MapPage'));
+const GoogleMapsTestPage = lazy(() => import('./pages/GoogleMapsTestPage'));
 
 function LandingRoute() {
   const apiHealth = useApiHealth();
@@ -22,6 +23,10 @@ export const routes: Record<string, RouteDefinition> = {
   '/map': {
     Component: MapPage,
     loadingLabel: '여행 지도를 불러오고 있습니다.',
+  },
+  '/dev/google-maps': {
+    Component: GoogleMapsTestPage,
+    loadingLabel: 'Google Maps 테스트베드를 불러오고 있습니다.',
   },
 };
 
