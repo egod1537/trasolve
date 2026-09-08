@@ -1,17 +1,24 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { memo, useEffect, useRef, useState, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import {
   loadGoogleMaps,
   mapsAuthErrorEvent,
   mapsConfig,
 } from '../../maps/googleMaps';
-import type { MapFocus, TripDay, TripRoute } from '../../types/trip';
+import { GoogleMapAdapter } from '../../adapters/map/GoogleMapAdapter';
+import { GoogleOverlayHost } from '../../adapters/map/GoogleOverlayHost';
+import type { MapAdapter } from '../../adapters/map/MapAdapter';
+import type { MapOverlayHost } from '../../adapters/map/MapOverlayHost';
+import type { MapFocusTarget } from '../../domain/map/mapTypes';
+import { useMapProjection } from '../../hooks/useMapProjection';
+import type { TripDay, TripRoute } from '../../types/trip';
 import { MapMarker } from './MapMarker';
 import { RoutePolyline } from './RoutePolyline';
 
 type Props = {
   days: TripDay[];
   routes: TripRoute[];
-  focus: MapFocus;
+  focusTarget: MapFocusTarget;
   selectedPlaceId: string | null;
   selectedDayId: string | null;
   onSelectPlace: (id: string) => void;
@@ -19,14 +26,14 @@ type Props = {
 };
 
 type MapRuntime = {
-  map: google.maps.Map;
-  markerLibrary: google.maps.MarkerLibrary;
+  adapter: MapAdapter;
+  overlayHost: MapOverlayHost;
 };
 
-export function GoogleMapView({
+export const GoogleMapView = memo(function GoogleMapView({
   days,
   routes,
-  focus,
+  focusTarget,
   selectedPlaceId,
   selectedDayId,
   onSelectPlace,
@@ -37,13 +44,27 @@ export function GoogleMapView({
   const [status, setStatus] = useState<
     'loading' | 'ready' | 'missing-key' | 'error'
   >(mapsConfig.apiKey ? 'loading' : 'missing-key');
+  const projection = useMapProjection(
+    runtime?.adapter ?? null,
+    runtime?.overlayHost ?? null,
+    canvasRef,
+    days,
+    routes,
+  );
+  const projectedRoutes = selectedDayId
+    ? [...projection.routes].sort(
+        (left, right) =>
+          Number(left.route.dayId === selectedDayId) -
+          Number(right.route.dayId === selectedDayId),
+      )
+    : projection.routes;
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !mapsConfig.apiKey) return;
     let disposed = false;
+    let ownedRuntime: MapRuntime | null = null;
     let authRejected = false;
-    let instance: google.maps.Map | undefined;
     const authFailed = () => {
       authRejected = true;
       if (!disposed) setStatus('error');
@@ -53,22 +74,18 @@ export function GoogleMapView({
     async function initialize() {
       try {
         await loadGoogleMaps();
-        const [maps, marker] = await Promise.all([
+        const [maps] = await Promise.all([
           google.maps.importLibrary('maps'),
-          google.maps.importLibrary('marker'),
           google.maps.importLibrary('core'),
         ]);
         if (disposed || authRejected) return;
         const { Map } = maps as google.maps.MapsLibrary;
-        instance = new Map(canvas!, {
+        const instance = new Map(canvas!, {
           center: { lat: 35.6812, lng: 139.7671 },
           zoom: 12,
           mapId: mapsConfig.mapId,
           disableDefaultUI: true,
-          zoomControl: true,
-          zoomControlOptions: {
-            position: google.maps.ControlPosition.RIGHT_BOTTOM,
-          },
+          zoomControl: false,
           gestureHandling: 'greedy',
           scrollwheel: true,
           disableDoubleClickZoom: false,
@@ -78,10 +95,11 @@ export function GoogleMapView({
           mapTypeControl: false,
           fullscreenControl: false,
         });
-        setRuntime({
-          map: instance,
-          markerLibrary: marker as google.maps.MarkerLibrary,
-        });
+        const adapter = new GoogleMapAdapter(instance);
+        const overlayHost = new GoogleOverlayHost();
+        ownedRuntime = { adapter, overlayHost };
+        overlayHost.attach(instance);
+        setRuntime(ownedRuntime);
         setStatus('ready');
       } catch {
         if (!disposed) setStatus('error');
@@ -91,20 +109,21 @@ export function GoogleMapView({
     return () => {
       disposed = true;
       window.removeEventListener(mapsAuthErrorEvent, authFailed);
-      if (instance) google.maps.event.clearInstanceListeners(instance);
+      ownedRuntime?.overlayHost.dispose();
+      ownedRuntime?.adapter.dispose();
       canvas.replaceChildren();
     };
   }, []);
 
   useEffect(() => {
     if (!runtime || !canvasRef.current) return;
-    const { map } = runtime;
-    const allPlaces = days.flatMap((day) => day.places);
-    let idleListener: google.maps.MapsEventListener | undefined;
+    const { adapter } = runtime;
+    let stopCameraChange: (() => void) | undefined;
     let resizeFrame = 0;
 
     const focusMap = () => {
-      idleListener?.remove();
+      stopCameraChange?.();
+      stopCameraChange = undefined;
       const canvas = canvasRef.current!;
       const panel = sidebarRef.current;
       const rect = canvas.getBoundingClientRect();
@@ -118,40 +137,25 @@ export function GoogleMapView({
         left: !mobile && panelRect ? panelRect.right - rect.left + 32 : 40,
       };
 
-      if (focus.type === 'place') {
-        const place = allPlaces.find((item) => item.id === focus.placeId);
-        if (!place) return;
-        const zoom = Math.max(map.getZoom() ?? 12, 15);
-        map.setZoom(zoom);
-        const projection = map.getProjection();
-        const location = new google.maps.LatLng(place.lat, place.lng);
-        const point = projection?.fromLatLngToPoint(location);
+      if (focusTarget.type === 'place') {
+        const zoom = Math.max(adapter.getZoom(), 15);
+        adapter.setZoom(zoom);
         // Pan once to an offset center; two concurrent pan animations can cancel.
-        const center =
-          point && projection
-            ? projection.fromPointToLatLng(
-                new google.maps.Point(
-                  point.x + (padding.right - padding.left) / (2 * 2 ** zoom),
-                  point.y + (padding.bottom - padding.top) / (2 * 2 ** zoom),
-                ),
-              )
-            : location;
-        map.panTo(center ?? location);
+        adapter.panTo(focusTarget.point, {
+          x: (padding.right - padding.left) / 2,
+          y: (padding.bottom - padding.top) / 2,
+        });
         return;
       }
 
-      const places =
-        focus.type === 'day'
-          ? (days.find((day) => day.id === focus.dayId)?.places ?? [])
-          : allPlaces;
-      if (!places.length) return;
-      const bounds = new google.maps.LatLngBounds();
-      places.forEach(({ lat, lng }) => bounds.extend({ lat, lng }));
+      if (!focusTarget.bounds) return;
       // One place (or coincident places) must not zoom all the way into a building.
-      idleListener = google.maps.event.addListenerOnce(map, 'idle', () => {
-        if ((map.getZoom() ?? 0) > 16) map.setZoom(16);
+      stopCameraChange = adapter.subscribeCameraChange(() => {
+        stopCameraChange?.();
+        stopCameraChange = undefined;
+        if (adapter.getZoom() > 16) adapter.setZoom(16);
       });
-      map.fitBounds(bounds, padding);
+      adapter.fitBounds(focusTarget.bounds, padding);
     };
     focusMap();
     const observer = new ResizeObserver(() => {
@@ -163,12 +167,12 @@ export function GoogleMapView({
     return () => {
       observer.disconnect();
       cancelAnimationFrame(resizeFrame);
-      idleListener?.remove();
+      stopCameraChange?.();
     };
-  }, [runtime, days, focus, sidebarRef]);
+  }, [runtime, focusTarget, sidebarRef]);
 
   return (
-    <>
+    <div className="trip-map-root">
       <div
         ref={canvasRef}
         className="trip-map-canvas"
@@ -198,34 +202,41 @@ export function GoogleMapView({
           )}
         </div>
       )}
-      {runtime && (
-        <>
-          {days.flatMap((day) =>
-            day.places.map((place) => (
-              <MapMarker
-                key={place.id}
-                map={runtime.map}
-                markerLibrary={runtime.markerLibrary}
-                place={place}
-                dayTitle={day.title}
-                color={day.color}
-                selected={selectedPlaceId === place.id}
-                onSelect={onSelectPlace}
-              />
-            )),
-          )}
-          {routes
-            .filter((route) => route.path.length > 1)
-            .map((route) => (
-              <RoutePolyline
-                key={route.dayId}
-                map={runtime.map}
-                route={route}
-                active={!selectedDayId || selectedDayId === route.dayId}
-              />
-            ))}
-        </>
-      )}
-    </>
+      {runtime &&
+        createPortal(
+          <div className="trip-map-overlay">
+            <svg
+              className="trip-map-svg-overlay"
+              aria-hidden="true"
+              focusable="false"
+            >
+              {projectedRoutes.map(({ route, points }) => (
+                <RoutePolyline
+                  key={route.dayId}
+                  route={route}
+                  points={points}
+                  active={!selectedDayId || selectedDayId === route.dayId}
+                />
+              ))}
+            </svg>
+            <div className="trip-map-dom-overlay">
+              {projection.markers.map(
+                ({ place, dayTitle, color, position }) => (
+                  <MapMarker
+                    key={place.id}
+                    place={place}
+                    dayTitle={dayTitle}
+                    color={color}
+                    selected={selectedPlaceId === place.id}
+                    position={position}
+                    onSelect={onSelectPlace}
+                  />
+                ),
+              )}
+            </div>
+          </div>,
+          runtime.overlayHost.getElement(),
+        )}
+    </div>
   );
-}
+});

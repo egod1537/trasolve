@@ -2,8 +2,19 @@
 
 The landing page links to `/map`, a full-screen Google Maps itinerary view.
 The sample trip is in `src/data/demoTrip.ts`; it does not require the backend.
-Selection lives in `MapPage`, while SDK loading and map operations are isolated in
-`src/maps/googleMaps.ts` and `src/components/map/`.
+Map selection and focus state live in `src/domain/map/MapModel.ts` and are exposed
+to React as a cached external-store snapshot through `src/hooks/useMapModel.ts`.
+Provider-neutral camera operations are defined by
+`src/adapters/map/MapAdapter.ts`; `src/adapters/map/GoogleMapAdapter.ts` translates
+them to Google Maps calls. `src/maps/googleMaps.ts` only loads and configures the
+SDK.
+Markers and route lines render through a React portal into
+`src/adapters/map/GoogleOverlayHost.ts`, which owns a Google Maps `OverlayView`.
+`MapOverlayHost` supplies pane-local coordinates and draw notifications, while
+`useMapProjection` culls markers and caches coordinates until the projection
+changes. The SDK moves the pane during panning; zoom, heading, tilt, and pane
+rebasing invalidate the coordinate cache. Unmounting removes the overlay and its
+subscriptions.
 
 ## Local setup
 
@@ -12,7 +23,7 @@ Copy `frontend/.env.example` to `frontend/.env.local`, then set
 billing configured. Restrict it to Maps JavaScript API and the HTTP referrers used
 by the app (including the local development origin). Set
 `VITE_GOOGLE_MAPS_MAP_ID` to a JavaScript map ID; `DEMO_MAP_ID` is the development
-fallback for Advanced Markers. Restart `npm run dev` after changing the file.
+fallback. Restart `npm run dev` after changing the file.
 
 These are Vite build-time inputs, so a production build needs the variables
 available when Vite runs. Changing container runtime variables alone does not
@@ -31,10 +42,13 @@ Manual checks with a configured key: open `/map`, select a place in the sidebar,
 click a marker, collapse its Day then select that marker again, select a Day,
 and use “전체 일정 보기”. Verify markers remain clear of the panel, and that dragging,
 wheel/pinch zoom and double-click zoom work. On narrow screens the itinerary
-becomes a lower panel, leaving the native zoom controls and attribution accessible.
+becomes a lower panel while map gestures and attribution remain accessible.
+Also pan far enough to bring previously hidden places into view, zoom repeatedly,
+and leave and reopen `/map`; check that route lines remain visible and markers
+stay attached to their places without duplicate overlays.
 
 References: [API loading](https://developers.google.com/maps/documentation/javascript/load-maps-js-api),
-[Advanced Markers](https://developers.google.com/maps/documentation/javascript/advanced-markers/start),
+[custom overlays](https://developers.google.com/maps/documentation/javascript/reference/overlay-view),
 [camera bounds and padding](https://developers.google.com/maps/documentation/javascript/reference/map#Map.fitBounds).
 
 # Frontend build metadata

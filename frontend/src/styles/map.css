@@ -8,9 +8,46 @@
   --trip-panel-width: 360px;
 }
 
+.trip-map-root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
 .trip-map-canvas {
   position: absolute;
   inset: 0;
+}
+
+.trip-map-overlay-host,
+.trip-map-overlay,
+.trip-map-svg-overlay,
+.trip-map-dom-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.trip-map-overlay {
+  z-index: 1;
+}
+.trip-map-svg-overlay {
+  width: 1px;
+  height: 1px;
+}
+.trip-map-route {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-opacity: 0.35;
+  stroke-width: 3px;
+}
+.trip-map-route.is-active {
+  stroke-opacity: 0.9;
+  stroke-width: 4px;
 }
 
 .trip-sidebar {
@@ -148,14 +185,72 @@
   padding: 0 0 12px;
   list-style: none;
 }
+.trip-place-item {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border-left: 3px solid transparent;
+}
+.trip-place-item.is-selected {
+  border-left-color: var(--day-color);
+}
+.trip-place-item.is-dragging {
+  z-index: 1;
+  background: #eff6ff;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.1);
+}
+.trip-place-item.is-drop-before::before,
+.trip-place-item.is-drop-after::after {
+  position: absolute;
+  z-index: 2;
+  right: 12px;
+  left: 12px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  content: '';
+  pointer-events: none;
+}
+.trip-place-item.is-drop-before::before {
+  top: -1px;
+}
+.trip-place-item.is-drop-after::after {
+  bottom: -1px;
+}
+.trip-place-drag-handle {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  width: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.trip-place-drag-handle:hover,
+.trip-place-drag-handle:focus-visible {
+  color: var(--color-muted);
+}
+.trip-place-drag-handle.is-dragging {
+  color: var(--color-primary);
+  cursor: grabbing;
+}
+.trip-place-drag-handle svg {
+  width: 16px;
+  height: 20px;
+  fill: currentColor;
+}
 .trip-place {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  width: 100%;
-  padding: 14px 20px;
+  min-width: 0;
+  flex: 1;
+  padding: 14px 20px 14px 2px;
   border: 0;
-  border-left: 3px solid transparent;
   background: none;
   text-align: left;
   cursor: pointer;
@@ -164,8 +259,10 @@
   background: #f8fafc;
 }
 .trip-place.is-selected {
-  border-left-color: var(--day-color);
   background: #eff6ff;
+}
+.trip-place.is-dragging {
+  opacity: 0.68;
 }
 .trip-place-order {
   display: grid;
@@ -262,23 +359,240 @@
   color: var(--color-muted);
 }
 
+.trip-map-ai-button {
+  position: absolute;
+  z-index: 3;
+  right: max(24px, calc(env(safe-area-inset-right) + 16px));
+  bottom: max(24px, calc(env(safe-area-inset-bottom) + 16px));
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow:
+    0 6px 16px rgba(15, 23, 42, 0.22),
+    0 2px 5px rgba(15, 23, 42, 0.16);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+.trip-map-ai-button svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+}
+.trip-map-ai-button:hover {
+  background: var(--color-primary-dark);
+  box-shadow:
+    0 8px 20px rgba(15, 23, 42, 0.26),
+    0 3px 6px rgba(15, 23, 42, 0.18);
+  transform: translateY(-2px);
+}
+.trip-map-ai-button:active {
+  box-shadow:
+    0 3px 9px rgba(15, 23, 42, 0.22),
+    0 1px 3px rgba(15, 23, 42, 0.16);
+  transform: translateY(1px);
+}
+.trip-map-ai-button.is-panel-open {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.9);
+}
+
+.trip-map-ai-panel {
+  position: absolute;
+  z-index: 4;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  width: 380px;
+  overflow: hidden;
+  border: 1px solid #d9dee5;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.16);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(calc(100% + 24px));
+  contain: layout;
+  will-change: transform, opacity;
+  visibility: hidden;
+  transition:
+    transform 250ms ease,
+    opacity 200ms ease,
+    visibility 0s linear 250ms;
+}
+.trip-map-ai-panel.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+  visibility: visible;
+  transition-delay: 0s;
+}
+.trip-map-ai-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+  min-height: 72px;
+  padding: 14px 16px 14px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+.trip-map-ai-panel-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.trip-map-ai-panel-header p {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.trip-map-ai-panel-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+.trip-map-ai-panel-close:hover {
+  background: #f1f5f9;
+  color: var(--color-text);
+}
+.trip-map-ai-panel-close:active {
+  background: #e2e8f0;
+}
+.trip-map-ai-panel-close svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.75;
+}
+.trip-map-ai-messages {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.trip-map-ai-message {
+  align-self: flex-start;
+  max-width: 86%;
+  margin: 0;
+  padding: 10px 13px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.trip-map-ai-message.is-assistant {
+  border: 1px solid var(--color-border);
+  border-bottom-left-radius: 4px;
+  background: #f8fafc;
+  color: var(--color-text);
+}
+.trip-map-ai-message.is-user {
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  background: var(--color-primary);
+  color: #fff;
+}
+.trip-map-ai-compose {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex: none;
+  padding: 12px;
+  border-top: 1px solid var(--color-border);
+  background: #fff;
+}
+.trip-map-ai-compose textarea {
+  min-width: 0;
+  min-height: 44px;
+  max-height: 112px;
+  flex: 1;
+  resize: none;
+  padding: 11px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+}
+.trip-map-ai-compose textarea::placeholder {
+  color: #94a3b8;
+}
+.trip-map-ai-compose button {
+  min-width: 52px;
+  height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.trip-map-ai-compose button:not(:disabled):hover {
+  background: var(--color-primary-dark);
+}
+.trip-map-ai-compose button:disabled {
+  background: #cbd5e1;
+  color: #f8fafc;
+}
+
 .trip-map-marker {
+  position: absolute;
   display: grid;
   place-items: center;
   width: 30px;
   height: 30px;
+  margin: 0;
+  padding: 0;
   border: 2px solid white;
   border-radius: 6px;
   background: var(--day-color);
   color: white;
+  appearance: none;
   font-size: 13px;
   font-weight: 700;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
 }
 .trip-map-marker.is-selected {
   outline: 3px solid var(--day-color);
   outline-offset: 3px;
-  transform: scale(1.15);
+  transform: translate(-50%, -50%) scale(1.15);
 }
 .trip-map-status {
   position: absolute;
@@ -320,6 +634,17 @@
 }
 
 @media (max-width: 760px) {
+  .trip-map-ai-button {
+    width: 52px;
+    height: 52px;
+  }
+  .trip-map-ai-panel {
+    top: 72px;
+    right: max(12px, calc(env(safe-area-inset-right) + 8px));
+    bottom: max(12px, calc(env(safe-area-inset-bottom) + 8px));
+    left: max(12px, calc(env(safe-area-inset-left) + 8px));
+    width: auto;
+  }
   .trip-sidebar {
     top: auto;
     bottom: 28px;
@@ -354,7 +679,7 @@
     display: none;
   }
   .trip-place {
-    padding-inline: 10px;
+    padding: 14px 10px 14px 2px;
     gap: 8px;
   }
   .trip-place-time {

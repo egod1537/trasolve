@@ -1,4 +1,6 @@
-export type Coordinates = { lat: number; lng: number };
+import type { GeoPoint } from '../domain/map/mapTypes';
+
+export type Coordinates = GeoPoint;
 
 export type TripPlace = Coordinates & {
   id: string;
@@ -25,20 +27,10 @@ export type Trip = {
 // A route is independent of its provider. Routes API geometry can replace path.
 export type TripRoute = { dayId: string; color: string; path: Coordinates[] };
 
-export type MapFocus = { revision: number } & (
-  | { type: 'all' }
-  | { type: 'day'; dayId: string }
-  | { type: 'place'; placeId: string }
-);
-
-export function orderedPlaces(day: TripDay) {
-  return [...day.places].sort((a, b) => a.order - b.order);
-}
-
 export function buildTripRoutes(days: TripDay[]): TripRoute[] {
   return days.map((day) => ({
     dayId: day.id,
     color: day.color,
-    path: orderedPlaces(day).map(({ lat, lng }) => ({ lat, lng })),
+    path: day.places.map(({ lat, lng }) => ({ lat, lng })),
   }));
 }

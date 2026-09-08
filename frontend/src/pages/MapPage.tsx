@@ -1,74 +1,58 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { GoogleMapView } from '../components/map/GoogleMapView';
+import { MapAiButton } from '../components/map/MapAiButton';
+import { MapAiPanel } from '../components/map/MapAiPanel';
 import { MapSearchBar } from '../components/map/MapSearchBar';
 import { TripSidebar } from '../components/map/TripSidebar';
 import { demoTrip } from '../data/demoTrip';
-import { buildTripRoutes, type MapFocus } from '../types/trip';
+import { MapModel } from '../domain/map/MapModel';
+import { useMapModel } from '../hooks/useMapModel';
 import '../styles/map.css';
 
 export default function MapPage() {
-  const [trip] = useState(demoTrip);
-  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
-  const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
-  const [focus, setFocus] = useState<MapFocus>({ type: 'all', revision: 0 });
+  const [model] = useState(() => new MapModel(demoTrip));
+  const snapshot = useMapModel(model);
+  const [aiOpen, setAiOpen] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
-  const routes = useMemo(() => buildTripRoutes(trip.days), [trip.days]);
+  const aiButtonRef = useRef<HTMLButtonElement>(null);
+  const aiWasOpenRef = useRef(false);
 
-  const selectPlace = useCallback(
-    (placeId: string) => {
-      const day = trip.days.find((item) =>
-        item.places.some((place) => place.id === placeId),
-      );
-      if (!day) return;
-      setSelectedPlaceId(placeId);
-      setSelectedDayId(day.id);
-      setFocus((previous) => ({
-        type: 'place',
-        placeId,
-        revision: previous.revision + 1,
-      }));
-    },
-    [trip.days],
-  );
-
-  const selectDay = useCallback((dayId: string) => {
-    setSelectedDayId(dayId);
-    setSelectedPlaceId(null);
-    setFocus((previous) => ({
-      type: 'day',
-      dayId,
-      revision: previous.revision + 1,
-    }));
-  }, []);
-
-  const showAll = () => {
-    setSelectedDayId(null);
-    setSelectedPlaceId(null);
-    setFocus((previous) => ({ type: 'all', revision: previous.revision + 1 }));
-  };
+  useEffect(() => {
+    if (!aiOpen && aiWasOpenRef.current) {
+      aiButtonRef.current?.focus({ preventScroll: true });
+    }
+    aiWasOpenRef.current = aiOpen;
+  }, [aiOpen]);
 
   return (
     <main className="trip-map-page">
       <GoogleMapView
-        days={trip.days}
-        routes={routes}
-        focus={focus}
-        selectedPlaceId={selectedPlaceId}
-        selectedDayId={selectedDayId}
-        onSelectPlace={selectPlace}
+        days={snapshot.trip.days}
+        routes={snapshot.routes}
+        focusTarget={snapshot.focusTarget}
+        selectedPlaceId={snapshot.selectedPlaceId}
+        selectedDayId={snapshot.selectedDayId}
+        onSelectPlace={model.selectPlace}
         sidebarRef={sidebarRef}
       />
       <TripSidebar
-        selectionRevision={focus.revision}
-        trip={trip}
+        selectionRevision={snapshot.focus.revision}
+        trip={snapshot.trip}
         sidebarRef={sidebarRef}
-        selectedPlaceId={selectedPlaceId}
-        selectedDayId={selectedDayId}
-        onSelectPlace={selectPlace}
-        onSelectDay={selectDay}
-        onShowAll={showAll}
+        selectedPlaceId={snapshot.selectedPlaceId}
+        selectedDayId={snapshot.selectedDayId}
+        onSelectPlace={model.selectPlace}
+        onSelectDay={model.selectDay}
+        onShowAll={model.showAll}
+        onMovePlace={model.movePlace}
       />
       <MapSearchBar />
+      <MapAiButton
+        ref={aiButtonRef}
+        open={aiOpen}
+        onClick={() => setAiOpen((open) => !open)}
+      />
+      <MapAiPanel open={aiOpen} onClose={() => setAiOpen(false)} />
     </main>
   );
 }
