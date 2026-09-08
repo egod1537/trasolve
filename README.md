@@ -7,6 +7,40 @@ branch별 Docker 배포를 수행하는 프로젝트입니다. GitHub Actions는
 
 ## Architecture
 
+로컬 경로 조회는 `frontend → POST /api/routes → Google Routes API`를 사용합니다.
+브라우저 키는 `frontend/.env.local`의 `VITE_GOOGLE_MAPS_API_KEY`, 서버 경로 키는
+`backend/.env.local`의 `GOOGLE_ROUTES_API_KEY`에 설정한 뒤 `npm run dev`를 실행합니다.
+서버 키에는 Routes API를 활성화하고 서버용 제한을 적용합니다. 배포 시에는
+`~/.config/jjs/deploy.env`의 `GOOGLE_ROUTES_API_KEY`가 백엔드 컨테이너로 전달됩니다.
+요청·응답 계약은 `shared/schemas/routes.ts`에 있으며, Google Maps 백엔드 구현은
+`backend/src/google/maps/`에 모여 있습니다.
+
+```text
+backend/src/google/maps/
+├── routes.ts  # Routes: 요청 검증, Google API 호출·변환, HTTP 처리
+└── errors.ts  # ApiError: 경로 API 오류
+```
+
+`backend/src/instances.ts`에서 환경 변수를 읽은 뒤 클래스 인스턴스를 한 번 생성합니다.
+다른 백엔드 모듈은 이 파일에서 `API`만 import해서 사용합니다.
+`API.Route`는 생성한 `Routes` 인스턴스를 직접 참조합니다.
+공용 인스턴스는 Node.js 프로세스마다 하나이며, 서버 재시작 시 새로 생성됩니다.
+`instances.ts`에서 `new Routes(apiKey)` 한 번으로 경로 객체를 생성합니다.
+`Routes`는 키와 타임아웃을 보관하며, 공개 메서드는 `getDirections`와 `handle`입니다.
+JSON 읽기, Google 요청 생성·호출, 응답 변환은 private 메서드로 캡슐화합니다.
+요청별 데이터는 메서드 내부에서만 관리합니다.
+
+```ts
+import { API } from './instances.js';
+
+// HTTP 요청: API.Route.handle(request, response)
+// 다른 백엔드 로직에서 경로 조회: API.Route.getDirections(input)
+```
+
+`npm run lint`는 호출부의 Google Maps 구현 직접 import/re-export를 금지합니다.
+`Routes` 생성용 import는 `instances.ts`에서 수행합니다.
+구현 내부에서 `instances.ts`를 가져오는 것도 금지합니다.
+
 ```text
 developer: git push origin <branch>
                  |

@@ -1,65 +1,38 @@
-import type { LatLng, MapBounds } from '../components/google-map/types';
-import { loadGoogleMaps } from './googleMaps';
+import {
+  API_ROUTES,
+  apiErrorSchema,
+  directionsResultSchema,
+  type DirectionsRequest,
+  type DirectionsResult,
+} from '@trasolve/shared';
 
-export type TravelMode = 'DRIVING' | 'WALKING' | 'BICYCLING' | 'TRANSIT';
-export type DirectionsLocation = string | LatLng;
-export type DirectionsRequest = {
-  origin: DirectionsLocation;
-  destination: DirectionsLocation;
-  travelMode?: TravelMode;
-  intermediates?: DirectionsLocation[];
-  computeAlternativeRoutes?: boolean;
-};
-
-export type MapRoute = {
-  description: string;
-  distanceMeters: number | null;
-  durationMillis: number | null;
-  path: LatLng[];
-  bounds: MapBounds | null;
-  warnings: string[];
-};
-
-export type DirectionsResult = {
-  request: DirectionsRequest;
-  routes: MapRoute[];
-  /** JSON snapshot of the SDK response; no live Google objects escape. */
-  rawResponse: unknown;
-};
+export type {
+  DirectionsRequest,
+  DirectionsResult,
+  MapRoute,
+  RouteLocation,
+  TravelMode,
+} from '@trasolve/shared';
 
 export async function getDirections(
   request: DirectionsRequest,
 ): Promise<DirectionsResult> {
-  await loadGoogleMaps();
-  const { Route } = (await google.maps.importLibrary(
-    'routes',
-  )) as google.maps.RoutesLibrary;
-  const response = await Route.computeRoutes({
-    ...request,
-    travelMode: request.travelMode ?? 'DRIVING',
-    intermediates: request.intermediates?.map((location) => ({ location })),
-    fields: [
-      'path',
-      'viewport',
-      'description',
-      'distanceMeters',
-      'durationMillis',
-      'warnings',
-    ],
+  const response = await fetch(API_ROUTES.routes, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+    signal: AbortSignal.timeout(20000),
   });
-  return {
-    request,
-    routes: (response.routes ?? []).map((route) => ({
-      description: route.description ?? '',
-      distanceMeters: route.distanceMeters ?? null,
-      durationMillis: route.durationMillis ?? null,
-      path: (route.path ?? []).map((point) => ({
-        lat: point.lat,
-        lng: point.lng,
-      })),
-      bounds: route.viewport?.toJSON() ?? null,
-      warnings: route.warnings ?? [],
-    })),
-    rawResponse: JSON.parse(JSON.stringify(response)) as unknown,
-  };
+  const body: unknown = await response.json();
+  if (!response.ok) {
+    const parsed = apiErrorSchema.safeParse(body);
+    throw new Error(
+      parsed.success
+        ? `${parsed.data.error.code}: ${parsed.data.error.message}`
+        : `경로 조회 실패 (HTTP ${response.status})`,
+    );
+  }
+  const parsed = directionsResultSchema.safeParse(body);
+  if (!parsed.success) throw new Error('경로 응답 형식이 올바르지 않습니다.');
+  return parsed.data;
 }

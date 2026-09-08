@@ -1,17 +1,27 @@
-import type { LatLng, MapPlace } from '../google-map/types';
+import type { MapClickEvent, MapPlace } from '../google-map/types';
 import type { Endpoint } from './types';
 import { Coordinates } from './Coordinates';
 
-function endpointFromPoint(point: LatLng): Endpoint {
-  return { text: `${point.lat}, ${point.lng}`, location: point };
+function endpointFromPoint(point: MapClickEvent): Endpoint {
+  return {
+    text: `${point.lat}, ${point.lng}`,
+    location: point.placeId
+      ? { type: 'place', placeId: point.placeId }
+      : { type: 'coordinates', lat: point.lat, lng: point.lng },
+  };
 }
 
 function endpointFromPlace(place: MapPlace): Endpoint {
-  return { text: place.name, location: place.location };
+  return {
+    text: place.name,
+    location: place.id
+      ? { type: 'place', placeId: place.id }
+      : { type: 'coordinates', ...place.location },
+  };
 }
 
 type Props = {
-  clicked: LatLng | null;
+  clicked: MapClickEvent | null;
   selectedPlace: MapPlace | null;
   pending: boolean;
   onOriginSelect: (endpoint: Endpoint) => void;
@@ -32,6 +42,12 @@ export function SelectionPanel({
         {clicked ? (
           <>
             <Coordinates point={clicked} />
+            <dl className="maps-test-data">
+              <dt>placeId</dt>
+              <dd>
+                {clicked.placeId ?? '없음 · 장소 아이콘을 클릭해 주세요.'}
+              </dd>
+            </dl>
             <div className="maps-test-actions">
               <button
                 type="button"

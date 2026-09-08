@@ -9,6 +9,15 @@ const modes: { value: TravelMode; label: string }[] = [
   { value: 'BICYCLING', label: '자전거' },
 ];
 
+function describeEndpoint(endpoint: Endpoint): string {
+  const location = endpoint.location;
+  if (location?.type === 'place')
+    return `선택한 장소 · placeId: ${location.placeId}`;
+  if (location?.type === 'coordinates')
+    return `좌표: ${location.lat}, ${location.lng}`;
+  return '주소 문자열';
+}
+
 type Props = {
   origin: Endpoint;
   destination: Endpoint;
@@ -52,11 +61,7 @@ export function DirectionsPanel({
             value={origin.text}
             onChange={(event) => onOriginChange(event.target.value)}
           />
-          <small>
-            {origin.location
-              ? `좌표: ${origin.location.lat}, ${origin.location.lng}`
-              : '주소 문자열'}
-          </small>
+          <small>{describeEndpoint(origin)}</small>
         </label>
         <label>
           도착지
@@ -65,11 +70,7 @@ export function DirectionsPanel({
             value={destination.text}
             onChange={(event) => onDestinationChange(event.target.value)}
           />
-          <small>
-            {destination.location
-              ? `좌표: ${destination.location.lat}, ${destination.location.lng}`
-              : '주소 문자열'}
-          </small>
+          <small>{describeEndpoint(destination)}</small>
         </label>
         <label>
           이동수단

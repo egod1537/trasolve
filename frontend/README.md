@@ -65,7 +65,7 @@ function Example() {
         zoom={12}
         options={{ zoomControl: true }}
         onReady={(map) => map.setZoom(14)}
-        onMapClick={(position) => console.log(position)}
+        onMapClick={({ lat, lng, placeId }) => console.log(lat, lng, placeId)}
       />
     </>
   );
@@ -81,9 +81,13 @@ map. Callback changes do not recreate the map or accumulate event listeners.
 `onReady(handle)` runs once per runtime; use it for commands that need a loaded
 map. Ref commands before readiness or after disposal have no effect.
 
-`onMapClick`, `onCenterChanged`, and `onZoomChanged` receive plain data. The ref
-supports `panTo`, `setZoom`, and `fitBounds`. `polylines` accepts coordinate paths
-and optional color, weight, and opacity; it performs no directions requests.
+`onMapClick`, `onCenterChanged`, and `onZoomChanged` receive plain data. The map
+click event is a `MapClickEvent`: `{ lat, lng, placeId?: string }`. Google POI
+icon clicks include `placeId` when supplied by the SDK; ordinary map clicks omit
+it. POI icons are clickable by default; `options.clickableIcons: false` disables
+them. Clicking an arbitrary building area does not look up a place ID.
+The ref supports `panTo`, `setZoom`, and `fitBounds`. `polylines` accepts coordinate
+paths and optional color, weight, and opacity; it performs no directions requests.
 For custom React overlays, children can call `useGoogleMap()` to access the
 existing `MapAdapter`, `MapOverlayHost`, and canvas ref. Children mount when the
 runtime is ready; the component owns their runtime's lifecycle.
@@ -107,7 +111,8 @@ Open `/dev/google-maps` to search for places, inspect click coordinates and came
 events, choose an origin/destination, and request directions. Controls and the map
 appear side by side on wide screens and stack on narrow screens. Both the last
 map click and a searched place have buttons to populate either endpoint using
-coordinates; editing the input switches back to an address request. Input hints
+a place ID when available, otherwise coordinates; editing the input switches
+back to an address request. Input hints
 show which form will be sent. Camera center and zoom are visible from map readiness
 and update through the shared component's callbacks.
 
@@ -116,23 +121,55 @@ count, description, distance, duration, and warnings (including an explicit empt
 state). Route buttons change the displayed polyline and fit its bounds; a separate
 button can fit the selected route again after panning. The collapsible Debug area
 shows the last submitted request, route coordinates, event logs, and Raw Response
-JSON in scrollable panels. This JSON is an SDK snapshot, not the underlying HTTP
-response. Empty route results and API failures are displayed separately.
+JSON in scrollable panels. Raw Response is the Google Routes REST response for
+the requested fields. Empty route results and API failures are displayed separately.
 
-The testbed additionally needs **Places API (New)** and **Routes API** enabled on
-the browser key's Google Cloud project and allowed by its API restrictions.
-Keep the same HTTP referrer restrictions used for Maps JavaScript API. These
-features make real Google API requests. No backend endpoint or extra key is used.
+The browser key needs **Maps JavaScript API** and **Places API (New)**, with HTTP
+referrer restrictions for the app. Routes use a separate server key with
+**Routes API** enabled. Copy `backend/.env.example` to `backend/.env.local`, set
+`GOOGLE_ROUTES_API_KEY`, and restart `npm run dev`. The backend loads this file
+relative to its own directory; existing process environment values take priority.
+Do not prefix the server key with `VITE_`. For deployment, set the same variable
+in the host's `~/.config/jjs/deploy.env`; Compose passes it only to the backend.
+Use server-appropriate restrictions (such as the server's outbound IP), not
+HTTP referrers. All features still call real Google APIs.
 
 `GooglePlaceSearch` uses the new `PlaceAutocompleteElement` and returns a
-`MapPlace` through `onSelect`. `src/maps/googleDirections.ts` independently calls
-`Route.computeRoutes`, returning plain routes and a JSON snapshot. Its request
-supports address/coordinate endpoints, travel mode, intermediate waypoints, and
-alternative routes; the testbed exposes travel mode and alternative-route controls.
-Search and routing SDK libraries load only when their feature is used.
+`MapPlace` through `onSelect`. `src/maps/googleDirections.ts` calls
+`POST /api/routes`; request/response schemas and types live in `@trasolve/shared`.
+Google Maps backend code lives in `backend/src/google/maps/routes.ts`: the single
+`Routes` class handles HTTP, validates requests, calls Google REST, and normalizes
+responses. `ApiError` in `errors.ts` defines API errors.
+`backend/src/instances.ts` loads the environment and creates one `Routes` instance
+per Node.js process. Backend consumers import only `API` from that module and use
+`API.Route.getDirections(input)` or `API.Route.handle(request, response)`.
+Both facade objects are frozen. Lint rules reject direct implementation imports
+outside the Maps module and instance wiring, and reject value imports of `Routes`
+inside the Maps implementation. `Routes` receives its API key and optional timeout (default 15000ms) through its
+constructor; request construction and response normalization are private methods.
+Requests support tagged address, coordinate, and place-ID endpoints, travel mode,
+up to 25 intermediate waypoints (except transit), and alternative routes.
+Google does not return alternatives when intermediates are supplied.
+The testbed exposes travel mode and alternative-route controls.
+Only the autocomplete feature loads the Places SDK library; routing does not
+load a browser SDK. The existing `/map` itinerary is not yet connected to routing.
+
+```ts
+await getDirections({
+  origin: { type: 'place', placeId: selectedPlace.id },
+  destination: { type: 'coordinates', lat: 35.6586, lng: 139.7454 },
+  travelMode: 'DRIVING',
+});
+```
+
+The endpoint requires JSON, limits request bodies to 16KB, and validates coordinate
+ranges and endpoint variants. Google calls time out after 15 seconds. Errors use
+`{ error: { code, message } }`, with distinct configuration, validation, quota,
+upstream, and timeout failures. The development client times out after 20 seconds.
+The endpoint currently has no user authentication or per-user rate limiting.
 
 References: [Place Autocomplete](https://developers.google.com/maps/documentation/javascript/place-autocomplete-new),
-[Routes](https://developers.google.com/maps/documentation/javascript/routes/get-a-route).
+[Routes REST](https://developers.google.com/maps/documentation/routes/compute_route_directions).
 
 Manual checks with a configured key: open `/map`, select a place in the sidebar,
 click a marker, collapse its Day then select that marker again, select a Day,

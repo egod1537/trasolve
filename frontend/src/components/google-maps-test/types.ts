@@ -1,4 +1,4 @@
-import type { LatLng } from '../google-map/types';
+import type { RouteLocation } from '@trasolve/shared';
 
-export type Endpoint = { text: string; location?: LatLng };
+export type Endpoint = { text: string; location?: RouteLocation };
 export type ApiStatus = 'idle' | 'loading' | 'success' | 'error';

@@ -43,8 +43,14 @@ export function useDirectionsState(appendLog: (message: string) => void) {
     if (pending) return;
     const id = ++requestId.current;
     const nextRequest: DirectionsRequest = {
-      origin: origin.location ?? origin.text.trim(),
-      destination: destination.location ?? destination.text.trim(),
+      origin: origin.location ?? {
+        type: 'address',
+        address: origin.text.trim(),
+      },
+      destination: destination.location ?? {
+        type: 'address',
+        address: destination.text.trim(),
+      },
       travelMode,
       computeAlternativeRoutes: alternatives,
     };

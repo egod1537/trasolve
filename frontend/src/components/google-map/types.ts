@@ -9,6 +9,11 @@ import type {
 export type LatLng = GeoPoint;
 export type MapBounds = GeoBounds;
 
+export type MapClickEvent = LatLng & {
+  /** Present only when Google supplies a place ID for a clicked POI icon. */
+  placeId?: string;
+};
+
 export type MapPlace = {
   id?: string;
   name: string;
@@ -39,7 +44,7 @@ export type GoogleMapHandle = {
 };
 
 export type GoogleMapEvents = {
-  onMapClick?: (position: LatLng) => void;
+  onMapClick?: (event: MapClickEvent) => void;
   onCenterChanged?: (position: LatLng) => void;
   onZoomChanged?: (zoom: number) => void;
 };

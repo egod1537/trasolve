@@ -8,5 +8,48 @@
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "warn"
   },
-  "ignorePatterns": ["**/dist/**", "**/node_modules/**"]
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**"],
+  "overrides": [
+    {
+      "files": ["backend/src/**/*.{ts,tsx,js,mjs,cjs}"],
+      "excludeFiles": [
+        "backend/src/instances.ts",
+        "backend/src/google/maps/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(?i)(^|/)(google/maps(/|$)|routes(\\.[^/]*)?$)",
+                "message": "Import API from instances.js and use API.Route.getDirections() or API.Route.handle()."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["backend/src/google/maps/**/*.{ts,tsx,js,mjs,cjs}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(?i)(^|/)instances(\\.[^/]*)?$",
+                "message": "Importing API inside its implementation creates a circular dependency."
+              },
+              {
+                "regex": "(?i)(^|/)routes(\\.[^/]*)?$",
+                "allowTypeImports": true,
+                "message": "Only instances.ts constructs Routes. Use import type when only the type is needed."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

@@ -3,6 +3,7 @@ import { GooglePlaceSearch } from '../components/google-map/GooglePlaceSearch';
 import type {
   GoogleMapHandle,
   LatLng,
+  MapClickEvent,
   MapPlace,
 } from '../components/google-map/types';
 import { DirectionsPanel } from '../components/google-maps-test/DirectionsPanel';
@@ -21,7 +22,7 @@ import '../styles/google-maps-test.css';
 export default function GoogleMapsTestPage() {
   const mapRef = useRef<GoogleMapHandle>(null);
   const [selectedPlace, setSelectedPlace] = useState<MapPlace | null>(null);
-  const [clicked, setClicked] = useState<LatLng | null>(null);
+  const [clicked, setClicked] = useState<MapClickEvent | null>(null);
   const [camera, setCamera] = useState<LatLng | null>(null);
   const [zoom, setZoom] = useState(initialZoom);
   const [logs, setLogs] = useState<string[]>([]);
@@ -61,9 +62,11 @@ export default function GoogleMapsTestPage() {
   );
 
   const handleMapClick = useCallback(
-    (point: LatLng) => {
-      setClicked(point);
-      appendLog(`지도 클릭: ${point.lat}, ${point.lng}`);
+    (event: MapClickEvent) => {
+      setClicked(event);
+      appendLog(
+        `지도 클릭: ${event.lat}, ${event.lng}${event.placeId ? ` · placeId: ${event.placeId}` : ''}`,
+      );
     },
     [appendLog],
   );

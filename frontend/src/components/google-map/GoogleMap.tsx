@@ -120,7 +120,7 @@ export function GoogleMap(props: GoogleMapProps) {
   useEffect(
     () =>
       runtime?.subscribeEvents({
-        onMapClick: (point) => latest.current.onMapClick?.(point),
+        onMapClick: (event) => latest.current.onMapClick?.(event),
         onCenterChanged: (point) => latest.current.onCenterChanged?.(point),
         onZoomChanged: (value) => latest.current.onZoomChanged?.(value),
       }),

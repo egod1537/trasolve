@@ -68,7 +68,7 @@ export async function createGoogleMapRuntime(
       scrollwheel: true,
       disableDoubleClickZoom: false,
       keyboardShortcuts: true,
-      clickableIcons: false,
+      clickableIcons: true,
       streetViewControl: false,
       mapTypeControl: false,
       fullscreenControl: false,
@@ -87,9 +87,18 @@ export async function createGoogleMapRuntime(
       subscribeEvents(events) {
         if (disposed) return () => undefined;
         const listeners = [
-          instance.addListener('click', (event: google.maps.MapMouseEvent) => {
-            if (event.latLng) events.onMapClick?.(event.latLng.toJSON());
-          }),
+          instance.addListener(
+            'click',
+            (event: google.maps.MapMouseEvent | google.maps.IconMouseEvent) => {
+              if (!event.latLng) return;
+              const point = event.latLng.toJSON();
+              events.onMapClick?.(
+                'placeId' in event && event.placeId
+                  ? { ...point, placeId: event.placeId }
+                  : point,
+              );
+            },
+          ),
           instance.addListener('center_changed', () => {
             const center = camera.getCenter();
             if (center) events.onCenterChanged?.(center);

@@ -1,6 +1,11 @@
 import type { RefObject } from 'react';
 import { GoogleMap } from '../google-map/GoogleMap';
-import type { GoogleMapHandle, MapPolyline, LatLng } from '../google-map/types';
+import type {
+  GoogleMapHandle,
+  MapClickEvent,
+  MapPolyline,
+  LatLng,
+} from '../google-map/types';
 import { Coordinates } from './Coordinates';
 import { initialCenter, initialZoom, mapOptions } from './config';
 
@@ -10,7 +15,7 @@ type Props = {
   camera: LatLng | null;
   zoom: number;
   onReady: (map: GoogleMapHandle) => void;
-  onMapClick: (point: LatLng) => void;
+  onMapClick: (event: MapClickEvent) => void;
   onCenterChanged: (point: LatLng) => void;
   onZoomChanged: (zoom: number) => void;
   onError: (error: Error) => void;
