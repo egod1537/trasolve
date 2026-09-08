@@ -26,7 +26,7 @@ backend/src/google/maps/
 `API.Route`는 생성한 `Routes` 인스턴스를 직접 참조합니다.
 공용 인스턴스는 Node.js 프로세스마다 하나이며, 서버 재시작 시 새로 생성됩니다.
 `instances.ts`에서 `new Routes(apiKey)` 한 번으로 경로 객체를 생성합니다.
-`Routes`는 키와 타임아웃을 보관하며, 공개 메서드는 `getDirections`와 `handle`입니다.
+`Routes`는 키와 타임아웃을 보관하며, 공개 메서드는 `queryRoutes`와 `handle`입니다.
 JSON 읽기, Google 요청 생성·호출, 응답 변환은 private 메서드로 캡슐화합니다.
 요청별 데이터는 메서드 내부에서만 관리합니다.
 
@@ -34,8 +34,45 @@ JSON 읽기, Google 요청 생성·호출, 응답 변환은 private 메서드로
 import { API } from './instances.js';
 
 // HTTP 요청: API.Route.handle(request, response)
-// 다른 백엔드 로직에서 경로 조회: API.Route.getDirections(input)
+// 다른 백엔드 로직에서 경로 조회: API.Route.queryRoutes(request)
 ```
+
+`queryRoutes(request: DirectionsRequest)`는 타입이 지정된 요청 객체를 받습니다.
+HTTP JSON 입력은 `handle`에서 스키마로 검증한 뒤 전달합니다.
+프런트엔드와 백엔드에서 공용 `DirectionsRequestBuilder`로 요청을 구성할 수도 있습니다.
+
+```ts
+import { DirectionsRequestBuilder, TravelMode } from '@trasolve/shared';
+import { API } from './instances.js';
+
+const request = new DirectionsRequestBuilder()
+  .setOrigin({ type: 'address', address: '도쿄역' })
+  .setDestination({ type: 'address', address: '신주쿠역' })
+  .setTravelMode(TravelMode.TRANSIT)
+  .setComputeAlternativeRoutes(false)
+  .build();
+
+const result = await API.Route.queryRoutes(request);
+```
+
+`setIntermediates(locations)`로 경유지를 설정하며, 빈 배열을 전달하면 제거합니다.
+이동 수단은 문자열 대신 `TravelMode.DRIVING`, `TravelMode.WALKING`,
+`TravelMode.BICYCLING`, `TravelMode.TRANSIT` enum 멤버를 사용합니다.
+`build()`는 출발지·도착지 누락, 좌표 범위와 최대 25개의 경유지 제한을
+공용 스키마로 검증하고, 잘못된 설정이면 `ZodError`를 던집니다.
+반환 객체는 빌더 상태와 독립적입니다. 이동 수단을 생략하면 서버에서 자동차로 조회합니다.
+
+대중교통도 `setIntermediates()`로 경유지를 지정할 수 있습니다.
+[Google 대중교통 API](https://developers.google.com/maps/documentation/routes/transit-route)는
+경유지를 직접 지원하지 않으므로, 서버에서 인접 지점 사이를 각각 조회합니다.
+경유지가 N개이면 Google 요청은 N+1개이며, 전체 구간이 하나의 타임아웃을 공유합니다.
+각 구간의 첫 번째 경로를 순서대로 연결하고 거리·소요 시간을 합산합니다.
+어느 구간의 거리나 시간이 없으면 해당 합계도 `null`이며, 경로가 없는 구간이 있으면
+전체 `routes`는 빈 배열입니다. API 호출 오류가 나면 전체 요청을 실패 처리합니다.
+구간별 독립 조회이므로 시간표 연결·구간 사이 환승 대기·체류 시간을 반영하지 않으며,
+`computeAlternativeRoutes`를 지정해도 전체 대체 경로는 생성하지 않습니다.
+이 제한은 결과의 `warnings`에도 포함됩니다. 구간별 요청과 원본 응답은
+`rawResponse.segments`에 순서대로 보관합니다.
 
 `npm run lint`는 호출부의 Google Maps 구현 직접 import/re-export를 금지합니다.
 `Routes` 생성용 import는 `instances.ts`에서 수행합니다.

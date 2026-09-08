@@ -2,24 +2,92 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
 import {
   directionsRequestSchema,
+  TravelMode,
   type ApiErrorResponse,
   type DirectionsRequest,
   type DirectionsResult,
+  type MapRoute,
   type RouteLocation,
-  type TravelMode,
 } from '@trasolve/shared';
 import { ApiError } from './errors.js';
 
 export class Routes {
-  private readonly apiKey: string;
-  private readonly maxBodyBytes = 16384;
-
-  constructor(
+  public constructor(
     apiKey: string,
     private readonly timeoutMs = 15000,
   ) {
     this.apiKey = apiKey.trim();
   }
+
+  public async queryRoutes(
+    request: DirectionsRequest,
+  ): Promise<DirectionsResult> {
+    if (
+      request.travelMode === TravelMode.TRANSIT &&
+      request.intermediates?.length
+    ) {
+      return this.computeTransitSegments(request);
+    }
+    return this.computeRoutes(request);
+  }
+
+  public async handle(request: IncomingMessage, response: ServerResponse) {
+    response.setHeader('Cache-Control', 'no-store');
+    try {
+      if (request.method !== 'POST') {
+        response.setHeader('Allow', 'POST');
+        throw new ApiError(
+          405,
+          'METHOD_NOT_ALLOWED',
+          'POST 요청을 사용해 주세요.',
+        );
+      }
+      if (
+        request.headers['content-type']?.split(';')[0]?.trim().toLowerCase() !==
+        'application/json'
+      ) {
+        throw new ApiError(
+          415,
+          'UNSUPPORTED_MEDIA_TYPE',
+          'Content-Type을 application/json으로 지정해 주세요.',
+        );
+      }
+      const parsed = directionsRequestSchema.safeParse(
+        await this.readJson(request),
+      );
+      if (!parsed.success) {
+        throw new ApiError(
+          400,
+          'INVALID_ROUTE_REQUEST',
+          '경로 요청을 확인해 주세요: ' +
+            parsed.error.issues
+              .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+              .join('; '),
+        );
+      }
+      const result = await this.queryRoutes(parsed.data);
+      response.writeHead(200);
+      response.end(JSON.stringify(result));
+    } catch (cause) {
+      if (response.destroyed) return;
+      const error =
+        cause instanceof ApiError
+          ? cause
+          : new ApiError(
+              500,
+              'INTERNAL_ERROR',
+              '경로 요청을 처리할 수 없습니다.',
+            );
+      const body: ApiErrorResponse = {
+        error: { code: error.code, message: error.message },
+      };
+      response.writeHead(error.status);
+      response.end(JSON.stringify(body));
+    }
+  }
+
+  private readonly apiKey: string;
+  private readonly maxBodyBytes = 16384;
 
   private static readonly latLngSchema = z.object({
     latitude: z.number().default(0),
@@ -54,10 +122,10 @@ export class Routes {
   });
 
   private static readonly travelModes: Readonly<Record<TravelMode, string>> = {
-    DRIVING: 'DRIVE',
-    WALKING: 'WALK',
-    BICYCLING: 'BICYCLE',
-    TRANSIT: 'TRANSIT',
+    [TravelMode.DRIVING]: 'DRIVE',
+    [TravelMode.WALKING]: 'WALK',
+    [TravelMode.BICYCLING]: 'BICYCLE',
+    [TravelMode.TRANSIT]: 'TRANSIT',
   };
 
   private toWaypoint(location: RouteLocation) {
@@ -77,6 +145,7 @@ export class Routes {
 
   private async computeRoutes(
     request: DirectionsRequest,
+    signal = AbortSignal.timeout(this.timeoutMs),
   ): Promise<DirectionsResult> {
     if (!this.apiKey) {
       throw new ApiError(
@@ -86,7 +155,6 @@ export class Routes {
       );
     }
 
-    const signal = AbortSignal.timeout(this.timeoutMs);
     try {
       const response = await fetch(
         'https://routes.googleapis.com/directions/v2:computeRoutes',
@@ -123,6 +191,108 @@ export class Routes {
     }
   }
 
+  private async computeTransitSegments(
+    request: DirectionsRequest,
+  ): Promise<DirectionsResult> {
+    const locations = [
+      request.origin,
+      ...(request.intermediates ?? []),
+      request.destination,
+    ];
+    const controller = new AbortController();
+    const signal = AbortSignal.any([
+      controller.signal,
+      AbortSignal.timeout(this.timeoutMs),
+    ]);
+    try {
+      const results = await Promise.all(
+        locations.slice(1).map((destination, index) =>
+          this.computeRoutes(
+            {
+              origin: locations[index],
+              destination,
+              travelMode: TravelMode.TRANSIT,
+              computeAlternativeRoutes: false,
+            },
+            signal,
+          ),
+        ),
+      );
+      const rawResponse = {
+        segments: results.map((result) => ({
+          request: result.request,
+          response: result.rawResponse,
+        })),
+      };
+      const segments = results.flatMap((result) => result.routes.slice(0, 1));
+      if (segments.length !== results.length) {
+        return { request, routes: [], rawResponse };
+      }
+      return {
+        request,
+        routes: [this.mergeTransitSegments(segments)],
+        rawResponse,
+      };
+    } finally {
+      // Cancel remaining upstream calls if any segment fails.
+      controller.abort();
+    }
+  }
+
+  private mergeTransitSegments(segments: MapRoute[]): MapRoute {
+    const path: MapRoute['path'] = [];
+    let bounds: MapRoute['bounds'] = null;
+    let distanceMeters: number | null = 0;
+    let durationMillis: number | null = 0;
+    for (const segment of segments) {
+      distanceMeters =
+        distanceMeters === null || segment.distanceMeters === null
+          ? null
+          : distanceMeters + segment.distanceMeters;
+      durationMillis =
+        durationMillis === null || segment.durationMillis === null
+          ? null
+          : durationMillis + segment.durationMillis;
+      for (const point of segment.path) {
+        const previous = path[path.length - 1];
+        if (
+          !previous ||
+          previous.lat !== point.lat ||
+          previous.lng !== point.lng
+        ) {
+          path.push(point);
+        }
+        bounds = bounds
+          ? {
+              north: Math.max(bounds.north, point.lat),
+              south: Math.min(bounds.south, point.lat),
+              east: Math.max(bounds.east, point.lng),
+              west: Math.min(bounds.west, point.lng),
+            }
+          : {
+              north: point.lat,
+              south: point.lat,
+              east: point.lng,
+              west: point.lng,
+            };
+      }
+    }
+    return {
+      description: `경유지를 포함한 대중교통 경로 (${segments.length}개 구간)`,
+      distanceMeters,
+      durationMillis,
+      path,
+      bounds,
+      warnings: [
+        ...new Set([
+          '구간별 조회 결과를 합친 경로입니다. 구간 사이의 시간표 연결, 환승 대기 및 경유지 체류 시간은 반영하지 않습니다.',
+          '각 구간의 첫 번째 경로를 연결하며, 전체 여정의 대체 경로는 제공하지 않습니다.',
+          ...segments.flatMap((segment) => segment.warnings),
+        ]),
+      ],
+    };
+  }
+
   private buildRequest(request: DirectionsRequest) {
     return {
       origin: this.toWaypoint(request.origin),
@@ -130,7 +300,7 @@ export class Routes {
       intermediates: request.intermediates?.map((location) =>
         this.toWaypoint(location),
       ),
-      travelMode: Routes.travelModes[request.travelMode ?? 'DRIVING'],
+      travelMode: Routes.travelModes[request.travelMode ?? TravelMode.DRIVING],
       computeAlternativeRoutes: request.computeAlternativeRoutes ?? false,
       polylineEncoding: 'GEO_JSON_LINESTRING',
       languageCode: 'ko',
@@ -202,21 +372,6 @@ export class Routes {
     };
   }
 
-  async getDirections(input: unknown): Promise<DirectionsResult> {
-    const parsed = directionsRequestSchema.safeParse(input);
-    if (!parsed.success) {
-      throw new ApiError(
-        400,
-        'INVALID_ROUTE_REQUEST',
-        '경로 요청을 확인해 주세요: ' +
-          parsed.error.issues
-            .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-            .join('; '),
-      );
-    }
-    return this.computeRoutes(parsed.data);
-  }
-
   private readJson(request: IncomingMessage): Promise<unknown> {
     return new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
@@ -254,47 +409,5 @@ export class Routes {
       });
       request.on('error', reject);
     });
-  }
-
-  async handle(request: IncomingMessage, response: ServerResponse) {
-    response.setHeader('Cache-Control', 'no-store');
-    try {
-      if (request.method !== 'POST') {
-        response.setHeader('Allow', 'POST');
-        throw new ApiError(
-          405,
-          'METHOD_NOT_ALLOWED',
-          'POST 요청을 사용해 주세요.',
-        );
-      }
-      if (
-        request.headers['content-type']?.split(';')[0]?.trim().toLowerCase() !==
-        'application/json'
-      ) {
-        throw new ApiError(
-          415,
-          'UNSUPPORTED_MEDIA_TYPE',
-          'Content-Type을 application/json으로 지정해 주세요.',
-        );
-      }
-      const result = await this.getDirections(await this.readJson(request));
-      response.writeHead(200);
-      response.end(JSON.stringify(result));
-    } catch (cause) {
-      if (response.destroyed) return;
-      const error =
-        cause instanceof ApiError
-          ? cause
-          : new ApiError(
-              500,
-              'INTERNAL_ERROR',
-              '경로 요청을 처리할 수 없습니다.',
-            );
-      const body: ApiErrorResponse = {
-        error: { code: error.code, message: error.message },
-      };
-      response.writeHead(error.status);
-      response.end(JSON.stringify(body));
-    }
   }
 }

@@ -6,12 +6,13 @@ import {
   type DirectionsResult,
 } from '@trasolve/shared';
 
+export { TravelMode } from '@trasolve/shared';
+
 export type {
   DirectionsRequest,
   DirectionsResult,
   MapRoute,
   RouteLocation,
-  TravelMode,
 } from '@trasolve/shared';
 
 export async function getDirections(

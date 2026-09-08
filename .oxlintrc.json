@@ -23,7 +23,7 @@
             "patterns": [
               {
                 "regex": "(?i)(^|/)(google/maps(/|$)|routes(\\.[^/]*)?$)",
-                "message": "Import API from instances.js and use API.Route.getDirections() or API.Route.handle()."
+                "message": "Import API from instances.js and use API.Route.queryRoutes() or API.Route.handle()."
               }
             ]
           }

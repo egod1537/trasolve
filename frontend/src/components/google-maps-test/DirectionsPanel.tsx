@@ -1,12 +1,12 @@
 import { useCallback, type FormEvent } from 'react';
-import type { TravelMode } from '../../maps/googleDirections';
+import { TravelMode } from '../../maps/googleDirections';
 import type { Endpoint } from './types';
 
 const modes: { value: TravelMode; label: string }[] = [
-  { value: 'DRIVING', label: '자동차' },
-  { value: 'WALKING', label: '도보' },
-  { value: 'TRANSIT', label: '대중교통' },
-  { value: 'BICYCLING', label: '자전거' },
+  { value: TravelMode.DRIVING, label: '자동차' },
+  { value: TravelMode.WALKING, label: '도보' },
+  { value: TravelMode.TRANSIT, label: '대중교통' },
+  { value: TravelMode.BICYCLING, label: '자전거' },
 ];
 
 function describeEndpoint(endpoint: Endpoint): string {
@@ -76,9 +76,10 @@ export function DirectionsPanel({
           이동수단
           <select
             value={travelMode}
-            onChange={(event) =>
-              onTravelModeChange(event.target.value as TravelMode)
-            }
+            onChange={(event) => {
+              const mode = modes.find((mode) => mode.value === event.target.value);
+              if (mode) onTravelModeChange(mode.value);
+            }}
           >
             {modes.map((mode) => (
               <option key={mode.value} value={mode.value}>

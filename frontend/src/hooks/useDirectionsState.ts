@@ -4,7 +4,7 @@ import {
   getDirections,
   type DirectionsRequest,
   type DirectionsResult,
-  type TravelMode,
+  TravelMode,
 } from '../maps/googleDirections';
 
 export function useDirectionsState(appendLog: (message: string) => void) {
@@ -13,7 +13,7 @@ export function useDirectionsState(appendLog: (message: string) => void) {
   const [destination, setDestination] = useState<Endpoint>({
     text: '東京タワー、日本',
   });
-  const [travelMode, setTravelMode] = useState<TravelMode>('DRIVING');
+  const [travelMode, setTravelMode] = useState<TravelMode>(TravelMode.DRIVING);
   const [alternatives, setAlternatives] = useState(false);
   const [apiStatus, setApiStatus] = useState<ApiStatus>('idle');
   const [request, setRequest] = useState<DirectionsRequest | null>(null);

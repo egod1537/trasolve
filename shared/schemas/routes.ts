@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TravelMode } from '../constants/travelMode.js';
 
 const coordinatesSchema = z.object({
   lat: z.number().min(-90).max(90),
@@ -20,24 +21,13 @@ export const routeLocationSchema = z.discriminatedUnion('type', [
   }),
 ]);
 
-export const directionsRequestSchema = z
-  .strictObject({
-    origin: routeLocationSchema,
-    destination: routeLocationSchema,
-    travelMode: z
-      .enum(['DRIVING', 'WALKING', 'BICYCLING', 'TRANSIT'])
-      .optional(),
-    intermediates: z.array(routeLocationSchema).max(25).optional(),
-    computeAlternativeRoutes: z.boolean().optional(),
-  })
-  .refine(
-    (request) =>
-      request.travelMode !== 'TRANSIT' || !request.intermediates?.length,
-    {
-      message: '대중교통 경로에는 경유지를 지정할 수 없습니다.',
-      path: ['intermediates'],
-    },
-  );
+export const directionsRequestSchema = z.strictObject({
+  origin: routeLocationSchema,
+  destination: routeLocationSchema,
+  travelMode: z.enum(TravelMode).optional(),
+  intermediates: z.array(routeLocationSchema).max(25).optional(),
+  computeAlternativeRoutes: z.boolean().optional(),
+});
 
 export const mapRouteSchema = z.object({
   description: z.string(),
@@ -58,7 +48,7 @@ export const mapRouteSchema = z.object({
 export const directionsResultSchema = z.object({
   request: directionsRequestSchema,
   routes: z.array(mapRouteSchema),
-  /** Google REST response for the development inspector. */
+  /** Google REST response, or ordered segment requests/responses for transit waypoints. */
   rawResponse: z.unknown(),
 });
 

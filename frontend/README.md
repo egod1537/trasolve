@@ -142,23 +142,40 @@ Google Maps backend code lives in `backend/src/google/maps/routes.ts`: the singl
 responses. `ApiError` in `errors.ts` defines API errors.
 `backend/src/instances.ts` loads the environment and creates one `Routes` instance
 per Node.js process. Backend consumers import only `API` from that module and use
-`API.Route.getDirections(input)` or `API.Route.handle(request, response)`.
-Both facade objects are frozen. Lint rules reject direct implementation imports
+`API.Route.queryRoutes(request)` with a typed `DirectionsRequest`, or
+`API.Route.handle(request, response)` for HTTP input validation and responses.
+`DirectionsRequestBuilder` from `@trasolve/shared` can build requests for either
+the frontend `getDirections` function or backend `queryRoutes` method. Its fluent
+setters configure endpoints, travel mode, intermediates, and alternative routes;
+`build()` validates the shared schema and returns an independent request object,
+throwing `ZodError` for invalid or incomplete settings.
+`API.Route` directly references the shared `Routes` instance. Lint rules reject direct implementation imports
 outside the Maps module and instance wiring, and reject value imports of `Routes`
 inside the Maps implementation. `Routes` receives its API key and optional timeout (default 15000ms) through its
 constructor; request construction and response normalization are private methods.
 Requests support tagged address, coordinate, and place-ID endpoints, travel mode,
-up to 25 intermediate waypoints (except transit), and alternative routes.
-Google does not return alternatives when intermediates are supplied.
+up to 25 intermediate waypoints for all travel modes, and alternative routes.
+For transit with waypoints, the backend queries each adjacent pair in parallel
+under one shared timeout and combines the first route from every segment.
+Distances and durations are summed (or null if any segment omits that value).
+Any segment without a route produces an empty overall result; API errors fail
+the whole request. Segment requests/responses appear in `rawResponse.segments`.
+These independent queries do not account for timetable connections, waiting
+between segments, or stopover time; result warnings explain those limitations.
+No combined transit alternatives are generated, even when requested.
+Google does not return alternatives for other modes when intermediates are supplied.
 The testbed exposes travel mode and alternative-route controls.
 Only the autocomplete feature loads the Places SDK library; routing does not
 load a browser SDK. The existing `/map` itinerary is not yet connected to routing.
 
 ```ts
+import { TravelMode } from '@trasolve/shared';
+import { getDirections } from './src/maps/googleDirections';
+
 await getDirections({
   origin: { type: 'place', placeId: selectedPlace.id },
   destination: { type: 'coordinates', lat: 35.6586, lng: 139.7454 },
-  travelMode: 'DRIVING',
+  travelMode: TravelMode.DRIVING,
 });
 ```
 
