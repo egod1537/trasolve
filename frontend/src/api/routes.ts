@@ -1,28 +1,22 @@
 import {
   API_ROUTES,
   apiErrorSchema,
+  directionsRequestSchema,
   directionsResultSchema,
   type DirectionsRequest,
   type DirectionsResult,
 } from '@trasolve/shared';
 
-export { TravelMode } from '@trasolve/shared';
-
-export type {
-  DirectionsRequest,
-  DirectionsResult,
-  MapRoute,
-  RouteLocation,
-} from '@trasolve/shared';
-
 export async function getDirections(
   request: DirectionsRequest,
+  signal?: AbortSignal,
 ): Promise<DirectionsResult> {
+  const timeout = AbortSignal.timeout(20000);
   const response = await fetch(API_ROUTES.routes, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
-    signal: AbortSignal.timeout(20000),
+    body: JSON.stringify(directionsRequestSchema.parse(request)),
+    signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
   });
   const body: unknown = await response.json();
   if (!response.ok) {

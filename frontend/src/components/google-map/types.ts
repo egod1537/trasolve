@@ -1,74 +1,37 @@
 import type { CSSProperties, ReactNode, Ref } from 'react';
 import type {
-  GeoBounds,
-  GeoPoint,
-  MapPadding,
-  ScreenPoint,
+  LatLng,
+  MapEvents,
+  MapHandle,
+  MapOptions,
+  MapPolyline,
 } from '../../domain/map/mapTypes';
 
-export type LatLng = GeoPoint;
-export type MapBounds = GeoBounds;
-
-export type MapClickEvent = LatLng & {
-  /** Present only when Google supplies a place ID for a clicked POI icon. */
-  placeId?: string;
-};
-
-export type MapPlace = {
-  id?: string;
-  name: string;
-  address?: string;
-  location: LatLng;
-};
-
-export type GoogleMapOptions = {
-  gestureHandling?: 'auto' | 'cooperative' | 'greedy' | 'none';
-  clickableIcons?: boolean;
-  disableDefaultUI?: boolean;
-  zoomControl?: boolean;
-  scrollwheel?: boolean;
-  disableDoubleClickZoom?: boolean;
-  keyboardShortcuts?: boolean;
-  streetViewControl?: boolean;
-  mapTypeControl?: boolean;
-  fullscreenControl?: boolean;
-  minZoom?: number | null;
-  maxZoom?: number | null;
-  mapTypeId?: 'roadmap' | 'satellite' | 'hybrid' | 'terrain';
-};
-
-export type GoogleMapHandle = {
-  panTo(position: LatLng, offset?: ScreenPoint): void;
-  setZoom(zoom: number): void;
-  fitBounds(bounds: MapBounds, padding?: MapPadding): void;
-};
-
-export type GoogleMapEvents = {
-  onMapClick?: (event: MapClickEvent) => void;
-  onCenterChanged?: (position: LatLng) => void;
-  onZoomChanged?: (zoom: number) => void;
-};
-
-export type MapPolyline = {
-  path: readonly LatLng[];
-  color?: string;
-  weight?: number;
-  opacity?: number;
-};
+// Preserve the component's public names over provider-neutral domain contracts.
+export type {
+  LatLng,
+  MapBounds,
+  MapClickEvent,
+  MapPlace,
+  MapPolyline,
+  MapOptions as GoogleMapOptions,
+  MapHandle as GoogleMapHandle,
+  MapEvents as GoogleMapEvents,
+} from '../../domain/map/mapTypes';
 
 export type GoogleMapStatus = 'loading' | 'ready' | 'missing-key' | 'error';
 
-export type GoogleMapProps = GoogleMapEvents & {
-  ref?: Ref<GoogleMapHandle>;
+export type GoogleMapProps = MapEvents & {
+  ref?: Ref<MapHandle>;
   center?: LatLng;
   zoom?: number;
   mapId?: string;
-  options?: GoogleMapOptions;
+  options?: MapOptions;
   className?: string;
   style?: CSSProperties;
   ariaLabel?: string;
   polylines?: readonly MapPolyline[];
-  onReady?: (map: GoogleMapHandle) => void;
+  onReady?: (map: MapHandle) => void;
   onError?: (error: Error) => void;
   renderStatus?: (status: Exclude<GoogleMapStatus, 'ready'>) => ReactNode;
   children?: ReactNode;

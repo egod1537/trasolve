@@ -15,5 +15,12 @@
 - 자동 unit / integration 테스트 파일(`*.test.*`, `*.spec.*`), 실행 스크립트, 테스트 전용 의존성·fixture·helper를 추가하거나 유지하지 않는다.
 - 애플리케이션에 테스트 전용 분기, mock injection, fake Google SDK 또는 mock API 응답을 추가하지 않는다.
 - 타입 검사, 빌드, 린트와 실제 UI를 통한 수동 확인으로 변경을 검증한다.
-- `/dev/google-maps`의 Google Maps Test Bed는 실제 API를 실행하는 개발용 React 페이지로 유지한다. 자동 테스트 제거 대상이 아니다.
-- Test Bed는 공용 `GoogleMap`, `GooglePlaceSearch`, `googleDirections`를 조합하며 SDK 초기화나 Adapter 생성을 직접 구현하지 않는다. 일반 서비스 메뉴에 진입 링크를 추가하지 않는다.
+- `/testbed/google-maps`의 Google Maps Test Bed는 실제 API를 실행하는 개발용 React 페이지로 유지한다. 자동 테스트 제거 대상이 아니다.
+- Test Bed는 공용 `GoogleMap`, `GooglePlaceSearch`, `api/routes`의 `getDirections`를 조합하며 SDK 초기화나 Adapter 생성을 직접 구현하지 않는다. 일반 서비스 메뉴에 진입 링크를 추가하지 않는다.
+
+## Google Maps 경계
+
+- `google.maps` 객체 및 타입의 직접 사용은 `frontend/src/maps/`와 `frontend/src/adapters/map/`에 둔다. 컴포넌트·페이지·도메인은 provider-neutral 타입과 `MapRuntime` 계약을 사용한다.
+- `maps/`는 브라우저 SDK 로딩과 지도 렌더링만 담당한다. HTTP 요청은 `frontend/src/api/`에 두고 React 컴포넌트에서 직접 `fetch`하지 않는다.
+- Routes 계산과 Places 조회는 Trasolve backend를 경유한다. Google 원본 응답은 도메인 데이터로 사용하지 않으며, 기존 Test Bed의 Routes 원본 응답은 Debug 표시 용도로만 사용한다.
+- 브라우저 키는 Maps JavaScript API 전용이며 HTTP referrer 제한을 적용한다. Routes·Places 서버 키와 공유하거나 서버 키를 `VITE_` 환경변수에 넣지 않는다.

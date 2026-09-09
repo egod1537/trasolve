@@ -1,20 +1,77 @@
 # Travel map
 
-The landing page links to `/map`, a full-screen Google Maps itinerary view.
-The sample trip is in `src/data/demoTrip.ts`; it does not require the backend.
-Map selection and focus state live in `src/domain/map/MapModel.ts` and are exposed
-to React as a cached external-store snapshot through `src/hooks/useMapModel.ts`.
+Route entries use class page roots for dependency ownership and lifecycle; reusable
+UI remains function components. See [Page root ownership](../docs/page-roots.md).
+The map is composed from LayerPanel, MapViewport and MapAiRegion; see
+[Map visual regions](../docs/map-regions.md) for ownership and layout boundaries.
+
+The landing page links to `/map`, a backend-backed trip list and Google Maps itinerary
+editor. Create an empty trip or explicitly create the Tokyo example from
+`src/data/demoTrip.ts`. The class route root `MapPage` assembles one external TripMapStore
+and frontend TripMapController per workspace and passes a stable value to TripMapProvider.
+Sidebar and TripMapLayer consume the
+same immutable snapshot through useSyncExternalStore. Commands optimistically
+update it, save through `src/api/trips.ts`, then apply the canonical response or
+roll back on failure. Selection/camera focus live separately in `useMapUi`.
+See [Frontend state/binding](../docs/frontend-trip-map.md) and
+[TripMap persistence](../docs/trip-maps.md).
 Provider-neutral camera operations are defined by
 `src/adapters/map/MapAdapter.ts`; `src/adapters/map/GoogleMapAdapter.ts` translates
 them to Google Maps calls. `src/maps/googleMaps.ts` only loads and configures the
 SDK.
-Markers and route lines render through a React portal into
-`src/adapters/map/GoogleOverlayHost.ts`, which owns a Google Maps `OverlayView`.
-`MapOverlayHost` supplies pane-local coordinates and draw notifications, while
-`useMapProjection` culls markers and caches coordinates until the projection
-changes. The SDK moves the pane during panning; zoom, heading, tilt, and pane
-rebasing invalidate the coordinate cache. Unmounting removes the overlay and its
-subscriptions.
+`MapRuntime.objects` implements `src/adapters/map/MapObjectController.ts`.
+`GoogleMapObjectController` owns native `AdvancedMarkerElement` and `Polyline`
+instances, bound to the runtime's map. The SDK positions markers during pan/zoom;
+React does not project their coordinates or render their content. Marker DOM and
+styles live in the adapter, preserving order numbers, day colors and selection.
+`TripMapLayer` reconciles marker handles by place ID and polyline handles by day ID.
+Labels, coordinates and styles update via setters without rebuilding objects.
+The old MapMarker/RoutePolyline wrappers, useMapMarker, MapModel and useMapModel
+are removed. The generic useMapPolyline hook remains for GoogleMap.polylines props.
+
+`GoogleOverlayHost` and its `OverlayView` remain available for specialized
+map-anchored React UI. Ordinary markers and route lines do not use the overlay
+host. The obsolete itinerary projection hook and SVG route rendering are removed.
+
+### Object lifecycle
+
+The controller contract exposes `addMarker`, `addPolyline`, `remove`, `clearLayer`,
+`clear`, and `dispose`. Polygon/circle options, styles and handles are defined as
+optional provider capabilities; this implementation supports markers and polylines.
+Handles share `id`, `setVisible`, `setZIndex` and idempotent `remove`. Marker handles
+also update position, label, title, color and selection, and provide `onClick`
+with an unsubscribe function. Polyline handles update path and partially update
+style. Hooks reset omitted props to defaults without recreating the native object.
+
+IDs are unique within a runtime; duplicates throw before creating SDK objects.
+Omitting an ID generates one. A layer is fixed for the handle's lifetime.
+`clearLayer('route')` removes that layer only; `clear()` removes all objects and
+allows subsequent additions. Removal detaches SDK objects, removes registered
+listeners and clears registry/layer membership. Removed handles are inert; create
+a new handle (or remount its React owner) to display the object again.
+Runtime disposal cleans objects before the overlay/camera, releases map references,
+and rejects further additions. React cleanup may safely remove a handle again.
+
+```ts
+const marker = runtime.objects.addMarker({
+  layer: 'itinerary',
+  position: { lat: 35.6586, lng: 139.7454 },
+  label: '1',
+  color: '#2563eb',
+});
+const unsubscribe = marker.onClick(() => marker.setSelected(true));
+marker.setLabel('2');
+unsubscribe();
+marker.remove();
+
+const preview = runtime.objects.addPolyline({
+  layer: 'ai-preview',
+  path: [{ lat: 35.6586, lng: 139.7454 }, { lat: 35.6812, lng: 139.7671 }],
+  style: { color: '#2563eb', width: 5, opacity: 0.85 },
+});
+preview.setStyle({ opacity: 0.5 });
+runtime.objects.clearLayer('ai-preview');
+```
 
 ## Local setup
 
@@ -33,7 +90,7 @@ the frontend image build.
 
 Without a key or if Google Maps fails to load, the page keeps the itinerary usable
 and shows a map connection message; it does not substitute a fake map.
-Search is a disabled UI placeholder. The route lines connect each day's places
+MapToolbar search is a local UI placeholder without API calls. The route lines connect each day's places
 by `order`, and are not road routes or travel-time estimates. `TripRoute.path`
 accepts coordinate arrays so a future Routes API adapter can supply the geometry
 without changing itinerary selection or marker components.
@@ -43,9 +100,29 @@ without changing itinerary selection or marker components.
 `src/components/google-map/GoogleMap.tsx` owns SDK initialization and cleanup
 through `src/maps/createGoogleMapRuntime.ts`. It works without itinerary data and
 has a default height of 400px. Override `style` or `className` for page layout.
-The existing `/map` view uses this component and retains its itinerary overlays,
+The existing `/map` view uses this component and retains its itinerary objects,
 camera padding, and loading/error UI. Camera calculations remain in
 `src/domain/map/cameraPolicy.ts`.
+
+`src/adapters/map/MapRuntime.ts` defines the provider-neutral runtime contract;
+`src/domain/map/mapTypes.ts` owns coordinates, bounds, places, events, options,
+and polylines. Component types re-export the existing public names for compatibility.
+The runtime imports these contracts directly and does not depend on React components.
+The `GoogleMap` component is the composition point for the runtime factory and loader
+configuration. Direct SDK objects and types stay in `src/maps/` and `src/adapters/map/`.
+Overlay and camera contracts remain available. All marker/polyline creation is
+owned by the object controller; the former runtime `setPolylines` method is removed.
+The public `GoogleMap.polylines` prop remains compatible and uses controller-backed
+children, updating native paths/styles in place by array position.
+
+HTTP clients live in `src/api/health.ts`, `routes.ts`, and `places.ts`. They call
+Trasolve endpoints, accept cancellation signals, and validate shared schemas.
+`maps/` contains only rendering infrastructure and SDK loading. The legacy
+`googleDirections.ts` client has moved to `api/routes.ts`; import route types and
+`TravelMode` directly from `@trasolve/shared`. Lint rejects direct `google`/`fetch`
+access and concrete Google adapter imports in components, pages, hooks, and domain code.
+Google Routes raw responses are kept only for Test Bed diagnostics; application
+map data uses normalized paths and plain coordinates.
 
 ```tsx
 import { useRef, useState } from 'react';
@@ -89,10 +166,24 @@ them. Clicking an arbitrary building area does not look up a place ID.
 The ref supports `panTo`, `setZoom`, and `fitBounds`. `polylines` accepts coordinate
 paths and optional color, weight, and opacity; it performs no directions requests.
 For custom React overlays, children can call `useGoogleMap()` to access the
-existing `MapAdapter`, `MapOverlayHost`, and canvas ref. Children mount when the
+existing `MapAdapter`, `MapObjectController` (`objects`), `MapOverlayHost`, and canvas ref. Children mount when the
 runtime is ready; the component owns their runtime's lifecycle.
 
-## Google Maps testbed
+## Testbeds
+
+Open `/testbed` for the development debug page directory. It links to Google Maps
+at `/testbed/google-maps` and AI Chat at `/testbed/ai-chat`.
+
+### AI Chat testbed
+
+`/testbed/ai-chat` embeds the same `MapAiPanel` used by `/map`, without loading a
+map or the Google SDK. It uses `src/api/chat.ts` and the actual backend provider.
+Check conversation history, Enter/Shift+Enter/IME input, the animated waiting dots,
+duplicate-submit prevention, and error messages. The reset button starts a fresh
+conversation and cancels any pending request by unmounting the previous panel.
+The close button returns to `/testbed`. No API or provider logic is duplicated.
+
+### Google Maps testbed
 
 This is a development UI for manual verification with real Google APIs, not an
 automated test suite. The repository does not maintain unit/integration test
@@ -107,7 +198,7 @@ events; shared Maps/Places/Routes modules and `google-maps-test.css` remain the
 same. Coordinate rendering, initial map settings, and endpoint types are shared
 within the testbed components.
 
-Open `/dev/google-maps` to search for places, inspect click coordinates and camera
+Open `/testbed/google-maps` to search for places, inspect click coordinates and camera
 events, choose an origin/destination, and request directions. Controls and the map
 appear side by side on wide screens and stack on narrow screens. Both the last
 map click and a searched place have buttons to populate either endpoint using
@@ -124,18 +215,26 @@ shows the last submitted request, route coordinates, event logs, and Raw Respons
 JSON in scrollable panels. Raw Response is the Google Routes REST response for
 the requested fields. Empty route results and API failures are displayed separately.
 
-The browser key needs **Maps JavaScript API** and **Places API (New)**, with HTTP
-referrer restrictions for the app. Routes use a separate server key with
-**Routes API** enabled. Copy `backend/.env.example` to `backend/.env.local`, set
-`GOOGLE_ROUTES_API_KEY`, and restart `npm run dev`. The backend loads this file
+The browser key needs only **Maps JavaScript API**, with HTTP referrer restrictions
+for the app. Copy `backend/.env.example` to `backend/.env.local`, set
+`GOOGLE_ROUTES_API_KEY` for **Routes API** and `GOOGLE_PLACES_API_KEY` for
+**Places API (New)**, and restart `npm run dev`. The backend loads this file
 relative to its own directory; existing process environment values take priority.
-Do not prefix the server key with `VITE_`. For deployment, set the same variable
-in the host's `~/.config/jjs/deploy.env`; Compose passes it only to the backend.
+Do not prefix either server key with `VITE_`. For deployment, set both variables
+in the host's `~/.config/jjs/deploy.env`; Compose passes them only to the backend.
 Use server-appropriate restrictions (such as the server's outbound IP), not
 HTTP referrers. All features still call real Google APIs.
 
-`GooglePlaceSearch` uses the new `PlaceAutocompleteElement` and returns a
-`MapPlace` through `onSelect`. `src/maps/googleDirections.ts` calls
+`GooglePlaceSearch` uses a standard input and backend autocomplete, and returns a
+`MapPlace` through `onSelect`. Search starts at two trimmed characters after a
+300ms debounce. Input changes cancel previous requests and invalidate stale
+autocomplete/detail responses. Arrow keys navigate, Enter selects, and Escape
+closes the list. Korean/Japanese IME composition waits until committed. Clicking
+a suggestion fetches its details before calling `onSelect`. Each autocomplete
+session shares a token with its details request and then discards the token.
+`src/api/places.ts` calls only Trasolve endpoints and validates normalized
+responses with `@trasolve/shared`; it does not load a Google SDK.
+`src/api/routes.ts` calls
 `POST /api/routes`; request/response schemas and types live in `@trasolve/shared`.
 Google Maps backend code lives in `backend/src/google/maps/routes.ts`: the single
 `Routes` class handles HTTP, validates requests, calls Google REST, and normalizes
@@ -165,12 +264,13 @@ between segments, or stopover time; result warnings explain those limitations.
 No combined transit alternatives are generated, even when requested.
 Google does not return alternatives for other modes when intermediates are supplied.
 The testbed exposes travel mode and alternative-route controls.
-Only the autocomplete feature loads the Places SDK library; routing does not
-load a browser SDK. The existing `/map` itinerary is not yet connected to routing.
+Places and routing do not load a browser SDK. Map rendering still uses the Google
+Maps JavaScript SDK (`maps`, `core`, and `marker`) and its browser key. The existing `/map`
+itinerary search remains a disabled placeholder and is not yet connected to routing.
 
 ```ts
 import { TravelMode } from '@trasolve/shared';
-import { getDirections } from './src/maps/googleDirections';
+import { getDirections } from './src/api/routes';
 
 await getDirections({
   origin: { type: 'place', placeId: selectedPlace.id },

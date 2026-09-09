@@ -11,6 +11,61 @@
   "ignorePatterns": ["**/dist/**", "**/node_modules/**"],
   "overrides": [
     {
+      "files": ["frontend/src/**/*.{ts,tsx,js,mjs,cjs}"],
+      "excludeFiles": [
+        "frontend/src/maps/**",
+        "frontend/src/adapters/map/**",
+        "frontend/src/api/**"
+      ],
+      "rules": {
+        "no-restricted-globals": [
+          "error",
+          {
+            "name": "google",
+            "message": "Google SDK access belongs in maps or adapters/map. Use provider-neutral contracts."
+          },
+          {
+            "name": "fetch",
+            "message": "HTTP requests belong in frontend/src/api."
+          }
+        ],
+        "no-restricted-properties": [
+          "error",
+          {
+            "object": "window",
+            "property": "google",
+            "message": "Google SDK access belongs in maps or adapters/map."
+          },
+          {
+            "object": "globalThis",
+            "property": "google",
+            "message": "Google SDK access belongs in maps or adapters/map."
+          },
+          {
+            "object": "window",
+            "property": "fetch",
+            "message": "HTTP requests belong in frontend/src/api."
+          },
+          {
+            "object": "globalThis",
+            "property": "fetch",
+            "message": "HTTP requests belong in frontend/src/api."
+          }
+        ],
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(^|/)Google(MapAdapter|MapObjectController|OverlayHost)(\\.[^/]*)?$",
+                "message": "Use MapAdapter, MapObjectController, MapOverlayHost and MapRuntime contracts instead of concrete Google adapters."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["backend/src/**/*.{ts,tsx,js,mjs,cjs}"],
       "excludeFiles": [
         "backend/src/instances.ts",
@@ -24,6 +79,10 @@
               {
                 "regex": "(?i)(^|/)(google/maps(/|$)|routes(\\.[^/]*)?$)",
                 "message": "Import API from instances.js and use API.Route.queryRoutes() or API.Route.handle()."
+              },
+              {
+                "regex": "(^|/)localFileTripMapRepository(\\.[^/]*)?$",
+                "message": "Only instances.ts constructs the file repository. Use TripMapController and the TripMapRepository contract."
               }
             ]
           }
@@ -45,6 +104,69 @@
                 "regex": "(?i)(^|/)routes(\\.[^/]*)?$",
                 "allowTypeImports": true,
                 "message": "Only instances.ts constructs Routes. Use import type when only the type is needed."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "frontend/src/controllers/**/*.ts",
+        "frontend/src/stores/**/*.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["react", "react/*", "react-dom", "react-dom/*"],
+                "message": "React binding belongs in Provider/hooks, not the store or controller."
+              },
+              {
+                "regex": "(^|/)(adapters|maps|components|hooks)(/|$)",
+                "message": "Domain state and commands must not depend on map rendering or React bindings."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["frontend/src/components/map/TripMapLayer.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(^|/)(api|controllers|stores)(/|$)",
+                "message": "TripMapLayer only projects props to map primitives; no persistence or domain mutation."
+              },
+              {
+                "regex": "(^|/)Google(MapAdapter|MapObjectController|OverlayHost)(\\.[^/]*)?$",
+                "message": "Use the provider-neutral object controller contract."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "frontend/src/components/map/layer-panel/**/*.tsx",
+        "frontend/src/components/map/viewport/**/*.tsx",
+        "frontend/src/components/map/ai/**/*.tsx"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(^|/)(api|controllers|stores|adapters|maps)(/|$)",
+                "message": "Visual regions compose UI through props; keep API, domain commands and SDK infrastructure in their existing owners."
               }
             ]
           }

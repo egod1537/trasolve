@@ -1,4 +1,4 @@
-import type { DirectionsResult, MapRoute } from '../../maps/googleDirections';
+import type { DirectionsResult, MapRoute } from '@trasolve/shared';
 import type { ApiStatus } from './types';
 
 function formatDistance(meters: number | null): string {

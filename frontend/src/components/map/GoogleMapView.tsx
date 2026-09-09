@@ -1,5 +1,5 @@
 import { memo, useEffect, type RefObject } from 'react';
-import { createPortal } from 'react-dom';
+import type { TripMap } from '@trasolve/shared';
 import { GoogleMap, useGoogleMap } from '../google-map/GoogleMap';
 import type { GoogleMapStatus } from '../google-map/types';
 import {
@@ -9,14 +9,12 @@ import {
   calculatePlaceZoom,
 } from '../../domain/map/cameraPolicy';
 import type { MapFocusTarget } from '../../domain/map/mapTypes';
-import { useMapProjection } from '../../hooks/useMapProjection';
-import type { TripDay, TripRoute } from '../../types/trip';
-import { MapMarker } from './MapMarker';
-import { RoutePolyline } from './RoutePolyline';
+import type { TripRoute } from '../../types/trip';
+import { TripMapLayer } from './TripMapLayer';
 
 type Props = {
-  days: TripDay[];
-  routes: TripRoute[];
+  tripMap: TripMap;
+  routes: readonly TripRoute[];
   focusTarget: MapFocusTarget;
   selectedPlaceId: string | null;
   selectedDayId: string | null;
@@ -24,8 +22,8 @@ type Props = {
   sidebarRef: RefObject<HTMLElement | null>;
 };
 
-function TripMapOverlay({
-  days,
+function TripMapObjects({
+  tripMap,
   routes,
   focusTarget,
   selectedPlaceId,
@@ -33,21 +31,7 @@ function TripMapOverlay({
   onSelectPlace,
   sidebarRef,
 }: Props) {
-  const { adapter, overlayHost, canvasRef } = useGoogleMap();
-  const projection = useMapProjection(
-    adapter,
-    overlayHost,
-    canvasRef,
-    days,
-    routes,
-  );
-  const projectedRoutes = selectedDayId
-    ? [...projection.routes].sort(
-        (left, right) =>
-          Number(left.route.dayId === selectedDayId) -
-          Number(right.route.dayId === selectedDayId),
-      )
-    : projection.routes;
+  const { adapter, objects, canvasRef } = useGoogleMap();
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -97,37 +81,15 @@ function TripMapOverlay({
     };
   }, [adapter, canvasRef, focusTarget, sidebarRef]);
 
-  return createPortal(
-    <div className="trip-map-overlay">
-      <svg
-        className="trip-map-svg-overlay"
-        aria-hidden="true"
-        focusable="false"
-      >
-        {projectedRoutes.map(({ route, points }) => (
-          <RoutePolyline
-            key={route.dayId}
-            route={route}
-            points={points}
-            active={!selectedDayId || selectedDayId === route.dayId}
-          />
-        ))}
-      </svg>
-      <div className="trip-map-dom-overlay">
-        {projection.markers.map(({ place, dayTitle, color, position }) => (
-          <MapMarker
-            key={place.id}
-            place={place}
-            dayTitle={dayTitle}
-            color={color}
-            selected={selectedPlaceId === place.id}
-            position={position}
-            onSelect={onSelectPlace}
-          />
-        ))}
-      </div>
-    </div>,
-    overlayHost.getElement(),
+  return (
+    <TripMapLayer
+      objects={objects}
+      tripMap={tripMap}
+      routes={routes}
+      selectedPlaceId={selectedPlaceId}
+      selectedDayId={selectedDayId}
+      onSelectPlace={onSelectPlace}
+    />
   );
 }
 
@@ -166,7 +128,7 @@ export const GoogleMapView = memo(function GoogleMapView(props: Props) {
       ariaLabel="여행 장소 지도"
       renderStatus={renderTripMapStatus}
     >
-      <TripMapOverlay {...props} />
+      <TripMapObjects {...props} />
     </GoogleMap>
   );
 });

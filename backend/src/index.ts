@@ -9,6 +9,42 @@ const server = createServer((request, response) => {
   const pathname = new URL(request.url ?? '/', 'http://localhost').pathname;
   response.setHeader('Content-Type', 'application/json; charset=utf-8');
 
+  if (
+    pathname === API_ROUTES.trips ||
+    pathname.startsWith(`${API_ROUTES.trips}/`)
+  ) {
+    void API.TripMapHttp.handle(
+      request,
+      response,
+      pathname === API_ROUTES.trips
+        ? undefined
+        : pathname.slice(API_ROUTES.trips.length + 1),
+    );
+    return;
+  }
+
+  if (pathname === API_ROUTES.chat) {
+    void API.Chat.handle(request, response);
+    return;
+  }
+
+  if (pathname === API_ROUTES.placesAutocomplete) {
+    void API.Place.handleAutocomplete(request, response);
+    return;
+  }
+
+  if (
+    pathname === API_ROUTES.places ||
+    pathname.startsWith(`${API_ROUTES.places}/`)
+  ) {
+    void API.Place.handlePlace(
+      request,
+      response,
+      pathname.slice(API_ROUTES.places.length + 1),
+    );
+    return;
+  }
+
   if (pathname === API_ROUTES.routes) {
     void API.Route.handle(request, response);
     return;

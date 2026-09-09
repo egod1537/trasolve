@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ApiStatus, Endpoint } from '../components/google-maps-test/types';
 import {
-  getDirections,
   type DirectionsRequest,
   type DirectionsResult,
   TravelMode,
-} from '../maps/googleDirections';
+} from '@trasolve/shared';
+import { getDirections } from '../api/routes';
 
 export function useDirectionsState(appendLog: (message: string) => void) {
   const requestId = useRef(0);
+  const controllerRef = useRef<AbortController | null>(null);
   const [origin, setOrigin] = useState<Endpoint>({ text: '東京駅、日本' });
   const [destination, setDestination] = useState<Endpoint>({
     text: '東京タワー、日本',
@@ -30,6 +31,7 @@ export function useDirectionsState(appendLog: (message: string) => void) {
   useEffect(
     () => () => {
       requestId.current++;
+      controllerRef.current?.abort();
     },
     [],
   );
@@ -42,6 +44,9 @@ export function useDirectionsState(appendLog: (message: string) => void) {
   const findRoute = useCallback(async () => {
     if (pending) return;
     const id = ++requestId.current;
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
     const nextRequest: DirectionsRequest = {
       origin: origin.location ?? {
         type: 'address',
@@ -61,7 +66,7 @@ export function useDirectionsState(appendLog: (message: string) => void) {
     setRouteIndex(0);
     appendLog('길찾기 요청');
     try {
-      const response = await getDirections(nextRequest);
+      const response = await getDirections(nextRequest, controller.signal);
       if (id !== requestId.current) return;
       setResult(response);
       setApiStatus('success');

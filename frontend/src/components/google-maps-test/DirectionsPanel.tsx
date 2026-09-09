@@ -1,5 +1,5 @@
 import { useCallback, type FormEvent } from 'react';
-import { TravelMode } from '../../maps/googleDirections';
+import { TravelMode } from '@trasolve/shared';
 import type { Endpoint } from './types';
 
 const modes: { value: TravelMode; label: string }[] = [
@@ -77,7 +77,9 @@ export function DirectionsPanel({
           <select
             value={travelMode}
             onChange={(event) => {
-              const mode = modes.find((mode) => mode.value === event.target.value);
+              const mode = modes.find(
+                (mode) => mode.value === event.target.value,
+              );
               if (mode) onTravelModeChange(mode.value);
             }}
           >

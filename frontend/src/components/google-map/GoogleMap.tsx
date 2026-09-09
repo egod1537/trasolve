@@ -11,21 +11,40 @@ import {
 } from 'react';
 import type { MapAdapter } from '../../adapters/map/MapAdapter';
 import type { MapOverlayHost } from '../../adapters/map/MapOverlayHost';
-import {
-  createGoogleMapRuntime,
-  type MapRuntime,
-} from '../../maps/createGoogleMapRuntime';
+import type { MapRuntime } from '../../adapters/map/MapRuntime';
+import type { MapObjectController } from '../../adapters/map/MapObjectController';
+import type { MapPolyline } from '../../domain/map/mapTypes';
+import { useMapPolyline } from '../../hooks/map/useMapPolyline';
+import { createGoogleMapRuntime } from '../../maps/createGoogleMapRuntime';
 import { mapsAuthErrorEvent, mapsConfig } from '../../maps/googleMaps';
 import type { GoogleMapHandle, GoogleMapProps, GoogleMapStatus } from './types';
 import './google-map.css';
 
 type MapContextValue = {
   adapter: MapAdapter;
+  objects: MapObjectController;
   overlayHost: MapOverlayHost;
   canvasRef: RefObject<HTMLDivElement | null>;
 };
 
 const MapContext = createContext<MapContextValue | null>(null);
+
+function RuntimePolyline({
+  line,
+  index,
+}: {
+  line: MapPolyline;
+  index: number;
+}) {
+  const { objects } = useGoogleMap();
+  useMapPolyline(objects, {
+    id: `google-map-polyline-${index}`,
+    layer: 'route',
+    path: line.path,
+    style: { color: line.color, width: line.weight, opacity: line.opacity },
+  });
+  return null;
+}
 
 // Custom overlays can use the existing provider-neutral boundaries.
 export function useGoogleMap() {
@@ -143,9 +162,6 @@ export function GoogleMap(props: GoogleMapProps) {
     if (options) runtime?.setOptions(options);
   }, [runtime, options]);
   useEffect(() => {
-    runtime?.setPolylines(polylines ?? []);
-  }, [runtime, polylines]);
-  useEffect(() => {
     if (runtime) latest.current.onReady?.(handle);
   }, [runtime, handle]);
 
@@ -154,6 +170,7 @@ export function GoogleMap(props: GoogleMapProps) {
       runtime
         ? {
             adapter: runtime.adapter,
+            objects: runtime.objects,
             overlayHost: runtime.overlayHost,
             canvasRef,
           }
@@ -191,7 +208,12 @@ export function GoogleMap(props: GoogleMapProps) {
           </div>
         ))}
       {context && (
-        <MapContext.Provider value={context}>{children}</MapContext.Provider>
+        <MapContext.Provider value={context}>
+          {polylines?.map((line, index) => (
+            <RuntimePolyline key={index} line={line} index={index} />
+          ))}
+          {children}
+        </MapContext.Provider>
       )}
     </div>
   );

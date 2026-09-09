@@ -26,11 +26,3 @@ export type Trip = {
 
 // A route is independent of its provider. Routes API geometry can replace path.
 export type TripRoute = { dayId: string; color: string; path: Coordinates[] };
-
-export function buildTripRoutes(days: TripDay[]): TripRoute[] {
-  return days.map((day) => ({
-    dayId: day.id,
-    color: day.color,
-    path: day.places.map(({ lat, lng }) => ({ lat, lng })),
-  }));
-}

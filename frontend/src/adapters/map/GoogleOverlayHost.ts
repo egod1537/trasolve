@@ -4,17 +4,7 @@ import type { GeoPoint, ScreenPoint } from '../../domain/map/mapTypes';
 import type { MapOverlayHost } from './MapOverlayHost';
 
 export class GoogleOverlayHost implements MapOverlayHost {
-  private readonly element = document.createElement('div');
-  private readonly overlay: google.maps.OverlayView;
-  private readonly listeners = new Set<() => void>();
-  private map: google.maps.Map | null = null;
-  private projection: google.maps.MapCanvasProjection | null = null;
-  private anchor: google.maps.LatLng | null = null;
-  private basis: number[] = [];
-  private revision = 0;
-  private disposed = false;
-
-  constructor() {
+  public constructor() {
     this.element.className = 'trip-map-overlay-host';
     google.maps.OverlayView.preventMapHitsFrom(this.element);
     // Composition avoids evaluating a Google superclass before the API loads.
@@ -31,7 +21,7 @@ export class GoogleOverlayHost implements MapOverlayHost {
     };
   }
 
-  attach(map: google.maps.Map): void {
+  public attach(map: google.maps.Map): void {
     if (this.disposed || this.map === map) return;
     this.map = map;
     this.projection = null;
@@ -41,22 +31,22 @@ export class GoogleOverlayHost implements MapOverlayHost {
     this.overlay.setMap(map);
   }
 
-  getElement(): HTMLElement {
+  public getElement(): HTMLElement {
     return this.element;
   }
 
-  project(point: GeoPoint): ScreenPoint | null {
+  public project(point: GeoPoint): ScreenPoint | null {
     const pixel = this.projection?.fromLatLngToDivPixel(
       new google.maps.LatLng(point.lat, point.lng),
     );
     return pixel ? { x: pixel.x, y: pixel.y } : null;
   }
 
-  getProjectionRevision(): number {
+  public getProjectionRevision(): number {
     return this.revision;
   }
 
-  subscribeDraw = (callback: () => void): (() => void) => {
+  public subscribeDraw = (callback: () => void): (() => void) => {
     if (this.disposed) return () => undefined;
     this.listeners.add(callback);
     return () => {
@@ -64,7 +54,7 @@ export class GoogleOverlayHost implements MapOverlayHost {
     };
   };
 
-  dispose(): void {
+  public dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
     this.listeners.clear();
@@ -73,6 +63,16 @@ export class GoogleOverlayHost implements MapOverlayHost {
     this.projection = null;
     this.map = null;
   }
+
+  private readonly element = document.createElement('div');
+  private readonly overlay: google.maps.OverlayView;
+  private readonly listeners = new Set<() => void>();
+  private map: google.maps.Map | null = null;
+  private projection: google.maps.MapCanvasProjection | null = null;
+  private anchor: google.maps.LatLng | null = null;
+  private basis: number[] = [];
+  private revision = 0;
+  private disposed = false;
 
   private draw(): void {
     if (this.disposed || !this.map) return;

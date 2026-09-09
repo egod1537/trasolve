@@ -10,22 +10,21 @@ import type {
 } from '../../domain/map/mapTypes';
 
 export class GoogleMapAdapter implements MapAdapter {
-  private readonly listenerRemovers = new Set<() => void>();
-  private disposed = false;
+  public constructor(map: google.maps.Map) {
+    this.map = map;
+  }
 
-  constructor(private readonly map: google.maps.Map) {}
-
-  getCenter(): GeoPoint | null {
-    const center = this.map.getCenter();
+  public getCenter(): GeoPoint | null {
+    const center = this.map?.getCenter();
     return center ? { lat: center.lat(), lng: center.lng() } : null;
   }
 
-  getZoom(): number {
-    return this.map.getZoom() ?? 0;
+  public getZoom(): number {
+    return this.map?.getZoom() ?? 0;
   }
 
-  getBounds(): GeoBounds | null {
-    const bounds = this.map.getBounds();
+  public getBounds(): GeoBounds | null {
+    const bounds = this.map?.getBounds();
     if (!bounds) return null;
     const northEast = bounds.getNorthEast();
     const southWest = bounds.getSouthWest();
@@ -37,12 +36,13 @@ export class GoogleMapAdapter implements MapAdapter {
     };
   }
 
-  getCamera(): MapCameraState | null {
+  public getCamera(): MapCameraState | null {
     const center = this.getCenter();
     return center ? { center, zoom: this.getZoom() } : null;
   }
 
-  panTo(point: GeoPoint, centerOffset?: ScreenPoint): void {
+  public panTo(point: GeoPoint, centerOffset?: ScreenPoint): void {
+    if (!this.map) return;
     if (!centerOffset || (!centerOffset.x && !centerOffset.y)) {
       this.map.panTo(point);
       return;
@@ -67,12 +67,12 @@ export class GoogleMapAdapter implements MapAdapter {
     this.map.panTo(offsetCenter ?? point);
   }
 
-  setZoom(zoom: number): void {
-    this.map.setZoom(zoom);
+  public setZoom(zoom: number): void {
+    this.map?.setZoom(zoom);
   }
 
-  fitBounds(bounds: GeoBounds, padding?: MapPadding): void {
-    this.map.fitBounds(
+  public fitBounds(bounds: GeoBounds, padding?: MapPadding): void {
+    this.map?.fitBounds(
       {
         north: bounds.north,
         south: bounds.south,
@@ -83,18 +83,23 @@ export class GoogleMapAdapter implements MapAdapter {
     );
   }
 
-  subscribeCameraChange(callback: () => void): () => void {
+  public subscribeCameraChange(callback: () => void): () => void {
     return this.subscribe('idle', callback);
   }
 
-  dispose(): void {
+  public dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
     for (const remove of [...this.listenerRemovers]) remove();
+    this.map = null;
   }
 
+  private readonly listenerRemovers = new Set<() => void>();
+  private map: google.maps.Map | null;
+  private disposed = false;
+
   private subscribe(eventName: string, callback: () => void): () => void {
-    if (this.disposed) return () => undefined;
+    if (this.disposed || !this.map) return () => undefined;
 
     const listener = this.map.addListener(eventName, callback);
     let active = true;

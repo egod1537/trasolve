@@ -1,0 +1,22 @@
+.trip-map-marker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  padding: 0;
+  border: 2px solid white;
+  border-radius: 6px;
+  background: var(--day-color);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+.trip-map-marker.is-selected {
+  outline: 3px solid var(--day-color);
+  outline-offset: 3px;
+  transform: scale(1.15);
+}

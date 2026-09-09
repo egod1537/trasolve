@@ -8,6 +8,30 @@
   --trip-panel-width: 360px;
 }
 
+.map-viewport {
+  position: relative;
+  display: grid;
+  grid-template-columns: calc(var(--trip-panel-width) + 16px) minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+}
+
+.map-viewport-tools {
+  position: relative;
+  grid-column: 2;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.map-ai-region {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.map-ai-region > .trip-map-ai-button:not(.is-panel-open) {
+  pointer-events: auto;
+}
+
 .trip-map-root {
   position: absolute;
   inset: 0;
@@ -19,10 +43,7 @@
   inset: 0;
 }
 
-.trip-map-overlay-host,
-.trip-map-overlay,
-.trip-map-svg-overlay,
-.trip-map-dom-overlay {
+.trip-map-overlay-host {
   position: absolute;
   top: 0;
   left: 0;
@@ -30,24 +51,6 @@
   height: 0;
   overflow: visible;
   pointer-events: none;
-}
-.trip-map-overlay {
-  z-index: 1;
-}
-.trip-map-svg-overlay {
-  width: 1px;
-  height: 1px;
-}
-.trip-map-route {
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-opacity: 0.35;
-  stroke-width: 3px;
-}
-.trip-map-route.is-active {
-  stroke-opacity: 0.9;
-  stroke-width: 4px;
 }
 
 .trip-sidebar {
@@ -320,45 +323,6 @@
   font-size: 13px;
 }
 
-.trip-map-search {
-  position: absolute;
-  z-index: 2;
-  top: 16px;
-  left: calc(var(--trip-panel-width) + 32px);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: min(420px, calc(100% - var(--trip-panel-width) - 48px));
-  height: 48px;
-  padding: 0 16px;
-  border: 1px solid #d9dee5;
-  border-radius: 6px;
-  background: white;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
-}
-.trip-map-search svg {
-  width: 20px;
-  flex: none;
-  fill: none;
-  stroke: var(--color-muted);
-  stroke-width: 1.6;
-}
-.trip-map-search input {
-  width: 100%;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-muted);
-  font: inherit;
-  font-size: 14px;
-}
-.trip-map-search span:not(.sr-only) {
-  flex: none;
-  font-size: 11px;
-  color: var(--color-muted);
-}
-
 .trip-map-ai-button {
   position: absolute;
   z-index: 3;
@@ -462,7 +426,13 @@
   color: var(--color-muted);
   font-size: 12px;
 }
-.trip-map-ai-panel-close {
+.trip-map-ai-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.trip-map-ai-panel-close,
+.trip-map-ai-panel-export {
   display: grid;
   place-items: center;
   width: 36px;
@@ -474,14 +444,21 @@
   color: var(--color-muted);
   cursor: pointer;
 }
-.trip-map-ai-panel-close:hover {
+.trip-map-ai-panel-close:hover,
+.trip-map-ai-panel-export:not(:disabled):hover {
   background: #f1f5f9;
   color: var(--color-text);
 }
-.trip-map-ai-panel-close:active {
+.trip-map-ai-panel-close:active,
+.trip-map-ai-panel-export:not(:disabled):active {
   background: #e2e8f0;
 }
-.trip-map-ai-panel-close svg {
+.trip-map-ai-panel-export:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.trip-map-ai-panel-close svg,
+.trip-map-ai-panel-export svg {
   width: 20px;
   height: 20px;
   fill: none;
@@ -501,6 +478,7 @@
 }
 .trip-map-ai-message {
   align-self: flex-start;
+  min-width: 0;
   max-width: 86%;
   margin: 0;
   padding: 10px 13px;
@@ -521,6 +499,43 @@
   border-bottom-right-radius: 4px;
   background: var(--color-primary);
   color: #fff;
+}
+.trip-map-ai-typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  vertical-align: middle;
+}
+.trip-map-ai-typing-dots > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-muted);
+  opacity: 0.5;
+}
+@keyframes trip-map-ai-typing {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .trip-map-ai-typing-dots > span {
+    animation: trip-map-ai-typing 1.2s ease-in-out infinite;
+  }
+  .trip-map-ai-typing-dots > span:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .trip-map-ai-typing-dots > span:nth-child(3) {
+    animation-delay: 0.3s;
+  }
 }
 .trip-map-ai-compose {
   display: flex;
@@ -569,31 +584,6 @@
   color: #f8fafc;
 }
 
-.trip-map-marker {
-  position: absolute;
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  margin: 0;
-  padding: 0;
-  border: 2px solid white;
-  border-radius: 6px;
-  background: var(--day-color);
-  color: white;
-  appearance: none;
-  font-size: 13px;
-  font-weight: 700;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  pointer-events: auto;
-  transform: translate(-50%, -50%);
-}
-.trip-map-marker.is-selected {
-  outline: 3px solid var(--day-color);
-  outline-offset: 3px;
-  transform: translate(-50%, -50%) scale(1.15);
-}
 .trip-map-status {
   position: absolute;
   z-index: 1;
@@ -634,6 +624,10 @@
 }
 
 @media (max-width: 760px) {
+  .map-viewport {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+
   .trip-map-ai-button {
     width: 52px;
     height: 52px;
@@ -684,12 +678,6 @@
   }
   .trip-place-time {
     display: none;
-  }
-  .trip-map-search {
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    width: auto;
   }
   .trip-map-status {
     top: 84px;

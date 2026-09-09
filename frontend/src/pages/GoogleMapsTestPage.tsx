@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Component, useCallback, useEffect, useRef, useState } from 'react';
 import { GooglePlaceSearch } from '../components/google-map/GooglePlaceSearch';
 import type {
   GoogleMapHandle,
@@ -19,7 +19,7 @@ import {
 import { useDirectionsState } from '../hooks/useDirectionsState';
 import '../styles/google-maps-test.css';
 
-export default function GoogleMapsTestPage() {
+function GoogleMapsTestContent() {
   const mapRef = useRef<GoogleMapHandle>(null);
   const [selectedPlace, setSelectedPlace] = useState<MapPlace | null>(null);
   const [clicked, setClicked] = useState<MapClickEvent | null>(null);
@@ -81,7 +81,7 @@ export default function GoogleMapsTestPage() {
   return (
     <main className="maps-test-page">
       <header>
-        <a href="/map">여행 지도</a>
+        <a href="/testbed">← 테스트베드 목록</a>
         <h1>Google Maps Test Bed</h1>
         <p>개발용 playground · 실제 Google API</p>
       </header>
@@ -140,4 +140,10 @@ export default function GoogleMapsTestPage() {
       />
     </main>
   );
+}
+
+export default class GoogleMapsTestPage extends Component {
+  public render() {
+    return <GoogleMapsTestContent />;
+  }
 }

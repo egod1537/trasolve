@@ -2,7 +2,7 @@ import type {
   DirectionsRequest,
   DirectionsResult,
   MapRoute,
-} from '../../maps/googleDirections';
+} from '@trasolve/shared';
 
 type Props = {
   request: DirectionsRequest | null;

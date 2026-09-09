@@ -1,0 +1,66 @@
+.trip-maps-workspace,
+.trip-map-empty-background {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.trip-map-picker-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+.trip-map-picker-dialog {
+  width: 420px;
+  max-width: calc(100% - 32px);
+  max-height: 70vh;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  background: white;
+  border: 1px solid #999;
+  padding: 16px;
+}
+.trip-map-picker-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.trip-map-picker-dialog h2 {
+  margin: 0 0 12px;
+}
+.trip-map-picker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.trip-map-picker-dialog button {
+  padding: 4px 8px;
+  border: 1px solid #999;
+  background: white;
+  font: inherit;
+}
+.trip-map-picker-dialog button:disabled {
+  opacity: 0.5;
+}
+.trip-map-picker-dialog ul {
+  padding: 0;
+  list-style: none;
+}
+.trip-map-picker-dialog li {
+  padding: 12px 0;
+  border-bottom: 1px solid #ccc;
+}
+.trip-map-workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+.trip-map-workspace .trip-map-page {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}

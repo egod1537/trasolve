@@ -1,5 +1,13 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import { loadGoogleMaps, mapsAuthErrorEvent } from '../../maps/googleMaps';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import type { PlaceAutocompleteSuggestion } from '@trasolve/shared';
+import { getPlace, searchPlaces } from '../../api/places';
 import type { MapPlace } from './types';
 import './google-map.css';
 
@@ -18,107 +26,232 @@ export function GooglePlaceSearch({
   onSelect,
   onError,
 }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const widgetRef = useRef<google.maps.places.PlaceAutocompleteElement | null>(
-    null,
+  const inputId = useId();
+  const listId = useId();
+  const statusId = useId();
+  const errorId = useId();
+  const [input, setInput] = useState('');
+  const [query, setQuery] = useState<{ input: string } | null>(null);
+  const [suggestions, setSuggestions] = useState<PlaceAutocompleteSuggestion[]>(
+    [],
   );
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState('2자 이상 입력해 주세요.');
+  const [error, setError] = useState<string | null>(null);
+  const controller = useRef<AbortController | null>(null);
+  const revision = useRef(0);
+  const sessionToken = useRef<string | undefined>(undefined);
+  const composing = useRef(false);
+  const listRef = useRef<HTMLUListElement>(null);
   const callbacks = useRef({ onSelect, onError });
   useLayoutEffect(() => {
     callbacks.current = { onSelect, onError };
   });
-  const labelId = useId();
-  const [status, setStatus] = useState('검색을 준비하고 있습니다.');
-  const [error, setError] = useState<string | null>(null);
+
+  const cancelRequests = useCallback(() => {
+    revision.current++;
+    controller.current?.abort();
+    controller.current = null;
+  }, []);
+
+  const fail = useCallback((cause: unknown) => {
+    const failure =
+      cause instanceof Error ? cause : new Error('장소 조회에 실패했습니다.');
+    setStatus('');
+    setError(failure.message);
+    callbacks.current.onError?.(failure);
+  }, []);
+
+  useEffect(() => cancelRequests, [cancelRequests]);
 
   useEffect(() => {
-    let disposed = false;
-    let selection = 0;
-    let removeListeners: (() => void) | undefined;
-    const fail = (cause: unknown) => {
-      if (disposed) return;
-      const error = cause instanceof Error ? cause : new Error(String(cause));
-      setStatus('');
-      setError(error.message);
-      callbacks.current.onError?.(error);
-    };
-    const authFailed = () =>
-      fail(new Error('Google Maps 인증에 실패했습니다.'));
-    window.addEventListener(mapsAuthErrorEvent, authFailed);
-    async function initialize() {
+    if (!query) return;
+    const request = ++revision.current;
+    const current = new AbortController();
+    controller.current = current;
+    const timer = window.setTimeout(async () => {
+      if (current.signal.aborted || request !== revision.current) return;
       try {
-        await loadGoogleMaps();
-        const { PlaceAutocompleteElement } = (await google.maps.importLibrary(
-          'places',
-        )) as google.maps.PlacesLibrary;
-        if (disposed || !containerRef.current) return;
-        const widget = new PlaceAutocompleteElement();
-        widgetRef.current = widget;
-        widget.setAttribute('aria-labelledby', labelId);
-        const select = async (event: Event) => {
-          const request = ++selection;
-          setError(null);
-          setStatus('장소 정보를 불러오고 있습니다.');
-          try {
-            const place = (
-              event as google.maps.places.PlacePredictionSelectEvent
-            ).placePrediction.toPlace();
-            await place.fetchFields({
-              fields: ['id', 'displayName', 'formattedAddress', 'location'],
-            });
-            if (disposed || request !== selection) return;
-            if (!place.location)
-              throw new Error('이 장소에는 좌표 정보가 없습니다.');
-            setStatus('');
-            callbacks.current.onSelect({
-              id: place.id,
-              name:
-                place.displayName ?? place.formattedAddress ?? '선택한 장소',
-              address: place.formattedAddress ?? undefined,
-              location: place.location.toJSON(),
-            });
-          } catch (error) {
-            if (request === selection) fail(error);
-          }
-        };
-        const requestFailed = () =>
-          fail(
-            new Error(
-              '장소 검색에 실패했습니다. Places API 연결을 확인해 주세요.',
-            ),
-          );
-        widget.addEventListener('gmp-select', select);
-        widget.addEventListener('gmp-error', requestFailed);
-        removeListeners = () => {
-          widget.removeEventListener('gmp-select', select);
-          widget.removeEventListener('gmp-error', requestFailed);
-          widget.remove();
-        };
-        containerRef.current.append(widget);
-        setStatus('');
-      } catch (error) {
-        fail(error);
+        sessionToken.current ??= crypto.randomUUID();
+        const result = await searchPlaces(query.input, {
+          sessionToken: sessionToken.current,
+          signal: current.signal,
+        });
+        if (current.signal.aborted || request !== revision.current) return;
+        setSuggestions(result.suggestions);
+        setActiveIndex(-1);
+        setOpen(result.suggestions.length > 0);
+        setStatus(
+          result.suggestions.length
+            ? `${result.suggestions.length}개의 검색 결과가 있습니다.`
+            : '검색 결과가 없습니다.',
+        );
+      } catch (cause) {
+        if (!current.signal.aborted && request === revision.current)
+          fail(cause);
       }
-    }
-    void initialize();
+    }, 300);
     return () => {
-      disposed = true;
-      selection++;
-      window.removeEventListener(mapsAuthErrorEvent, authFailed);
-      removeListeners?.();
-      widgetRef.current = null;
+      window.clearTimeout(timer);
+      current.abort();
     };
-  }, [labelId]);
+  }, [query, fail]);
 
   useEffect(() => {
-    if (widgetRef.current) widgetRef.current.placeholder = placeholder;
-  }, [placeholder, status]);
+    if (open && activeIndex >= 0) {
+      listRef.current?.children[activeIndex]?.scrollIntoView({
+        block: 'nearest',
+      });
+    }
+  }, [open, activeIndex]);
+
+  function updateInput(value: string) {
+    // Invalidate immediately, including during the next debounce window.
+    cancelRequests();
+    setInput(value);
+    setError(null);
+    setSuggestions([]);
+    setActiveIndex(-1);
+    setOpen(false);
+    const ready = value.trim().length >= 2 && !composing.current;
+    setQuery(ready ? { input: value.trim() } : null);
+    setStatus(ready ? '장소를 검색하고 있습니다.' : '2자 이상 입력해 주세요.');
+    if (!value.trim()) sessionToken.current = undefined;
+  }
+
+  function dismiss() {
+    cancelRequests();
+    setQuery(null);
+    setOpen(false);
+    setActiveIndex(-1);
+    setStatus('');
+    sessionToken.current = undefined;
+  }
+
+  async function selectSuggestion(suggestion: PlaceAutocompleteSuggestion) {
+    cancelRequests();
+    setQuery(null);
+    setInput(suggestion.text);
+    setOpen(false);
+    setSuggestions([]);
+    setActiveIndex(-1);
+    setError(null);
+    setStatus('장소 정보를 불러오고 있습니다.');
+    const request = revision.current;
+    const current = new AbortController();
+    controller.current = current;
+    const token = sessionToken.current;
+    // A details request ends this autocomplete session, even if it fails.
+    sessionToken.current = undefined;
+    try {
+      const place = await getPlace(suggestion.placeId, {
+        sessionToken: token,
+        signal: current.signal,
+      });
+      if (current.signal.aborted || request !== revision.current) return;
+      setInput(place.name);
+      setStatus(`${place.name} 선택 완료`);
+      callbacks.current.onSelect({
+        id: place.id,
+        name: place.name,
+        address: place.address,
+        location: place.location,
+      });
+    } catch (cause) {
+      if (!current.signal.aborted && request === revision.current) fail(cause);
+    }
+  }
 
   return (
     <div className={`google-place-search ${className ?? ''}`}>
-      <span id={labelId}>{label}</span>
-      <div ref={containerRef} />
-      {status && <span role="status">{status}</span>}
-      {error && <span role="alert">{error}</span>}
+      <label htmlFor={inputId}>{label}</label>
+      <div className="google-place-search-field">
+        <input
+          id={inputId}
+          type="text"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={open}
+          aria-controls={open ? listId : undefined}
+          aria-activedescendant={
+            open && activeIndex >= 0 ? `${listId}-${activeIndex}` : undefined
+          }
+          aria-describedby={`${statusId}${error ? ` ${errorId}` : ''}`}
+          autoComplete="off"
+          maxLength={1024}
+          placeholder={placeholder}
+          value={input}
+          onChange={(event) => updateInput(event.target.value)}
+          onFocus={() => {
+            if (input.trim().length >= 2) updateInput(input);
+          }}
+          onBlur={dismiss}
+          onCompositionStart={() => {
+            composing.current = true;
+            cancelRequests();
+            setQuery(null);
+            setOpen(false);
+          }}
+          onCompositionEnd={(event) => {
+            composing.current = false;
+            updateInput(event.currentTarget.value);
+          }}
+          onKeyDown={(event) => {
+            if (event.nativeEvent.isComposing || composing.current) return;
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              dismiss();
+            } else if (
+              open &&
+              (event.key === 'ArrowDown' || event.key === 'ArrowUp')
+            ) {
+              event.preventDefault();
+              setActiveIndex((index) =>
+                event.key === 'ArrowDown'
+                  ? (index + 1) % suggestions.length
+                  : (index <= 0 ? suggestions.length : index) - 1,
+              );
+            } else if (open && event.key === 'Enter' && activeIndex >= 0) {
+              event.preventDefault();
+              void selectSuggestion(suggestions[activeIndex]);
+            }
+          }}
+        />
+        {open && (
+          <ul
+            className="google-place-suggestions"
+            id={listId}
+            role="listbox"
+            aria-label={label}
+            ref={listRef}
+          >
+            {suggestions.map((suggestion, index) => (
+              <li
+                id={`${listId}-${index}`}
+                key={suggestion.placeId}
+                role="option"
+                aria-selected={activeIndex === index}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => void selectSuggestion(suggestion)}
+              >
+                <strong>{suggestion.text}</strong>
+                {suggestion.secondaryText && (
+                  <span>{suggestion.secondaryText}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <span id={statusId} role="status">
+        {status}
+      </span>
+      {error && (
+        <span id={errorId} role="alert">
+          {error}
+        </span>
+      )}
     </div>
   );
 }

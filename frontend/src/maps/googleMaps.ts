@@ -1,5 +1,4 @@
-/// <reference types="google.maps" />
-
+// Browser SDK configuration and loading only; Web Service keys stay on the backend.
 declare global {
   interface Window {
     trasolveMapsReady?: () => void;

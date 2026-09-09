@@ -26,6 +26,7 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/backend ./backend
 COPY --from=build /app/shared ./shared
 
+RUN mkdir -p /app/backend/data && chown node:node /app/backend/data
 USER node
 EXPOSE 3000
 WORKDIR /app/backend

@@ -1,0 +1,41 @@
+.ai-chat-test-page {
+  max-width: 900px;
+}
+
+.ai-chat-test-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ai-chat-test-toolbar button {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.ai-chat-test-toolbar button:hover {
+  border-color: var(--color-primary);
+}
+
+.ai-chat-test-page .ai-chat-test-hint {
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.ai-chat-test-panel .trip-map-ai-panel {
+  position: relative;
+  z-index: auto;
+  inset: auto;
+  width: 100%;
+  height: min(680px, 70dvh);
+  min-height: 360px;
+  box-shadow: 0 4px 16px #0f172a0a;
+  will-change: auto;
+}
