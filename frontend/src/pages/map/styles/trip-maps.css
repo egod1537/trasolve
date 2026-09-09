@@ -13,7 +13,7 @@
   justify-content: center;
   z-index: 10000;
 }
-.trip-map-picker-dialog {
+.trip-map-picker-popup {
   width: 420px;
   max-width: calc(100% - 32px);
   max-height: 70vh;
@@ -23,12 +23,12 @@
   border: 1px solid #999;
   padding: 16px;
 }
-.trip-map-picker-dialog header {
+.trip-map-picker-popup header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.trip-map-picker-dialog h2 {
+.trip-map-picker-popup h2 {
   margin: 0 0 12px;
 }
 .trip-map-picker-actions {
@@ -36,20 +36,20 @@
   flex-wrap: wrap;
   gap: 6px;
 }
-.trip-map-picker-dialog button {
+.trip-map-picker-popup button {
   padding: 4px 8px;
   border: 1px solid #999;
   background: white;
   font: inherit;
 }
-.trip-map-picker-dialog button:disabled {
+.trip-map-picker-popup button:disabled {
   opacity: 0.5;
 }
-.trip-map-picker-dialog ul {
+.trip-map-picker-popup ul {
   padding: 0;
   list-style: none;
 }
-.trip-map-picker-dialog li {
+.trip-map-picker-popup li {
   padding: 12px 0;
   border-bottom: 1px solid #ccc;
 }

@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import type { TripMap } from '@trasolve/shared';
+import type { Trip } from '@trasolve/shared';
 import type { MapFocus, MapFocusTarget } from '../domain/mapUiTypes';
 import { getGeoBounds } from '../domain/geometry';
 
-export function useMapUi(trip: TripMap) {
+export function useMapUi(trip: Trip) {
   const [focus, setFocus] = useState<MapFocus>({ type: 'all', revision: 0 });
   const selectedDay = trip.days.find((day) =>
     focus.type === 'day'

@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
-import type { TripMap } from '@trasolve/shared';
+import type { Trip } from '@trasolve/shared';
 
 type Props = {
-  trips: readonly TripMap[];
+  trips: readonly Trip[];
   busy: boolean;
   error: string | null;
   canClose: boolean;
@@ -11,9 +11,10 @@ type Props = {
   onOpen: (id: string) => void;
   onCreate: () => void;
   onCreateExample: () => void;
+  onDelete: (id: string) => void;
 };
 
-export function TripMapPickerDialog({
+export function TripPickerPopup({
   trips,
   busy,
   error,
@@ -23,11 +24,12 @@ export function TripMapPickerDialog({
   onOpen,
   onCreate,
   onCreateExample,
+  onDelete,
 }: Props) {
-  const dialogRef = useRef<HTMLElement>(null);
+  const popupRef = useRef<HTMLElement>(null);
   useEffect(() => {
     const previousFocus = document.activeElement;
-    dialogRef.current?.focus();
+    popupRef.current?.focus();
     return () => {
       if (previousFocus instanceof HTMLElement && previousFocus.isConnected)
         previousFocus.focus({ preventScroll: true });
@@ -37,8 +39,8 @@ export function TripMapPickerDialog({
   return (
     <div className="trip-map-picker-backdrop">
       <section
-        ref={dialogRef}
-        className="trip-map-picker-dialog"
+        ref={popupRef}
+        className="trip-map-picker-popup"
         role="dialog"
         aria-modal="true"
         aria-labelledby="trip-map-picker-title"
@@ -89,6 +91,9 @@ export function TripMapPickerDialog({
               </div>
               <button disabled={busy} onClick={() => onOpen(trip.id)}>
                 열기
+              </button>
+              <button disabled={busy} onClick={() => onDelete(trip.id)}>
+                삭제
               </button>
             </li>
           ))}

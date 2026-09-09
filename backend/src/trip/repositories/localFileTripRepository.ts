@@ -8,20 +8,20 @@ import {
 } from 'node:fs/promises';
 import { resolve, relative, isAbsolute, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { tripMapIdSchema, tripMapSchema, type TripMap } from '@trasolve/shared';
-import type { TripMapRepository } from '../tripMapRepository.js';
+import { tripIdSchema, tripSchema, type Trip } from '@trasolve/shared';
+import type { TripRepository } from '../tripRepository.js';
 import { invalidTripRequest, tripStorageUnavailable } from '../errors.js';
 
-export class LocalFileTripMapRepository implements TripMapRepository {
+export class LocalFileTripRepository implements TripRepository {
   public constructor(options: { rootDir: string }) {
     this.rootDir = resolve(options.rootDir);
   }
 
-  public async listByUser(userId: string): Promise<TripMap[]> {
+  public async listByUser(userId: string): Promise<Trip[]> {
     const directory = this.directory(userId);
     try {
       const files = await readdir(directory);
-      const trips: TripMap[] = [];
+      const trips: Trip[] = [];
       for (const file of files
         .filter((name) => name.endsWith('.json'))
         .sort()) {
@@ -39,14 +39,14 @@ export class LocalFileTripMapRepository implements TripMapRepository {
 
   public async getById(
     userId: string,
-    tripMapId: string,
-  ): Promise<TripMap | null> {
-    const path = this.path(userId, tripMapId);
+    tripId: string,
+  ): Promise<Trip | null> {
+    const path = this.path(userId, tripId);
     try {
-      const trip = tripMapSchema.parse(
+      const trip = tripSchema.parse(
         JSON.parse(await readFile(path, 'utf8')),
       );
-      if (trip.userId !== userId || trip.id !== tripMapId)
+      if (trip.userId !== userId || trip.id !== tripId)
         throw tripStorageUnavailable();
       return trip;
     } catch (error) {
@@ -55,8 +55,8 @@ export class LocalFileTripMapRepository implements TripMapRepository {
     }
   }
 
-  public async save(userId: string, tripMap: TripMap): Promise<void> {
-    const parsed = tripMapSchema.safeParse(tripMap);
+  public async save(userId: string, input: Trip): Promise<void> {
+    const parsed = tripSchema.safeParse(input);
     if (!parsed.success || parsed.data.userId !== userId)
       throw invalidTripRequest();
     const trip = parsed.data;
@@ -81,8 +81,8 @@ export class LocalFileTripMapRepository implements TripMapRepository {
     });
   }
 
-  public async delete(userId: string, tripMapId: string): Promise<void> {
-    const path = this.path(userId, tripMapId);
+  public async delete(userId: string, tripId: string): Promise<void> {
+    const path = this.path(userId, tripId);
     await this.serialize(path, async () => {
       try {
         await unlink(path);
@@ -96,14 +96,14 @@ export class LocalFileTripMapRepository implements TripMapRepository {
   private readonly writes = new Map<string, Promise<void>>();
 
   private directory(userId: string): string {
-    if (!tripMapIdSchema.safeParse(userId).success) throw invalidTripRequest();
+    if (!tripIdSchema.safeParse(userId).success) throw invalidTripRequest();
     return join(this.rootDir, 'users', userId, 'trips');
   }
 
-  private path(userId: string, tripMapId: string): string {
-    if (!tripMapIdSchema.safeParse(tripMapId).success)
+  private path(userId: string, tripId: string): string {
+    if (!tripIdSchema.safeParse(tripId).success)
       throw invalidTripRequest();
-    const path = resolve(this.directory(userId), `${tripMapId}.json`);
+    const path = resolve(this.directory(userId), `${tripId}.json`);
     const within = relative(this.rootDir, path);
     if (within.startsWith('..') || isAbsolute(within))
       throw invalidTripRequest();

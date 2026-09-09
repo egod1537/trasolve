@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Safe as a single filename segment on Windows and Unix.
-export const tripMapIdSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/);
+export const tripIdSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/);
 const title = z.string().trim().min(1).max(200);
 const placeFields = {
   placeId: z.string().trim().min(1).max(1024).optional(),
@@ -17,32 +17,32 @@ const placeFields = {
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
     .optional(),
 };
-export const tripMapPlaceSchema = z.strictObject({
-  id: tripMapIdSchema,
+export const tripPlaceSchema = z.strictObject({
+  id: tripIdSchema,
   ...placeFields,
   order: z.number().int().min(1).max(500),
 });
-export const tripMapDaySchema = z.strictObject({
-  id: tripMapIdSchema,
+export const tripDaySchema = z.strictObject({
+  id: tripIdSchema,
   title,
   date: z.iso.date().optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-  places: z.array(tripMapPlaceSchema).max(500),
+  places: z.array(tripPlaceSchema).max(500),
 });
-export const tripMapInputSchema = z
+export const tripInputSchema = z
   .strictObject({
     title,
     startDate: z.iso.date().optional(),
     endDate: z.iso.date().optional(),
     days: z
       .array(
-        tripMapDaySchema.extend({
-          id: tripMapIdSchema.optional(),
-          color: tripMapDaySchema.shape.color.default('#2563eb'),
+        tripDaySchema.extend({
+          id: tripIdSchema.optional(),
+          color: tripDaySchema.shape.color.default('#2563eb'),
           places: z
             .array(
-              tripMapPlaceSchema.extend({
-                id: tripMapIdSchema.optional(),
+              tripPlaceSchema.extend({
+                id: tripIdSchema.optional(),
                 // Array order is authoritative; the controller recomputes 1-based order.
                 order: z.number().int().min(1).max(500).optional(),
               }),
@@ -59,14 +59,14 @@ export const tripMapInputSchema = z
       message: 'End date must not precede start date.',
     },
   );
-export const tripMapSchema = z
+export const tripSchema = z
   .strictObject({
-    id: tripMapIdSchema,
-    userId: tripMapIdSchema,
+    id: tripIdSchema,
+    userId: tripIdSchema,
     title,
     startDate: z.iso.date().optional(),
     endDate: z.iso.date().optional(),
-    days: z.array(tripMapDaySchema).max(100),
+    days: z.array(tripDaySchema).max(100),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })
@@ -94,5 +94,5 @@ export const tripMapSchema = z
       });
     }
   });
-export const tripMapListSchema = z.array(tripMapSchema);
+export const tripListSchema = z.array(tripSchema);
 export const TRIP_BODY_LIMIT = 2 * 1024 * 1024;

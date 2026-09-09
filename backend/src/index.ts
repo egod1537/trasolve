@@ -13,7 +13,7 @@ const server = createServer((request, response) => {
     pathname === API_ROUTES.trips ||
     pathname.startsWith(`${API_ROUTES.trips}/`)
   ) {
-    void API.TripMapHttp.handle(
+    void API.TripHttp.handle(
       request,
       response,
       pathname === API_ROUTES.trips

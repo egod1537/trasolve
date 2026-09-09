@@ -1,22 +1,22 @@
 import {
   API_ROUTES,
   apiErrorSchema,
-  tripMapIdSchema,
-  tripMapSchema,
-  tripMapListSchema,
-  tripMapInputSchema,
-  type TripMap,
-  type TripMapInput,
+  tripIdSchema,
+  tripSchema,
+  tripListSchema,
+  tripInputSchema,
+  type Trip,
+  type TripInput,
 } from '@trasolve/shared';
 
 async function request(
   path: string,
   method: string,
-  input?: TripMapInput,
+  input?: TripInput,
   signal?: AbortSignal,
 ): Promise<unknown> {
   const payload =
-    input === undefined ? undefined : tripMapInputSchema.parse(input);
+    input === undefined ? undefined : tripInputSchema.parse(input);
   const timeout = AbortSignal.timeout(20000);
   let response: Response;
   try {
@@ -47,35 +47,35 @@ async function request(
   return body;
 }
 function path(tripId: string): string {
-  return `${API_ROUTES.trips}/${encodeURIComponent(tripMapIdSchema.parse(tripId))}`;
+  return `${API_ROUTES.trips}/${encodeURIComponent(tripIdSchema.parse(tripId))}`;
 }
-export async function listTrips(signal?: AbortSignal): Promise<TripMap[]> {
-  return tripMapListSchema.parse(
+export async function listTrips(signal?: AbortSignal): Promise<Trip[]> {
+  return tripListSchema.parse(
     await request(API_ROUTES.trips, 'GET', undefined, signal),
   );
 }
 export async function getTrip(
   tripId: string,
   signal?: AbortSignal,
-): Promise<TripMap> {
-  return tripMapSchema.parse(
+): Promise<Trip> {
+  return tripSchema.parse(
     await request(path(tripId), 'GET', undefined, signal),
   );
 }
 export async function createTrip(
-  input: TripMapInput,
+  input: TripInput,
   signal?: AbortSignal,
-): Promise<TripMap> {
-  return tripMapSchema.parse(
+): Promise<Trip> {
+  return tripSchema.parse(
     await request(API_ROUTES.trips, 'POST', input, signal),
   );
 }
 export async function saveTrip(
   tripId: string,
-  input: TripMapInput,
+  input: TripInput,
   signal?: AbortSignal,
-): Promise<TripMap> {
-  return tripMapSchema.parse(await request(path(tripId), 'PUT', input, signal));
+): Promise<Trip> {
+  return tripSchema.parse(await request(path(tripId), 'PUT', input, signal));
 }
 export async function deleteTrip(
   tripId: string,
@@ -83,16 +83,3 @@ export async function deleteTrip(
 ): Promise<void> {
   await request(path(tripId), 'DELETE', undefined, signal);
 }
-
-export interface TripMapApi {
-  getTrip: typeof getTrip;
-  createTrip: typeof createTrip;
-  saveTrip: typeof saveTrip;
-  deleteTrip: typeof deleteTrip;
-}
-export const tripMapApi: TripMapApi = {
-  getTrip,
-  createTrip,
-  saveTrip,
-  deleteTrip,
-};

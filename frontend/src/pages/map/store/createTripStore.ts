@@ -1,4 +1,6 @@
-import type { TripMapState, TripMapStore } from './TripMapStore';
+import { tripSchema, type Trip } from '@trasolve/shared';
+import { tripToRoutes } from '../domain/tripMapping';
+import type { TripState, TripStore } from './TripStore';
 
 function freeze<T>(value: T): T {
   if (value && typeof value === 'object' && !Object.isFrozen(value)) {
@@ -8,11 +10,12 @@ function freeze<T>(value: T): T {
   return value;
 }
 
-export function createTripMapStore(): TripMapStore {
-  let state: TripMapState = freeze({
-    tripMap: null,
-    routes: [],
-    status: 'idle',
+export function createTripStore(initialTrip: Trip): TripStore {
+  const trip = tripSchema.parse(initialTrip);
+  let state: TripState = freeze({
+    trip,
+    routes: tripToRoutes(trip),
+    status: 'ready',
     error: null,
   });
   const listeners = new Set<() => void>();

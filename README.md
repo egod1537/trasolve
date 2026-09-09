@@ -10,11 +10,16 @@ branch별 Docker 배포를 수행하는 프로젝트입니다. GitHub Actions는
 Frontend는 `app`, `pages`, `map`, `api`, `shared`, `assets`로 구성합니다.
 [소스 구조와 파일 이동 목록](docs/frontend-source-layout.md)을 참고하세요.
 
-### TripMap persistence
+### Trip persistence
+
+Frontend는 `TripWorkspace → TripRepository`로 목록·선택·생성·삭제를 처리합니다.
+선택 후에만 `TripSession`이 `TripStore + TripEditController`를 만들고
+`TripProvider`로 지도 화면에 주입합니다. 편집 저장은 Repository를 경유하며
+세션 종료 시 pending 편집을 취소합니다. MapPage는 route root만 담당합니다.
 
 `/map`은 backend에서 내 여행 목록을 불러오며 여행 생성·열기·제목/순서 저장·삭제를 지원합니다.
-`TripMapHttpService → TripMapController → TripMapRepository`로 처리하고,
-`instances.ts`에서 `LocalFileTripMapRepository`를 주입합니다. shared TripMap 계약을 사용하며
+`TripHttpService → TripController → TripRepository`로 처리하고,
+`instances.ts`에서 `LocalFileTripRepository`를 주입합니다. shared Trip 계약을 사용하며
 기본 저장 위치는 `backend/data/users/local-user/trips/<tripId>.json`입니다.
 `TRASOLVE_DATA_DIR`와 `TRASOLVE_LOCAL_USER_ID`로 저장 루트와 임시 사용자를 설정합니다.
 파일은 검증 후 임시 파일에 쓰고 rename하며 사용자 범위를 분리합니다. 실제 인증은 아직 없고
@@ -85,7 +90,7 @@ Maps JavaScript API 전용으로 HTTP referrer 제한을 적용합니다.
   카메라·이벤트·투영·오버레이 렌더링과 해제를 담당합니다.
 - `MapRuntime.objects`의 `MapObjectController`는 지도 객체의 생성·갱신·삭제를 담당합니다.
   `GoogleMapObjectController`가 native AdvancedMarkerElement와 Polyline을 지도에 바인딩합니다.
-  frontend `TripMapController → TripMapStore → TripMapLayer`를 통해 handle setter를 호출합니다.
+  frontend `TripEditController → TripStore → TripLayer`를 통해 handle setter를 호출합니다.
   Controller는 렌더링 객체를 모르며, Layer는 ID 기준으로 마커와 선을 동기화합니다.
   객체는 layer별 삭제와 반복 삭제를 지원하고 runtime dispose 시 정리됩니다.
   Polygon/Circle은 확장용 계약만 정의합니다. 자세한 사용법은 `frontend/README.md`에 있습니다.

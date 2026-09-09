@@ -13,9 +13,10 @@ src/
 ├─ pages/
 │  ├─ map/
 │  │  ├─ MapPage.tsx
-│  │  ├─ components/    workspace, picker, layer-panel, viewport, ai
-│  │  ├─ controller/    TripMapController
-│  │  ├─ store/         TripMapStore, factory, Provider
+│  │  ├─ components/    workspace, session, picker, layer-panel, viewport, ai
+│  │  ├─ repository/    TripRepository, HttpTripRepository
+│  │  ├─ controller/    TripEditController
+│  │  ├─ store/         TripStore, factory, Provider
 │  │  ├─ hooks/         selection, store binding, reorder
 │  │  ├─ domain/        camera policy, mapping, trip/UI types, bounds helper
 │  │  ├─ api/           trips.ts
@@ -48,7 +49,9 @@ map infrastructure used by both map and testbed.
 The top-level api folder is the existing common Web Service client boundary:
 chat serves both chat surfaces, places/routes supply reusable Google data requests,
 and health represents app connectivity. trips.ts is currently map-feature-only and
-moves beside its controller. API logic is unchanged.
+remains a low-level client wrapped by HttpTripRepository. Only the selected
+TripSession creates the store/edit controller; TripWorkspace owns the repository.
+API logic is unchanged.
 
 MapFocus/MapFocusTarget were extracted to pages/map/domain/mapUiTypes.ts so map
 primitives no longer contain page selection state. Existing declarations were
@@ -60,6 +63,8 @@ Imports point explicitly at their new owners; no barrels or aliases were added.
 Lint boundaries now address the new paths, including the page-specific trips client.
 Map/shared/api cannot import pages. The plain controller/store still cannot import
 React or rendering bindings, and visual regions retain their existing restrictions.
+Repositories cannot import React/session/rendering code. UI cannot import repositories;
+TripWorkspace and TripSession are the composition exceptions.
 
 Validation: lint, typecheck and production build pass. A static relative-import
 graph review of 86 modules found no unresolved imports, cycles (including type
@@ -84,9 +89,9 @@ applies after moving files.
 | `src/styles/google-maps-test.css` | `src/pages/testbed/styles/google-maps-test.css` |
 | `src/styles/global.css` | `src/shared/styles/global.css` |
 | `src/styles/ai-chat-test.css` | `src/pages/testbed/styles/ai-chat-test.css` |
-| `src/stores/TripMapStore.ts` | `src/pages/map/store/TripMapStore.ts` |
-| `src/stores/TripMapProvider.tsx` | `src/pages/map/store/TripMapProvider.tsx` |
-| `src/stores/createTripMapStore.ts` | `src/pages/map/store/createTripMapStore.ts` |
+| `src/stores/TripStore.ts` | `src/pages/map/store/TripStore.ts` |
+| `src/stores/TripProvider.tsx` | `src/pages/map/store/TripProvider.tsx` |
+| `src/stores/createTripStore.ts` | `src/pages/map/store/createTripStore.ts` |
 | `src/routes.tsx` | `src/app/routes.tsx` |
 | `src/pages/TestbedPage.tsx` | `src/pages/testbed/TestbedPage.tsx` |
 | `src/pages/MapPage.tsx` | `src/pages/map/MapPage.tsx` |
@@ -98,16 +103,16 @@ applies after moving files.
 | `src/main.tsx` | `src/app/main.tsx` |
 | `src/hooks/usePlaceReorder.ts` | `src/pages/map/hooks/usePlaceReorder.ts` |
 | `src/hooks/useDirectionsState.ts` | `src/pages/testbed/hooks/useDirectionsState.ts` |
-| `src/hooks/map/useTripMap.ts` | `src/pages/map/hooks/useTripMap.ts` |
+| `src/hooks/map/useTrip.ts` | `src/pages/map/hooks/useTrip.ts` |
 | `src/hooks/map/useMapUi.ts` | `src/pages/map/hooks/useMapUi.ts` |
 | `src/hooks/map/useMapPolyline.ts` | `src/map/hooks/useMapPolyline.ts` |
 | `src/buildInfo.ts` | `src/app/buildInfo.ts` |
-| `src/domain/map/tripMapMapping.ts` | `src/pages/map/domain/tripMapMapping.ts` |
+| `src/domain/map/tripMapping.ts` | `src/pages/map/domain/tripMapping.ts` |
 | `src/domain/map/mapTypes.ts` | `src/map/types/mapTypes.ts` |
 | `src/domain/map/geometry.ts` | `src/pages/map/domain/geometry.ts` |
 | `src/domain/map/culling.ts` | `src/map/geometry/culling.ts` |
 | `src/domain/map/cameraPolicy.ts` | `src/pages/map/domain/cameraPolicy.ts` |
-| `src/controllers/TripMapController.ts` | `src/pages/map/controller/TripMapController.ts` |
+| `src/controllers/TripController.ts` | `src/pages/map/controller/TripEditController.ts` |
 | `src/data/demoTrip.ts` | `src/pages/map/data/demoTrip.ts` |
 | `src/api/trips.ts` | `src/pages/map/api/trips.ts` |
 | `src/adapters/map/MapRuntime.ts` | `src/map/adapters/MapRuntime.ts` |
@@ -144,9 +149,9 @@ applies after moving files.
 | `src/components/map/MapAiPanel.tsx` | `src/shared/components/chat/MapAiPanel.tsx` |
 | `src/components/map/MapAiButton.tsx` | `src/pages/map/components/ai/MapAiButton.tsx` |
 | `src/components/map/viewport/MapViewport.tsx` | `src/pages/map/components/viewport/MapViewport.tsx` |
-| `src/components/map/TripMapsWorkspace.tsx` | `src/pages/map/components/TripMapsWorkspace.tsx` |
-| `src/components/map/TripMapPickerDialog.tsx` | `src/pages/map/components/TripMapPickerDialog.tsx` |
-| `src/components/map/TripMapLayer.tsx` | `src/pages/map/components/viewport/TripMapLayer.tsx` |
+| `src/components/map/TripWorkspace.tsx` | `src/pages/map/components/TripWorkspace.tsx` |
+| `src/components/map/TripPickerDialog.tsx` | `src/pages/map/components/TripPickerPopup.tsx` |
+| `src/components/map/TripLayer.tsx` | `src/pages/map/components/viewport/TripLayer.tsx` |
 | `src/components/map/PlaceDragHandle.tsx` | `src/pages/map/components/layer-panel/PlaceDragHandle.tsx` |
 | `src/components/map/layer-panel/PlaceLayerItem.tsx` | `src/pages/map/components/layer-panel/PlaceLayerItem.tsx` |
 | `src/components/map/layer-panel/LayerPanel.tsx` | `src/pages/map/components/layer-panel/LayerPanel.tsx` |

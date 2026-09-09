@@ -1,41 +1,25 @@
 import {
-  tripMapSchema,
-  type TripMap,
-  type TripMapInput,
-  type TripMapPlace,
+  tripSchema,
+  type Trip,
+  type TripInput,
+  type TripPlace,
 } from '@trasolve/shared';
-import type { TripMapApi } from '../api/trips';
-import type { TripMapState, TripMapStore } from '../store/TripMapStore';
+import type { TripRepository } from '../repository/TripRepository';
+import { tripToRoutes } from '../domain/tripMapping';
+import type { TripState, TripStore } from '../store/TripStore';
 
-export type PlaceInput = Omit<TripMapPlace, 'id' | 'order'>;
+export type PlaceInput = Omit<TripPlace, 'id' | 'order'>;
 
-export class TripMapController {
+export class TripEditController {
   public constructor(
-    private readonly store: TripMapStore,
-    private readonly api: TripMapApi,
-  ) {}
-
-  public async loadTrip(tripId: string): Promise<boolean> {
-    this.cancelPending();
-    return this.run('loading', (signal) => this.api.getTrip(tripId, signal));
+    private readonly store: TripStore,
+    private readonly repository: TripRepository,
+  ) {
+    this.tripId = tripSchema.parse(store.getState().trip).id;
   }
 
-  public async createTrip(input: TripMapInput): Promise<boolean> {
-    return this.run('loading', (signal) => this.api.createTrip(input, signal));
-  }
-
-  public async deleteTrip(): Promise<boolean> {
-    const trip = this.store.getState().tripMap;
-    if (!trip) return false;
-    return this.run('saving', async (signal) => {
-      await this.api.deleteTrip(trip.id, signal);
-      return null;
-    });
-  }
-
-  public closeTrip(): void {
-    this.cancelPending();
-    this.publish(null, 'idle');
+  public save(): Promise<boolean> {
+    return this.mutate((trip) => trip);
   }
 
   public renameTrip(title: string): Promise<boolean> {
@@ -124,12 +108,14 @@ export class TripMapController {
     this.store.setState(pending.before);
   }
 
+  private readonly tripId: string;
+
   private pending: {
     controller: AbortController;
-    before: TripMapState;
+    before: TripState;
   } | null = null;
 
-  private findPlace(trip: TripMap, placeId: string): TripMapPlace {
+  private findPlace(trip: Trip, placeId: string): TripPlace {
     const place = trip.days
       .flatMap((day) => day.places)
       .find((place) => place.id === placeId);
@@ -137,17 +123,17 @@ export class TripMapController {
     return place;
   }
 
-  private async mutate(update: (trip: TripMap) => TripMap): Promise<boolean> {
-    const before = this.store.getState().tripMap;
-    if (!before || this.pending) return false;
-    let next: TripMap;
+  private async mutate(update: (trip: Trip) => Trip): Promise<boolean> {
+    const before = this.store.getState().trip;
+    if (this.pending) return false;
+    let next: Trip;
     try {
       next = update(structuredClone(before));
       for (const day of next.days)
         day.places.forEach((place, index) => {
           place.order = index + 1;
         });
-      next = tripMapSchema.parse(next);
+      next = tripSchema.parse(next);
     } catch {
       this.store.setState({
         ...this.store.getState(),
@@ -160,7 +146,7 @@ export class TripMapController {
     const places = new Set(
       before.days.flatMap((day) => day.places.map((place) => place.id)),
     );
-    const input: TripMapInput = {
+    const input: TripInput = {
       title: next.title,
       startDate: next.startDate,
       endDate: next.endDate,
@@ -174,16 +160,14 @@ export class TripMapController {
       })),
     };
     return this.run(
-      'saving',
-      (signal) => this.api.saveTrip(before.id, input, signal),
+      (signal) => this.repository.saveTrip(this.tripId, input, signal),
       next,
     );
   }
 
   private async run(
-    status: 'loading' | 'saving',
-    operation: (signal: AbortSignal) => Promise<TripMap | null>,
-    optimistic?: TripMap,
+    operation: (signal: AbortSignal) => Promise<Trip>,
+    optimistic: Trip,
   ): Promise<boolean> {
     if (this.pending) return false;
     const pending = {
@@ -191,12 +175,14 @@ export class TripMapController {
       before: this.store.getState(),
     };
     this.pending = pending;
-    this.publish(optimistic ?? pending.before.tripMap, status);
+    this.publish(optimistic, 'saving');
     try {
       const saved = await operation(pending.controller.signal);
       if (this.pending !== pending || pending.controller.signal.aborted)
         return false;
-      this.publish(saved, saved ? 'ready' : 'idle');
+      if (saved.id !== this.tripId)
+        throw new Error('저장된 여행이 현재 세션과 다릅니다.');
+      this.publish(saved, 'ready');
       return true;
     } catch (cause) {
       if (this.pending !== pending || pending.controller.signal.aborted)
@@ -212,18 +198,10 @@ export class TripMapController {
     }
   }
 
-  private publish(
-    tripMap: TripMap | null,
-    status: TripMapState['status'],
-  ): void {
+  private publish(trip: Trip, status: TripState['status']): void {
     // Visiting-order lines are regenerated here on location/order changes and rollback.
     // A future road-route cache must be invalidated here, never inside the renderer.
-    const routes =
-      tripMap?.days.map((day) => ({
-        dayId: day.id,
-        color: day.color,
-        path: day.places.map((place) => ({ ...place.location })),
-      })) ?? [];
-    this.store.setState({ tripMap, routes, status, error: null });
+    const routes = tripToRoutes(trip);
+    this.store.setState({ trip, routes, status, error: null });
   }
 }

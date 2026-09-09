@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { TRIP_BODY_LIMIT, tripMapInputSchema } from '@trasolve/shared';
-import type { TripMapController } from './tripMapController.js';
+import { TRIP_BODY_LIMIT, tripInputSchema } from '@trasolve/shared';
+import type { TripController } from './tripController.js';
 import {
   TripError,
   invalidTripRequest,
@@ -11,9 +11,9 @@ export type CurrentUserResolver = (
   request: IncomingMessage,
 ) => string | Promise<string>;
 
-export class TripMapHttpService {
+export class TripHttpService {
   public constructor(
-    private readonly controller: TripMapController,
+    private readonly controller: TripController,
     private readonly currentUser: CurrentUserResolver,
   ) {}
 
@@ -129,7 +129,7 @@ export class TripMapHttpService {
       request.on('error', reject);
       request.on('aborted', () => reject(invalidTripRequest()));
     });
-    const result = tripMapInputSchema.safeParse(json);
+    const result = tripInputSchema.safeParse(json);
     if (!result.success) throw invalidTripRequest();
     return result.data;
   }

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import type { TripMap } from '@trasolve/shared';
+import type { Trip } from '@trasolve/shared';
 import type {
   MapMarkerHandle,
   MapObjectController,
@@ -9,16 +9,17 @@ import type { TripRoute } from '../../domain/trip';
 
 type Props = {
   objects: MapObjectController;
-  tripMap: TripMap;
+  trip: Trip;
   routes: readonly TripRoute[];
   selectedPlaceId: string | null;
   selectedDayId: string | null;
   onSelectPlace: (id: string) => void;
 };
 
-export function TripMapLayer({
+/** Projects Trip data to provider-neutral map objects; owns no domain mutations. */
+export function TripLayer({
   objects,
-  tripMap,
+  trip,
   routes,
   selectedPlaceId,
   selectedDayId,
@@ -32,7 +33,7 @@ export function TripMapLayer({
   useLayoutEffect(() => {
     selection.current = onSelectPlace;
   }, [onSelectPlace]);
-  const tripId = tripMap.id;
+  const tripId = trip.id;
 
   useEffect(() => {
     const ownedMarkers = markers.current,
@@ -50,7 +51,7 @@ export function TripMapLayer({
 
   useEffect(() => {
     const remaining = new Set<string>();
-    for (const day of tripMap.days) {
+    for (const day of trip.days) {
       for (const place of day.places) {
         remaining.add(place.id);
         let marker = markers.current.get(place.id);
@@ -110,7 +111,7 @@ export function TripMapLayer({
         lines.current.delete(id);
       }
     }
-  }, [objects, tripId, tripMap, routes, selectedPlaceId, selectedDayId]);
+  }, [objects, tripId, trip, routes, selectedPlaceId, selectedDayId]);
 
   return null;
 }

@@ -2,10 +2,10 @@ import { existsSync } from 'node:fs';
 import { loadEnvFile } from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
-import { tripMapIdSchema } from '@trasolve/shared';
-import { LocalFileTripMapRepository } from './trip/repositories/localFileTripMapRepository.js';
-import { TripMapController } from './trip/tripMapController.js';
-import { TripMapHttpService } from './trip/tripMapHttpService.js';
+import { tripIdSchema } from '@trasolve/shared';
+import { LocalFileTripRepository } from './trip/repositories/localFileTripRepository.js';
+import { TripController } from './trip/tripController.js';
+import { TripHttpService } from './trip/tripHttpService.js';
 import { Routes } from './google/maps/routes.js';
 import { Places } from './google/maps/places.js';
 import { ChatService } from './ai/chatService.js';
@@ -23,22 +23,22 @@ const places = new Places(process.env.GOOGLE_PLACES_API_KEY ?? '');
 const chatProvider = new RandomChatProvider();
 const chat = new ChatService(chatProvider);
 const backendRoot = fileURLToPath(new URL('../', import.meta.url));
-const tripMapRepository = new LocalFileTripMapRepository({
+const tripRepository = new LocalFileTripRepository({
   rootDir: resolve(
     backendRoot,
     process.env.TRASOLVE_DATA_DIR?.trim() || 'data',
   ),
 });
-const tripMap = new TripMapController(tripMapRepository);
-const localUserId = tripMapIdSchema.parse(
+const trip = new TripController(tripRepository);
+const localUserId = tripIdSchema.parse(
   process.env.TRASOLVE_LOCAL_USER_ID?.trim() || 'local-user',
 );
-const tripMapHttp = new TripMapHttpService(tripMap, () => localUserId);
+const tripHttp = new TripHttpService(trip, () => localUserId);
 
 export const API = {
   Route: routes,
   Place: places,
   Chat: chat,
-  TripMap: tripMap,
-  TripMapHttp: tripMapHttp,
+  Trip: trip,
+  TripHttp: tripHttp,
 };

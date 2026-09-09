@@ -1,113 +1,104 @@
-# Frontend TripMap state and rendering
+# Frontend Trip sessions and rendering
 
-```mermaid
-flowchart TD
-  Action[User action] --> Controller[Frontend TripMapController]
-  Controller --> Store[TripMapStore]
-  Controller --> API[TripMapApi / existing backend CRUD]
-  API --> Controller
-  Store --> Sidebar[React Sidebar]
-  Store --> Layer[TripMapLayer]
-  UI[Selection / camera UI state] --> Layer
-  Layer --> Objects[MapObjectController]
-  Objects --> Google[GoogleMapObjectController / native SDK objects]
-```
+Trip is travel domain data: title, dates, days, places, order and memos. Map is
+rendering infrastructure: camera and drawable objects. TripLayer binds the two.
+Map infrastructure never imports Trip or page features.
 
-## Composition and contracts
+## Composition and ownership
 
-The class route root `MapPage` in `frontend/src/pages/map/MapPage.tsx` creates one store
-and controller in its constructor and injects the stateless tripMapApi client.
-Its stable context value is passed through the render-only `TripMapProvider`.
-`pages/map/hooks/useTripMap.ts` exposes the Context, `useTripMapState`
-(useSyncExternalStore) and `useTripMapController`. Keeping the Context separate
-from the component preserves its identity when the Provider is refreshed in development.
-MapPage.componentWillUnmount cancels pending controller requests; StrictMode can
-reuse the instance after cleanup. Constructors have no requests/subscriptions to leak
-when StrictMode discards a construction. TripMapsWorkspace owns its catalog query
-effect and MapWorkspace owns local UI; both remain function components.
-No global mutable store or additional state-management dependency is introduced.
+MapPage remains a class route root and only renders TripWorkspace. No TripStore,
+TripEditController or TripProvider exists before the user selects a trip.
 
-TripMapStore has getState, setState and subscribe. Snapshots contain tripMap,
-visiting-order routes, status (idle/loading/ready/saving/error) and error. They are
-detached and recursively frozen; getState returns a stable snapshot until publication.
-The store performs no API work, domain commands or Google rendering.
+    MapPage
+    └─ TripWorkspace: repository, catalog and selection requests
+       ├─ TripPickerPopup: presentation and callbacks
+       └─ TripSession: one selected Trip
+          ├─ TripStore
+          ├─ TripEditController → TripRepository.saveTrip
+          └─ TripProvider → MapWorkspace
+                            ├─ LayerPanel
+                            ├─ MapViewport → GoogleMapView → TripLayer
+                            └─ MapAiRegion
 
-The frontend TripMapController depends only on the store contract, TripMapApi and
-provider-neutral domain types. Its commands are loadTrip, createTrip, deleteTrip,
-closeTrip, renameTrip, addDay, addPlace, removePlace, movePlace, updatePlace and
-updateMemo. movePlace takes a zero-based targetIndex matching sidebar drag/drop;
-the controller normalizes stored order to one-based consecutive values per day.
-The backend controller remains the canonical persistence/domain validation boundary.
+TripWorkspace constructs one HttpTripRepository. Frontend TripRepository exposes
+listTrips, getTrip, createTrip, saveTrip and deleteTrip with AbortSignal support.
+Lists retain the existing Trip[] response. HttpTripRepository wraps pages/map/api/trips.ts,
+which retains fetch, timeout, error normalization and shared schema validation.
+Application code depends on the repository contract; the old TripApi object is
+removed. Backend TripRepository is a separate server storage contract. Neither
+HTTP nor persisted format changes.
 
-## Mutation and request ordering
+The picker receives callbacks only. Workspace loads or creates a canonical Trip,
+then mounts TripSession. Each selection gets a session key; selecting another ID
+or explicitly reloading the same ID replaces the session. Failure leaves the current
+session intact. Delete clears a matching selection and refreshes the catalog.
+Workspace owns catalogLoading/catalogError and opening/creating/deleting status
+with separate action errors and request cancellation. It does not edit trip internals.
 
-Commands clone the previous snapshot, apply and validate a mutation, publish it
-with saving status, then call the existing PUT API. Sidebar and map update before
-the response. Success replaces the snapshot with the canonical backend result.
-Failure restores the previous domain and route snapshots and reports an error.
-Only one mutation is in flight; mutation controls are disabled during saving and
-programmatic concurrent mutation attempts return false without changing state.
-Commands resolve to a success boolean; UI callbacks do not need exception handling.
+TripSession creates the store and edit controller in a lazy state initializer.
+TripProvider passes their stable Context value. Constructors perform no I/O or
+subscriptions; discarded StrictMode initializations leak no resources. Session
+unmount cancels pending edits. Idempotent cancellation permits StrictMode effect
+cleanup/setup to reuse the session. useTripState (useSyncExternalStore) and
+useTripEditController are session-only; Workspace and picker do not call them.
 
-New days/places use temporary frontend IDs for optimistic display. Those IDs are
-omitted from the request. The backend generates canonical IDs, so only newly added
-temporary objects are replaced after creation. Existing place/day IDs stay stable.
-Loading another trip cancels previous work, and request identity/abort checks prevent
-late responses from updating a different trip. closeTrip clears the opened snapshot.
-Aborting or timing out a request does not guarantee the server canceled a write;
-opening/reloading the trip fetches the canonical persisted state again.
+## Store and edits
 
-Currently routes are straight visiting-order lines. The controller publishes updated
-geometry whenever domain state changes; rollback restores the matching geometry.
-TripMapLayer only renders the supplied routes and does not infer invalidation rules.
-Future computed road routes need cache invalidation in the controller/backend.
+createTripStore(initialTrip) validates and detaches a required Trip, prepares
+visiting-order route geometry and starts ready. Trip is non-null; state contains
+trip, routes, ready/saving/error status and error. Snapshots are recursively frozen
+and stable until setState publishes a detached copy. Store performs no HTTP work.
+MapWorkspace subscribes to the live store rather than the initial selection snapshot;
+both LayerPanel and TripLayer receive optimistic and canonical changes.
 
-## Rendering ownership
+TripEditController binds to the initial Trip ID and exposes save, renameTrip,
+addDay, addPlace, removePlace, movePlace, updatePlace, updateMemo and cancelPending.
+List/load/create/delete/close belong outside it. Dependencies are TripStore,
+TripRepository and provider-neutral domain helpers, never React or map objects.
 
-TripMapLayer accepts tripMap, routes, selection and a MapObjectController contract.
-It contains no API/controller/store mutation calls or Google SDK references.
-It holds marker handles keyed by place ID and polyline handles keyed by day ID.
-New IDs create objects; existing IDs update through setters; missing IDs remove
-their handles and click subscriptions. Layers are named itinerary-markers and
-itinerary-route. Cleanup removes only its own handles, preserving unrelated layers.
-Object cleanup is idempotent even if runtime disposal runs before React cleanup.
+Mutations structuredClone the snapshot, normalize each day's order to consecutive
+one-based values, validate the shared schema and publish saving state immediately.
+movePlace still accepts the zero-based sidebar target index. Concurrent edits return
+false while one mutation is pending. Temporary optimistic day/place IDs are omitted
+from input so the backend supplies canonical IDs; known IDs and optional fields persist.
+Repository.saveTrip sends TripInput through the existing whole-trip PUT endpoint.
+Success publishes the canonical result with ready status. A mismatched response ID
+is rejected. Failure restores domain and route snapshots and reports an error.
+save() uses the same pipeline without introducing an additional edit.
 
-This replaces MapMarker.tsx, RoutePolyline.tsx and useMapMarker. The generic
-useMapPolyline hook remains for the independent GoogleMap.polylines API. Native
-Google objects are still owned by MapRuntime.objects; no domain object owns a handle.
-TripMapLayer does not project screen coordinates, so panning/zoom remain SDK work.
+cancelPending aborts the request, restores its snapshot and detaches request identity.
+Late completion cannot update canceled/replaced sessions. Workspace separately aborts
+catalog/action requests on unmount. Abort does not guarantee a server write was
+canceled; reopening retrieves persisted state.
 
-## UI state
+tripToRoutes supplies the same straight visiting-order geometry for initialization
+and edits. Rollback restores matching geometry. Future road-route invalidation
+belongs in the edit controller/backend, never TripLayer.
 
-useMapUi owns selection and camera focus separately; sidebar collapse, AI panel
-visibility remain React state. Derived view types are
-read-only projections for the existing sidebar, not another editable TripMap model.
-MapModel and useMapModel have been removed. LayerPanel reorder invokes the frontend
-controller, and marker clicks update only selection. The former persistence
-toolbar and place editor UI are removed; all controller commands remain available.
+## Rendering and UI
 
-TripMapsWorkspace keeps the current map mounted while TripMapPickerDialog is open.
-Without a current trip, a reusable GoogleMap supplies the
-background and the picker cannot be dismissed. Opening the picker refreshes its
-abortable catalog query; successful load/create closes it, failures keep it open,
-and no toolbar or replacement control reopens the picker after selection.
-X/Escape dismiss it only when a trip exists. The backdrop and inert background
-block map/sidebar interaction.
+TripLayer still takes Trip, routes, selection and MapObjectController. Marker handles
+remain keyed by place ID and polylines by day ID; setters update existing objects,
+and missing IDs remove handles/listeners. Cleanup removes only owned
+itinerary-markers/itinerary-route objects. GoogleMapView, camera policy, native
+marker positioning and map object lifecycle are unchanged.
 
-MapToolbar is a React overlay aligned to the left of the available area beside
-LayerPanel. MapViewport supplies a grid column for tools using the existing panel
-width variable; the toolbar itself uses a local 16px inset and a maximum width of
-720px. AI visibility changes available width, never the toolbar's left anchor.
-Search keeps a local draft and reports that search is not connected yet. Undo/redo
-are disabled; pan, marker, polyline, route and measure only change local selection.
-It does not call APIs, controllers or Google controls. The picker remains above it.
-On wide screens it reserves room for an open AI panel; at 1100px and below it hides
-while AI is open, preserving its local state. Mobile placement uses the full map width.
+Selection/camera stay in useMapUi. Collapse, AI visibility/chat and drag previews
+are not persisted. Sidebar view types remain derived data; the mapper imports its
+view Trip as TripView to distinguish it from shared Trip.
+
+The picker blocks background interaction above the existing map. Without selection,
+a reusable GoogleMap supplies the background and the popup cannot be dismissed.
+Load/create success closes it; failure keeps it open. X/Escape only dismiss when a
+trip exists and no catalog action is pending. No replacement toolbar control reopens
+the picker after selection. Picker deletion calls Workspace and ends a matching session.
+MapToolbar placement/state, AI focus/history/Markdown/export and drag algorithm remain.
 
 ## Manual verification
 
-Use the real backend and /map. Verify initial picker load/create, optimistic reorder,
-existing marker identity, route geometry, selection, pan/zoom,
-AI panel, cleanup and remount. Temporarily disconnect the browser network to verify
-rollback; reconnect and reopen to confirm persisted data. No test-only providers,
-fixtures, automated test files or application branches are required.
+Use the real /map UI and backend: confirm no Provider before selection, load/create,
+initial routes, optimistic reorder/place edits, failed-save rollback, session switch,
+unmount cancellation and deletion. Disconnect browser networking for failures, then
+reopen to retrieve canonical state. No test-only branches, fake providers, automated
+tests or fixtures are added. HTTP/static checks do not replace browser lifecycle,
+focus, map interaction and StrictMode verification.

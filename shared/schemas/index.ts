@@ -1,13 +1,13 @@
 import { z } from 'zod';
 export {
-  tripMapIdSchema,
-  tripMapSchema,
-  tripMapInputSchema,
-  tripMapDaySchema,
-  tripMapPlaceSchema,
-  tripMapListSchema,
+  tripIdSchema,
+  tripSchema,
+  tripInputSchema,
+  tripDaySchema,
+  tripPlaceSchema,
+  tripListSchema,
   TRIP_BODY_LIMIT,
-} from './tripMap.js';
+} from './trip.js';
 
 export const healthResponseSchema = z.object({
   status: z.literal('ok'),

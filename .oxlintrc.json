@@ -82,8 +82,8 @@
                 "message": "Import API from instances.js and use API.Route.queryRoutes() or API.Route.handle()."
               },
               {
-                "regex": "(^|/)localFileTripMapRepository(\\.[^/]*)?$",
-                "message": "Only instances.ts constructs the file repository. Use TripMapController and the TripMapRepository contract."
+                "regex": "(^|/)localFileTripRepository(\\.[^/]*)?$",
+                "message": "Only instances.ts constructs the file repository. Use TripController and the TripRepository contract."
               }
             ]
           }
@@ -126,7 +126,7 @@
                 "message": "React binding belongs in Provider/hooks, not the store or controller."
               },
               {
-                "regex": "(^|/)(adapters|runtime|components|hooks)(/|$)",
+                "regex": "(^|/)(adapters|runtime|components|hooks|api)(/|$)|(^|/)HttpTripRepository(\\.[^/]*)?$",
                 "message": "Domain state and commands must not depend on map rendering or React bindings."
               }
             ]
@@ -135,15 +135,15 @@
       }
     },
     {
-      "files": ["frontend/src/pages/map/components/viewport/TripMapLayer.tsx"],
+      "files": ["frontend/src/pages/map/components/viewport/TripLayer.tsx"],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
               {
-                "regex": "(^|/)(api|controller|store)(/|$)",
-                "message": "TripMapLayer only projects props to map primitives; no persistence or domain mutation."
+                "regex": "(^|/)(api|controller|store|repository)(/|$)",
+                "message": "TripLayer only projects props to map primitives; no persistence or domain mutation."
               },
               {
                 "regex": "(^|/)Google(MapAdapter|MapObjectController|OverlayHost)(\\.[^/]*)?$",
@@ -166,8 +166,51 @@
           {
             "patterns": [
               {
-                "regex": "(^|/)(api|controller|store|adapters|runtime)(/|$)",
+                "regex": "(^|/)(api|controller|store|repository|adapters|runtime)(/|$)",
                 "message": "Visual regions compose UI through props; keep API, domain commands and SDK infrastructure in their existing owners."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["frontend/src/pages/map/repository/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["react", "react/*", "react-dom", "react-dom/*"],
+                "message": "Trip repositories are independent of React."
+              },
+              {
+                "regex": "(^|/)(controller|store|hooks|components|adapters|runtime)(/|$)",
+                "message": "Repositories depend on persistence contracts and HTTP clients, not sessions or rendering."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["frontend/src/pages/map/components/**/*.tsx"],
+      "excludeFiles": [
+        "frontend/src/pages/map/components/TripWorkspace.tsx",
+        "frontend/src/pages/map/components/TripSession.tsx",
+        "frontend/src/pages/map/components/viewport/**",
+        "frontend/src/pages/map/components/layer-panel/**",
+        "frontend/src/pages/map/components/ai/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(^|/)(api|repository|controller|store|adapters|runtime)(/|$)",
+                "message": "UI uses callbacks or session hooks; only TripWorkspace and TripSession compose persistence dependencies."
               }
             ]
           }

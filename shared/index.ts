@@ -1,19 +1,19 @@
 export { API_ROUTES, CHAT_LIMITS, TravelMode } from './constants/index.js';
 export {
-  tripMapIdSchema,
-  tripMapSchema,
-  tripMapInputSchema,
-  tripMapDaySchema,
-  tripMapPlaceSchema,
-  tripMapListSchema,
+  tripIdSchema,
+  tripSchema,
+  tripInputSchema,
+  tripDaySchema,
+  tripPlaceSchema,
+  tripListSchema,
   TRIP_BODY_LIMIT,
-} from './schemas/tripMap.js';
+} from './schemas/trip.js';
 export type {
-  TripMap,
-  TripMapInput,
-  TripMapDay,
-  TripMapPlace,
-} from './types/tripMap.js';
+  Trip,
+  TripInput,
+  TripDay,
+  TripPlace,
+} from './types/trip.js';
 export { DirectionsRequestBuilder } from './builders/DirectionsRequestBuilder.js';
 export { healthResponseSchema } from './schemas/index.js';
 export type { HealthResponse } from './types/index.js';

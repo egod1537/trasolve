@@ -1,23 +1,23 @@
 import { randomUUID } from 'node:crypto';
 import {
-  tripMapIdSchema,
-  tripMapInputSchema,
-  tripMapSchema,
-  type TripMap,
-  type TripMapInput,
+  tripIdSchema,
+  tripInputSchema,
+  tripSchema,
+  type Trip,
+  type TripInput,
 } from '@trasolve/shared';
-import type { TripMapRepository } from './tripMapRepository.js';
+import type { TripRepository } from './tripRepository.js';
 import { TripError, invalidTripRequest } from './errors.js';
 
-export class TripMapController {
-  public constructor(private readonly repository: TripMapRepository) {}
+export class TripController {
+  public constructor(private readonly repository: TripRepository) {}
 
-  public async listTrips(userId: string): Promise<TripMap[]> {
+  public async listTrips(userId: string): Promise<Trip[]> {
     this.validateIds(userId);
     return this.repository.listByUser(userId);
   }
 
-  public async getTrip(userId: string, tripId: string): Promise<TripMap> {
+  public async getTrip(userId: string, tripId: string): Promise<Trip> {
     this.validateIds(userId, tripId);
     const trip = await this.repository.getById(userId, tripId);
     if (!trip)
@@ -27,8 +27,8 @@ export class TripMapController {
 
   public async createTrip(
     userId: string,
-    input: TripMapInput,
-  ): Promise<TripMap> {
+    input: TripInput,
+  ): Promise<Trip> {
     this.validateIds(userId);
     const now = new Date().toISOString();
     const trip = this.normalize(input, {
@@ -44,8 +44,8 @@ export class TripMapController {
   public async saveTrip(
     userId: string,
     tripId: string,
-    input: TripMapInput,
-  ): Promise<TripMap> {
+    input: TripInput,
+  ): Promise<Trip> {
     this.validateIds(userId, tripId);
     // Serialize the whole read/modify/write operation, including delete.
     return this.serialize(userId, tripId, async () => {
@@ -70,11 +70,11 @@ export class TripMapController {
   private readonly mutations = new Map<string, Promise<unknown>>();
 
   private normalize(
-    input: TripMapInput,
-    metadata: Pick<TripMap, 'id' | 'userId' | 'createdAt' | 'updatedAt'>,
-    existing?: TripMap,
-  ): TripMap {
-    const parsed = tripMapInputSchema.safeParse(input);
+    input: TripInput,
+    metadata: Pick<Trip, 'id' | 'userId' | 'createdAt' | 'updatedAt'>,
+    existing?: Trip,
+  ): Trip {
+    const parsed = tripInputSchema.safeParse(input);
     if (!parsed.success) throw invalidTripRequest();
     const knownDays = new Set(existing?.days.map((day) => day.id));
     const knownPlaces = new Set(
@@ -85,7 +85,7 @@ export class TripMapController {
       if (!known.has(id)) throw invalidTripRequest();
       return id;
     };
-    const result = tripMapSchema.safeParse({
+    const result = tripSchema.safeParse({
       ...parsed.data,
       id: metadata.id,
       userId: metadata.userId,
@@ -106,7 +106,7 @@ export class TripMapController {
   }
 
   private validateIds(...ids: string[]): void {
-    if (ids.some((id) => !tripMapIdSchema.safeParse(id).success))
+    if (ids.some((id) => !tripIdSchema.safeParse(id).success))
       throw invalidTripRequest();
   }
 

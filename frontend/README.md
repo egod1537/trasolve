@@ -10,14 +10,16 @@ The map is composed from LayerPanel, MapViewport and MapAiRegion; see
 
 The landing page links to `/map`, a backend-backed trip list and Google Maps itinerary
 editor. Create an empty trip or explicitly create the Tokyo example from
-`src/pages/map/data/demoTrip.ts`. The class route root `MapPage` assembles one external TripMapStore
-and frontend TripMapController per workspace and passes a stable value to TripMapProvider.
-Sidebar and TripMapLayer consume the
+`src/pages/map/data/demoTrip.ts`. MapPage only renders TripWorkspace, which owns the frontend TripRepository and
+catalog selection. Selecting a Trip mounts TripSession, creating a non-null TripStore
+and TripEditController and providing their stable value through TripProvider.
+Session unmount cancels edits; workspace cleanup separately cancels catalog requests.
+Sidebar and TripLayer consume the
 same immutable snapshot through useSyncExternalStore. Commands optimistically
-update it, save through `src/pages/map/api/trips.ts`, then apply the canonical response or
+update it, save through TripRepository → HttpTripRepository → `src/pages/map/api/trips.ts`, then apply the canonical response or
 roll back on failure. Selection/camera focus live separately in `useMapUi`.
 See [Frontend state/binding](../docs/frontend-trip-map.md) and
-[TripMap persistence](../docs/trip-maps.md).
+[Trip persistence](../docs/trip-maps.md).
 Provider-neutral camera operations are defined by
 `src/map/adapters/MapAdapter.ts`; `src/map/adapters/GoogleMapAdapter.ts` translates
 them to Google Maps calls. `src/map/runtime/googleMaps.ts` only loads and configures the
@@ -27,7 +29,7 @@ SDK.
 instances, bound to the runtime's map. The SDK positions markers during pan/zoom;
 React does not project their coordinates or render their content. Marker DOM and
 styles live in the adapter, preserving order numbers, day colors and selection.
-`TripMapLayer` reconciles marker handles by place ID and polyline handles by day ID.
+`TripLayer` reconciles marker handles by place ID and polyline handles by day ID.
 Labels, coordinates and styles update via setters without rebuilding objects.
 The old MapMarker/RoutePolyline wrappers, useMapMarker, MapModel and useMapModel
 are removed. The generic useMapPolyline hook remains for GoogleMap.polylines props.

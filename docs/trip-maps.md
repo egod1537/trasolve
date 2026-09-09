@@ -1,16 +1,20 @@
-# TripMap persistence
+# Trip persistence
 
-`frontend/src/pages/map/api/trips.ts → TripMapHttpService → TripMapController → TripMapRepository`
+`Frontend TripRepository → HttpTripRepository → api/trips.ts → backend TripHttpService → TripController → TripRepository`
 is the persistence boundary. Rendering remains separate through MapObjectController.
+
+The Trip terminology is an internal type/module naming convention. HTTP paths,
+request/response JSON fields, stored JSON and the data directory are unchanged;
+existing local files require no migration.
 
 ## Domain and commands
 
-`shared/schemas/tripMap.ts` validates the domain; `shared/types/tripMap.ts` exports
-TripMap, TripMapInput, TripMapDay and TripMapPlace. Stored data includes owner, title,
+`shared/schemas/trip.ts` validates the domain; `shared/types/trip.ts` exports
+Trip, TripInput, TripDay and TripPlace. Stored data includes owner, title,
 optional ISO dates, days (including color), places (location, order, optional Google
 placeId/address/memo/time), and UTC createdAt/updatedAt timestamps.
 
-TripMapController exposes listTrips, getTrip, createTrip, saveTrip and deleteTrip.
+TripController exposes listTrips, getTrip, createTrip, saveTrip and deleteTrip.
 It imports only the repository interface. All modifications, including future AI
 commands, must go through this controller. The initial API uses whole-trip PUT;
 addPlace/movePlace/updatePlace command endpoints are not implemented yet.
@@ -25,15 +29,15 @@ optional fields are removed and omitted days/places are deleted.
 
 ## HTTP contract
 
-| Method | Endpoint             | Success                             |
-| ------ | -------------------- | ----------------------------------- |
-| GET    | `/api/trips`         | 200, TripMap[] for the current user |
-| POST   | `/api/trips`         | 201, created TripMap                |
-| GET    | `/api/trips/:tripId` | 200, TripMap                        |
-| PUT    | `/api/trips/:tripId` | 200, saved TripMap                  |
-| DELETE | `/api/trips/:tripId` | 204, no body                        |
+| Method | Endpoint            | Success                         |
+| ------ | ------------------- | ------------------------------- |
+| GET    | `/api/trips`        | 200, Trip[] for the current user |
+| POST   | `/api/trips`        | 201, created Trip               |
+| GET    | `/api/trips/:tripId` | 200, Trip                       |
+| PUT    | `/api/trips/:tripId` | 200, saved Trip                 |
+| DELETE | `/api/trips/:tripId` | 204, no body                    |
 
-POST/PUT accept TripMapInput as JSON, for example:
+POST/PUT accept TripInput as JSON, for example:
 
 ```json
 {
@@ -70,9 +74,9 @@ ENOENT. Filesystem paths, contents and stack traces are not returned to clients.
 instances.ts is the composition root:
 
 ```text
-new LocalFileTripMapRepository({ rootDir })
-  → new TripMapController(repository) → API.TripMap
-  → new TripMapHttpService(controller, currentUserResolver) → API.TripMapHttp
+new LocalFileTripRepository({ rootDir })
+  → new TripController(repository) → API.Trip
+  → new TripHttpService(controller, currentUserResolver) → API.TripHttp
 ```
 
 `TRASOLVE_DATA_DIR` defaults to `backend/data`, resolved relative to the backend
@@ -107,25 +111,28 @@ the optional Tokyo example button submits sample content through the same API an
 receives canonical server IDs. No automatic seed runs inside the repository.
 The initial picker supports trip selection and creation; the map sidebar supports
 drag/drop reorder. The persistence toolbar and place editor are no longer exposed.
-Controller commands for title, places, coordinates/memos, days and deletion remain
-available. Mutations still use the existing APIs; dates and other fields are preserved.
+TripEditController commands for title, places, coordinates/memos and days remain
+available. Trip deletion belongs to TripWorkspace and is exposed in the picker. Mutations still use the existing APIs; dates and other fields are preserved.
 
-`src/pages/map/domain/tripMapMapping.ts` maps persisted data to the existing map view
-types; the sample creation helper maps the example to an API input. TripMapStore
-holds the current frontend snapshot. TripMapController applies optimistic mutations,
+`src/pages/map/domain/tripMapping.ts` maps persisted data to the existing map view
+types; the sample creation helper maps the example to an API input. TripStore
+holds a non-null snapshot only inside the selected TripSession. TripEditController applies optimistic mutations,
 then replaces them with the server response or rolls back on failure. Opening a trip
-fetches it again from the backend. Selection, sidebar state, AI panel
-visibility, drag previews and chat messages are never included in TripMapInput.
+fetches it through the frontend repository and mounts a new TripSession/TripProvider.
+Frontend TripRepository describes HTTP persistence; backend TripRepository describes
+server storage. MapPage creates no store or edit controller before selection.
+Selection, sidebar state, AI panel
+visibility, drag previews and chat messages are never included in TripInput.
 The API client validates request/response schemas and supports AbortSignal/timeouts.
 
-See [Frontend TripMap state and binding](frontend-trip-map.md) for store/controller/
+See [Frontend Trip state and binding](frontend-trip-map.md) for store/controller/
 renderer ownership. The backend controller and persistence contracts remain unchanged.
 
 ## PostgreSQL replacement
 
-Implement TripMapRepository in PostgresTripMapRepository, retaining user-scoped
+Implement TripRepository in PostgresTripRepository, retaining user-scoped
 list/get/save/delete semantics. Replace repository construction in instances.ts.
-TripMapController, HTTP contracts, shared types and frontend need no storage-specific
+TripController, HTTP contracts, shared types and frontend need no storage-specific
 changes. Add database transactions/versioning when expanding concurrency support.
 
 ## Verification

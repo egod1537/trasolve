@@ -1,7 +1,16 @@
-import type { TripMap, TripMapInput } from '@trasolve/shared';
-import type { Trip } from './trip';
+import type { Trip, TripInput } from '@trasolve/shared';
+import type { Trip as TripView, TripRoute } from './trip';
 
-export function tripMapToView(trip: TripMap): Trip {
+/** Visiting-order geometry shared by initial state, edits and rollback. */
+export function tripToRoutes(trip: Trip): TripRoute[] {
+  return trip.days.map((day) => ({
+    dayId: day.id,
+    color: day.color,
+    path: day.places.map((place) => ({ ...place.location })),
+  }));
+}
+
+export function tripToView(trip: Trip): TripView {
   return {
     title: trip.title,
     period:
@@ -20,7 +29,7 @@ export function tripMapToView(trip: TripMap): Trip {
   };
 }
 
-export function tripViewToInput(view: Trip, stored?: TripMap): TripMapInput {
+export function tripViewToInput(view: TripView, stored?: Trip): TripInput {
   const places = new Map(
     stored?.days.flatMap((day) =>
       day.places.map((place) => [place.id, place] as const),

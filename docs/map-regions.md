@@ -4,23 +4,27 @@ The visual-region refactor starts from commit
 `0e57cabbbd0da456b2ec7f4dafc23a32ca200e82` on `impl`.
 
 ```text
-MapPage (class, owns Store/Controller)
-└─ TripMapsWorkspace (catalog and picker)
-   ├─ MapWorkspace (mapping, selection and composition)
+MapPage (class route root)
+└─ TripWorkspace (catalog and picker)
+   ├─ TripSession → TripProvider → MapWorkspace (mapping, selection and composition)
    │  ├─ LayerPanel
-   │  │  └─ DayLayerSection
-   │  │     └─ PlaceLayerItem → PlaceDragHandle
+   │  │  ├─ LayerPanelHeader
+   │  │  ├─ LayerPanelContent
+   │  │  │  └─ DayLayerSection → PlaceLayerItem → PlaceDragHandle
+   │  │  └─ LayerPanelFooter
    │  ├─ MapViewport
-   │  │  ├─ GoogleMapView → GoogleMap / TripMapLayer
+   │  │  ├─ GoogleMapView → GoogleMap / TripLayer
    │  │  └─ MapToolbar
    │  └─ MapAiRegion
    │     ├─ MapAiButton
    │     └─ MapAiPanel
-   └─ TripMapPickerDialog
+   └─ TripPickerPopup
 ```
 
-LayerPanel owns the existing collapse state, scroll ref, selected-item reveal and
-usePlaceReorder binding. It only reports reorder results through onMovePlace.
+LayerPanel composes its header, content and footer while retaining the aside ref
+and busy state boundary. Header owns trip summary/show-all markup; footer owns the
+route explanation. Content owns collapse state, scroll ref, selected-item reveal
+and usePlaceReorder binding, reporting reorder results through onMovePlace.
 DayLayerSection owns day headings, collapse controls and the unchanged drop-indicator
 calculation. PlaceLayerItem owns the place row, its drag handle and presentation.
 The drag algorithm and its data attributes / trip-place-item selector are unchanged.
@@ -29,7 +33,7 @@ MapViewport provides a relative wrapper with the same full canvas dimensions as
 before. The floating LayerPanel still overlays the canvas: physically shrinking the
 canvas would change the existing camera padding. The original sidebarRef points to
 the LayerPanel aside, so GoogleMapView keeps measuring the same panel geometry.
-GoogleMapView still owns camera effects and TripMapLayer; the viewport never creates
+GoogleMapView still owns camera effects and TripLayer; the viewport never creates
 SDK objects or mutates trip data. A tools grid column beside LayerPanel supplies
 MapToolbar's positioning boundary. It uses the existing panel-width variable;
 MapToolbar has no panel-width calculation and starts at a local 16px inset. Its

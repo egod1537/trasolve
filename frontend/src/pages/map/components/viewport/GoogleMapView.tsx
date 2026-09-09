@@ -1,5 +1,5 @@
 import { memo, useEffect, type RefObject } from 'react';
-import type { TripMap } from '@trasolve/shared';
+import type { Trip } from '@trasolve/shared';
 import { GoogleMap, useGoogleMap } from '../../../../map/components/GoogleMap';
 import type { GoogleMapStatus } from '../../../../map/types/googleMapComponent';
 import {
@@ -10,10 +10,10 @@ import {
 } from '../../domain/cameraPolicy';
 import type { MapFocusTarget } from '../../domain/mapUiTypes';
 import type { TripRoute } from '../../domain/trip';
-import { TripMapLayer } from './TripMapLayer';
+import { TripLayer } from './TripLayer';
 
 type Props = {
-  tripMap: TripMap;
+  trip: Trip;
   routes: readonly TripRoute[];
   focusTarget: MapFocusTarget;
   selectedPlaceId: string | null;
@@ -22,8 +22,8 @@ type Props = {
   sidebarRef: RefObject<HTMLElement | null>;
 };
 
-function TripMapObjects({
-  tripMap,
+function TripObjects({
+  trip,
   routes,
   focusTarget,
   selectedPlaceId,
@@ -82,9 +82,9 @@ function TripMapObjects({
   }, [adapter, canvasRef, focusTarget, sidebarRef]);
 
   return (
-    <TripMapLayer
+    <TripLayer
       objects={objects}
-      tripMap={tripMap}
+      trip={trip}
       routes={routes}
       selectedPlaceId={selectedPlaceId}
       selectedDayId={selectedDayId}
@@ -93,7 +93,7 @@ function TripMapObjects({
   );
 }
 
-function renderTripMapStatus(status: Exclude<GoogleMapStatus, 'ready'>) {
+function renderMapStatus(status: Exclude<GoogleMapStatus, 'ready'>) {
   return (
     <div
       className="trip-map-status"
@@ -126,9 +126,9 @@ export const GoogleMapView = memo(function GoogleMapView(props: Props) {
       className="trip-map-root"
       style={{ position: 'absolute', inset: 0, height: '100%' }}
       ariaLabel="여행 장소 지도"
-      renderStatus={renderTripMapStatus}
+      renderStatus={renderMapStatus}
     >
-      <TripMapObjects {...props} />
+      <TripObjects {...props} />
     </GoogleMap>
   );
 });
