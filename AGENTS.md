@@ -20,7 +20,7 @@
 
 ## Google Maps 경계
 
-- `google.maps` 객체 및 타입의 직접 사용은 `frontend/src/maps/`와 `frontend/src/adapters/map/`에 둔다. 컴포넌트·페이지·도메인은 provider-neutral 타입과 `MapRuntime` 계약을 사용한다.
-- `maps/`는 브라우저 SDK 로딩과 지도 렌더링만 담당한다. HTTP 요청은 `frontend/src/api/`에 두고 React 컴포넌트에서 직접 `fetch`하지 않는다.
+- `google.maps` 객체 및 타입의 직접 사용은 `frontend/src/map/runtime/`와 `frontend/src/map/adapters/`에 둔다. 컴포넌트·페이지·도메인은 provider-neutral 타입과 `MapRuntime` 계약을 사용한다.
+- `map/runtime/`는 브라우저 SDK 로딩과 지도 렌더링만 담당한다. HTTP 요청은 공용 `frontend/src/api/` 또는 페이지 전용 `frontend/src/pages/map/api/`에 두고 React 컴포넌트에서 직접 `fetch`하지 않는다.
 - Routes 계산과 Places 조회는 Trasolve backend를 경유한다. Google 원본 응답은 도메인 데이터로 사용하지 않으며, 기존 Test Bed의 Routes 원본 응답은 Debug 표시 용도로만 사용한다.
 - 브라우저 키는 Maps JavaScript API 전용이며 HTTP referrer 제한을 적용한다. Routes·Places 서버 키와 공유하거나 서버 키를 `VITE_` 환경변수에 넣지 않는다.

@@ -1,6 +1,6 @@
 # Page root ownership
 
-Every entry in `frontend/src/routes.tsx` renders a React class page root. Lazy
+Every entry in `frontend/src/app/routes.tsx` renders a React class page root. Lazy
 loading and URLs are unchanged. Routing currently supplies no params or navigation
 hooks, so no function route bridge is needed.
 
@@ -14,7 +14,7 @@ hooks, so no function route bridge is needed.
 
 MapPage is now the `/map` route entry, replacing TripMapsPage. The former list and
 editor function components are `TripMapsWorkspace` and `MapWorkspace` under
-`components/map`. TripMapsWorkspace owns its abortable catalog query effect;
+`pages/map/components`. TripMapsWorkspace owns its abortable catalog query effect;
 MapWorkspace owns selection, camera and panel state. They consume the same
 page-owned TripMapStore. TripMapProvider only passes the supplied value to Context;
 it never creates dependencies or disposes dependencies owned by its caller.

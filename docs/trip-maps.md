@@ -1,6 +1,6 @@
 # TripMap persistence
 
-`frontend/src/api/trips.ts → TripMapHttpService → TripMapController → TripMapRepository`
+`frontend/src/pages/map/api/trips.ts → TripMapHttpService → TripMapController → TripMapRepository`
 is the persistence boundary. Rendering remains separate through MapObjectController.
 
 ## Domain and commands
@@ -110,7 +110,7 @@ drag/drop reorder. The persistence toolbar and place editor are no longer expose
 Controller commands for title, places, coordinates/memos, days and deletion remain
 available. Mutations still use the existing APIs; dates and other fields are preserved.
 
-`src/domain/map/tripMapMapping.ts` maps persisted data to the existing map view
+`src/pages/map/domain/tripMapMapping.ts` maps persisted data to the existing map view
 types; the sample creation helper maps the example to an API input. TripMapStore
 holds the current frontend snapshot. TripMapController applies optimistic mutations,
 then replaces them with the server response or rolls back on failure. Opening a trip

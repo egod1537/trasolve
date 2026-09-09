@@ -13,20 +13,21 @@
     {
       "files": ["frontend/src/**/*.{ts,tsx,js,mjs,cjs}"],
       "excludeFiles": [
-        "frontend/src/maps/**",
-        "frontend/src/adapters/map/**",
-        "frontend/src/api/**"
+        "frontend/src/map/runtime/**",
+        "frontend/src/map/adapters/**",
+        "frontend/src/api/**",
+        "frontend/src/pages/map/api/**"
       ],
       "rules": {
         "no-restricted-globals": [
           "error",
           {
             "name": "google",
-            "message": "Google SDK access belongs in maps or adapters/map. Use provider-neutral contracts."
+            "message": "Google SDK access belongs in map/runtime or map/adapters. Use provider-neutral contracts."
           },
           {
             "name": "fetch",
-            "message": "HTTP requests belong in frontend/src/api."
+            "message": "HTTP requests belong in api clients."
           }
         ],
         "no-restricted-properties": [
@@ -34,22 +35,22 @@
           {
             "object": "window",
             "property": "google",
-            "message": "Google SDK access belongs in maps or adapters/map."
+            "message": "Google SDK access belongs in map/runtime or map/adapters."
           },
           {
             "object": "globalThis",
             "property": "google",
-            "message": "Google SDK access belongs in maps or adapters/map."
+            "message": "Google SDK access belongs in map/runtime or map/adapters."
           },
           {
             "object": "window",
             "property": "fetch",
-            "message": "HTTP requests belong in frontend/src/api."
+            "message": "HTTP requests belong in api clients."
           },
           {
             "object": "globalThis",
             "property": "fetch",
-            "message": "HTTP requests belong in frontend/src/api."
+            "message": "HTTP requests belong in api clients."
           }
         ],
         "no-restricted-imports": [
@@ -112,8 +113,8 @@
     },
     {
       "files": [
-        "frontend/src/controllers/**/*.ts",
-        "frontend/src/stores/**/*.ts"
+        "frontend/src/pages/map/controller/**/*.ts",
+        "frontend/src/pages/map/store/**/*.ts"
       ],
       "rules": {
         "no-restricted-imports": [
@@ -125,7 +126,7 @@
                 "message": "React binding belongs in Provider/hooks, not the store or controller."
               },
               {
-                "regex": "(^|/)(adapters|maps|components|hooks)(/|$)",
+                "regex": "(^|/)(adapters|runtime|components|hooks)(/|$)",
                 "message": "Domain state and commands must not depend on map rendering or React bindings."
               }
             ]
@@ -134,14 +135,14 @@
       }
     },
     {
-      "files": ["frontend/src/components/map/TripMapLayer.tsx"],
+      "files": ["frontend/src/pages/map/components/viewport/TripMapLayer.tsx"],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
               {
-                "regex": "(^|/)(api|controllers|stores)(/|$)",
+                "regex": "(^|/)(api|controller|store)(/|$)",
                 "message": "TripMapLayer only projects props to map primitives; no persistence or domain mutation."
               },
               {
@@ -155,9 +156,9 @@
     },
     {
       "files": [
-        "frontend/src/components/map/layer-panel/**/*.tsx",
-        "frontend/src/components/map/viewport/**/*.tsx",
-        "frontend/src/components/map/ai/**/*.tsx"
+        "frontend/src/pages/map/components/layer-panel/**/*.tsx",
+        "frontend/src/pages/map/components/viewport/MapViewport.tsx",
+        "frontend/src/pages/map/components/ai/**/*.tsx"
       ],
       "rules": {
         "no-restricted-imports": [
@@ -165,8 +166,28 @@
           {
             "patterns": [
               {
-                "regex": "(^|/)(api|controllers|stores|adapters|maps)(/|$)",
+                "regex": "(^|/)(api|controller|store|adapters|runtime)(/|$)",
                 "message": "Visual regions compose UI through props; keep API, domain commands and SDK infrastructure in their existing owners."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "frontend/src/map/**/*.{ts,tsx}",
+        "frontend/src/shared/**/*.{ts,tsx}",
+        "frontend/src/api/**/*.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(^|/)pages(/|$)",
+                "message": "Shared code, HTTP clients and map infrastructure must not import page features."
               }
             ]
           }

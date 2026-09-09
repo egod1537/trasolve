@@ -15,10 +15,10 @@ flowchart TD
 
 ## Composition and contracts
 
-The class route root `MapPage` in `frontend/src/pages/MapPage.tsx` creates one store
+The class route root `MapPage` in `frontend/src/pages/map/MapPage.tsx` creates one store
 and controller in its constructor and injects the stateless tripMapApi client.
 Its stable context value is passed through the render-only `TripMapProvider`.
-`hooks/map/useTripMap.ts` exposes the Context, `useTripMapState`
+`pages/map/hooks/useTripMap.ts` exposes the Context, `useTripMapState`
 (useSyncExternalStore) and `useTripMapController`. Keeping the Context separate
 from the component preserves its identity when the Provider is refreshed in development.
 MapPage.componentWillUnmount cancels pending controller requests; StrictMode can

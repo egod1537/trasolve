@@ -7,6 +7,9 @@ branch별 Docker 배포를 수행하는 프로젝트입니다. GitHub Actions는
 
 ## Architecture
 
+Frontend는 `app`, `pages`, `map`, `api`, `shared`, `assets`로 구성합니다.
+[소스 구조와 파일 이동 목록](docs/frontend-source-layout.md)을 참고하세요.
+
 ### TripMap persistence
 
 `/map`은 backend에서 내 여행 목록을 불러오며 여행 생성·열기·제목/순서 저장·삭제를 지원합니다.
@@ -57,7 +60,7 @@ assistant 응답은 `react-markdown`과 `remark-gfm`으로 렌더링하며 user 
 패널 헤더의 “Markdown으로 저장” 버튼은 실제 대화 전체를 브라우저 현지 날짜 기준
 `trasolve-ai-chat-YYYY-MM-DD.md`로 다운로드합니다. 환영 문구·로딩·오류 표시는 제외하고,
 응답 대기 중에도 이미 전송된 메시지를 저장할 수 있습니다. Markdown 생성과 다운로드는
-`frontend/src/utils/chatMarkdown.ts`에서 처리하며 backend 계약은 `content: string` 그대로입니다.
+`frontend/src/shared/utils/chatMarkdown.ts`에서 처리하며 backend 계약은 `content: string` 그대로입니다.
 RandomChatProvider의 응답 두 개는 Markdown 일정 예시입니다.
 
 ### Google Maps
@@ -77,8 +80,8 @@ Maps JavaScript API 전용으로 HTTP referrer 제한을 적용합니다.
 
 - `src/api/health.ts`, `routes.ts`, `places.ts`는 Trasolve backend에만 HTTP 요청을
   보내며, 공용 스키마로 응답을 검증합니다. 경로 계산과 장소 조회는 서버가 담당합니다.
-- `src/maps/googleMaps.ts`는 브라우저 SDK 로딩·키·Map ID·인증 이벤트만 담당합니다.
-  `createGoogleMapRuntime.ts`와 `src/adapters/map/Google*.ts`는 지도 생성,
+- `src/map/runtime/googleMaps.ts`는 브라우저 SDK 로딩·키·Map ID·인증 이벤트만 담당합니다.
+  `createGoogleMapRuntime.ts`와 `src/map/adapters/Google*.ts`는 지도 생성,
   카메라·이벤트·투영·오버레이 렌더링과 해제를 담당합니다.
 - `MapRuntime.objects`의 `MapObjectController`는 지도 객체의 생성·갱신·삭제를 담당합니다.
   `GoogleMapObjectController`가 native AdvancedMarkerElement와 Polyline을 지도에 바인딩합니다.
@@ -86,8 +89,8 @@ Maps JavaScript API 전용으로 HTTP referrer 제한을 적용합니다.
   Controller는 렌더링 객체를 모르며, Layer는 ID 기준으로 마커와 선을 동기화합니다.
   객체는 layer별 삭제와 반복 삭제를 지원하고 runtime dispose 시 정리됩니다.
   Polygon/Circle은 확장용 계약만 정의합니다. 자세한 사용법은 `frontend/README.md`에 있습니다.
-- React 컴포넌트는 `src/adapters/map/MapRuntime.ts`의 계약과
-  `src/domain/map/mapTypes.ts`의 좌표·장소·경계·polyline 타입을 사용합니다.
+- React 컴포넌트는 `src/map/adapters/MapRuntime.ts`의 계약과
+  `src/map/types/mapTypes.ts`의 좌표·장소·경계·polyline 타입을 사용합니다.
   Google SDK 타입은 runtime/adapter 내부에서만 사용합니다.
 
 `GoogleMap`은 runtime 생성 함수와 loader 설정을 사용하는 조립 지점입니다.

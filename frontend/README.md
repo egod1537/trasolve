@@ -1,5 +1,8 @@
 # Travel map
 
+Source ownership and the complete move inventory are documented in
+[Frontend source layout](../docs/frontend-source-layout.md).
+
 Route entries use class page roots for dependency ownership and lifecycle; reusable
 UI remains function components. See [Page root ownership](../docs/page-roots.md).
 The map is composed from LayerPanel, MapViewport and MapAiRegion; see
@@ -7,19 +10,19 @@ The map is composed from LayerPanel, MapViewport and MapAiRegion; see
 
 The landing page links to `/map`, a backend-backed trip list and Google Maps itinerary
 editor. Create an empty trip or explicitly create the Tokyo example from
-`src/data/demoTrip.ts`. The class route root `MapPage` assembles one external TripMapStore
+`src/pages/map/data/demoTrip.ts`. The class route root `MapPage` assembles one external TripMapStore
 and frontend TripMapController per workspace and passes a stable value to TripMapProvider.
 Sidebar and TripMapLayer consume the
 same immutable snapshot through useSyncExternalStore. Commands optimistically
-update it, save through `src/api/trips.ts`, then apply the canonical response or
+update it, save through `src/pages/map/api/trips.ts`, then apply the canonical response or
 roll back on failure. Selection/camera focus live separately in `useMapUi`.
 See [Frontend state/binding](../docs/frontend-trip-map.md) and
 [TripMap persistence](../docs/trip-maps.md).
 Provider-neutral camera operations are defined by
-`src/adapters/map/MapAdapter.ts`; `src/adapters/map/GoogleMapAdapter.ts` translates
-them to Google Maps calls. `src/maps/googleMaps.ts` only loads and configures the
+`src/map/adapters/MapAdapter.ts`; `src/map/adapters/GoogleMapAdapter.ts` translates
+them to Google Maps calls. `src/map/runtime/googleMaps.ts` only loads and configures the
 SDK.
-`MapRuntime.objects` implements `src/adapters/map/MapObjectController.ts`.
+`MapRuntime.objects` implements `src/map/adapters/MapObjectController.ts`.
 `GoogleMapObjectController` owns native `AdvancedMarkerElement` and `Polyline`
 instances, bound to the runtime's map. The SDK positions markers during pan/zoom;
 React does not project their coordinates or render their content. Marker DOM and
@@ -97,19 +100,19 @@ without changing itinerary selection or marker components.
 
 ## Reusable Google Maps components
 
-`src/components/google-map/GoogleMap.tsx` owns SDK initialization and cleanup
-through `src/maps/createGoogleMapRuntime.ts`. It works without itinerary data and
+`src/map/components/GoogleMap.tsx` owns SDK initialization and cleanup
+through `src/map/runtime/createGoogleMapRuntime.ts`. It works without itinerary data and
 has a default height of 400px. Override `style` or `className` for page layout.
 The existing `/map` view uses this component and retains its itinerary objects,
 camera padding, and loading/error UI. Camera calculations remain in
-`src/domain/map/cameraPolicy.ts`.
+`src/pages/map/domain/cameraPolicy.ts`.
 
-`src/adapters/map/MapRuntime.ts` defines the provider-neutral runtime contract;
-`src/domain/map/mapTypes.ts` owns coordinates, bounds, places, events, options,
+`src/map/adapters/MapRuntime.ts` defines the provider-neutral runtime contract;
+`src/map/types/mapTypes.ts` owns coordinates, bounds, places, events, options,
 and polylines. Component types re-export the existing public names for compatibility.
 The runtime imports these contracts directly and does not depend on React components.
 The `GoogleMap` component is the composition point for the runtime factory and loader
-configuration. Direct SDK objects and types stay in `src/maps/` and `src/adapters/map/`.
+configuration. Direct SDK objects and types stay in `src/map/runtime/` and `src/map/adapters/`.
 Overlay and camera contracts remain available. All marker/polyline creation is
 owned by the object controller; the former runtime `setPolylines` method is removed.
 The public `GoogleMap.polylines` prop remains compatible and uses controller-backed
@@ -117,7 +120,7 @@ children, updating native paths/styles in place by array position.
 
 HTTP clients live in `src/api/health.ts`, `routes.ts`, and `places.ts`. They call
 Trasolve endpoints, accept cancellation signals, and validate shared schemas.
-`maps/` contains only rendering infrastructure and SDK loading. The legacy
+`map/runtime/` contains only rendering infrastructure and SDK loading. The legacy
 `googleDirections.ts` client has moved to `api/routes.ts`; import route types and
 `TravelMode` directly from `@trasolve/shared`. Lint rejects direct `google`/`fetch`
 access and concrete Google adapter imports in components, pages, hooks, and domain code.
@@ -191,8 +194,8 @@ files, test scripts, or test-only mocks and dependencies. Validate changes with
 type checking, builds, lint, and browser interaction. The testbed has no entry
 link in the landing page or service menus.
 
-`GoogleMapsTestPage` composes the five panels in `src/components/google-maps-test/`
-and connects map/selection callbacks. `src/hooks/useDirectionsState.ts` owns route
+`GoogleMapsTestPage` composes the five panels in `src/pages/testbed/components/google-maps/`
+and connects map/selection callbacks. `src/pages/testbed/hooks/useDirectionsState.ts` owns route
 inputs, requests, API state, and route selection. Panels render data and forward
 events; shared Maps/Places/Routes modules and `google-maps-test.css` remain the
 same. Coordinate rendering, initial map settings, and endpoint types are shared
@@ -303,7 +306,7 @@ References: [API loading](https://developers.google.com/maps/documentation/javas
 
 # Frontend build metadata
 
-The landing header reads build metadata only through `src/buildInfo.ts`. Local and
+The landing header reads build metadata only through `src/app/buildInfo.ts`. Local and
 preview builds show `branch · shortSha` to the left of the Trasolve brand. The
 commit link opens the full SHA on GitHub. Production builds show no metadata.
 
