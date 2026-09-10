@@ -1,12 +1,19 @@
-import { createServer } from 'node:http';
-import { API_ROUTES, type HealthResponse } from '@trasolve/shared';
+import { createServer, type ServerResponse } from 'node:http';
+import {
+  API_ROUTES,
+  type ApiErrorResponse,
+  type HealthResponse,
+} from '@trasolve/shared';
+import { GoogleOAuthHttpFlow } from './googleOAuthHttp.js';
 import { API } from './instances.js';
 
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? '127.0.0.1';
+const googleOAuthHttpFlow = new GoogleOAuthHttpFlow();
 
 const server = createServer((request, response) => {
-  const pathname = new URL(request.url ?? '/', 'http://localhost').pathname;
+  const requestUrl = new URL(request.url ?? '/', 'http://localhost');
+  const { pathname } = requestUrl;
   response.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   if (
@@ -50,6 +57,17 @@ const server = createServer((request, response) => {
     return;
   }
 
+  if (
+    pathname === API_ROUTES.googleOAuthStart ||
+    pathname === API_ROUTES.googleOAuthCallback ||
+    pathname === API_ROUTES.googleOAuthResult
+  ) {
+    void googleOAuthHttpFlow
+      .handle(request, response, requestUrl)
+      .catch(() => sendOAuthInternalError(response));
+    return;
+  }
+
   if (request.method === 'GET' && pathname === API_ROUTES.health) {
     const body: HealthResponse = { status: 'ok' };
     response.writeHead(200);
@@ -61,6 +79,24 @@ const server = createServer((request, response) => {
   response.end(JSON.stringify({ error: 'Not found' }));
 });
 server.requestTimeout = 10000;
+
+function sendOAuthInternalError(response: ServerResponse): void {
+  if (response.headersSent) {
+    response.end();
+    return;
+  }
+
+  response.setHeader('Cache-Control', 'no-store');
+  response.setHeader('Content-Type', 'application/json; charset=utf-8');
+  const body: ApiErrorResponse = {
+    error: {
+      code: 'INTERNAL_ERROR',
+      message: 'OAuth 요청을 처리할 수 없습니다.',
+    },
+  };
+  response.writeHead(500);
+  response.end(JSON.stringify(body));
+}
 
 server.listen(port, host, () => {
   console.log(`Backend: http://${host}:${port}`);

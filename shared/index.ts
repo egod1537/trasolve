@@ -8,12 +8,7 @@ export {
   tripListSchema,
   TRIP_BODY_LIMIT,
 } from './schemas/trip.js';
-export type {
-  Trip,
-  TripInput,
-  TripDay,
-  TripPlace,
-} from './types/trip.js';
+export type { Trip, TripInput, TripDay, TripPlace } from './types/trip.js';
 export { DirectionsRequestBuilder } from './builders/DirectionsRequestBuilder.js';
 export { healthResponseSchema } from './schemas/index.js';
 export type { HealthResponse } from './types/index.js';
@@ -57,3 +52,11 @@ export type {
   ChatRequest,
   ChatResponse,
 } from './types/chat.js';
+export {
+  googleOAuthResultSchema,
+  googleOAuthUserSchema,
+} from './schemas/googleOAuth.js';
+export type {
+  GoogleOAuthResult,
+  GoogleOAuthUser,
+} from './types/googleOAuth.js';

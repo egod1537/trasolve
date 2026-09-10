@@ -3,8 +3,13 @@ import { LandingPage } from '../pages/landing/LandingPage';
 
 const MapPage = lazy(() => import('../pages/map/MapPage'));
 const TestbedPage = lazy(() => import('../pages/testbed/TestbedPage'));
-const GoogleMapsTestPage = lazy(() => import('../pages/testbed/GoogleMapsTestPage'));
+const GoogleMapsTestPage = lazy(
+  () => import('../pages/testbed/GoogleMapsTestPage'),
+);
 const AiChatTestPage = lazy(() => import('../pages/testbed/AiChatTestPage'));
+const GoogleOAuthTestPage = lazy(
+  () => import('../pages/testbed/GoogleOAuthTestPage'),
+);
 
 type RouteDefinition = {
   Component: ComponentType;
@@ -31,6 +36,10 @@ export const routes: Record<string, RouteDefinition> = {
   '/testbed/ai-chat': {
     Component: AiChatTestPage,
     loadingLabel: 'AI 채팅 테스트베드를 불러오고 있습니다.',
+  },
+  '/testbed/google-oauth': {
+    Component: GoogleOAuthTestPage,
+    loadingLabel: 'Google OAuth 테스트 페이지를 불러오고 있습니다.',
   },
 };
 

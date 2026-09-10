@@ -8,4 +8,7 @@ export const API_ROUTES = {
   routes: '/api/routes',
   placesAutocomplete: '/api/google/maps/places/autocomplete',
   places: '/api/google/maps/places',
+  googleOAuthStart: '/api/auth/google/start',
+  googleOAuthCallback: '/api/auth/google/callback',
+  googleOAuthResult: '/api/auth/google/result',
 } as const;
