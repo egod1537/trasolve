@@ -6,20 +6,21 @@ loading and URLs are unchanged; no route hook bridge is currently needed.
 | Route | Class root | Ownership and cleanup |
 | --- | --- | --- |
 | / | LandingPage | Starts health request on mount; owns and aborts its request. |
-| /map | MapPage | Renders TripWorkspace; no preselection store/controller. |
+| /map | MapPage | Owns TripRepository/catalog state and directly composes TripPickerPopup + TripSession; no preselection store/controller. |
 | /testbed | TestbedPage | Static navigation, no imperative resources. |
 | /testbed/google-maps | GoogleMapsTestPage | Function content owns map/directions cleanup. |
 | /testbed/ai-chat | AiChatTestPage | Function content owns reset UI; MapAiPanel cancels chat requests. |
 
-TripWorkspace owns HttpTripRepository, catalog, selected Trip and abortable
-list/open/create/delete requests. The picker is outside Context. Only selection
+MapPage owns HttpTripRepository, catalog, selected Trip and abortable
+list/open/create/delete requests. It renders the picker outside Context. Only selection
 mounts TripSession, which creates TripStore and TripEditController and passes their
 stable value to TripProvider. MapWorkspace subscribes to the live session store.
 TripProvider creates no resources.
 
 Switching Trip or explicitly reloading replaces the keyed session. Session unmount
-calls cancelPending; Workspace independently aborts catalog/action work. Trip data
-is not copied into MapPage class state. Optimistic commands, rollback and route
+calls cancelPending; MapPage independently aborts catalog/action work. MapPage keeps
+the selected canonical Trip only to create a session; the session Store owns live
+edits. Optimistic commands, rollback and route
 invalidation remain in plain TypeScript TripEditController. Map objects stay under
 GoogleMap/MapRuntime and TripLayer.
 

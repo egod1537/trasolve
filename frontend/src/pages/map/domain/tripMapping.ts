@@ -1,14 +1,5 @@
 import type { Trip, TripInput } from '@trasolve/shared';
-import type { Trip as TripView, TripRoute } from './trip';
-
-/** Visiting-order geometry shared by initial state, edits and rollback. */
-export function tripToRoutes(trip: Trip): TripRoute[] {
-  return trip.days.map((day) => ({
-    dayId: day.id,
-    color: day.color,
-    path: day.places.map((place) => ({ ...place.location })),
-  }));
-}
+import type { Trip as TripView } from './trip';
 
 export function tripToView(trip: Trip): TripView {
   return {
@@ -18,13 +9,15 @@ export function tripToView(trip: Trip): TripView {
     days: trip.days.map((day) => ({
       ...day,
       places: day.places.map((place) => ({
-        id: place.id,
-        name: place.name,
+        ...place,
         ...place.location,
-        order: place.order,
-        time: place.time,
         description: place.memo ?? '',
       })),
+      polylines: day.polylines.map((polyline) => ({
+        ...polyline,
+        path: polyline.path?.map((point) => ({ ...point })),
+      })),
+      layerItems: day.layerItems.map((item) => ({ ...item })),
     })),
   };
 }
@@ -45,15 +38,25 @@ export function tripViewToInput(view: TripView, stored?: Trip): TripInput {
       date: stored?.days.find((item) => item.id === day.id)?.date,
       color: day.color,
       places: day.places.map((place) => ({
-        id: stored ? place.id : undefined,
-        placeId: places.get(place.id)?.placeId,
-        address: places.get(place.id)?.address,
+        id: place.id,
+        placeId: place.placeId ?? places.get(place.id)?.placeId,
+        address: place.address ?? places.get(place.id)?.address,
         name: place.name,
         location: { lat: place.lat, lng: place.lng },
         order: place.order,
         memo: place.description,
+        openingHours: place.openingHours ?? places.get(place.id)?.openingHours,
+        placeStyle: place.placeStyle ?? places.get(place.id)?.placeStyle,
+        durationMinutes:
+          place.durationMinutes ?? places.get(place.id)?.durationMinutes,
         time: place.time,
       })),
+      polylines: day.polylines.map((polyline) => ({
+        ...polyline,
+        id: polyline.id,
+        path: polyline.path?.map((point) => ({ ...point })),
+      })),
+      layerItems: day.layerItems.map((item) => ({ ...item })),
     })),
   };
 }

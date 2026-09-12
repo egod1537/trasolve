@@ -59,6 +59,7 @@ export type MapOptions = {
 };
 
 export type MapHandle = {
+  getCenter(): LatLng | null;
   panTo(position: LatLng, offset?: ScreenPoint): void;
   setZoom(zoom: number): void;
   fitBounds(bounds: MapBounds, padding?: MapPadding): void;

@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {},
   "scripts": {
-    "dev": "tsx watch --include ../shared/dist/**/*.js src/index.ts",
+    "dev": "node --watch --import tsx src/index.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node dist/index.js"

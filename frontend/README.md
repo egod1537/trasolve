@@ -10,8 +10,9 @@ The map is composed from LayerPanel, MapViewport and MapAiRegion; see
 
 The landing page links to `/map`, a backend-backed trip list and Google Maps itinerary
 editor. Create an empty trip or explicitly create the Tokyo example from
-`src/pages/map/data/demoTrip.ts`. MapPage only renders TripWorkspace, which owns the frontend TripRepository and
-catalog selection. Selecting a Trip mounts TripSession, creating a non-null TripStore
+`src/pages/map/data/demoTrip.ts`. MapPage owns the frontend TripRepository and
+catalog selection, and directly renders TripPickerPopup and TripSession. Selecting
+a Trip mounts TripSession, creating a non-null TripStore
 and TripEditController and providing their stable value through TripProvider.
 Session unmount cancels edits; workspace cleanup separately cancels catalog requests.
 Sidebar and TripLayer consume the
@@ -95,8 +96,9 @@ the frontend image build.
 
 Without a key or if Google Maps fails to load, the page keeps the itinerary usable
 and shows a map connection message; it does not substitute a fake map.
-MapToolbar search is a local UI placeholder without API calls. The route lines connect each day's places
-by `order`, and are not road routes or travel-time estimates. `TripRoute.path`
+MapSearchToolbar search is a local UI placeholder without API calls. Derived route
+segments connect each Day's adjacent places by order and are not road routes or
+travel-time estimates. `TripRoute.path`
 accepts coordinate arrays so a future Routes API adapter can supply the geometry
 without changing itinerary selection or marker components.
 

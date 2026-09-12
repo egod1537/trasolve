@@ -1,4 +1,7 @@
-import type { MapClickEvent, MapPlace } from '../../../../map/types/googleMapComponent';
+import type {
+  MapClickEvent,
+  MapPlace,
+} from '../../../../map/types/googleMapComponent';
 import type { Endpoint } from './types';
 import { Coordinates } from './Coordinates';
 
@@ -24,7 +27,9 @@ type Props = {
   clicked: MapClickEvent | null;
   selectedPlace: MapPlace | null;
   pending: boolean;
+  canAddIntermediate: boolean;
   onOriginSelect: (endpoint: Endpoint) => void;
+  onIntermediateSelect: (endpoint: Endpoint) => void;
   onDestinationSelect: (endpoint: Endpoint) => void;
 };
 
@@ -32,7 +37,9 @@ export function SelectionPanel({
   clicked,
   selectedPlace,
   pending,
+  canAddIntermediate,
   onOriginSelect,
+  onIntermediateSelect,
   onDestinationSelect,
 }: Props) {
   return (
@@ -55,6 +62,13 @@ export function SelectionPanel({
                 onClick={() => onOriginSelect(endpointFromPoint(clicked))}
               >
                 출발지로 설정
+              </button>
+              <button
+                type="button"
+                disabled={pending || !canAddIntermediate}
+                onClick={() => onIntermediateSelect(endpointFromPoint(clicked))}
+              >
+                경유지로 추가
               </button>
               <button
                 type="button"
@@ -93,6 +107,15 @@ export function SelectionPanel({
                 onClick={() => onOriginSelect(endpointFromPlace(selectedPlace))}
               >
                 출발지로 설정
+              </button>
+              <button
+                type="button"
+                disabled={pending || !canAddIntermediate}
+                onClick={() =>
+                  onIntermediateSelect(endpointFromPlace(selectedPlace))
+                }
+              >
+                경유지로 추가
               </button>
               <button
                 type="button"

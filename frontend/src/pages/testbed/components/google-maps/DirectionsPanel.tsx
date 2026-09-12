@@ -1,6 +1,6 @@
 import { useCallback, type FormEvent } from 'react';
 import { TravelMode } from '@trasolve/shared';
-import type { Endpoint } from './types';
+import type { Endpoint, IntermediateInput } from './types';
 
 const modes: { value: TravelMode; label: string }[] = [
   { value: TravelMode.DRIVING, label: '자동차' },
@@ -20,11 +20,16 @@ function describeEndpoint(endpoint: Endpoint): string {
 
 type Props = {
   origin: Endpoint;
+  intermediates: readonly IntermediateInput[];
   destination: Endpoint;
   travelMode: TravelMode;
   alternatives: boolean;
   pending: boolean;
+  canAddIntermediate: boolean;
   onOriginChange: (value: string) => void;
+  onIntermediateAdd: () => void;
+  onIntermediateChange: (id: number, value: string) => void;
+  onIntermediateRemove: (id: number) => void;
   onDestinationChange: (value: string) => void;
   onTravelModeChange: (mode: TravelMode) => void;
   onAlternativesChange: (value: boolean) => void;
@@ -33,11 +38,16 @@ type Props = {
 
 export function DirectionsPanel({
   origin,
+  intermediates,
   destination,
   travelMode,
   alternatives,
   pending,
+  canAddIntermediate,
   onOriginChange,
+  onIntermediateAdd,
+  onIntermediateChange,
+  onIntermediateRemove,
   onDestinationChange,
   onTravelModeChange,
   onAlternativesChange,
@@ -63,6 +73,45 @@ export function DirectionsPanel({
           />
           <small>{describeEndpoint(origin)}</small>
         </label>
+        {intermediates.map((intermediate, index) => {
+          const inputId = `maps-test-intermediate-${intermediate.id}`;
+          const descriptionId = `${inputId}-description`;
+          return (
+            <div className="maps-test-intermediate" key={intermediate.id}>
+              <label htmlFor={inputId}>경유지 {index + 1}</label>
+              <div className="maps-test-intermediate-row">
+                <input
+                  id={inputId}
+                  value={intermediate.endpoint.text}
+                  aria-describedby={descriptionId}
+                  onChange={(event) =>
+                    onIntermediateChange(intermediate.id, event.target.value)
+                  }
+                />
+                <button
+                  type="button"
+                  className="maps-test-intermediate-remove"
+                  aria-label={`경유지 ${index + 1} 삭제`}
+                  title={`경유지 ${index + 1} 삭제`}
+                  onClick={() => onIntermediateRemove(intermediate.id)}
+                >
+                  삭제
+                </button>
+              </div>
+              <small id={descriptionId}>
+                {describeEndpoint(intermediate.endpoint)}
+              </small>
+            </div>
+          );
+        })}
+        <button
+          type="button"
+          className="maps-test-intermediate-add"
+          disabled={!canAddIntermediate}
+          onClick={onIntermediateAdd}
+        >
+          + 경유지 추가
+        </button>
         <label>
           도착지
           <input

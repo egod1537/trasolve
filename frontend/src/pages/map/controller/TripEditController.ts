@@ -1,11 +1,18 @@
 import {
+  reconcileDayRouteSegments,
   tripSchema,
+  type PlaceStyle,
   type Trip,
   type TripInput,
   type TripPlace,
+  type TripPolyline,
+  type TripPolylineMode,
 } from '@trasolve/shared';
+import {
+  DEFAULT_PLACE_DURATION_MINUTES,
+  DEFAULT_PLACE_START_TIME,
+} from '../domain/placeDefaults';
 import type { TripRepository } from '../repository/TripRepository';
-import { tripToRoutes } from '../domain/tripMapping';
 import type { TripState, TripStore } from '../store/TripStore';
 
 export type PlaceInput = Omit<TripPlace, 'id' | 'order'>;
@@ -23,7 +30,10 @@ export class TripEditController {
   }
 
   public renameTrip(title: string): Promise<boolean> {
-    return this.mutate((trip) => ({ ...trip, title: title.trim() }));
+    const normalizedTitle = title.trim();
+    if (!normalizedTitle) return Promise.resolve(false);
+
+    return this.mutate((trip) => ({ ...trip, title: normalizedTitle }));
   }
 
   public addDay(title: string): Promise<boolean> {
@@ -36,9 +46,32 @@ export class TripEditController {
           title,
           color: '#2563eb',
           places: [],
+          polylines: [],
+          layerItems: [],
         },
       ],
     }));
+  }
+
+  public renameDay(dayId: string, title: string): Promise<boolean> {
+    const normalizedTitle = title.trim();
+    if (!normalizedTitle) return Promise.resolve(false);
+
+    return this.mutate((trip) => {
+      const day = trip.days.find((day) => day.id === dayId);
+      if (!day) throw new Error('이름을 변경할 날짜를 찾을 수 없습니다.');
+      day.title = normalizedTitle;
+      return trip;
+    });
+  }
+
+  public updateDayColor(dayId: string, color: string): Promise<boolean> {
+    return this.mutate((trip) => {
+      const day = trip.days.find((candidate) => candidate.id === dayId);
+      if (!day) throw new Error('색상을 변경할 날짜를 찾을 수 없습니다.');
+      day.color = color;
+      return trip;
+    });
   }
 
   public addPlace(dayId: string, input: PlaceInput): Promise<boolean> {
@@ -47,23 +80,57 @@ export class TripEditController {
       if (!day) throw new Error('장소를 추가할 날짜를 선택해 주세요.');
       day.places.push({
         ...input,
+        time: input.time ?? DEFAULT_PLACE_START_TIME,
+        durationMinutes:
+          input.durationMinutes ?? DEFAULT_PLACE_DURATION_MINUTES,
         id: `pending-${crypto.randomUUID()}`,
         order: day.places.length + 1,
+      });
+      day.layerItems.push({
+        type: 'place',
+        id: day.places.at(-1)!.id,
       });
       return trip;
     });
   }
 
   public removePlace(placeId: string): Promise<boolean> {
+    return this.removePlaces([placeId]);
+  }
+
+  public removePlaces(placeIds: readonly string[]): Promise<boolean> {
+    const uniquePlaceIds = new Set(placeIds);
+    if (uniquePlaceIds.size === 0) return Promise.resolve(false);
     return this.mutate((trip) => {
-      this.findPlace(trip, placeId);
-      for (const day of trip.days)
-        day.places = day.places.filter((place) => place.id !== placeId);
+      for (const placeId of uniquePlaceIds) this.findPlace(trip, placeId);
+      for (const day of trip.days) {
+        day.places = day.places.filter(
+          (place) => !uniquePlaceIds.has(place.id),
+        );
+      }
       return trip;
     });
   }
 
   /** targetIndex is zero-based, matching the sidebar drag/drop contract. */
+  public moveDay(dayId: string, targetIndex: number): Promise<boolean> {
+    return this.mutate((trip) => {
+      const sourceIndex = trip.days.findIndex((day) => day.id === dayId);
+      if (sourceIndex < 0 || !Number.isInteger(targetIndex)) {
+        throw new Error('이동할 날짜와 순서를 확인해 주세요.');
+      }
+
+      const [day] = trip.days.splice(sourceIndex, 1);
+      trip.days.splice(
+        Math.max(0, Math.min(targetIndex, trip.days.length)),
+        0,
+        day,
+      );
+      return trip;
+    });
+  }
+
+  /** targetIndex is zero-based in the target Day's Place order. */
   public movePlace(
     placeId: string,
     targetDayId: string,
@@ -73,14 +140,19 @@ export class TripEditController {
       const target = trip.days.find((day) => day.id === targetDayId);
       if (!target || !Number.isInteger(targetIndex))
         throw new Error('이동할 날짜와 순서를 확인해 주세요.');
-      const place = this.findPlace(trip, placeId);
-      for (const day of trip.days)
-        day.places = day.places.filter((item) => item.id !== placeId);
-      target.places.splice(
-        Math.max(0, Math.min(targetIndex, target.places.length)),
-        0,
-        place,
+      const source = trip.days.find((day) =>
+        day.places.some((place) => place.id === placeId),
       );
+      if (!source) throw new Error('이동할 장소를 찾을 수 없습니다.');
+      const sourceIndex = source.places.findIndex(
+        (place) => place.id === placeId,
+      );
+      const [place] = source.places.splice(sourceIndex, 1);
+      const insertionIndex = Math.max(
+        0,
+        Math.min(targetIndex, target.places.length),
+      );
+      target.places.splice(insertionIndex, 0, place);
       return trip;
     });
   }
@@ -98,6 +170,42 @@ export class TripEditController {
 
   public updateMemo(placeId: string, memo: string): Promise<boolean> {
     return this.updatePlace(placeId, { memo });
+  }
+
+  public updateTimeRange(
+    placeId: string,
+    time: string,
+    durationMinutes: number,
+  ): Promise<boolean> {
+    return this.updatePlace(placeId, { time, durationMinutes });
+  }
+
+  public updatePlaceStyle(
+    placeId: string,
+    placeStyle: PlaceStyle,
+  ): Promise<boolean> {
+    return this.updatePlace(placeId, { placeStyle });
+  }
+
+  public updatePolylineMode(
+    polylineId: string,
+    mode: TripPolylineMode,
+  ): Promise<boolean> {
+    return this.updatePolylineModes([polylineId], mode);
+  }
+
+  public updatePolylineModes(
+    polylineIds: readonly string[],
+    mode: TripPolylineMode,
+  ): Promise<boolean> {
+    const uniquePolylineIds = new Set(polylineIds);
+    if (uniquePolylineIds.size === 0) return Promise.resolve(false);
+    return this.mutate((trip) => {
+      for (const polylineId of uniquePolylineIds) {
+        this.findPolyline(trip, polylineId).mode = mode;
+      }
+      return trip;
+    });
   }
 
   public cancelPending(): void {
@@ -123,16 +231,23 @@ export class TripEditController {
     return place;
   }
 
+  private findPolyline(trip: Trip, polylineId: string): TripPolyline {
+    const polyline = trip.days
+      .flatMap((day) => day.polylines)
+      .find((item) => item.id === polylineId);
+    if (!polyline) throw new Error('연결선을 찾을 수 없습니다.');
+    return polyline;
+  }
+
   private async mutate(update: (trip: Trip) => Trip): Promise<boolean> {
     const before = this.store.getState().trip;
     if (this.pending) return false;
     let next: Trip;
     try {
       next = update(structuredClone(before));
-      for (const day of next.days)
-        day.places.forEach((place, index) => {
-          place.order = index + 1;
-        });
+      for (const day of next.days) {
+        reconcileDayRouteSegments(day, () => `pending-${crypto.randomUUID()}`);
+      }
       next = tripSchema.parse(next);
     } catch {
       this.store.setState({
@@ -142,21 +257,15 @@ export class TripEditController {
       });
       return false;
     }
-    const days = new Set(before.days.map((day) => day.id));
-    const places = new Set(
-      before.days.flatMap((day) => day.places.map((place) => place.id)),
-    );
     const input: TripInput = {
       title: next.title,
       startDate: next.startDate,
       endDate: next.endDate,
       days: next.days.map((day) => ({
         ...day,
-        id: days.has(day.id) ? day.id : undefined,
-        places: day.places.map((place) => ({
-          ...place,
-          id: places.has(place.id) ? place.id : undefined,
-        })),
+        places: day.places.map((place) => ({ ...place })),
+        polylines: day.polylines.map((polyline) => ({ ...polyline })),
+        layerItems: day.layerItems.map((layerItem) => ({ ...layerItem })),
       })),
     };
     return this.run(
@@ -199,9 +308,6 @@ export class TripEditController {
   }
 
   private publish(trip: Trip, status: TripState['status']): void {
-    // Visiting-order lines are regenerated here on location/order changes and rollback.
-    // A future road-route cache must be invalidated here, never inside the renderer.
-    const routes = tripToRoutes(trip);
-    this.store.setState({ trip, routes, status, error: null });
+    this.store.setState({ trip, status, error: null });
   }
 }

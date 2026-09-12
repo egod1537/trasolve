@@ -1,11 +1,24 @@
 import {
   API_ROUTES,
-  apiErrorSchema,
+  directionsErrorResponseSchema,
   directionsRequestSchema,
   directionsResultSchema,
+  type DirectionsDebugDetails,
   type DirectionsRequest,
   type DirectionsResult,
 } from '@trasolve/shared';
+
+export class DirectionsApiError extends Error {
+  public constructor(
+    public readonly httpStatus: number,
+    public readonly code: string,
+    message: string,
+    public readonly details?: DirectionsDebugDetails,
+  ) {
+    super(message);
+    this.name = 'DirectionsApiError';
+  }
+}
 
 export async function getDirections(
   request: DirectionsRequest,
@@ -20,11 +33,19 @@ export async function getDirections(
   });
   const body: unknown = await response.json();
   if (!response.ok) {
-    const parsed = apiErrorSchema.safeParse(body);
-    throw new Error(
-      parsed.success
-        ? `${parsed.data.error.code}: ${parsed.data.error.message}`
-        : `경로 조회 실패 (HTTP ${response.status})`,
+    const parsed = directionsErrorResponseSchema.safeParse(body);
+    if (parsed.success) {
+      throw new DirectionsApiError(
+        response.status,
+        parsed.data.error.code,
+        parsed.data.error.message,
+        parsed.data.error.details,
+      );
+    }
+    throw new DirectionsApiError(
+      response.status,
+      'ROUTES_REQUEST_FAILED',
+      `경로 조회 실패 (HTTP ${response.status})`,
     );
   }
   const parsed = directionsResultSchema.safeParse(body);

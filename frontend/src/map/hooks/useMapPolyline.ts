@@ -15,7 +15,16 @@ export function useMapPolyline(
     latest.current = options;
   });
   const { id, layer, path, visible, zIndex } = options;
-  const { color = '#2563eb', width = 5, opacity = 0.85 } = options.style ?? {};
+  const {
+    color = '#2563eb',
+    width = 5,
+    opacity = 0.85,
+    pattern = 'solid',
+    patternRepeatPx = 20,
+    directional = false,
+    directionRepeatPx = 88,
+    directionScale = 3.5,
+  } = options.style ?? {};
 
   useEffect(() => {
     const line = objects.addPolyline({ ...latest.current, id, layer });
@@ -30,8 +39,32 @@ export function useMapPolyline(
     const line = handle.current;
     if (!line) return;
     line.setPath(path);
-    line.setStyle({ color, width, opacity });
+    line.setStyle({
+      color,
+      width,
+      opacity,
+      pattern,
+      patternRepeatPx,
+      directional,
+      directionRepeatPx,
+      directionScale,
+    });
     line.setVisible(visible ?? true);
     line.setZIndex(zIndex ?? 0);
-  }, [objects, id, layer, path, color, width, opacity, visible, zIndex]);
+  }, [
+    objects,
+    id,
+    layer,
+    path,
+    color,
+    width,
+    opacity,
+    pattern,
+    patternRepeatPx,
+    directional,
+    directionRepeatPx,
+    directionScale,
+    visible,
+    zIndex,
+  ]);
 }

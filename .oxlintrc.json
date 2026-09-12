@@ -197,7 +197,6 @@
     {
       "files": ["frontend/src/pages/map/components/**/*.tsx"],
       "excludeFiles": [
-        "frontend/src/pages/map/components/TripWorkspace.tsx",
         "frontend/src/pages/map/components/TripSession.tsx",
         "frontend/src/pages/map/components/viewport/**",
         "frontend/src/pages/map/components/layer-panel/**",
@@ -210,7 +209,7 @@
             "patterns": [
               {
                 "regex": "(^|/)(api|repository|controller|store|adapters|runtime)(/|$)",
-                "message": "UI uses callbacks or session hooks; only TripWorkspace and TripSession compose persistence dependencies."
+                "message": "UI uses callbacks or session hooks; MapPage and TripSession compose persistence dependencies."
               }
             ]
           }

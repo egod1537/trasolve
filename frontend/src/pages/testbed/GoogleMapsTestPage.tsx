@@ -93,11 +93,16 @@ function GoogleMapsTestContent() {
           />
           <DirectionsPanel
             origin={directions.origin}
+            intermediates={directions.intermediates}
             destination={directions.destination}
             travelMode={directions.travelMode}
             alternatives={directions.alternatives}
             pending={directions.pending}
+            canAddIntermediate={directions.canAddIntermediate}
             onOriginChange={directions.changeOrigin}
+            onIntermediateAdd={() => directions.addIntermediate()}
+            onIntermediateChange={directions.changeIntermediate}
+            onIntermediateRemove={directions.removeIntermediate}
             onDestinationChange={directions.changeDestination}
             onTravelModeChange={directions.setTravelMode}
             onAlternativesChange={directions.setAlternatives}
@@ -120,24 +125,22 @@ function GoogleMapsTestContent() {
         clicked={clicked}
         selectedPlace={selectedPlace}
         pending={directions.pending}
+        canAddIntermediate={directions.canAddIntermediate}
         onOriginSelect={directions.setOrigin}
+        onIntermediateSelect={directions.addIntermediate}
         onDestinationSelect={directions.setDestination}
       />
       <RouteResultPanel
         apiStatus={directions.apiStatus}
         error={directions.error}
+        request={directions.request}
         result={directions.result}
         route={route}
         routeIndex={directions.routeIndex}
         onSelectRoute={directions.setRouteIndex}
         onFitBounds={handleFitBounds}
       />
-      <DebugPanel
-        request={directions.request}
-        result={directions.result}
-        route={route}
-        logs={logs}
-      />
+      <DebugPanel request={directions.request} route={route} logs={logs} />
     </main>
   );
 }

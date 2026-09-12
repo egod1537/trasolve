@@ -1,5 +1,8 @@
-import { tripSchema, type Trip } from '@trasolve/shared';
-import { tripToRoutes } from '../domain/tripMapping';
+import {
+  reconcileDayRouteSegments,
+  tripSchema,
+  type Trip,
+} from '@trasolve/shared';
 import type { TripState, TripStore } from './TripStore';
 
 function freeze<T>(value: T): T {
@@ -11,10 +14,13 @@ function freeze<T>(value: T): T {
 }
 
 export function createTripStore(initialTrip: Trip): TripStore {
-  const trip = tripSchema.parse(initialTrip);
+  const normalizedTrip = structuredClone(initialTrip);
+  for (const day of normalizedTrip.days) {
+    reconcileDayRouteSegments(day, () => `pending-${crypto.randomUUID()}`);
+  }
+  const trip = tripSchema.parse(normalizedTrip);
   let state: TripState = freeze({
     trip,
-    routes: tripToRoutes(trip),
     status: 'ready',
     error: null,
   });

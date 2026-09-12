@@ -4,7 +4,12 @@ export {
   tripSchema,
   tripInputSchema,
   tripDaySchema,
+  tripLayerItemSchema,
+  placeStyleSchema,
+  placeStyleTypeSchema,
   tripPlaceSchema,
+  tripPolylineModeSchema,
+  tripPolylineSchema,
   tripListSchema,
   TRIP_BODY_LIMIT,
 } from './trip.js';

@@ -2,21 +2,60 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   margin: 0;
   padding: 0;
   border: 2px solid white;
-  border-radius: 6px;
-  background: var(--day-color);
+  border-radius: 9px;
+  background: var(--place-color);
   color: white;
-  font-size: 13px;
-  font-weight: 700;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   cursor: pointer;
+  transition:
+    filter 140ms ease,
+    opacity 140ms ease,
+    outline-color 140ms ease,
+    transform 140ms ease;
+}
+.trip-map-marker-icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
 }
 .trip-map-marker.is-selected {
-  outline: 3px solid var(--day-color);
+  outline: 3px solid var(--place-color);
   outline-offset: 3px;
   transform: scale(1.15);
+}
+.trip-map-marker.is-drawing-selectable,
+.trip-map-marker.is-drawing-source,
+.trip-map-marker.is-drawing-target {
+  filter: brightness(1.55) saturate(1.35);
+  transform: scale(1.12);
+}
+.trip-map-marker.is-drawing-selectable {
+  outline: 3px solid rgba(139, 92, 246, 0.82);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 7px rgba(139, 92, 246, 0.16);
+}
+.trip-map-marker.is-drawing-source {
+  outline: 3px solid #10b981;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.24);
+  transform: scale(1.2);
+}
+.trip-map-marker.is-drawing-target {
+  outline: 3px solid #38bdf8;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 9px rgba(56, 189, 248, 0.28);
+  transform: scale(1.22);
+}
+.trip-map-marker.is-drawing-unavailable {
+  filter: grayscale(0.6);
+  opacity: 0.45;
 }

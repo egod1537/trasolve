@@ -50,7 +50,7 @@ The top-level api folder is the existing common Web Service client boundary:
 chat serves both chat surfaces, places/routes supply reusable Google data requests,
 and health represents app connectivity. trips.ts is currently map-feature-only and
 remains a low-level client wrapped by HttpTripRepository. Only the selected
-TripSession creates the store/edit controller; TripWorkspace owns the repository.
+TripSession creates the store/edit controller; MapPage owns the repository.
 API logic is unchanged.
 
 MapFocus/MapFocusTarget were extracted to pages/map/domain/mapUiTypes.ts so map
@@ -64,7 +64,7 @@ Lint boundaries now address the new paths, including the page-specific trips cli
 Map/shared/api cannot import pages. The plain controller/store still cannot import
 React or rendering bindings, and visual regions retain their existing restrictions.
 Repositories cannot import React/session/rendering code. UI cannot import repositories;
-TripWorkspace and TripSession are the composition exceptions.
+MapPage and TripSession are the composition exceptions.
 
 Validation: lint, typecheck and production build pass. A static relative-import
 graph review of 86 modules found no unresolved imports, cycles (including type
@@ -145,11 +145,10 @@ applies after moving files.
 | `src/components/map/GoogleMapView.tsx` | `src/pages/map/components/viewport/GoogleMapView.tsx` |
 | `src/components/map/ai/MapAiRegion.tsx` | `src/pages/map/components/ai/MapAiRegion.tsx` |
 | `src/components/map/MapWorkspace.tsx` | `src/pages/map/components/MapWorkspace.tsx` |
-| `src/components/map/MapToolbar.tsx` | `src/pages/map/components/viewport/MapToolbar.tsx` |
+| `src/components/map/MapToolbar.tsx` | `src/pages/map/components/viewport/MapSearchToolbar.tsx` |
 | `src/components/map/MapAiPanel.tsx` | `src/shared/components/chat/MapAiPanel.tsx` |
 | `src/components/map/MapAiButton.tsx` | `src/pages/map/components/ai/MapAiButton.tsx` |
 | `src/components/map/viewport/MapViewport.tsx` | `src/pages/map/components/viewport/MapViewport.tsx` |
-| `src/components/map/TripWorkspace.tsx` | `src/pages/map/components/TripWorkspace.tsx` |
 | `src/components/map/TripPickerDialog.tsx` | `src/pages/map/components/TripPickerPopup.tsx` |
 | `src/components/map/TripLayer.tsx` | `src/pages/map/components/viewport/TripLayer.tsx` |
 | `src/components/map/PlaceDragHandle.tsx` | `src/pages/map/components/layer-panel/PlaceDragHandle.tsx` |

@@ -6,12 +6,12 @@ import type { MapOverlayHost } from './MapOverlayHost';
 export class GoogleOverlayHost implements MapOverlayHost {
   public constructor() {
     this.element.className = 'trip-map-overlay-host';
-    google.maps.OverlayView.preventMapHitsFrom(this.element);
+    google.maps.OverlayView.preventMapHitsAndGesturesFrom(this.element);
     // Composition avoids evaluating a Google superclass before the API loads.
     this.overlay = new google.maps.OverlayView();
     this.overlay.onAdd = () => {
       if (!this.disposed) {
-        this.overlay.getPanes()?.overlayMouseTarget.append(this.element);
+        this.overlay.getPanes()?.floatPane.append(this.element);
       }
     };
     this.overlay.draw = () => this.draw();

@@ -6,6 +6,7 @@ import {
   placeDetailsRequestSchema,
   placeDetailsSchema,
   placeIdSchema,
+  placeOpeningScheduleSchema,
   type ApiErrorResponse,
   type PlaceAutocompleteRequest,
   type PlaceAutocompleteResponse,
@@ -29,7 +30,7 @@ export class Places {
     const raw = await this.fetchGoogle('places:autocomplete', {
       method: 'POST',
       fieldMask:
-        'suggestions.placePrediction.placeId,suggestions.placePrediction.structuredFormat.mainText.text,suggestions.placePrediction.structuredFormat.secondaryText.text',
+        'suggestions.placePrediction.placeId,suggestions.placePrediction.structuredFormat.mainText.text,suggestions.placePrediction.structuredFormat.secondaryText.text,suggestions.placePrediction.types',
       body: JSON.stringify({
         input: input.input,
         languageCode: input.languageCode ?? 'ko',
@@ -56,6 +57,7 @@ export class Places {
         text: placePrediction.structuredFormat.mainText.text,
         secondaryText:
           placePrediction.structuredFormat.secondaryText?.text ?? '',
+        types: placePrediction.types,
       })),
     });
   }
@@ -69,7 +71,11 @@ export class Places {
     if (input.sessionToken) query.set('sessionToken', input.sessionToken);
     const raw = await this.fetchGoogle(
       `places/${encodeURIComponent(input.placeId)}?${query}`,
-      { method: 'GET', fieldMask: 'id,displayName,formattedAddress,location' },
+      {
+        method: 'GET',
+        fieldMask:
+          'id,displayName,formattedAddress,location,rating,userRatingCount,websiteUri,nationalPhoneNumber,internationalPhoneNumber,googleMapsUri,primaryType,primaryTypeDisplayName,currentOpeningHours,regularOpeningHours,timeZone,utcOffsetMinutes',
+      },
     );
     const place = this.validateResponse(Places.detailsSchema, raw);
     return this.validateResponse(placeDetailsSchema, {
@@ -80,6 +86,21 @@ export class Places {
         lat: place.location.latitude,
         lng: place.location.longitude,
       },
+      rating: place.rating,
+      userRatingCount: place.userRatingCount,
+      website: place.websiteUri,
+      phoneNumber: place.internationalPhoneNumber ?? place.nationalPhoneNumber,
+      googleMapsUrl: place.googleMapsUri,
+      category: place.primaryTypeDisplayName?.text ?? place.primaryType,
+      openingHours:
+        place.currentOpeningHours || place.regularOpeningHours
+          ? {
+              timeZone: place.timeZone?.id,
+              utcOffsetMinutes: place.utcOffsetMinutes,
+              current: place.currentOpeningHours,
+              regular: place.regularOpeningHours,
+            }
+          : undefined,
     });
   }
 
@@ -149,6 +170,7 @@ export class Places {
         z.object({
           placePrediction: z.object({
             placeId: placeIdSchema,
+            types: z.array(z.string().min(1).max(100)).max(32).default([]),
             structuredFormat: z.object({
               mainText: z.object({ text: z.string().min(1) }),
               secondaryText: z.object({ text: z.string() }).optional(),
@@ -167,6 +189,18 @@ export class Places {
       latitude: z.number().min(-90).max(90).default(0),
       longitude: z.number().min(-180).max(180).default(0),
     }),
+    rating: z.number().min(1).max(5).optional(),
+    userRatingCount: z.number().int().nonnegative().optional(),
+    websiteUri: z.string().url().optional(),
+    nationalPhoneNumber: z.string().min(1).optional(),
+    internationalPhoneNumber: z.string().min(1).optional(),
+    googleMapsUri: z.string().url().optional(),
+    primaryType: z.string().min(1).optional(),
+    primaryTypeDisplayName: z.object({ text: z.string().min(1) }).optional(),
+    currentOpeningHours: placeOpeningScheduleSchema.optional(),
+    regularOpeningHours: placeOpeningScheduleSchema.optional(),
+    timeZone: z.object({ id: z.string().min(1).max(100) }).optional(),
+    utcOffsetMinutes: z.number().int().min(-840).max(840).optional(),
   });
 
   private async fetchGoogle(

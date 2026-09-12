@@ -19,9 +19,11 @@
   max-height: 70vh;
   overflow: auto;
   overflow-wrap: anywhere;
-  background: white;
-  border: 1px solid #999;
   padding: 16px;
+  border: 1px solid var(--color-floating-border);
+  border-radius: 8px;
+  background: var(--color-floating-surface);
+  box-shadow: var(--shadow-floating-lg);
 }
 .trip-map-picker-popup header {
   display: flex;

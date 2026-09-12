@@ -1,9 +1,11 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
 import {
+  directionsDebugDetailsSchema,
   directionsRequestSchema,
   TravelMode,
-  type ApiErrorResponse,
+  type DirectionsDebugDetails,
+  type DirectionsErrorResponse,
   type DirectionsRequest,
   type DirectionsResult,
   type MapRoute,
@@ -78,8 +80,15 @@ export class Routes {
               'INTERNAL_ERROR',
               '경로 요청을 처리할 수 없습니다.',
             );
-      const body: ApiErrorResponse = {
-        error: { code: error.code, message: error.message },
+      const parsedDetails = directionsDebugDetailsSchema.safeParse(
+        error.details,
+      );
+      const body: DirectionsErrorResponse = {
+        error: {
+          code: error.code,
+          message: error.message,
+          ...(parsedDetails.success ? { details: parsedDetails.data } : {}),
+        },
       };
       response.writeHead(error.status);
       response.end(JSON.stringify(body));
@@ -90,8 +99,66 @@ export class Routes {
   private readonly maxBodyBytes = 16384;
 
   private static readonly latLngSchema = z.object({
-    latitude: z.number().default(0),
-    longitude: z.number().default(0),
+    latitude: z.number(),
+    longitude: z.number(),
+  });
+  private static readonly durationSchema = z
+    .string()
+    .regex(/^\d+(?:\.\d{1,9})?s$/);
+  private static readonly locationSchema = z.object({
+    latLng: Routes.latLngSchema,
+  });
+  private static readonly transitStopSchema = z.object({
+    name: z.string().optional(),
+    location: Routes.locationSchema.optional(),
+  });
+  private static readonly transitDetailsSchema = z.object({
+    stopDetails: z
+      .object({
+        departureStop: Routes.transitStopSchema.optional(),
+        arrivalStop: Routes.transitStopSchema.optional(),
+        departureTime: z.string().optional(),
+        arrivalTime: z.string().optional(),
+      })
+      .optional(),
+    headsign: z.string().optional(),
+    transitLine: z
+      .object({
+        name: z.string().optional(),
+        nameShort: z.string().optional(),
+        vehicle: z
+          .object({
+            type: z.string().optional(),
+          })
+          .optional(),
+      })
+      .optional(),
+    stopCount: z.number().int().nonnegative().optional(),
+  });
+  private static readonly legStepSchema = z.object({
+    distanceMeters: z.number().nonnegative().optional(),
+    staticDuration: Routes.durationSchema.optional(),
+    startLocation: Routes.locationSchema.optional(),
+    endLocation: Routes.locationSchema.optional(),
+    navigationInstruction: z
+      .object({
+        instructions: z.string().optional(),
+      })
+      .optional(),
+    travelMode: z.string().optional(),
+    transitDetails: Routes.transitDetailsSchema.optional(),
+  });
+  private static readonly legSchema = z.object({
+    distanceMeters: z.number().nonnegative().optional(),
+    duration: Routes.durationSchema.optional(),
+    startLocation: Routes.locationSchema.optional(),
+    endLocation: Routes.locationSchema.optional(),
+    steps: z.array(Routes.legStepSchema).default([]),
+  });
+  private static readonly moneySchema = z.object({
+    currencyCode: z.string().optional(),
+    units: z.string().optional(),
+    nanos: z.number().int().optional(),
   });
   private static readonly responseSchema = z.object({
     routes: z
@@ -99,10 +166,13 @@ export class Routes {
         z.object({
           description: z.string().optional(),
           distanceMeters: z.number().nonnegative().optional(),
-          duration: z
-            .string()
-            .regex(/^\d+(?:\.\d{1,9})?s$/)
+          duration: Routes.durationSchema.optional(),
+          travelAdvisory: z
+            .object({
+              transitFare: Routes.moneySchema.optional(),
+            })
             .optional(),
+          legs: z.array(Routes.legSchema).default([]),
           polyline: z.object({
             geoJsonLinestring: z.object({
               type: z.literal('LineString'),
@@ -119,6 +189,12 @@ export class Routes {
         }),
       )
       .default([]),
+  });
+  private static readonly upstreamErrorResponseSchema = z.object({
+    error: z.object({
+      status: z.string().optional(),
+      message: z.string().optional(),
+    }),
   });
 
   private static readonly travelModes: Readonly<Record<TravelMode, string>> = {
@@ -156,6 +232,7 @@ export class Routes {
     }
 
     try {
+      const upstreamRequest = this.buildRequest(request);
       const response = await fetch(
         'https://routes.googleapis.com/directions/v2:computeRoutes',
         {
@@ -164,17 +241,43 @@ export class Routes {
             'Content-Type': 'application/json',
             'X-Goog-Api-Key': this.apiKey,
             'X-Goog-FieldMask':
-              'routes.description,routes.distanceMeters,routes.duration,routes.polyline.geoJsonLinestring,routes.viewport,routes.warnings',
+              'routes.description,routes.distanceMeters,routes.duration,routes.travelAdvisory.transitFare,routes.legs.distanceMeters,routes.legs.duration,routes.legs.startLocation,routes.legs.endLocation,routes.legs.steps.distanceMeters,routes.legs.steps.staticDuration,routes.legs.steps.startLocation,routes.legs.steps.endLocation,routes.legs.steps.navigationInstruction.instructions,routes.legs.steps.travelMode,routes.legs.steps.transitDetails.stopDetails,routes.legs.steps.transitDetails.headsign,routes.legs.steps.transitDetails.transitLine.name,routes.legs.steps.transitDetails.transitLine.nameShort,routes.legs.steps.transitDetails.transitLine.vehicle.type,routes.legs.steps.transitDetails.stopCount,routes.polyline.geoJsonLinestring,routes.viewport,routes.warnings',
           },
           signal,
-          body: JSON.stringify(this.buildRequest(request)),
+          body: JSON.stringify(upstreamRequest),
         },
       );
+      const rawResponse = await this.readUpstreamBody(response);
       if (!response.ok) {
-        throw this.upstreamError(response.status);
+        throw this.upstreamError(
+          response.status,
+          rawResponse,
+          request,
+          upstreamRequest,
+        );
       }
-      const rawResponse: unknown = await response.json();
-      return this.normalizeResponse(request, rawResponse);
+      const debug = this.buildDebugDetails(
+        request,
+        upstreamRequest,
+        response.status,
+      );
+      const result = this.normalizeResponse(request, rawResponse, debug);
+      if (result.routes.length === 0) {
+        throw new ApiError(
+          422,
+          'ROUTE_NOT_FOUND',
+          request.travelMode === TravelMode.TRANSIT
+            ? 'Google Routes API가 대중교통 경로를 반환하지 않았습니다. 지역 지원 범위와 운행 시간을 확인해 주세요.'
+            : 'Google Routes API가 이 요청에 경로를 반환하지 않았습니다.',
+          this.buildDebugDetails(
+            request,
+            upstreamRequest,
+            response.status,
+            rawResponse,
+          ),
+        );
+      }
+      return { ...result, debug };
     } catch (error) {
       if (error instanceof ApiError) throw error;
       if (signal.aborted)
@@ -244,6 +347,20 @@ export class Routes {
     let bounds: MapRoute['bounds'] = null;
     let distanceMeters: number | null = 0;
     let durationMillis: number | null = 0;
+    const segmentFares = segments.map((segment) => segment.fare);
+    const fare =
+      segmentFares.every(
+        (item) =>
+          item !== null && item.currencyCode === segmentFares[0]?.currencyCode,
+      ) && segmentFares[0]
+        ? {
+            amount: segmentFares.reduce(
+              (total, item) => total + (item?.amount ?? 0),
+              0,
+            ),
+            currencyCode: segmentFares[0].currencyCode,
+          }
+        : null;
     for (const segment of segments) {
       distanceMeters =
         distanceMeters === null || segment.distanceMeters === null
@@ -281,6 +398,8 @@ export class Routes {
       description: `경유지를 포함한 대중교통 경로 (${segments.length}개 구간)`,
       distanceMeters,
       durationMillis,
+      fare,
+      legs: segments.flatMap((segment) => segment.legs),
       path,
       bounds,
       warnings: [
@@ -308,7 +427,12 @@ export class Routes {
     };
   }
 
-  private upstreamError(httpStatus: number): ApiError {
+  private upstreamError(
+    httpStatus: number,
+    rawErrorBody: unknown,
+    request: DirectionsRequest,
+    upstreamRequest: unknown,
+  ): ApiError {
     const errors: Record<number, [number, string, string]> = {
       400: [
         400,
@@ -331,12 +455,28 @@ export class Routes {
       'ROUTES_UPSTREAM_ERROR',
       'Google 경로 조회에 실패했습니다.',
     ];
-    return new ApiError(status, code, message);
+    const googleError =
+      Routes.upstreamErrorResponseSchema.safeParse(rawErrorBody);
+    const googleMessage = googleError.success
+      ? googleError.data.error.message?.trim()
+      : undefined;
+    return new ApiError(
+      status,
+      code,
+      googleMessage ? `${message} Google: ${googleMessage}` : message,
+      this.buildDebugDetails(
+        request,
+        upstreamRequest,
+        httpStatus,
+        rawErrorBody,
+      ),
+    );
   }
 
   private normalizeResponse(
     request: DirectionsRequest,
     rawResponse: unknown,
+    debug: DirectionsDebugDetails,
   ): DirectionsResult {
     const parsed = Routes.responseSchema.safeParse(rawResponse);
     if (!parsed.success) {
@@ -344,6 +484,10 @@ export class Routes {
         502,
         'INVALID_ROUTES_RESPONSE',
         'Google 경로 응답 형식이 올바르지 않습니다.',
+        {
+          ...debug,
+          upstream: { ...debug.upstream, rawErrorBody: rawResponse },
+        },
       );
     }
     return {
@@ -351,10 +495,42 @@ export class Routes {
       routes: parsed.data.routes.map((route) => ({
         description: route.description ?? '',
         distanceMeters: route.distanceMeters ?? null,
-        durationMillis:
-          route.duration === undefined
-            ? null
-            : Math.round(Number(route.duration.slice(0, -1)) * 1000),
+        durationMillis: this.durationToMillis(route.duration),
+        fare: this.normalizeFare(route.travelAdvisory?.transitFare),
+        legs: route.legs.map((leg) => ({
+          distanceMeters: leg.distanceMeters ?? null,
+          durationMillis: this.durationToMillis(leg.duration),
+          startLocation: this.normalizeLocation(leg.startLocation),
+          endLocation: this.normalizeLocation(leg.endLocation),
+          steps: leg.steps.map((step) => ({
+            travelMode: step.travelMode ?? null,
+            distanceMeters: step.distanceMeters ?? null,
+            durationMillis: this.durationToMillis(step.staticDuration),
+            instruction: step.navigationInstruction?.instructions ?? null,
+            startLocation: this.normalizeLocation(step.startLocation),
+            endLocation: this.normalizeLocation(step.endLocation),
+            transitDetails: step.transitDetails
+              ? {
+                  departureStop:
+                    step.transitDetails.stopDetails?.departureStop?.name ??
+                    null,
+                  arrivalStop:
+                    step.transitDetails.stopDetails?.arrivalStop?.name ?? null,
+                  departureTime:
+                    step.transitDetails.stopDetails?.departureTime ?? null,
+                  arrivalTime:
+                    step.transitDetails.stopDetails?.arrivalTime ?? null,
+                  lineName: step.transitDetails.transitLine?.name ?? null,
+                  lineShortName:
+                    step.transitDetails.transitLine?.nameShort ?? null,
+                  headsign: step.transitDetails.headsign ?? null,
+                  stopCount: step.transitDetails.stopCount ?? null,
+                  vehicleType:
+                    step.transitDetails.transitLine?.vehicle?.type ?? null,
+                }
+              : null,
+          })),
+        })),
         path: route.polyline.geoJsonLinestring.coordinates.map(
           ([lng, lat]) => ({ lat, lng }),
         ),
@@ -370,6 +546,71 @@ export class Routes {
       })),
       rawResponse,
     };
+  }
+
+  private buildDebugDetails(
+    request: DirectionsRequest,
+    upstreamRequest: unknown,
+    httpStatus: number,
+    rawErrorBody?: unknown,
+  ): DirectionsDebugDetails {
+    const googleError =
+      Routes.upstreamErrorResponseSchema.safeParse(rawErrorBody);
+    return {
+      request: {
+        travelMode: request.travelMode ?? TravelMode.DRIVING,
+        originType: request.origin.type,
+        destinationType: request.destination.type,
+        computeAlternativeRoutes: request.computeAlternativeRoutes ?? false,
+        intermediatesCount: request.intermediates?.length ?? 0,
+      },
+      upstream: {
+        httpStatus,
+        status: googleError.success
+          ? (googleError.data.error.status ?? null)
+          : null,
+        message: googleError.success
+          ? (googleError.data.error.message ?? null)
+          : null,
+        requestBody: upstreamRequest,
+        ...(rawErrorBody === undefined ? {} : { rawErrorBody }),
+      },
+    };
+  }
+
+  private async readUpstreamBody(response: Response): Promise<unknown> {
+    const text = await response.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text) as unknown;
+    } catch {
+      return text;
+    }
+  }
+
+  private durationToMillis(duration: string | undefined): number | null {
+    return duration === undefined
+      ? null
+      : Math.round(Number(duration.slice(0, -1)) * 1000);
+  }
+
+  private normalizeFare(
+    fare: { currencyCode?: string; units?: string; nanos?: number } | undefined,
+  ): MapRoute['fare'] {
+    if (!fare?.currencyCode) return null;
+    const units = Number(fare.units ?? '0');
+    const amount = units + (fare.nanos ?? 0) / 1_000_000_000;
+    return Number.isFinite(amount) && amount >= 0
+      ? { amount, currencyCode: fare.currencyCode }
+      : null;
+  }
+
+  private normalizeLocation(
+    location: { latLng: { latitude: number; longitude: number } } | undefined,
+  ): MapRoute['legs'][number]['startLocation'] {
+    return location
+      ? { lat: location.latLng.latitude, lng: location.latLng.longitude }
+      : null;
   }
 
   private readJson(request: IncomingMessage): Promise<unknown> {
