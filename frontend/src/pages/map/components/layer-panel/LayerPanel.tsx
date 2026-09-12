@@ -7,6 +7,7 @@ import {
   type RefObject,
 } from 'react';
 import type { PlaceStyle, TripPolylineMode } from '@trasolve/shared';
+import type { QueryRouteDuration } from '../../domain/routeDuration';
 import type { LayerValidationByItemKey, Trip } from '../../domain/trip';
 import { RouteSettingsCard } from '../RouteSettingsCard';
 import type { SelectionProps } from './DayLayerSection';
@@ -41,6 +42,7 @@ type Props = SelectionProps & {
     polylineId: string,
     mode: TripPolylineMode,
   ) => Promise<boolean>;
+  onQueryRouteDuration: QueryRouteDuration;
   onUpdatePlaceTimeRange: (
     placeId: string,
     time: string,
@@ -70,6 +72,7 @@ export const LayerPanel = memo(function LayerPanel({
   onUpdatePlaceStyle,
   onRemovePlace,
   onUpdatePolylineMode,
+  onQueryRouteDuration,
   onSelectPlace,
   onSelectPlaceForDetails,
   onSelectPolyline,
@@ -97,8 +100,20 @@ export const LayerPanel = memo(function LayerPanel({
   const detailPolylineContext = useMemo(
     () =>
       trip.days
-        .flatMap((day) => day.polylines)
-        .find((polyline) => polyline.id === detailPolylineId),
+        .flatMap((day) =>
+          day.polylines.flatMap((polyline) => {
+            const fromPlace = day.places.find(
+              (place) => place.id === polyline.fromPlaceId,
+            );
+            const toPlace = day.places.find(
+              (place) => place.id === polyline.toPlaceId,
+            );
+            return fromPlace && toPlace
+              ? [{ polyline, fromPlace, toPlace }]
+              : [];
+          }),
+        )
+        .find(({ polyline }) => polyline.id === detailPolylineId),
     [detailPolylineId, trip.days],
   );
   const detailOpen = !!detailPlaceContext || !!detailPolylineContext;
@@ -158,7 +173,6 @@ export const LayerPanel = memo(function LayerPanel({
     },
     [trip.days],
   );
-
   useEffect(() => {
     if (!detailOpen) {
       return;
@@ -232,11 +246,14 @@ export const LayerPanel = memo(function LayerPanel({
       )}
       {detailPolylineContext && (
         <RouteSettingsCard
-          key={detailPolylineContext.id}
-          polyline={detailPolylineContext}
-          anchorKey={`polyline:${detailPolylineContext.id}`}
+          key={detailPolylineContext.polyline.id}
+          polyline={detailPolylineContext.polyline}
+          fromPlace={detailPolylineContext.fromPlace}
+          toPlace={detailPolylineContext.toPlace}
+          anchorKey={`polyline:${detailPolylineContext.polyline.id}`}
           busy={busy}
           sidebarRef={sidebarRef}
+          onQueryRouteDuration={onQueryRouteDuration}
           onClose={closeDetails}
           onUpdateMode={onUpdatePolylineMode}
         />

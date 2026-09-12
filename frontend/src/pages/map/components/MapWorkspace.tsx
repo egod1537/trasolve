@@ -3,6 +3,7 @@ import {
   selectTripPlace,
   selectTripPolyline,
 } from '../domain/mapTripSelectors';
+import type { QueryRouteDuration } from '../domain/routeDuration';
 import { tripToView } from '../domain/tripMapping';
 import { useMapUi } from '../hooks/useMapUi';
 import { useSelectedGooglePlace } from '../hooks/useSelectedGooglePlace';
@@ -12,7 +13,11 @@ import { useMapWorkspaceActions } from './mapWorkspaceActions';
 import { MapViewport } from './viewport/MapViewport';
 import '../styles/map.css';
 
-export function MapWorkspace() {
+export function MapWorkspace({
+  onQueryRouteDuration,
+}: {
+  onQueryRouteDuration: QueryRouteDuration;
+}) {
   const { trip, status, error } = useTripState();
   const controller = useTripEditController();
   const ui = useMapUi(trip);
@@ -49,6 +54,7 @@ export function MapWorkspace() {
           saveStatus={status}
           savedAt={trip.updatedAt}
           mutationError={error}
+          onQueryRouteDuration={onQueryRouteDuration}
           sidebarRef={sidebarRef}
           selectionRevision={ui.selectionRevision}
           selectedPlaceId={ui.selectedPlaceId}

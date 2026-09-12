@@ -111,12 +111,12 @@ function layerItemKey(item: LayerItem): string {
 export const DayLayerSection = memo(function DayLayerSection({
   day,
   expanded,
-  onToggle,
   active,
   selectedPlaceIds,
   selectedPolylineIds,
   visible,
-  onSelectDay,
+  onActivateDay,
+  onToggleExpanded,
   onSelectPlace,
   onSelectPolyline,
   onToggleDayVisibility,
@@ -146,6 +146,7 @@ export const DayLayerSection = memo(function DayLayerSection({
   | 'onSelectPlaceForDetails'
   | 'onSelectPlaceForDrag'
   | 'onSelectPolylineForDetails'
+  | 'onSelectDay'
 > & {
   day: TripDay;
   active: boolean;
@@ -153,7 +154,6 @@ export const DayLayerSection = memo(function DayLayerSection({
   dayIndex: number;
   layerItemDayPreviewOffset: number;
   expanded: boolean;
-  onToggle: (dayId: string) => void;
   reorder: ReorderControls;
   dayReorder: DayReorderControls;
   dayDropIndicator: 'before' | 'after' | null;
@@ -169,6 +169,8 @@ export const DayLayerSection = memo(function DayLayerSection({
   onOpenPlaceDetails: (placeId: string) => void;
   onOpenPolylineDetails: (polylineId: string) => void;
   validationByItemKey?: LayerValidationByItemKey;
+  onActivateDay: (dayId: string) => void;
+  onToggleExpanded: (dayId: string) => void;
 }) {
   const [titleEditing, setTitleEditing] = useState(false);
   const dragState = reorder.dragState;
@@ -275,7 +277,7 @@ export const DayLayerSection = memo(function DayLayerSection({
               tabIndex={visible ? undefined : -1}
               onClick={() => {
                 if (visible) {
-                  onSelectDay(day.id);
+                  onActivateDay(day.id);
                 }
               }}
               aria-pressed={active}
@@ -305,7 +307,8 @@ export const DayLayerSection = memo(function DayLayerSection({
           expanded={expanded}
           controls={`layers-${day.id}`}
           label={`${day.title} ${expanded ? '접기' : '펼치기'}`}
-          onClick={() => onToggle(day.id)}
+          disabled={!visible}
+          onClick={() => onToggleExpanded(day.id)}
         />
       </div>
       <ol

@@ -33,16 +33,24 @@ export class OpenWebUIModelHttpService {
           'GET 요청을 사용해 주세요.',
         );
       }
-      if (!this.client) throw this.notConfigured();
+      if (!this.client) {
+        throw this.notConfigured();
+      }
       const result = openWebUIModelListResponseSchema.safeParse({
         models: await this.client.listModels(),
       });
-      if (!result.success) throw this.unavailable();
-      if (response.destroyed) return;
+      if (!result.success) {
+        throw this.unavailable();
+      }
+      if (response.destroyed) {
+        return;
+      }
       response.writeHead(200);
       response.end(JSON.stringify(result.data));
     } catch (cause) {
-      if (response.destroyed) return;
+      if (response.destroyed) {
+        return;
+      }
       const error = this.toHttpError(cause);
       const body: ApiErrorResponse = {
         error: { code: error.code, message: error.message },
@@ -55,8 +63,12 @@ export class OpenWebUIModelHttpService {
   private readonly client: OpenWebUIClient | null;
 
   private toHttpError(cause: unknown): ModelListError {
-    if (cause instanceof ModelListError) return cause;
-    if (!(cause instanceof OpenWebUIClientError)) return this.unavailable();
+    if (cause instanceof ModelListError) {
+      return cause;
+    }
+    if (!(cause instanceof OpenWebUIClientError)) {
+      return this.unavailable();
+    }
     switch (cause.kind) {
       case 'configuration':
         return this.notConfigured();

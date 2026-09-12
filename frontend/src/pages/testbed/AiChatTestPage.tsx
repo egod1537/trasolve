@@ -13,7 +13,9 @@ function AiChatTestContent() {
   const [modelsError, setModelsError] = useState<string | null>(null);
 
   const loadModels = async () => {
-    if (modelsPending) return;
+    if (modelsPending) {
+      return;
+    }
     setModelsPending(true);
     setModelsError(null);
     try {

@@ -104,7 +104,9 @@ export class OpenWebUIClient {
       this.modelsTimeoutMs,
     );
     const parsed = modelsResponseSchema.safeParse(rawResponse);
-    if (!parsed.success) throw this.malformedResponse('model list');
+    if (!parsed.success) {
+      throw this.malformedResponse('model list');
+    }
 
     return parsed.data.models.map((model) => {
       const id = model.model ?? model.name!;
@@ -131,7 +133,9 @@ export class OpenWebUIClient {
       this.chatTimeoutMs,
     );
     const parsed = chatResponseSchema.safeParse(rawResponse);
-    if (!parsed.success) throw this.malformedResponse('chat');
+    if (!parsed.success) {
+      throw this.malformedResponse('chat');
+    }
 
     return {
       model: parsed.data.model,
@@ -175,12 +179,18 @@ export class OpenWebUIClient {
       try {
         return (await response.json()) as unknown;
       } catch {
-        if (signal.aborted) throw this.timeoutError();
+        if (signal.aborted) {
+          throw this.timeoutError();
+        }
         throw this.malformedResponse('JSON');
       }
     } catch (cause) {
-      if (cause instanceof OpenWebUIClientError) throw cause;
-      if (signal.aborted) throw this.timeoutError();
+      if (cause instanceof OpenWebUIClientError) {
+        throw cause;
+      }
+      if (signal.aborted) {
+        throw this.timeoutError();
+      }
       throw new OpenWebUIClientError(
         'unavailable',
         'The OpenWebUI upstream is unavailable.',

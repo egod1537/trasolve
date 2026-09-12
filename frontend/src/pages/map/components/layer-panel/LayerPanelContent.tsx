@@ -1,11 +1,4 @@
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useDayReorder, type DayDragState } from '../../hooks/useDayReorder';
 import {
   usePlaceReorder,
@@ -112,9 +105,6 @@ export const LayerPanelContent = memo(function LayerPanelContent({
   selectionRevision,
   ...selection
 }: Props) {
-  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
-  const [editingPlaceId, setEditingPlaceId] = useState<string | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const {
     selectedDayId,
     selectedPlaceId,
@@ -128,6 +118,16 @@ export const LayerPanelContent = memo(function LayerPanelContent({
     onSelectDay,
     onToggleDayVisibility,
   } = selection;
+  const [expandedDayIds, setExpandedDayIds] = useState<Set<string>>(
+    () =>
+      new Set(
+        selectedDayId && visibleDayIds.has(selectedDayId)
+          ? [selectedDayId]
+          : [],
+      ),
+  );
+  const [editingPlaceId, setEditingPlaceId] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const reorder = usePlaceReorder({
     days,
     scrollRef,
@@ -142,10 +142,58 @@ export const LayerPanelContent = memo(function LayerPanelContent({
   });
   const cancelDayDrag = dayReorder.cancelDrag;
   const dayDropIndicator = getDayDropIndicator(days, dayReorder.dragState);
-  const collapsedRef = useRef(collapsed);
-  useLayoutEffect(() => {
-    collapsedRef.current = collapsed;
-  }, [collapsed]);
+  const daysRef = useRef(days);
+  const visibleDayIdsRef = useRef(visibleDayIds);
+  const expandedDayIdsRef = useRef(expandedDayIds);
+  const previousActiveDayIdRef = useRef(selectedDayId);
+
+  useEffect(() => {
+    daysRef.current = days;
+    visibleDayIdsRef.current = visibleDayIds;
+  }, [days, visibleDayIds]);
+
+  const expandDay = useCallback((dayId: string) => {
+    const current = expandedDayIdsRef.current;
+    if (current.has(dayId)) {
+      return;
+    }
+    const next = new Set(current);
+    next.add(dayId);
+    expandedDayIdsRef.current = next;
+    setExpandedDayIds(next);
+  }, []);
+  const collapseDay = useCallback(
+    (dayId: string) => {
+      const current = expandedDayIdsRef.current;
+      if (!current.has(dayId)) {
+        return false;
+      }
+      const next = new Set(current);
+      next.delete(dayId);
+      expandedDayIdsRef.current = next;
+      setExpandedDayIds(next);
+      onCollapseDay(dayId);
+      return true;
+    },
+    [onCollapseDay],
+  );
+  const transitionActiveDay = useCallback(
+    (nextActiveDayId: string | null) => {
+      const previousActiveDayId = previousActiveDayIdRef.current;
+      if (previousActiveDayId === nextActiveDayId) {
+        return;
+      }
+
+      previousActiveDayIdRef.current = nextActiveDayId;
+      if (previousActiveDayId) {
+        collapseDay(previousActiveDayId);
+      }
+      if (nextActiveDayId && visibleDayIds.has(nextActiveDayId)) {
+        expandDay(nextActiveDayId);
+      }
+    },
+    [collapseDay, expandDay, visibleDayIds],
+  );
 
   const beforeLayerItemDrag = useCallback(
     (placeId: string) => {
@@ -165,45 +213,87 @@ export const LayerPanelContent = memo(function LayerPanelContent({
   const finishPlaceNameEditing = useCallback((placeId: string) => {
     setEditingPlaceId((current) => (current === placeId ? null : current));
   }, []);
-  const toggleDay = useCallback(
+  const activateDay = useCallback(
     (dayId: string) => {
-      if (!collapsedRef.current.has(dayId)) {
-        cancelLayerItemDrag(dayId);
+      if (!visibleDayIds.has(dayId)) {
+        return;
+      }
+      cancelLayerItemDrag();
+      cancelDayDrag();
+      if (previousActiveDayIdRef.current === dayId) {
+        expandDay(dayId);
+      } else {
+        transitionActiveDay(dayId);
+      }
+      onSelectDay(dayId);
+    },
+    [
+      cancelDayDrag,
+      cancelLayerItemDrag,
+      expandDay,
+      onSelectDay,
+      transitionActiveDay,
+      visibleDayIds,
+    ],
+  );
+  const toggleDayExpanded = useCallback(
+    (dayId: string) => {
+      if (!visibleDayIds.has(dayId)) {
+        return;
+      }
+      cancelLayerItemDrag();
+      cancelDayDrag();
+      if (!collapseDay(dayId)) {
+        expandDay(dayId);
+      }
+    },
+    [cancelDayDrag, cancelLayerItemDrag, collapseDay, expandDay, visibleDayIds],
+  );
+  const toggleDayVisibility = useCallback(
+    (dayId: string) => {
+      const hiding = visibleDayIds.has(dayId);
+      if (hiding && !collapseDay(dayId)) {
         onCollapseDay(dayId);
       }
-      setCollapsed((previous) => {
-        const next = new Set(previous);
-        if (next.has(dayId)) {
-          next.delete(dayId);
-        } else {
-          next.add(dayId);
-        }
-        return next;
-      });
+      onToggleDayVisibility(dayId);
     },
-    [cancelLayerItemDrag, onCollapseDay],
+    [collapseDay, onCollapseDay, onToggleDayVisibility, visibleDayIds],
   );
 
   useEffect(() => {
+    transitionActiveDay(selectedDayId);
+  }, [selectedDayId, transitionActiveDay]);
+
+  useEffect(() => {
+    const selectedItemDayId = daysRef.current.find((day) =>
+      selectedPlaceId
+        ? day.places.some((place) => place.id === selectedPlaceId)
+        : selectedPolylineId
+          ? day.polylines.some((polyline) => polyline.id === selectedPolylineId)
+          : false,
+    )?.id;
     if (
-      !selectedDayId ||
-      (!selectedPlaceId && !selectedPolylineId) ||
-      !collapsedRef.current.has(selectedDayId)
+      !selectedItemDayId ||
+      !visibleDayIdsRef.current.has(selectedItemDayId)
     ) {
       return;
     }
-    const expandFrame = requestAnimationFrame(() => {
-      setCollapsed((previous) => {
-        if (!previous.has(selectedDayId)) {
-          return previous;
-        }
-        const next = new Set(previous);
-        next.delete(selectedDayId);
-        return next;
-      });
-    });
-    return () => cancelAnimationFrame(expandFrame);
-  }, [selectedDayId, selectedPlaceId, selectedPolylineId, selectionRevision]);
+    expandDay(selectedItemDayId);
+  }, [expandDay, selectedPlaceId, selectedPolylineId]);
+
+  useEffect(() => {
+    const validDayIds = new Set(days.map((day) => day.id));
+    const current = expandedDayIdsRef.current;
+    if ([...current].every((dayId) => validDayIds.has(dayId))) {
+      return;
+    }
+
+    const next = new Set(
+      [...current].filter((dayId) => validDayIds.has(dayId)),
+    );
+    expandedDayIdsRef.current = next;
+    setExpandedDayIds(next);
+  }, [days]);
 
   useEffect(() => {
     if (!selectedPlaceId && !selectedPolylineId) {
@@ -229,7 +319,13 @@ export const LayerPanelContent = memo(function LayerPanelContent({
     } else if (inner.bottom > outer.bottom) {
       panel.scrollTop += inner.bottom - outer.bottom;
     }
-  }, [selectedPlaceId, selectedPolylineId, collapsed, selectionRevision]);
+  }, [
+    expandedDayIds,
+    selectedDayId,
+    selectedPlaceId,
+    selectedPolylineId,
+    selectionRevision,
+  ]);
 
   return (
     <div className="layer-panel-scroll trip-sidebar-scroll" ref={scrollRef}>
@@ -243,10 +339,8 @@ export const LayerPanelContent = memo(function LayerPanelContent({
             reorder.dragState,
             index,
           )}
-          expanded={!collapsed.has(day.id)}
-          active={
-            selectedDayId === day.id && !selectedPlaceId && !selectedPolylineId
-          }
+          expanded={expandedDayIds.has(day.id)}
+          active={selectedDayId === day.id}
           visible={visibleDayIds.has(day.id)}
           selectedPlaceIds={selectedPlaceIds}
           selectedPolylineIds={selectedPolylineIds}
@@ -281,11 +375,11 @@ export const LayerPanelContent = memo(function LayerPanelContent({
           onOpenPlaceDetails={onOpenPlaceDetails}
           onOpenPolylineDetails={onOpenPolylineDetails}
           validationByItemKey={validationByItemKey}
-          onToggle={toggleDay}
           onSelectPlace={onSelectPlace}
           onSelectPolyline={onSelectPolyline}
-          onSelectDay={onSelectDay}
-          onToggleDayVisibility={onToggleDayVisibility}
+          onActivateDay={activateDay}
+          onToggleExpanded={toggleDayExpanded}
+          onToggleDayVisibility={toggleDayVisibility}
         />
       ))}
       {!days.length && (

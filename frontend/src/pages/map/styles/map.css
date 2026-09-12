@@ -1552,50 +1552,8 @@
   pointer-events: auto;
   animation: route-settings-card-enter 180ms ease-out;
 }
-.route-settings-card.is-closing {
-  pointer-events: none;
-  animation: route-settings-card-exit 180ms ease-in forwards;
-}
-.route-settings-card-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  min-height: 50px;
-  padding: 10px 12px 4px;
-}
-.route-settings-card-actions button {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: 1px solid #dbe1e8;
-  border-radius: 50%;
-  background: #f8fafc;
-  color: #334155;
-  cursor: pointer;
-}
-.route-settings-card-actions button:hover:not(:disabled),
-.route-settings-card-actions button:focus-visible {
-  border-color: var(--color-primary);
-  background: #eff6ff;
-  color: var(--color-primary);
-}
-.route-settings-card-actions button:disabled {
-  cursor: not-allowed;
-  opacity: 0.42;
-}
-.route-settings-card-actions svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.7;
-}
 .route-settings-mode-scroll {
+  padding-top: 14px;
   overflow-x: auto;
   scrollbar-width: thin;
 }
@@ -1641,6 +1599,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 21px;
   gap: 7px;
 }
 .route-settings-mode-primary .polyline-mode-icon {
@@ -1722,16 +1681,6 @@
   to {
     opacity: 1;
     transform: translateX(0);
-  }
-}
-@keyframes route-settings-card-exit {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateX(-8px);
   }
 }
 .trip-empty-day {
@@ -2061,8 +2010,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .route-settings-card,
-  .route-settings-card.is-closing {
+  .route-settings-card {
     animation: none;
   }
 }

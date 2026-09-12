@@ -5,20 +5,41 @@ import {
   useState,
   type RefObject,
 } from 'react';
-import type { TripPolyline, TripPolylineMode } from '@trasolve/shared';
+import {
+  TravelMode,
+  type RouteLocation,
+  type TripPolyline,
+  type TripPolylineMode,
+} from '@trasolve/shared';
 import { formatPolylineMode } from '../domain/polylineMode';
+import {
+  formatRouteDuration,
+  type QueryRouteDuration,
+} from '../domain/routeDuration';
+import type { TripPlace } from '../domain/trip';
 import { useLayerDetailCardPlacement } from './layer-panel/LayerDetailCard';
 import { PolylineModeIcon } from './PolylineModeIcon';
 
-const CLOSE_ANIMATION_MS = 180;
 const ROUTE_SETTINGS_CARD_WIDTH = 442;
 
 const ROUTE_MODE_ORDER = [
-  'driving',
-  'transit',
-  'walking',
   'straight',
+  'walking',
+  'transit',
+  'driving',
 ] as const satisfies ReadonlyArray<TripPolylineMode>;
+
+const ROUTABLE_MODES = [
+  'walking',
+  'transit',
+  'driving',
+] as const satisfies ReadonlyArray<RoutableMode>;
+
+const TRAVEL_MODE_BY_POLYLINE_MODE: Record<RoutableMode, TravelMode> = {
+  walking: TravelMode.WALKING,
+  transit: TravelMode.TRANSIT,
+  driving: TravelMode.DRIVING,
+};
 
 const MODE_DESCRIPTIONS: Record<TripPolylineMode, string> = {
   straight: '두 장소를 직선으로 연결합니다.',
@@ -30,15 +51,34 @@ const MODE_DESCRIPTIONS: Record<TripPolylineMode, string> = {
 type RouteModeOptionViewModel = {
   mode: TripPolylineMode;
   label: string;
-  durationLabel: string;
+  durationLabel?: string;
+  durationAriaLabel?: string;
   selected: boolean;
+};
+
+type RoutableMode = Exclude<TripPolylineMode, 'straight'>;
+
+type DurationState =
+  | { status: 'loading' }
+  | { status: 'ready'; label: string }
+  | { status: 'error' };
+
+type DurationStates = Record<RoutableMode, DurationState>;
+
+const INITIAL_DURATION_STATES: DurationStates = {
+  walking: { status: 'loading' },
+  transit: { status: 'loading' },
+  driving: { status: 'loading' },
 };
 
 type Props = {
   polyline: TripPolyline;
+  fromPlace: TripPlace;
+  toPlace: TripPlace;
   anchorKey: string;
   busy: boolean;
   sidebarRef: RefObject<HTMLElement | null>;
+  onQueryRouteDuration: QueryRouteDuration;
   onClose: () => void;
   onUpdateMode: (
     polylineId: string,
@@ -46,17 +86,52 @@ type Props = {
   ) => Promise<boolean>;
 };
 
+function resolveRouteLocation(
+  placeId: string | undefined,
+  lat: number,
+  lng: number,
+): RouteLocation {
+  if (placeId) {
+    return { type: 'place', placeId };
+  }
+  return { type: 'coordinates', lat, lng };
+}
+
+function resolveDurationPresentation(state: DurationState): {
+  label: string;
+  ariaLabel: string;
+} {
+  if (state.status === 'loading') {
+    return { label: '…', ariaLabel: '예상 시간 조회 중' };
+  }
+  if (state.status === 'error') {
+    return { label: '—', ariaLabel: '예상 시간 없음' };
+  }
+  return { label: state.label, ariaLabel: `예상 시간 ${state.label}` };
+}
+
 export function RouteSettingsCard({
   polyline,
+  fromPlace,
+  toPlace,
   anchorKey,
   busy,
   sidebarRef,
+  onQueryRouteDuration,
   onClose,
   onUpdateMode,
 }: Props) {
-  const [closing, setClosing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const disabled = busy || submitting || closing;
+  const [durationStates, setDurationStates] = useState<DurationStates>(
+    INITIAL_DURATION_STATES,
+  );
+  const {
+    placeId: fromPlaceId,
+    lat: fromPlaceLat,
+    lng: fromPlaceLng,
+  } = fromPlace;
+  const { placeId: toPlaceId, lat: toPlaceLat, lng: toPlaceLng } = toPlace;
+  const disabled = busy || submitting;
   const placement = useLayerDetailCardPlacement({
     anchorKey,
     sidebarRef,
@@ -65,35 +140,78 @@ export function RouteSettingsCard({
   });
   const modeOptions = useMemo<ReadonlyArray<RouteModeOptionViewModel>>(
     () =>
-      ROUTE_MODE_ORDER.map((mode) => ({
-        mode,
-        label: formatPolylineMode(mode),
-        durationLabel: '—',
-        selected: mode === polyline.mode,
-      })),
-    [polyline.mode],
+      ROUTE_MODE_ORDER.map((mode) => {
+        const duration =
+          mode === 'straight'
+            ? undefined
+            : resolveDurationPresentation(durationStates[mode]);
+        return {
+          mode,
+          label: formatPolylineMode(mode),
+          durationLabel: duration?.label,
+          durationAriaLabel: duration?.ariaLabel,
+          selected: mode === polyline.mode,
+        };
+      }),
+    [durationStates, polyline.mode],
   );
 
   useEffect(() => {
-    if (!closing) {
-      return;
-    }
-
-    const reducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches;
-    const timeoutId = window.setTimeout(
-      onClose,
-      reducedMotion ? 0 : CLOSE_ANIMATION_MS,
+    const request = new AbortController();
+    const origin = resolveRouteLocation(
+      fromPlaceId,
+      fromPlaceLat,
+      fromPlaceLng,
     );
-    return () => window.clearTimeout(timeoutId);
-  }, [closing, onClose]);
+    const destination = resolveRouteLocation(toPlaceId, toPlaceLat, toPlaceLng);
 
-  const requestClose = useCallback(() => {
-    if (!closing) {
-      setClosing(true);
-    }
-  }, [closing]);
+    void Promise.allSettled(
+      ROUTABLE_MODES.map(async (mode) => {
+        try {
+          const durationMillis = await onQueryRouteDuration(
+            {
+              origin,
+              destination,
+              travelMode: TRAVEL_MODE_BY_POLYLINE_MODE[mode],
+            },
+            request.signal,
+          );
+          if (request.signal.aborted) {
+            return;
+          }
+
+          setDurationStates((current) => ({
+            ...current,
+            [mode]:
+              durationMillis === null || durationMillis === undefined
+                ? { status: 'error' }
+                : {
+                    status: 'ready',
+                    label: formatRouteDuration(durationMillis),
+                  },
+          }));
+        } catch {
+          if (request.signal.aborted) {
+            return;
+          }
+          setDurationStates((current) => ({
+            ...current,
+            [mode]: { status: 'error' },
+          }));
+        }
+      }),
+    );
+
+    return () => request.abort();
+  }, [
+    fromPlaceId,
+    fromPlaceLat,
+    fromPlaceLng,
+    onQueryRouteDuration,
+    toPlaceId,
+    toPlaceLat,
+    toPlaceLng,
+  ]);
 
   const selectMode = useCallback(
     async (mode: TripPolylineMode) => {
@@ -112,49 +230,13 @@ export function RouteSettingsCard({
 
   return (
     <aside
-      className={`route-settings-card${closing ? ' is-closing' : ''}`}
+      className="route-settings-card"
       style={placement}
       role="dialog"
       aria-label="경로 설정"
       aria-busy={submitting}
       data-layer-detail-card
     >
-      <div className="route-settings-card-actions">
-        <button
-          type="button"
-          aria-label="경로 옵션"
-          title="경로 옵션 기능 준비 중"
-          disabled
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          aria-label="경로 공유"
-          title="경로 공유 기능 준비 중"
-          disabled
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="18" cy="5" r="2.5" />
-            <circle cx="6" cy="12" r="2.5" />
-            <circle cx="18" cy="19" r="2.5" />
-            <path d="m8.2 10.8 7.6-4.5m-7.6 6.9 7.6 4.5" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          aria-label="경로 설정 닫기"
-          title="닫기"
-          onClick={requestClose}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="m6 6 12 12M18 6 6 18" />
-          </svg>
-        </button>
-      </div>
-
       <div
         className="route-settings-mode-scroll"
         role="group"
@@ -166,14 +248,20 @@ export function RouteSettingsCard({
               key={option.mode}
               type="button"
               className="route-settings-mode"
-              aria-label={`${option.label}, 예상 시간 ${option.durationLabel}`}
+              aria-label={
+                option.durationAriaLabel
+                  ? `${option.label}, ${option.durationAriaLabel}`
+                  : option.label
+              }
               aria-pressed={option.selected}
               disabled={disabled}
               onClick={() => void selectMode(option.mode)}
             >
               <span className="route-settings-mode-primary">
                 <PolylineModeIcon mode={option.mode} />
-                <strong>{option.durationLabel}</strong>
+                {option.durationLabel && (
+                  <strong>{option.durationLabel}</strong>
+                )}
               </span>
               <span className="route-settings-mode-label">{option.label}</span>
               <span
