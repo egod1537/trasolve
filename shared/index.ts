@@ -95,6 +95,16 @@ export type {
 } from './types/chat.js';
 
 export {
+  googleOAuthResultSchema,
+  googleOAuthUserSchema,
+} from './schemas/googleOAuth.js';
+
+export type {
+  GoogleOAuthResult,
+  GoogleOAuthUser,
+} from './types/googleOAuth.js';
+
+export {
   openWebUIModelSchema,
   openWebUIModelListResponseSchema,
 } from './schemas/openwebui.js';
