@@ -29,6 +29,46 @@
   font-size: 13px;
 }
 
+.ai-chat-test-models {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.ai-chat-test-models > div,
+.ai-chat-test-models li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.ai-chat-test-models h2 {
+  font-size: 18px;
+}
+
+.ai-chat-test-models button {
+  justify-self: start;
+  padding: 8px 12px;
+}
+
+.ai-chat-test-models ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ai-chat-test-models code {
+  overflow-wrap: anywhere;
+}
+
 .ai-chat-test-panel .trip-map-ai-panel {
   position: relative;
   z-index: auto;

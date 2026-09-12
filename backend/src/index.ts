@@ -35,6 +35,11 @@ const server = createServer((request, response) => {
     return;
   }
 
+  if (pathname === API_ROUTES.openWebUIModels) {
+    void API.OpenWebUIModels.handle(request, response);
+    return;
+  }
+
   if (pathname === API_ROUTES.placesAutocomplete) {
     void API.Place.handleAutocomplete(request, response);
     return;

@@ -4,6 +4,7 @@ export { CHAT_LIMITS } from './chat.js';
 export const API_ROUTES = {
   health: '/api/health',
   chat: '/api/chat',
+  openWebUIModels: '/api/openwebui/models',
   trips: '/api/trips',
   routes: '/api/routes',
   placesAutocomplete: '/api/google/maps/places/autocomplete',

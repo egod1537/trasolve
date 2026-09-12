@@ -1,4 +1,5 @@
 export { API_ROUTES, CHAT_LIMITS, TravelMode } from './constants/index.js';
+
 export {
   tripIdSchema,
   TRIP_PLACE_MAX_DURATION_MINUTES,
@@ -14,6 +15,7 @@ export {
   tripListSchema,
   TRIP_BODY_LIMIT,
 } from './schemas/trip.js';
+
 export type {
   Trip,
   TripInput,
@@ -25,10 +27,13 @@ export type {
   TripPolyline,
   TripPolylineMode,
 } from './types/trip.js';
+
 export { DirectionsRequestBuilder } from './builders/DirectionsRequestBuilder.js';
 export { reconcileDayRouteSegments } from './domain/tripRoutes.js';
+
 export { healthResponseSchema } from './schemas/index.js';
 export type { HealthResponse } from './types/index.js';
+
 export {
   apiErrorSchema,
   directionsDebugDetailsSchema,
@@ -39,6 +44,7 @@ export {
   routeUpstreamDiagnosticsSchema,
   routeLocationSchema,
 } from './schemas/routes.js';
+
 export type {
   ApiErrorResponse,
   DirectionsDebugDetails,
@@ -48,6 +54,7 @@ export type {
   MapRoute,
   RouteLocation,
 } from './types/routes.js';
+
 export {
   placeIdSchema,
   placeAutocompleteRequestSchema,
@@ -60,6 +67,7 @@ export {
   placeOpeningScheduleSchema,
   placeOpeningHoursSchema,
 } from './schemas/places.js';
+
 export type {
   PlaceAutocompleteRequest,
   PlaceAutocompleteSuggestion,
@@ -71,23 +79,37 @@ export type {
   PlaceOpeningSchedule,
   PlaceOpeningHours,
 } from './types/places.js';
+
 export {
   chatRoleSchema,
   chatMessageSchema,
   chatRequestSchema,
   chatResponseSchema,
 } from './schemas/chat.js';
+
 export type {
   ChatRole,
   ChatMessage,
   ChatRequest,
   ChatResponse,
 } from './types/chat.js';
+
 export {
   googleOAuthResultSchema,
   googleOAuthUserSchema,
 } from './schemas/googleOAuth.js';
+
 export type {
   GoogleOAuthResult,
   GoogleOAuthUser,
 } from './types/googleOAuth.js';
+
+export {
+  openWebUIModelSchema,
+  openWebUIModelListResponseSchema,
+} from './schemas/openwebui.js';
+
+export type {
+  OpenWebUIModel,
+  OpenWebUIModelListResponse,
+} from './types/openwebui.js';
