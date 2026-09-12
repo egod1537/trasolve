@@ -14,6 +14,12 @@ const testbeds = [
     description:
       '실제 채팅 API로 대화를 주고받으며 응답 대기 애니메이션, 대화 이력, 오류 표시를 확인합니다.',
   },
+  {
+    href: '/testbed/google-oauth',
+    title: 'Google OAuth',
+    description:
+      '실제 Google OAuth 로그인 흐름을 실행하고 정제된 사용자 정보와 안전한 오류 상태를 확인합니다.',
+  },
 ];
 
 export default class TestbedPage extends Component {
