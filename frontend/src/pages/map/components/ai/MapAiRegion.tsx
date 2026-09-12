@@ -23,8 +23,9 @@ export function MapAiRegion({ open, onOpenChange }: Props) {
     [],
   );
   useEffect(() => {
-    if (!open && wasOpenRef.current)
+    if (!open && wasOpenRef.current) {
       buttonRef.current?.focus({ preventScroll: true });
+    }
     wasOpenRef.current = open;
   }, [open]);
   const togglePanel = useCallback(() => {

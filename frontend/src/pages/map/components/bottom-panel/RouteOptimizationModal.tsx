@@ -69,7 +69,9 @@ export function RouteOptimizationModal({
 
       event.preventDefault();
       event.stopImmediatePropagation();
-      if (event.key === 'Escape' && !submitting) onClose();
+      if (event.key === 'Escape' && !submitting) {
+        onClose();
+      }
     };
     window.addEventListener('keydown', interceptGlobalKeyDown, true);
     return () =>
@@ -77,7 +79,9 @@ export function RouteOptimizationModal({
   }, [onClose, submitting]);
 
   const handleDialogKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
-    if (event.key !== 'Tab') return;
+    if (event.key !== 'Tab') {
+      return;
+    }
     event.stopPropagation();
 
     const focusable = Array.from(
@@ -101,11 +105,15 @@ export function RouteOptimizationModal({
   };
 
   const closeFromBackdrop = (event: MouseEvent<HTMLDivElement>) => {
-    if (event.target === event.currentTarget && !submitting) onClose();
+    if (event.target === event.currentTarget && !submitting) {
+      onClose();
+    }
   };
 
   const runOptimization = async () => {
-    if (!canOptimize || submitting) return;
+    if (!canOptimize || submitting) {
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {

@@ -214,7 +214,9 @@ export const MapViewport = memo(function MapViewport({
   }, [onCloseTripPolyline]);
 
   useEffect(() => {
-    if (previousSelectionRevisionRef.current === selectionRevision) return;
+    if (previousSelectionRevisionRef.current === selectionRevision) {
+      return;
+    }
     previousSelectionRevisionRef.current = selectionRevision;
     if (preserveNextSelectionRef.current) {
       preserveNextSelectionRef.current = false;

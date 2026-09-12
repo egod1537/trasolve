@@ -91,7 +91,9 @@ const shortWeekdayLabels = ['일', '월', '화', '수', '목', '금', '토'];
 
 function formatDuration(minutes: number) {
   const rounded = Math.max(0, Math.ceil(minutes));
-  if (rounded < 60) return `${rounded}분`;
+  if (rounded < 60) {
+    return `${rounded}분`;
+  }
   const hours = Math.floor(rounded / 60);
   const remainingMinutes = rounded % 60;
   return remainingMinutes
@@ -141,7 +143,9 @@ function getParts(date: Date, hours: PlaceOpeningHours): LocalClock | null {
     }
   }
 
-  if (hours.utcOffsetMinutes === undefined) return null;
+  if (hours.utcOffsetMinutes === undefined) {
+    return null;
+  }
   const shifted = new Date(date.getTime() + hours.utcOffsetMinutes * 60_000);
   return {
     year: shifted.getUTCFullYear(),
@@ -166,7 +170,9 @@ function getPointDayOffset(point: PlaceOpeningHoursPoint, clock: LocalClock) {
 }
 
 function getPeriodDuration(period: PlaceOpeningHoursPeriod) {
-  if (!period.close) return undefined;
+  if (!period.close) {
+    return undefined;
+  }
 
   const openMinutes = period.open.hour * 60 + period.open.minute;
   const closeMinutes = period.close.hour * 60 + period.close.minute;
@@ -192,9 +198,13 @@ function getTodayTimelineRanges(
   const ranges: PlaceOpeningTimelineRange[] = [];
 
   for (const period of periods) {
-    if (!period.close) continue;
+    if (!period.close) {
+      continue;
+    }
     const duration = getPeriodDuration(period);
-    if (duration === undefined) continue;
+    if (duration === undefined) {
+      continue;
+    }
 
     const startOfDay =
       getPointDayOffset(period.open, clock) * MINUTES_PER_DAY +
@@ -207,7 +217,9 @@ function getTodayTimelineRanges(
     for (const weekOffset of weekOffsets) {
       const start = startOfDay + weekOffset;
       const end = start + duration;
-      if (start >= MINUTES_PER_DAY || end <= 0) continue;
+      if (start >= MINUTES_PER_DAY || end <= 0) {
+        continue;
+      }
       const visibleStart = Math.max(0, start);
       const visibleEnd = Math.min(MINUTES_PER_DAY, end);
       ranges.push({
@@ -238,7 +250,9 @@ function getOpeningTimeline(
     range = [...ranges].reverse().find(({ end }) => end <= now);
   }
 
-  if (!range) return undefined;
+  if (!range) {
+    return undefined;
+  }
   const progress =
     state === 'open' || state === 'closing-soon'
       ? ((now - range.start) / (range.end - range.start)) * 100
@@ -324,14 +338,20 @@ function formatWeeklyHours(schedule?: PlaceOpeningSchedule) {
   if (schedule?.weekdayDescriptions?.length) {
     return schedule.weekdayDescriptions;
   }
-  if (!schedule?.periods) return [];
-  if (isAlwaysOpen(schedule)) return ['월~일 24시간 영업'];
+  if (!schedule?.periods) {
+    return [];
+  }
+  if (isAlwaysOpen(schedule)) {
+    return ['월~일 24시간 영업'];
+  }
 
   return [1, 2, 3, 4, 5, 6, 0].map((day) => {
     const ranges = schedule
       .periods!.filter((period) => !period.open.date && period.open.day === day)
       .map((period) => {
-        if (!period.close) return `${formatClockTime(period.open)} 이후`;
+        if (!period.close) {
+          return `${formatClockTime(period.open)} 이후`;
+        }
         return `${formatClockTime(period.open)} ~ ${formatClockTime(period.close)}`;
       });
     return `${shortWeekdayLabels[day]} ${ranges.length ? ranges.join(', ') : '휴무'}`;
@@ -359,13 +379,17 @@ function getWeeklyTiming(
     if (!nextOpening || delta < nextOpening.minutes) {
       nextOpening = { minutes: delta, dayOffset, point: period.open };
     }
-    if (!period.close) continue;
+    if (!period.close) {
+      continue;
+    }
 
     let end =
       period.close.day * MINUTES_PER_DAY +
       period.close.hour * 60 +
       period.close.minute;
-    if (end <= start) end += MINUTES_PER_WEEK;
+    if (end <= start) {
+      end += MINUTES_PER_WEEK;
+    }
     const comparableNow =
       now < start && end > MINUTES_PER_WEEK ? now + MINUTES_PER_WEEK : now;
     if (comparableNow >= start && comparableNow < end) {
@@ -379,9 +403,13 @@ function getWeeklyTiming(
 }
 
 function minutesUntil(timestamp: string | undefined, now: Date) {
-  if (!timestamp) return undefined;
+  if (!timestamp) {
+    return undefined;
+  }
   const target = Date.parse(timestamp);
-  if (!Number.isFinite(target) || target < now.getTime()) return undefined;
+  if (!Number.isFinite(target) || target < now.getTime()) {
+    return undefined;
+  }
   return (target - now.getTime()) / 60_000;
 }
 
@@ -392,9 +420,13 @@ function nextOpeningFromTimestamp(
   localNow: LocalClock,
 ) {
   const minutes = minutesUntil(timestamp, now);
-  if (minutes === undefined || !timestamp) return undefined;
+  if (minutes === undefined || !timestamp) {
+    return undefined;
+  }
   const target = getParts(new Date(timestamp), hours);
-  if (!target) return undefined;
+  if (!target) {
+    return undefined;
+  }
   return {
     minutes,
     dayOffset: calendarDay(target) - calendarDay(localNow),

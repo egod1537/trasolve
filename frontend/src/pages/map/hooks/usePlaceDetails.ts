@@ -18,22 +18,30 @@ export function usePlaceDetails(
   >(null);
 
   useEffect(() => {
-    if (!placeId) return;
+    if (!placeId) {
+      return;
+    }
     const request = new AbortController();
     void getPlace(placeId, { signal: request.signal }).then(
       (place) => {
-        if (!request.signal.aborted)
+        if (!request.signal.aborted) {
           setSettled({ placeId, status: 'loaded', place });
+        }
       },
       () => {
-        if (!request.signal.aborted) setSettled({ placeId, status: 'error' });
+        if (!request.signal.aborted) {
+          setSettled({ placeId, status: 'error' });
+        }
       },
     );
     return () => request.abort();
   }, [placeId]);
 
-  if (!placeId) return { status: 'idle' } satisfies PlaceDetailsState;
-  if (!settled || settled.placeId !== placeId)
+  if (!placeId) {
+    return { status: 'idle' } satisfies PlaceDetailsState;
+  }
+  if (!settled || settled.placeId !== placeId) {
     return { status: 'loading' } satisfies PlaceDetailsState;
+  }
   return settled;
 }

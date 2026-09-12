@@ -97,14 +97,18 @@ export function PlaceDetailContent({
         : 'loading';
 
   useLayoutEffect(() => {
-    if (!memoEditing) return;
+    if (!memoEditing) {
+      return;
+    }
     const textarea = memoTextareaRef.current;
     textarea?.focus();
     textarea?.setSelectionRange(textarea.value.length, textarea.value.length);
   }, [memoEditing]);
 
   const saveTimeRange = async (time: string, durationMinutes: number) => {
-    if (disabled || !canEditTime) return false;
+    if (disabled || !canEditTime) {
+      return false;
+    }
     if (place.time === time && place.durationMinutes === durationMinutes) {
       return true;
     }
@@ -117,7 +121,9 @@ export function PlaceDetailContent({
   };
 
   const startTitleEditing = () => {
-    if (disabled || !canRename) return;
+    if (disabled || !canRename) {
+      return;
+    }
     setDeleteConfirmOpen(false);
     setTitleEditing(true);
   };
@@ -139,7 +145,9 @@ export function PlaceDetailContent({
   };
 
   const startMemoEditing = () => {
-    if (disabled || !canEditMemo) return;
+    if (disabled || !canEditMemo) {
+      return;
+    }
     setDeleteConfirmOpen(false);
     setMemoDraft(place.memo ?? '');
     setMemoEditing(true);
@@ -151,7 +159,9 @@ export function PlaceDetailContent({
   };
 
   const saveMemo = async () => {
-    if (disabled || !canEditMemo) return;
+    if (disabled || !canEditMemo) {
+      return;
+    }
     const nextMemo = memoDraft.trim();
     if (nextMemo === (place.memo ?? '')) {
       setMemoEditing(false);
@@ -170,7 +180,9 @@ export function PlaceDetailContent({
   };
 
   const closeDeleteConfirmation = (restoreFocus: boolean) => {
-    if (removing) return;
+    if (removing) {
+      return;
+    }
     setDeleteConfirmOpen(false);
     if (restoreFocus) {
       requestAnimationFrame(() => deleteTriggerRef.current?.focus());
@@ -178,7 +190,9 @@ export function PlaceDetailContent({
   };
 
   const confirmRemove = async () => {
-    if (disabled || !canRemove) return;
+    if (disabled || !canRemove) {
+      return;
+    }
     setRemoving(true);
     try {
       if (await onRemove(place.id)) {

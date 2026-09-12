@@ -25,7 +25,9 @@ export class GoogleMapAdapter implements MapAdapter {
 
   public getBounds(): GeoBounds | null {
     const bounds = this.map?.getBounds();
-    if (!bounds) return null;
+    if (!bounds) {
+      return null;
+    }
     const northEast = bounds.getNorthEast();
     const southWest = bounds.getSouthWest();
     return {
@@ -42,7 +44,9 @@ export class GoogleMapAdapter implements MapAdapter {
   }
 
   public panTo(point: GeoPoint, centerOffset?: ScreenPoint): void {
-    if (!this.map) return;
+    if (!this.map) {
+      return;
+    }
     if (!centerOffset || (!centerOffset.x && !centerOffset.y)) {
       this.map.panTo(point);
       return;
@@ -88,9 +92,13 @@ export class GoogleMapAdapter implements MapAdapter {
   }
 
   public dispose(): void {
-    if (this.disposed) return;
+    if (this.disposed) {
+      return;
+    }
     this.disposed = true;
-    for (const remove of [...this.listenerRemovers]) remove();
+    for (const remove of [...this.listenerRemovers]) {
+      remove();
+    }
     this.map = null;
   }
 
@@ -99,12 +107,16 @@ export class GoogleMapAdapter implements MapAdapter {
   private disposed = false;
 
   private subscribe(eventName: string, callback: () => void): () => void {
-    if (this.disposed || !this.map) return () => undefined;
+    if (this.disposed || !this.map) {
+      return () => undefined;
+    }
 
     const listener = this.map.addListener(eventName, callback);
     let active = true;
     const remove = () => {
-      if (!active) return;
+      if (!active) {
+        return;
+      }
       active = false;
       listener.remove();
       this.listenerRemovers.delete(remove);

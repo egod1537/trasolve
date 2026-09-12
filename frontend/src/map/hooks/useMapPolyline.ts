@@ -37,7 +37,9 @@ export function useMapPolyline(
 
   useEffect(() => {
     const line = handle.current;
-    if (!line) return;
+    if (!line) {
+      return;
+    }
     line.setPath(path);
     line.setStyle({
       color,

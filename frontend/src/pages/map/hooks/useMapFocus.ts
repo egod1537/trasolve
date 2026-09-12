@@ -57,11 +57,15 @@ export function useMapFocus(trip: Trip) {
   const replaceHiddenDayFocus = useCallback(
     (hiddenDayId: string, replacementDayId: string | null) => {
       const hiddenDay = trip.days.find((day) => day.id === hiddenDayId);
-      if (!hiddenDay) return;
+      if (!hiddenDay) {
+        return;
+      }
       setState((current) => {
         const targetsHiddenDay =
           current.focus.type === 'day' && current.focus.dayId === hiddenDayId;
-        if (!targetsHiddenDay) return current;
+        if (!targetsHiddenDay) {
+          return current;
+        }
         const nextFocus: MapFocus = replacementDayId
           ? {
               type: 'day',

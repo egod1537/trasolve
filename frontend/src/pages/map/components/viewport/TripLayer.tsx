@@ -32,7 +32,9 @@ function getPolylinePath(
   day: TripDay,
   polyline: TripPolyline,
 ): Array<{ lat: number; lng: number }> {
-  if (polyline.path) return polyline.path.map((point) => ({ ...point }));
+  if (polyline.path) {
+    return polyline.path.map((point) => ({ ...point }));
+  }
   const from = day.places.find((place) => place.id === polyline.fromPlaceId);
   const to = day.places.find((place) => place.id === polyline.toPlaceId);
   return from && to ? [{ ...from.location }, { ...to.location }] : [];
@@ -171,7 +173,9 @@ function syncPolylinePresentation(
 }
 
 function syncPolylineVisibility(line: OwnedPolyline, visible: boolean): void {
-  if (line.visible === visible) return;
+  if (line.visible === visible) {
+    return;
+  }
   line.handle.setVisible(visible);
   line.visible = visible;
 }

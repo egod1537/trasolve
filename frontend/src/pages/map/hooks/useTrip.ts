@@ -11,7 +11,9 @@ export const TripContext = createContext<TripContextValue | null>(null);
 
 function useApplication() {
   const value = useContext(TripContext);
-  if (!value) throw new Error('TripProvider가 필요합니다.');
+  if (!value) {
+    throw new Error('TripProvider가 필요합니다.');
+  }
   return value;
 }
 

@@ -26,7 +26,9 @@ export function useThreadRequests(getSelectedThreadId: () => string) {
 
   const beginRequest = useCallback(
     (threadId: string) => {
-      if (pendingRequestsRef.current.has(threadId)) return null;
+      if (pendingRequestsRef.current.has(threadId)) {
+        return null;
+      }
 
       const handle: ThreadRequestHandle = {
         requestId: crypto.randomUUID(),
@@ -59,7 +61,9 @@ export function useThreadRequests(getSelectedThreadId: () => string) {
         request?.controller !== handle.controller ||
         request.requestId !== handle.requestId
       ) {
-        if (handle.controller.signal.aborted) return;
+        if (handle.controller.signal.aborted) {
+          return;
+        }
         logThreadRequestLifecycle('REQUEST_DROPPED', {
           ...handle,
           threadId,
@@ -76,7 +80,9 @@ export function useThreadRequests(getSelectedThreadId: () => string) {
         selectedThreadId: getSelectedThreadId(),
       });
       setSendingThreadIds((current) => {
-        if (!current.has(threadId)) return current;
+        if (!current.has(threadId)) {
+          return current;
+        }
         const next = new Set(current);
         next.delete(threadId);
         return next;
@@ -99,7 +105,9 @@ export function useThreadRequests(getSelectedThreadId: () => string) {
         request.debugDelayPending = debugDelayPending;
         return;
       }
-      if (handle.controller.signal.aborted) return;
+      if (handle.controller.signal.aborted) {
+        return;
+      }
       logThreadRequestLifecycle('REQUEST_DROPPED', {
         ...handle,
         threadId,
@@ -113,7 +121,9 @@ export function useThreadRequests(getSelectedThreadId: () => string) {
   const cancelThreadRequest = useCallback(
     (threadId: string, reason: CancelReason = 'explicit-cancel') => {
       const request = pendingRequestsRef.current.get(threadId);
-      if (!request) return;
+      if (!request) {
+        return;
+      }
 
       pendingRequestsRef.current.delete(threadId);
       request.controller.abort(reason);
@@ -124,7 +134,9 @@ export function useThreadRequests(getSelectedThreadId: () => string) {
         reason,
       });
       setSendingThreadIds((current) => {
-        if (!current.has(threadId)) return current;
+        if (!current.has(threadId)) {
+          return current;
+        }
         const next = new Set(current);
         next.delete(threadId);
         return next;

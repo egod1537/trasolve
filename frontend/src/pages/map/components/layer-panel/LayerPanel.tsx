@@ -142,9 +142,13 @@ export const LayerPanel = memo(function LayerPanel({
   const closeDetailsForDay = useCallback(
     (dayId: string) => {
       const day = trip.days.find((candidate) => candidate.id === dayId);
-      if (!day) return;
+      if (!day) {
+        return;
+      }
       setDetailTarget((current) => {
-        if (!current) return null;
+        if (!current) {
+          return null;
+        }
         const belongsToDay =
           current.type === 'place'
             ? day.places.some((place) => place.id === current.id)
@@ -156,9 +160,13 @@ export const LayerPanel = memo(function LayerPanel({
   );
 
   useEffect(() => {
-    if (!detailOpen) return;
+    if (!detailOpen) {
+      return;
+    }
     const closeOnOutsidePointerDown = (event: PointerEvent) => {
-      if (!(event.target instanceof Element)) return;
+      if (!(event.target instanceof Element)) {
+        return;
+      }
       if (
         event.target.closest('[data-layer-detail-card]') ||
         event.target.closest('[data-layer-detail-toggle]') ||

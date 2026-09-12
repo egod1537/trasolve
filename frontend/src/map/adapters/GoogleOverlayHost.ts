@@ -22,7 +22,9 @@ export class GoogleOverlayHost implements MapOverlayHost {
   }
 
   public attach(map: google.maps.Map): void {
-    if (this.disposed || this.map === map) return;
+    if (this.disposed || this.map === map) {
+      return;
+    }
     this.map = map;
     this.projection = null;
     this.anchor = null;
@@ -47,7 +49,9 @@ export class GoogleOverlayHost implements MapOverlayHost {
   }
 
   public subscribeDraw = (callback: () => void): (() => void) => {
-    if (this.disposed) return () => undefined;
+    if (this.disposed) {
+      return () => undefined;
+    }
     this.listeners.add(callback);
     return () => {
       this.listeners.delete(callback);
@@ -55,7 +59,9 @@ export class GoogleOverlayHost implements MapOverlayHost {
   };
 
   public dispose(): void {
-    if (this.disposed) return;
+    if (this.disposed) {
+      return;
+    }
     this.disposed = true;
     this.listeners.clear();
     this.overlay.setMap(null);
@@ -75,12 +81,18 @@ export class GoogleOverlayHost implements MapOverlayHost {
   private disposed = false;
 
   private draw(): void {
-    if (this.disposed || !this.map) return;
+    if (this.disposed || !this.map) {
+      return;
+    }
     this.projection = this.overlay.getProjection();
     this.anchor ??= this.map.getCenter() ?? null;
-    if (!this.anchor) return;
+    if (!this.anchor) {
+      return;
+    }
     const pixel = this.projection.fromLatLngToDivPixel(this.anchor);
-    if (!pixel) return;
+    if (!pixel) {
+      return;
+    }
 
     // Panning normally translates the pane without changing div pixels.
     // Detect zoom, rotation, tilt, world wrapping and Google's pane rebasing.
@@ -96,6 +108,8 @@ export class GoogleOverlayHost implements MapOverlayHost {
       this.basis = basis;
       this.revision += 1;
     }
-    for (const listener of this.listeners) listener();
+    for (const listener of this.listeners) {
+      listener();
+    }
   }
 }

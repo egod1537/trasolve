@@ -90,7 +90,9 @@ function SearchModeIcon({ mode }: { mode: SearchModeDefinition }) {
 }
 
 export function getQuickSearchShortcutLabel(): string {
-  if (typeof navigator === 'undefined') return 'Ctrl K';
+  if (typeof navigator === 'undefined') {
+    return 'Ctrl K';
+  }
   return /Mac|iPhone|iPad|iPod/i.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
 }
 
@@ -159,7 +161,9 @@ export function QuickSearch({ open, shortcutLabel, onOpen, onClose }: Props) {
   }, [close, onOpen, open, selectMode]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     previousFocusRef.current =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
@@ -173,7 +177,9 @@ export function QuickSearch({ open, shortcutLabel, onOpen, onClose }: Props) {
   }, [open]);
 
   useEffect(() => {
-    if (!modeMenuOpen) return;
+    if (!modeMenuOpen) {
+      return;
+    }
     const frame = requestAnimationFrame(() =>
       modeOptionRefs.current.get(mode)?.focus(),
     );
@@ -192,7 +198,9 @@ export function QuickSearch({ open, shortcutLabel, onOpen, onClose }: Props) {
     };
   }, [mode, modeMenuOpen]);
 
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
 
   const handleInputKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -201,7 +209,9 @@ export function QuickSearch({ open, shortcutLabel, onOpen, onClose }: Props) {
     }
   };
   const handleBackdropClick = (event: MouseEvent<HTMLDivElement>) => {
-    if (event.target === event.currentTarget) close();
+    if (event.target === event.currentTarget) {
+      close();
+    }
   };
 
   return (
@@ -251,8 +261,11 @@ export function QuickSearch({ open, shortcutLabel, onOpen, onClose }: Props) {
                   <button
                     key={item.id}
                     ref={(node) => {
-                      if (node) modeOptionRefs.current.set(item.id, node);
-                      else modeOptionRefs.current.delete(item.id);
+                      if (node) {
+                        modeOptionRefs.current.set(item.id, node);
+                      } else {
+                        modeOptionRefs.current.delete(item.id);
+                      }
                     }}
                     type="button"
                     role="menuitemradio"

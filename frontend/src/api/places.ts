@@ -55,8 +55,9 @@ export async function searchPlaces(
     signal,
   );
   const parsed = placeAutocompleteResponseSchema.safeParse(body);
-  if (!parsed.success)
+  if (!parsed.success) {
     throw new Error('장소 검색 응답 형식이 올바르지 않습니다.');
+  }
   return parsed.data;
 }
 
@@ -66,16 +67,23 @@ export async function getPlace(
 ): Promise<PlaceDetails> {
   const request = placeDetailsRequestSchema.parse({ placeId, ...options });
   const query = new URLSearchParams();
-  if (request.languageCode) query.set('languageCode', request.languageCode);
-  if (request.regionCode) query.set('regionCode', request.regionCode);
-  if (request.sessionToken) query.set('sessionToken', request.sessionToken);
+  if (request.languageCode) {
+    query.set('languageCode', request.languageCode);
+  }
+  if (request.regionCode) {
+    query.set('regionCode', request.regionCode);
+  }
+  if (request.sessionToken) {
+    query.set('sessionToken', request.sessionToken);
+  }
   const body = await requestPlaces(
     `${API_ROUTES.places}/${encodeURIComponent(request.placeId)}?${query}`,
     { method: 'GET' },
     signal,
   );
   const parsed = placeDetailsSchema.safeParse(body);
-  if (!parsed.success)
+  if (!parsed.success) {
     throw new Error('장소 상세 응답 형식이 올바르지 않습니다.');
+  }
   return parsed.data;
 }

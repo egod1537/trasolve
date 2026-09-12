@@ -72,7 +72,9 @@ export function useMapUi(trip: Trip) {
           ? candidate.places.some((place) => place.id === target.id)
           : candidate.polylines.some((polyline) => polyline.id === target.id),
       );
-      if (!day || !visibleDayIds.has(day.id)) return;
+      if (!day || !visibleDayIds.has(day.id)) {
+        return;
+      }
       selectItemState(
         target,
         day.id,
@@ -91,7 +93,9 @@ export function useMapUi(trip: Trip) {
           ? candidate.places.some((place) => place.id === target.id)
           : candidate.polylines.some((polyline) => polyline.id === target.id),
       );
-      if (!day || !visibleDayIds.has(day.id)) return;
+      if (!day || !visibleDayIds.has(day.id)) {
+        return;
+      }
       selectLayerItemWithMode(
         { type: target.type, id: target.id },
         'replace',
@@ -143,7 +147,9 @@ export function useMapUi(trip: Trip) {
   );
   const selectDay = useCallback(
     (dayId: string) => {
-      if (!visibleDayIds.has(dayId)) return;
+      if (!visibleDayIds.has(dayId)) {
+        return;
+      }
       clear();
       setActiveDayId(dayId);
     },
@@ -152,7 +158,9 @@ export function useMapUi(trip: Trip) {
   const toggleDayVisibility = useCallback(
     (dayId: string) => {
       const day = trip.days.find((candidate) => candidate.id === dayId);
-      if (!day) return;
+      if (!day) {
+        return;
+      }
       const hiding = visibleDayIds.has(dayId);
       const replacementDayId = hiding
         ? (trip.days.find(

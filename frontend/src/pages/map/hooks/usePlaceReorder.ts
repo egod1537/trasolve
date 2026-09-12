@@ -50,11 +50,15 @@ function getTarget(
   placeId: string,
   pointerY: number,
 ): PlaceDropTarget | null {
-  if (!container) return null;
+  if (!container) {
+    return null;
+  }
   const daySections = Array.from(
     container.querySelectorAll<HTMLElement>('.trip-day'),
   );
-  if (!daySections.length) return null;
+  if (!daySections.length) {
+    return null;
+  }
   const targetDay =
     daySections.find((section) => {
       const rect = section.getBoundingClientRect();
@@ -78,7 +82,9 @@ function getTarget(
       return distance < nearestDistance ? section : nearest;
     });
   const dayId = targetDay.dataset.dayId;
-  if (!dayId) return null;
+  if (!dayId) {
+    return null;
+  }
   const rows = Array.from(
     targetDay.querySelectorAll<HTMLElement>('[data-place-id]'),
   ).filter((row) => row.dataset.placeId !== placeId);
@@ -90,7 +96,9 @@ function getTarget(
 }
 
 function autoScroll(container: HTMLElement | null, pointerY: number): void {
-  if (!container) return;
+  if (!container) {
+    return;
+  }
   const rect = container.getBoundingClientRect();
   const above = rect.top + autoScrollEdge - pointerY;
   const below = pointerY - (rect.bottom - autoScrollEdge);
@@ -143,7 +151,9 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
       sourceIndex: number,
       event: PointerEvent<HTMLButtonElement>,
     ) => {
-      if (!event.isPrimary || event.button !== 0) return;
+      if (!event.isPrimary || event.button !== 0) {
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       event.currentTarget.setPointerCapture(event.pointerId);
@@ -168,7 +178,9 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
   );
   const onPointerMove = useCallback(
     (event: PointerEvent<HTMLButtonElement>) => {
-      if (dragStateRef.current?.pointerId !== event.pointerId) return;
+      if (dragStateRef.current?.pointerId !== event.pointerId) {
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       pointerYRef.current = event.clientY;
@@ -178,7 +190,9 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
   const finishPointerDrag = useCallback(
     (event: PointerEvent<HTMLButtonElement>, commit: boolean) => {
       const current = dragStateRef.current;
-      if (!current || current.pointerId !== event.pointerId) return;
+      if (!current || current.pointerId !== event.pointerId) {
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       const target = getTarget(
@@ -208,7 +222,9 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
   );
   const onLostPointerCapture = useCallback(
     (event: PointerEvent<HTMLButtonElement>) => {
-      if (dragStateRef.current?.pointerId === event.pointerId) cancelDrag();
+      if (dragStateRef.current?.pointerId === event.pointerId) {
+        cancelDrag();
+      }
     },
     [cancelDrag],
   );
@@ -219,13 +235,19 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
       sourceIndex: number,
       event: KeyboardEvent<HTMLButtonElement>,
     ) => {
-      if (!event.altKey) return;
+      if (!event.altKey) {
+        return;
+      }
       const direction =
         event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
-      if (!direction) return;
+      if (!direction) {
+        return;
+      }
       const day = days.find((candidate) => candidate.id === dayId);
       const targetIndex = sourceIndex + direction;
-      if (!day || targetIndex < 0 || targetIndex >= day.places.length) return;
+      if (!day || targetIndex < 0 || targetIndex >= day.places.length) {
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       onMovePlace(placeId, dayId, targetIndex);
@@ -234,11 +256,15 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
   );
 
   useEffect(() => {
-    if (!dragState?.placeId) return;
+    if (!dragState?.placeId) {
+      return;
+    }
     const updatePreview = () => {
       frameRef.current = 0;
       const current = dragStateRef.current;
-      if (!current) return;
+      if (!current) {
+        return;
+      }
       autoScroll(scrollRef.current, pointerYRef.current);
       const target = getTarget(
         scrollRef.current,

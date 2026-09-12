@@ -49,6 +49,8 @@ export async function getDirections(
     );
   }
   const parsed = directionsResultSchema.safeParse(body);
-  if (!parsed.success) throw new Error('경로 응답 형식이 올바르지 않습니다.');
+  if (!parsed.success) {
+    throw new Error('경로 응답 형식이 올바르지 않습니다.');
+  }
   return parsed.data;
 }

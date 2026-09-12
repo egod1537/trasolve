@@ -9,7 +9,9 @@ function toRadians(degrees: number): number {
 export function calculatePolylineDistanceMeters(
   path: readonly GeoPoint[],
 ): number | undefined {
-  if (path.length < 2) return undefined;
+  if (path.length < 2) {
+    return undefined;
+  }
 
   let distance = 0;
   for (let index = 1; index < path.length; index += 1) {
@@ -33,8 +35,12 @@ export function calculatePolylineDistanceMeters(
 }
 
 export function formatPolylineDistance(distanceMeters: number | undefined) {
-  if (distanceMeters === undefined) return '경로 정보 없음';
-  if (distanceMeters < 1000) return `${Math.round(distanceMeters)} m`;
+  if (distanceMeters === undefined) {
+    return '경로 정보 없음';
+  }
+  if (distanceMeters < 1000) {
+    return `${Math.round(distanceMeters)} m`;
+  }
   const kilometers = distanceMeters / 1000;
   return `${kilometers < 10 ? kilometers.toFixed(1) : Math.round(kilometers)} km`;
 }

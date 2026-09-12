@@ -60,7 +60,9 @@ export function LayerBulkActionBar({
   const totalCount = selectedPlaceIds.length + selectedPolylines.length;
 
   useLayoutEffect(() => {
-    if (deleteOpen) deleteCancelRef.current?.focus();
+    if (deleteOpen) {
+      deleteCancelRef.current?.focus();
+    }
   }, [deleteOpen]);
 
   useEffect(() => {
@@ -74,7 +76,9 @@ export function LayerBulkActionBar({
       }
     };
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || operation) return;
+      if (event.key !== 'Escape' || operation) {
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       if (deleteOpen) {
@@ -96,7 +100,9 @@ export function LayerBulkActionBar({
   }, [deleteOpen, modeOpen, onClearSelection, operation]);
 
   const updateModes = async (mode: TripPolylineMode) => {
-    if (disabled || !selectedPolylineIds.length) return;
+    if (disabled || !selectedPolylineIds.length) {
+      return;
+    }
     if (commonMode === mode) {
       setModeOpen(false);
       requestAnimationFrame(() => modeTriggerRef.current?.focus());
@@ -117,7 +123,9 @@ export function LayerBulkActionBar({
   };
 
   const deletePlaces = async () => {
-    if (disabled || !selectedPlaceIds.length) return;
+    if (disabled || !selectedPlaceIds.length) {
+      return;
+    }
     setOperation('delete');
     setActionError(null);
     try {

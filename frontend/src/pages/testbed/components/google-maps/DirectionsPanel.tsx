@@ -11,10 +11,12 @@ const modes: { value: TravelMode; label: string }[] = [
 
 function describeEndpoint(endpoint: Endpoint): string {
   const location = endpoint.location;
-  if (location?.type === 'place')
+  if (location?.type === 'place') {
     return `선택한 장소 · placeId: ${location.placeId}`;
-  if (location?.type === 'coordinates')
+  }
+  if (location?.type === 'coordinates') {
     return `좌표: ${location.lat}, ${location.lng}`;
+  }
   return '주소 문자열';
 }
 
@@ -129,7 +131,9 @@ export function DirectionsPanel({
               const mode = modes.find(
                 (mode) => mode.value === event.target.value,
               );
-              if (mode) onTravelModeChange(mode.value);
+              if (mode) {
+                onTravelModeChange(mode.value);
+              }
             }}
           >
             {modes.map((mode) => (

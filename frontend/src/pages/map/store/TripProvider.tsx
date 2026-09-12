@@ -1,8 +1,5 @@
 import type { ReactNode } from 'react';
-import {
-  TripContext,
-  type TripContextValue,
-} from '../hooks/useTrip';
+import { TripContext, type TripContextValue } from '../hooks/useTrip';
 
 export function TripProvider({
   value,
@@ -11,7 +8,5 @@ export function TripProvider({
   value: TripContextValue;
   children: ReactNode;
 }) {
-  return (
-    <TripContext.Provider value={value}>{children}</TripContext.Provider>
-  );
+  return <TripContext.Provider value={value}>{children}</TripContext.Provider>;
 }

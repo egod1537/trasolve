@@ -26,7 +26,9 @@ export function LayerValidationIndicator({ validation }: Props) {
   const issues = validation?.issues.filter(
     (issue) => issue.level === 'error' || issue.level === 'warning',
   );
-  if (!issues?.length) return null;
+  if (!issues?.length) {
+    return null;
+  }
 
   const level = issues.some((issue) => issue.level === 'error')
     ? 'error'

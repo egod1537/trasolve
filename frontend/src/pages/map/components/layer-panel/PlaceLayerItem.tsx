@@ -83,11 +83,15 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
   const commitName = (draft: string) => {
     const nextName = draft.trim();
     onFinishNameEditing(place.id);
-    if (nextName && nextName !== place.name) onRename(place.id, nextName);
+    if (nextName && nextName !== place.name) {
+      onRename(place.id, nextName);
+    }
   };
   const finishNameEditing = () => onFinishNameEditing(place.id);
   const openDetails = () => {
-    if (!visible) return;
+    if (!visible) {
+      return;
+    }
     onCancelDrag();
     onOpenDetails(place.id);
   };

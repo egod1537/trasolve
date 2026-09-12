@@ -102,7 +102,9 @@ function getMinuteFromPointerPosition(
   axisRect: DOMRect,
   stepMinutes: number,
 ): number {
-  if (axisRect.width <= 0) return 0;
+  if (axisRect.width <= 0) {
+    return 0;
+  }
   const ratio = clamp((clientX - axisRect.left) / axisRect.width, 0, 1);
   return clamp(
     snapTimelineMinute(ratio * MINUTES_PER_DAY, stepMinutes),
@@ -139,7 +141,9 @@ function getEditableRange(
   ranges: readonly TimeRangeTimelineRange[],
   minimumRangeMinutes: number,
 ): TimeRangeTimelineRange | null {
-  if (ranges.length !== 1) return null;
+  if (ranges.length !== 1) {
+    return null;
+  }
   const range = ranges[0]!;
   return range.start >= 0 &&
     range.end <= MINUTES_PER_DAY &&
@@ -160,8 +164,12 @@ function getDayPosition(minute: number, endOfDay = false): number {
 }
 
 function getTimelinePositionClass(position: number): string {
-  if (position <= 8) return ' is-start-edge';
-  if (position >= 92) return ' is-end-edge';
+  if (position <= 8) {
+    return ' is-start-edge';
+  }
+  if (position >= 92) {
+    return ' is-end-edge';
+  }
   return '';
 }
 
@@ -232,7 +240,9 @@ function prepareWrappedRange(
   index: number,
 ): PreparedRange | undefined {
   const duration = range.end - range.start;
-  if (duration < 0) return undefined;
+  if (duration < 0) {
+    return undefined;
+  }
 
   const start = normalizeDayMinute(range.start);
   const end = start + duration;
@@ -317,7 +327,9 @@ function positionEventLabels(events: readonly TimelineEvent[]) {
   for (let index = 1; index < positionedEvents.length; index += 1) {
     const previous = positionedEvents[index - 1]!;
     const current = positionedEvents[index]!;
-    if (current.position - previous.position >= 18) continue;
+    if (current.position - previous.position >= 18) {
+      continue;
+    }
     previous.labelDirection ??= 'left';
     current.labelDirection = 'right';
   }
@@ -385,7 +397,9 @@ export function TimeRangeTimeline({
     clientX: number,
   ): TimeRangeTimelineRange => {
     const axisRect = axisRef.current?.getBoundingClientRect();
-    if (!axisRect) return edit.lastRange;
+    if (!axisRect) {
+      return edit.lastRange;
+    }
     return updateEditableRange(
       edit.initialRange,
       edit.edge,
@@ -399,8 +413,14 @@ export function TimeRangeTimeline({
     event: PointerEvent<HTMLButtonElement>,
     edge: RangeEdge,
   ) => {
-    if (!rangeInteractive || disabled || !event.isPrimary || event.button !== 0)
+    if (
+      !rangeInteractive ||
+      disabled ||
+      !event.isPrimary ||
+      event.button !== 0
+    ) {
       return;
+    }
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -416,22 +436,30 @@ export function TimeRangeTimeline({
 
   const movePointerEdit = (event: PointerEvent<HTMLButtonElement>) => {
     const edit = pointerEditRef.current;
-    if (!edit || edit.pointerId !== event.pointerId) return;
+    if (!edit || edit.pointerId !== event.pointerId) {
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     const nextRange = getPointerRange(edit, event.clientX);
-    if (isSameRange(nextRange, edit.lastRange)) return;
+    if (isSameRange(nextRange, edit.lastRange)) {
+      return;
+    }
     edit.lastRange = nextRange;
     onRangeChange?.(nextRange);
   };
 
   const finishPointerEdit = (event: PointerEvent<HTMLButtonElement>) => {
     const edit = pointerEditRef.current;
-    if (!edit || edit.pointerId !== event.pointerId) return;
+    if (!edit || edit.pointerId !== event.pointerId) {
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     const nextRange = getPointerRange(edit, event.clientX);
-    if (!isSameRange(nextRange, edit.lastRange)) onRangeChange?.(nextRange);
+    if (!isSameRange(nextRange, edit.lastRange)) {
+      onRangeChange?.(nextRange);
+    }
     pointerEditRef.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
@@ -444,7 +472,9 @@ export function TimeRangeTimeline({
 
   const cancelPointerEdit = (event: PointerEvent<HTMLButtonElement>) => {
     const edit = pointerEditRef.current;
-    if (!edit || edit.pointerId !== event.pointerId) return;
+    if (!edit || edit.pointerId !== event.pointerId) {
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     if (!isSameRange(edit.lastRange, edit.initialRange)) {
@@ -489,15 +519,21 @@ export function TimeRangeTimeline({
     );
     keyboardEditRef.current = edit;
     setActiveEdge(edge);
-    if (isSameRange(nextRange, edit.lastRange)) return;
+    if (isSameRange(nextRange, edit.lastRange)) {
+      return;
+    }
     edit.lastRange = nextRange;
     onRangeChange?.(nextRange);
   };
 
   const finishKeyboardEdit = (edge: RangeEdge, key?: string) => {
-    if (key && key !== 'ArrowLeft' && key !== 'ArrowRight') return;
+    if (key && key !== 'ArrowLeft' && key !== 'ArrowRight') {
+      return;
+    }
     const edit = keyboardEditRef.current;
-    if (!edit || edit.edge !== edge) return;
+    if (!edit || edit.edge !== edge) {
+      return;
+    }
     keyboardEditRef.current = null;
     setActiveEdge(null);
     if (!isSameRange(edit.lastRange, edit.initialRange)) {
@@ -506,7 +542,9 @@ export function TimeRangeTimeline({
   };
 
   const createRangeFromClick = (event: MouseEvent<HTMLSpanElement>) => {
-    if (!rangeCreatable || disabled || event.detail === 0) return;
+    if (!rangeCreatable || disabled || event.detail === 0) {
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     const minute = getMinuteFromPointerPosition(
@@ -519,7 +557,9 @@ export function TimeRangeTimeline({
   };
 
   const moveCreationMinute = (event: KeyboardEvent<HTMLSpanElement>) => {
-    if (!rangeCreatable || disabled) return;
+    if (!rangeCreatable || disabled) {
+      return;
+    }
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       event.stopPropagation();
@@ -537,8 +577,12 @@ export function TimeRangeTimeline({
     event.preventDefault();
     event.stopPropagation();
     setCreationMinute((current) => {
-      if (event.key === 'Home') return 0;
-      if (event.key === 'End') return MINUTES_PER_DAY;
+      if (event.key === 'Home') {
+        return 0;
+      }
+      if (event.key === 'End') {
+        return MINUTES_PER_DAY;
+      }
       const direction = event.key === 'ArrowLeft' ? -1 : 1;
       return clamp(
         snapTimelineMinute(current, normalizedStepMinutes) +

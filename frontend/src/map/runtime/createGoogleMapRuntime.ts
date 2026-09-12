@@ -27,9 +27,13 @@ export async function createGoogleMapRuntime(
   let instance: google.maps.Map | undefined;
   let disposed = false;
   const dispose = () => {
-    if (disposed) return;
+    if (disposed) {
+      return;
+    }
     disposed = true;
-    for (const remove of [...eventRemovers]) remove();
+    for (const remove of [...eventRemovers]) {
+      remove();
+    }
     objects?.dispose();
     overlayHost?.dispose();
     adapter?.dispose();
@@ -65,10 +69,14 @@ export async function createGoogleMapRuntime(
       objects,
       overlayHost,
       setOptions(options) {
-        if (!disposed) instance?.setOptions(options);
+        if (!disposed) {
+          instance?.setOptions(options);
+        }
       },
       subscribeEvents(events) {
-        if (disposed || !instance) return () => undefined;
+        if (disposed || !instance) {
+          return () => undefined;
+        }
         const listeners = [
           instance.addListener(
             'click',
@@ -78,7 +86,9 @@ export async function createGoogleMapRuntime(
                 // The application owns POI details; suppress Google's InfoWindow.
                 event.stop();
               }
-              if (!event.latLng) return;
+              if (!event.latLng) {
+                return;
+              }
               const point = event.latLng.toJSON();
               if (placeId) {
                 events.onMapClick?.({ ...point, placeId });
@@ -89,14 +99,18 @@ export async function createGoogleMapRuntime(
           ),
           instance.addListener('center_changed', () => {
             const center = camera.getCenter();
-            if (center) events.onCenterChanged?.(center);
+            if (center) {
+              events.onCenterChanged?.(center);
+            }
           }),
           instance.addListener('zoom_changed', () => {
             events.onZoomChanged?.(camera.getZoom());
           }),
         ];
         const remove = () => {
-          for (const listener of listeners) listener.remove();
+          for (const listener of listeners) {
+            listener.remove();
+          }
           eventRemovers.delete(remove);
         };
         eventRemovers.add(remove);

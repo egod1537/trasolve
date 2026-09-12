@@ -22,7 +22,9 @@ export async function sendChat(
       signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
     });
   } catch (cause) {
-    if (signal?.aborted) throw cause;
+    if (signal?.aborted) {
+      throw cause;
+    }
     throw new Error(
       timeout.aborted
         ? '답변 대기 시간이 초과됐습니다. 다시 시도해 주세요.'
@@ -39,6 +41,8 @@ export async function sendChat(
     );
   }
   const parsed = chatResponseSchema.safeParse(body);
-  if (!parsed.success) throw new Error('채팅 응답 형식이 올바르지 않습니다.');
+  if (!parsed.success) {
+    throw new Error('채팅 응답 형식이 올바르지 않습니다.');
+  }
   return parsed.data;
 }

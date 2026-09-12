@@ -23,7 +23,9 @@ function readGitValue(args: string[]) {
 function firstNonEmpty(...values: Array<string | undefined>) {
   for (const value of values) {
     const trimmedValue = value?.trim();
-    if (trimmedValue) return trimmedValue;
+    if (trimmedValue) {
+      return trimmedValue;
+    }
   }
 
   return '';

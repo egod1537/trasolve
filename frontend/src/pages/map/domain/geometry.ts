@@ -1,7 +1,9 @@
 import type { GeoBounds, GeoPoint } from '../../../map/types/mapTypes';
 
 export function getGeoBounds(points: readonly GeoPoint[]): GeoBounds | null {
-  if (!points.length) return null;
+  if (!points.length) {
+    return null;
+  }
 
   let north = points[0].lat;
   let south = points[0].lat;

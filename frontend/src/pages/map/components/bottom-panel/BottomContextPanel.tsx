@@ -7,7 +7,9 @@ type Props = {
 };
 
 export function BottomContextPanel({ activeDay }: Props) {
-  if (!activeDay) return null;
+  if (!activeDay) {
+    return null;
+  }
 
   const subtitle = activeDay.date ?? `${activeDay.places.length}개 장소`;
 

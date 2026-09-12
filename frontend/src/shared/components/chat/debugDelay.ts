@@ -6,10 +6,14 @@ export type DebugDelayCommand =
   | { kind: 'valid'; delayMs: number; prompt: string };
 
 export function parseDebugDelayCommand(content: string): DebugDelayCommand {
-  if (!import.meta.env.DEV) return { kind: 'none' };
+  if (!import.meta.env.DEV) {
+    return { kind: 'none' };
+  }
 
   const normalized = content.trim();
-  if (!/^\/delay(?:\s|$)/.test(normalized)) return { kind: 'none' };
+  if (!/^\/delay(?:\s|$)/.test(normalized)) {
+    return { kind: 'none' };
+  }
 
   const match = normalized.match(/^\/delay\s+(\S+)(?:\s+([\s\S]+))?$/);
   const millisecondsToken = match?.[1];
@@ -35,7 +39,9 @@ export function waitForDebugDelay(
   delayMs: number,
   signal: AbortSignal,
 ): Promise<void> {
-  if (delayMs === 0) return Promise.resolve();
+  if (delayMs === 0) {
+    return Promise.resolve();
+  }
 
   return new Promise((resolve, reject) => {
     const timer = window.setTimeout(() => {

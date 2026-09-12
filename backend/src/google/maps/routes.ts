@@ -71,7 +71,9 @@ export class Routes {
       response.writeHead(200);
       response.end(JSON.stringify(result));
     } catch (cause) {
-      if (response.destroyed) return;
+      if (response.destroyed) {
+        return;
+      }
       const error =
         cause instanceof ApiError
           ? cause
@@ -279,13 +281,16 @@ export class Routes {
       }
       return { ...result, debug };
     } catch (error) {
-      if (error instanceof ApiError) throw error;
-      if (signal.aborted)
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      if (signal.aborted) {
         throw new ApiError(
           504,
           'ROUTES_TIMEOUT',
           '경로 조회 시간이 초과됐습니다.',
         );
+      }
       throw new ApiError(
         502,
         'ROUTES_UNAVAILABLE',
@@ -580,7 +585,9 @@ export class Routes {
 
   private async readUpstreamBody(response: Response): Promise<unknown> {
     const text = await response.text();
-    if (!text) return null;
+    if (!text) {
+      return null;
+    }
     try {
       return JSON.parse(text) as unknown;
     } catch {
@@ -597,7 +604,9 @@ export class Routes {
   private normalizeFare(
     fare: { currencyCode?: string; units?: string; nanos?: number } | undefined,
   ): MapRoute['fare'] {
-    if (!fare?.currencyCode) return null;
+    if (!fare?.currencyCode) {
+      return null;
+    }
     const units = Number(fare.units ?? '0');
     const amount = units + (fare.nanos ?? 0) / 1_000_000_000;
     return Number.isFinite(amount) && amount >= 0
@@ -633,7 +642,9 @@ export class Routes {
         chunks.push(chunk);
       });
       request.on('end', () => {
-        if (size > this.maxBodyBytes) return;
+        if (size > this.maxBodyBytes) {
+          return;
+        }
         try {
           resolve(
             JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown,

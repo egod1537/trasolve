@@ -7,7 +7,9 @@ export function HeroVisual() {
 
   useEffect(() => {
     const visual = tiltRef.current;
-    if (!visual) return;
+    if (!visual) {
+      return;
+    }
 
     const motion = window.matchMedia(
       '(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)',
@@ -16,7 +18,9 @@ export function HeroVisual() {
 
     const configure = () => {
       stopTracking();
-      if (!motion.matches) return;
+      if (!motion.matches) {
+        return;
+      }
 
       let frame = 0;
       const target = targetRef.current;
@@ -31,7 +35,9 @@ export function HeroVisual() {
           Math.abs(target.x - current.x) < 0.001 &&
           Math.abs(target.y - current.y) < 0.001 &&
           Math.abs(target.active - current.active) < 0.001;
-        if (settled) Object.assign(current, target);
+        if (settled) {
+          Object.assign(current, target);
+        }
 
         visual.style.transform =
           `translate3d(${current.x * 10}px, ${current.y * 6}px, 0) ` +
@@ -41,12 +47,18 @@ export function HeroVisual() {
       };
 
       const start = () => {
-        if (!frame) frame = requestAnimationFrame(animate);
+        if (!frame) {
+          frame = requestAnimationFrame(animate);
+        }
       };
       const track = (event: PointerEvent) => {
-        if (event.pointerType !== 'mouse') return;
+        if (event.pointerType !== 'mouse') {
+          return;
+        }
         const { innerWidth, innerHeight } = window;
-        if (!innerWidth || !innerHeight) return;
+        if (!innerWidth || !innerHeight) {
+          return;
+        }
         target.x = Math.max(
           -1,
           Math.min(1, (event.clientX / innerWidth - 0.5) * 2),
@@ -64,8 +76,9 @@ export function HeroVisual() {
       };
       const leaveViewport = (event: PointerEvent) => {
         // Internal element boundaries must not reset the viewport interaction.
-        if (event.pointerType === 'mouse' && event.relatedTarget === null)
+        if (event.pointerType === 'mouse' && event.relatedTarget === null) {
           leave();
+        }
       };
       window.addEventListener('pointermove', track, { passive: true });
       window.addEventListener('pointerout', leaveViewport, { passive: true });

@@ -75,7 +75,9 @@ export function RouteSettingsCard({
   );
 
   useEffect(() => {
-    if (!closing) return;
+    if (!closing) {
+      return;
+    }
 
     const reducedMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
@@ -88,12 +90,16 @@ export function RouteSettingsCard({
   }, [closing, onClose]);
 
   const requestClose = useCallback(() => {
-    if (!closing) setClosing(true);
+    if (!closing) {
+      setClosing(true);
+    }
   }, [closing]);
 
   const selectMode = useCallback(
     async (mode: TripPolylineMode) => {
-      if (disabled || mode === polyline.mode) return;
+      if (disabled || mode === polyline.mode) {
+        return;
+      }
       setSubmitting(true);
       try {
         await onUpdateMode(polyline.id, mode);

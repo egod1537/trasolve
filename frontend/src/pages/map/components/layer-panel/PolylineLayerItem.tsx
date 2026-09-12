@@ -42,7 +42,9 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
   const toName = toPlace?.name ?? '알 수 없는 장소';
   const connectionName = `${fromName} → ${toName}`;
   const openDetails = () => {
-    if (visible) onOpenDetails(polyline.id);
+    if (visible) {
+      onOpenDetails(polyline.id);
+    }
   };
   return (
     <LayerItemShell

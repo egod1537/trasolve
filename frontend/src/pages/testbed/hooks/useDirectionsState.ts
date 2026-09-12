@@ -61,7 +61,9 @@ export function useDirectionsState(appendLog: (message: string) => void) {
   );
   const addIntermediate = useCallback((endpoint: Endpoint = { text: '' }) => {
     setIntermediates((current) => {
-      if (current.length >= MAX_INTERMEDIATES) return current;
+      if (current.length >= MAX_INTERMEDIATES) {
+        return current;
+      }
       return [...current, { id: ++intermediateId.current, endpoint }];
     });
   }, []);
@@ -80,7 +82,9 @@ export function useDirectionsState(appendLog: (message: string) => void) {
     );
   }, []);
   const findRoute = useCallback(async () => {
-    if (pending) return;
+    if (pending) {
+      return;
+    }
     const id = ++requestId.current;
     controllerRef.current?.abort();
     const controller = new AbortController();
@@ -108,12 +112,16 @@ export function useDirectionsState(appendLog: (message: string) => void) {
     );
     try {
       const response = await getDirections(nextRequest, controller.signal);
-      if (id !== requestId.current) return;
+      if (id !== requestId.current) {
+        return;
+      }
       setResult(response);
       setApiStatus('success');
       appendLog(`길찾기 응답: ${response.routes.length}개 경로`);
     } catch (cause) {
-      if (id !== requestId.current) return;
+      if (id !== requestId.current) {
+        return;
+      }
       const failure =
         cause instanceof DirectionsApiError
           ? cause

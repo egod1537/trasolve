@@ -110,17 +110,19 @@ export default class MapPage extends Component<Record<string, never>, State> {
     void this.repository
       .listTrips(abort.signal)
       .then((trips) => {
-        if (!abort.signal.aborted && this.pendingCatalog === abort)
+        if (!abort.signal.aborted && this.pendingCatalog === abort) {
           this.setState({ trips, catalogError: null });
+        }
       })
       .catch((cause: unknown) => {
-        if (!abort.signal.aborted && this.pendingCatalog === abort)
+        if (!abort.signal.aborted && this.pendingCatalog === abort) {
           this.setState({
             catalogError:
               cause instanceof Error
                 ? cause.message
                 : '목록을 불러올 수 없습니다.',
           });
+        }
       })
       .finally(() => {
         if (this.pendingCatalog === abort) {
@@ -187,22 +189,26 @@ export default class MapPage extends Component<Record<string, never>, State> {
     operation: (signal: AbortSignal) => Promise<T>,
     onSuccess: (result: T) => void,
   ): Promise<void> {
-    if (this.pendingAction) return;
+    if (this.pendingAction) {
+      return;
+    }
     const abort = new AbortController();
     this.pendingAction = abort;
     this.setState({ action, actionError: null });
     try {
       const result = await operation(abort.signal);
-      if (!abort.signal.aborted && this.pendingAction === abort)
+      if (!abort.signal.aborted && this.pendingAction === abort) {
         onSuccess(result);
+      }
     } catch (cause) {
-      if (!abort.signal.aborted && this.pendingAction === abort)
+      if (!abort.signal.aborted && this.pendingAction === abort) {
         this.setState({
           actionError:
             cause instanceof Error
               ? cause.message
               : '여행 요청에 실패했습니다.',
         });
+      }
     } finally {
       if (this.pendingAction === abort) {
         this.pendingAction = null;

@@ -21,8 +21,12 @@ type ThreadRequestLifecycleContext = {
 };
 
 function formatAbortReason(reason: unknown): string | undefined {
-  if (typeof reason === 'string') return reason;
-  if (reason instanceof Error) return reason.message;
+  if (typeof reason === 'string') {
+    return reason;
+  }
+  if (reason instanceof Error) {
+    return reason.message;
+  }
   return reason === undefined ? undefined : String(reason);
 }
 
@@ -30,7 +34,9 @@ export function logThreadRequestLifecycle(
   stage: ThreadRequestLifecycleStage,
   context: ThreadRequestLifecycleContext,
 ): void {
-  if (!import.meta.env.DEV) return;
+  if (!import.meta.env.DEV) {
+    return;
+  }
 
   const now = Date.now();
   const entry = {

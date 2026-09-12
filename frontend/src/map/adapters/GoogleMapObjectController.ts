@@ -168,13 +168,19 @@ export class GoogleMapObjectController implements MapObjectController {
     const listeners = new Set<() => void>();
     const base = this.register(id, options.layer, {
       setVisible: (visible) => {
-        if (marker) marker.map = visible ? this.map : null;
+        if (marker) {
+          marker.map = visible ? this.map : null;
+        }
       },
       setZIndex: (zIndex) => {
-        if (marker) marker.zIndex = zIndex;
+        if (marker) {
+          marker.zIndex = zIndex;
+        }
       },
       remove: () => {
-        for (const unsubscribe of [...listeners]) unsubscribe();
+        for (const unsubscribe of [...listeners]) {
+          unsubscribe();
+        }
         if (marker) {
           marker.map = null;
           marker.replaceChildren();
@@ -186,31 +192,44 @@ export class GoogleMapObjectController implements MapObjectController {
     const handle: MapMarkerHandle = {
       ...base,
       setPosition: (position) => {
-        if (marker) marker.position = { ...position };
+        if (marker) {
+          marker.position = { ...position };
+        }
       },
       setTitle: (title) => {
-        if (marker) marker.title = title ?? '';
+        if (marker) {
+          marker.title = title ?? '';
+        }
       },
       setSelected: (selected) => {
-        if (!marker) return;
+        if (!marker) {
+          return;
+        }
         content.classList.toggle('is-selected', selected);
         marker.setAttribute('aria-pressed', String(selected));
       },
       setColor: (color) => {
-        if (marker)
+        if (marker) {
           content.style.setProperty('--place-color', color ?? '#2563eb');
+        }
       },
       setIcon: (icon) => {
-        if (marker) applyMarkerIcon(markerIcon, icon);
+        if (marker) {
+          applyMarkerIcon(markerIcon, icon);
+        }
       },
       setEmphasis: (emphasis) => {
-        if (!marker) return;
+        if (!marker) {
+          return;
+        }
         for (const value of ['selectable', 'source', 'target', 'unavailable']) {
           content.classList.toggle(`is-drawing-${value}`, emphasis === value);
         }
       },
       onClick: (callback) => {
-        if (!marker) return () => undefined;
+        if (!marker) {
+          return () => undefined;
+        }
         let target: google.maps.marker.AdvancedMarkerElement | null = marker;
         const listener = () => callback();
         target.addEventListener('gmp-click', listener);
@@ -270,7 +289,9 @@ export class GoogleMapObjectController implements MapObjectController {
       setVisible: (visible) => line?.setVisible(visible),
       setZIndex: (zIndex) => line?.setOptions({ zIndex }),
       remove: () => {
-        for (const listener of listeners) listener.remove();
+        for (const listener of listeners) {
+          listener.remove();
+        }
         listeners.clear();
         line?.setMap(null);
         line = null;
@@ -284,12 +305,16 @@ export class GoogleMapObjectController implements MapObjectController {
         applyPolylineStyle(line, style);
       },
       onClick: (callback) => {
-        if (!line) return () => undefined;
+        if (!line) {
+          return () => undefined;
+        }
         line.setOptions({ clickable: true });
         const listener = line.addListener(
           'click',
           (event: google.maps.PolyMouseEvent) => {
-            if (!event.latLng) return;
+            if (!event.latLng) {
+              return;
+            }
             callback({ lat: event.latLng.lat(), lng: event.latLng.lng() });
           },
         );
@@ -297,7 +322,9 @@ export class GoogleMapObjectController implements MapObjectController {
         return () => {
           listener.remove();
           listeners.delete(listener);
-          if (!listeners.size) line?.setOptions({ clickable: false });
+          if (!listeners.size) {
+            line?.setOptions({ clickable: false });
+          }
         };
       },
     };
@@ -306,7 +333,9 @@ export class GoogleMapObjectController implements MapObjectController {
   public remove(object: MapObjectHandle): void {
     // A handle from another controller must not remove an object with the same ID.
     const registered = this.objects.get(object.id);
-    if (registered?.remove === object.remove) registered.remove();
+    if (registered?.remove === object.remove) {
+      registered.remove();
+    }
   }
 
   public clearLayer(layer: string): void {
@@ -316,11 +345,15 @@ export class GoogleMapObjectController implements MapObjectController {
   }
 
   public clear(): void {
-    for (const object of [...this.objects.values()]) object.remove();
+    for (const object of [...this.objects.values()]) {
+      object.remove();
+    }
   }
 
   public dispose(): void {
-    if (this.disposed) return;
+    if (this.disposed) {
+      return;
+    }
     this.disposed = true;
     this.clear();
     this.map = null;
@@ -337,8 +370,9 @@ export class GoogleMapObjectController implements MapObjectController {
       throw new Error('Map object controller has been disposed.');
     }
     if (id !== undefined) {
-      if (this.objects.has(id))
+      if (this.objects.has(id)) {
         throw new Error(`Duplicate map object ID: ${id}`);
+      }
       return id;
     }
     let generated: string;
@@ -357,20 +391,28 @@ export class GoogleMapObjectController implements MapObjectController {
     const handle: MapObjectHandle = {
       id,
       setVisible: (visible) => {
-        if (!removed) binding.setVisible(visible);
+        if (!removed) {
+          binding.setVisible(visible);
+        }
       },
       setZIndex: (zIndex) => {
-        if (!removed) binding.setZIndex(zIndex);
+        if (!removed) {
+          binding.setZIndex(zIndex);
+        }
       },
       remove: () => {
-        if (removed) return;
+        if (removed) {
+          return;
+        }
         removed = true;
         binding.remove();
         this.objects.delete(id);
         if (layer !== undefined) {
           const ids = this.layers.get(layer);
           ids?.delete(id);
-          if (!ids?.size) this.layers.delete(layer);
+          if (!ids?.size) {
+            this.layers.delete(layer);
+          }
         }
       },
     };

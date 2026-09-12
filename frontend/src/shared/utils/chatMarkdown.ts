@@ -13,7 +13,9 @@ export function serializeChatToMarkdown(
 }
 
 export function downloadChatMarkdown(messages: readonly ChatMessage[]): void {
-  if (!messages.length) return;
+  if (!messages.length) {
+    return;
+  }
   const now = new Date();
   const date = [
     now.getFullYear(),

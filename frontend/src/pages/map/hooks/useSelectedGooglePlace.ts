@@ -22,7 +22,9 @@ export function useSelectedGooglePlace() {
 
     void getPlace(placeId, { signal: request.signal }).then(
       (place) => {
-        if (request.signal.aborted || activeRequest.current !== request) return;
+        if (request.signal.aborted || activeRequest.current !== request) {
+          return;
+        }
         activeRequest.current = null;
         setSelection({
           status: 'loaded',
@@ -32,7 +34,9 @@ export function useSelectedGooglePlace() {
         });
       },
       () => {
-        if (request.signal.aborted || activeRequest.current !== request) return;
+        if (request.signal.aborted || activeRequest.current !== request) {
+          return;
+        }
         activeRequest.current = null;
         setSelection({ status: 'error', placeId, clickedLocation });
       },

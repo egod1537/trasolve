@@ -16,8 +16,12 @@ let loading: Promise<void> | undefined;
 
 // One script per document, including React StrictMode remounts.
 export function loadGoogleMaps(): Promise<void> {
-  if (loading) return loading;
-  if (!mapsConfig.apiKey) return Promise.reject(new Error('missing-key'));
+  if (loading) {
+    return loading;
+  }
+  if (!mapsConfig.apiKey) {
+    return Promise.reject(new Error('missing-key'));
+  }
 
   loading = new Promise<void>((resolve, reject) => {
     const script = document.createElement('script');

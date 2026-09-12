@@ -90,14 +90,20 @@ function choosePlacement(
     desiredHeight <= availableAbove || availableAbove >= availableBelow
       ? 'above'
       : 'below';
-  if (!currentPlacement || currentPlacement === preferred) return preferred;
+  if (!currentPlacement || currentPlacement === preferred) {
+    return preferred;
+  }
 
   const currentSpace =
     currentPlacement === 'above' ? availableAbove : availableBelow;
   const preferredSpace =
     preferred === 'above' ? availableAbove : availableBelow;
-  if (desiredHeight <= currentSpace) return currentPlacement;
-  if (currentSpace <= 0 && preferredSpace > 0) return preferred;
+  if (desiredHeight <= currentSpace) {
+    return currentPlacement;
+  }
+  if (currentSpace <= 0 && preferredSpace > 0) {
+    return preferred;
+  }
   return preferredSpace - currentSpace >= PLACEMENT_HYSTERESIS
     ? preferred
     : currentPlacement;
@@ -119,7 +125,9 @@ function getVisibleViewport(
     right: canvasRect.right,
     bottom: canvasRect.bottom,
   };
-  if (!occlusionRect) return { rect: canvas, anchorOccluded: false };
+  if (!occlusionRect) {
+    return { rect: canvas, anchorOccluded: false };
+  }
 
   const occlusion = {
     left: Math.max(canvas.left, occlusionRect.left),
@@ -176,10 +184,14 @@ export function AnchoredMapCard({
     (currentPlacement: Placement | null): Layout | null => {
       const card = cardRef.current;
       const canvas = canvasRef.current;
-      if (!card || !canvas) return null;
+      if (!card || !canvas) {
+        return null;
+      }
 
       const point = overlayHost.project({ lat, lng });
-      if (!point) return null;
+      if (!point) {
+        return null;
+      }
 
       const hostRect = overlayHost.getElement().getBoundingClientRect();
       const canvasRect = canvas.getBoundingClientRect();
@@ -253,10 +265,14 @@ export function AnchoredMapCard({
   const updateLayout = useCallback(() => {
     const positioned = positionedAnchorKeyRef.current === anchorKey;
     const next = calculateLayout(positioned ? placementRef.current : null);
-    if (!next) return;
+    if (!next) {
+      return;
+    }
 
     if (!positioned) {
-      if (initialPositionFrameRef.current) return;
+      if (initialPositionFrameRef.current) {
+        return;
+      }
       placementRef.current = null;
       setLayout((current) => {
         const measuring = { ...next, ready: false };
@@ -266,7 +282,9 @@ export function AnchoredMapCard({
         initialPositionFrameRef.current = requestAnimationFrame(() => {
           initialPositionFrameRef.current = 0;
           const confirmed = calculateLayout(null);
-          if (!confirmed || confirmed.anchorKey !== anchorKey) return;
+          if (!confirmed || confirmed.anchorKey !== anchorKey) {
+            return;
+          }
           positionedAnchorKeyRef.current = anchorKey;
           placementRef.current = confirmed.placement;
           setLayout((current) =>
@@ -284,12 +302,16 @@ export function AnchoredMapCard({
   useLayoutEffect(() => {
     const card = cardRef.current;
     const canvas = canvasRef.current;
-    if (!card || !canvas) return;
+    if (!card || !canvas) {
+      return;
+    }
 
     const observer = new ResizeObserver(updateLayout);
     observer.observe(card);
     observer.observe(canvas);
-    if (occlusionRef?.current) observer.observe(occlusionRef.current);
+    if (occlusionRef?.current) {
+      observer.observe(occlusionRef.current);
+    }
     const unsubscribe = overlayHost.subscribeDraw(updateLayout);
     updateLayout();
     return () => {

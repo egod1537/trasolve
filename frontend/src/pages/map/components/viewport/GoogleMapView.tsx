@@ -49,7 +49,9 @@ const TripObjects = memo(function TripObjects({
   const { adapter, objects, canvasRef } = useGoogleMap();
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current) {
+      return;
+    }
     let stopCameraChange: (() => void) | undefined;
     let resizeFrame = 0;
 
@@ -64,13 +66,17 @@ const TripObjects = memo(function TripObjects({
         mobile: window.matchMedia('(max-width: 760px)').matches,
       });
 
-      if (!focusTarget.bounds) return;
+      if (!focusTarget.bounds) {
+        return;
+      }
       stopCameraChange = adapter.subscribeCameraChange(() => {
         stopCameraChange?.();
         stopCameraChange = undefined;
         const currentZoom = adapter.getZoom();
         const zoom = calculateBoundsZoom(currentZoom);
-        if (currentZoom > zoom) adapter.setZoom(zoom);
+        if (currentZoom > zoom) {
+          adapter.setZoom(zoom);
+        }
       });
       adapter.fitBounds(focusTarget.bounds, padding);
     };
@@ -80,7 +86,9 @@ const TripObjects = memo(function TripObjects({
       resizeFrame = requestAnimationFrame(focusMap);
     });
     observer.observe(canvasRef.current);
-    if (sidebarRef.current) observer.observe(sidebarRef.current);
+    if (sidebarRef.current) {
+      observer.observe(sidebarRef.current);
+    }
     return () => {
       observer.disconnect();
       cancelAnimationFrame(resizeFrame);
