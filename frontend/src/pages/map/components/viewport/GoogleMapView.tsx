@@ -1,36 +1,51 @@
-import { memo, useEffect, type RefObject } from 'react';
+import { memo, useEffect, type ReactNode, type RefObject } from 'react';
 import type { Trip } from '@trasolve/shared';
 import { GoogleMap, useGoogleMap } from '../../../../map/components/GoogleMap';
-import type { GoogleMapStatus } from '../../../../map/types/googleMapComponent';
+import type {
+  GoogleMapHandle,
+  GoogleMapOptions,
+  GoogleMapStatus,
+} from '../../../../map/types/googleMapComponent';
+import type { MapClickEvent } from '../../../../map/types/mapTypes';
+import type { GeoPoint } from '../../../../map/types/mapTypes';
 import {
   calculateBoundsZoom,
   calculateMapPadding,
-  calculatePlacePanOffset,
-  calculatePlaceZoom,
 } from '../../domain/cameraPolicy';
 import type { MapFocusTarget } from '../../domain/mapUiTypes';
-import type { TripRoute } from '../../domain/trip';
 import { TripLayer } from './TripLayer';
 
-type Props = {
+type TripObjectsProps = {
   trip: Trip;
-  routes: readonly TripRoute[];
   focusTarget: MapFocusTarget;
   selectedPlaceId: string | null;
+  selectedPolylineId: string | null;
   selectedDayId: string | null;
+  visibleDayIds: ReadonlySet<string>;
   onSelectPlace: (id: string) => void;
+  onSelectPolyline: (id: string, anchor: GeoPoint) => void;
   sidebarRef: RefObject<HTMLElement | null>;
 };
 
-function TripObjects({
+type Props = TripObjectsProps & {
+  onMapClick: (event: MapClickEvent) => void;
+  mapRef?: RefObject<GoogleMapHandle | null>;
+  overlay?: ReactNode;
+};
+
+const mapOptions: GoogleMapOptions = { clickableIcons: true };
+
+const TripObjects = memo(function TripObjects({
   trip,
-  routes,
   focusTarget,
   selectedPlaceId,
+  selectedPolylineId,
   selectedDayId,
+  visibleDayIds,
   onSelectPlace,
+  onSelectPolyline,
   sidebarRef,
-}: Props) {
+}: TripObjectsProps) {
   const { adapter, objects, canvasRef } = useGoogleMap();
 
   useEffect(() => {
@@ -48,14 +63,6 @@ function TripObjects({
         sidebarRect: panel?.getBoundingClientRect(),
         mobile: window.matchMedia('(max-width: 760px)').matches,
       });
-
-      if (focusTarget.type === 'place') {
-        const zoom = calculatePlaceZoom(adapter.getZoom());
-        adapter.setZoom(zoom);
-        // Pan once to an offset center; two concurrent pan animations can cancel.
-        adapter.panTo(focusTarget.point, calculatePlacePanOffset(padding));
-        return;
-      }
 
       if (!focusTarget.bounds) return;
       stopCameraChange = adapter.subscribeCameraChange(() => {
@@ -82,16 +89,20 @@ function TripObjects({
   }, [adapter, canvasRef, focusTarget, sidebarRef]);
 
   return (
-    <TripLayer
-      objects={objects}
-      trip={trip}
-      routes={routes}
-      selectedPlaceId={selectedPlaceId}
-      selectedDayId={selectedDayId}
-      onSelectPlace={onSelectPlace}
-    />
+    <>
+      <TripLayer
+        objects={objects}
+        trip={trip}
+        selectedPlaceId={selectedPlaceId}
+        selectedPolylineId={selectedPolylineId}
+        selectedDayId={selectedDayId}
+        visibleDayIds={visibleDayIds}
+        onSelectPlace={onSelectPlace}
+        onSelectPolyline={onSelectPolyline}
+      />
+    </>
   );
-}
+});
 
 function renderMapStatus(status: Exclude<GoogleMapStatus, 'ready'>) {
   return (
@@ -121,14 +132,19 @@ function renderMapStatus(status: Exclude<GoogleMapStatus, 'ready'>) {
 }
 
 export const GoogleMapView = memo(function GoogleMapView(props: Props) {
+  const { mapRef, onMapClick, overlay, ...tripObjectProps } = props;
   return (
     <GoogleMap
+      ref={mapRef}
       className="trip-map-root"
       style={{ position: 'absolute', inset: 0, height: '100%' }}
       ariaLabel="여행 장소 지도"
       renderStatus={renderMapStatus}
+      onMapClick={onMapClick}
+      options={mapOptions}
     >
-      <TripObjects {...props} />
+      <TripObjects {...tripObjectProps} />
+      {overlay}
     </GoogleMap>
   );
 });

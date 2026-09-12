@@ -4,43 +4,42 @@ The visual-region refactor starts from commit
 `0e57cabbbd0da456b2ec7f4dafc23a32ca200e82` on `impl`.
 
 ```text
-MapPage (class route root)
-└─ TripWorkspace (catalog and picker)
-   ├─ TripSession → TripProvider → MapWorkspace (mapping, selection and composition)
-   │  ├─ LayerPanel
-   │  │  ├─ LayerPanelHeader
-   │  │  ├─ LayerPanelContent
-   │  │  │  └─ DayLayerSection → PlaceLayerItem → PlaceDragHandle
-   │  │  └─ LayerPanelFooter
-   │  ├─ MapViewport
-   │  │  ├─ GoogleMapView → GoogleMap / TripLayer
-   │  │  └─ MapToolbar
-   │  └─ MapAiRegion
-   │     ├─ MapAiButton
-   │     └─ MapAiPanel
-   └─ TripPickerPopup
+MapPage (class route root, catalog and picker)
+├─ TripSession → TripProvider → MapWorkspace (mapping, selection and composition)
+│  ├─ LayerPanel
+│  │  ├─ LayerPanelHeader
+│  │  ├─ LayerPanelContent
+│  │  │  └─ DayLayerSection → PlaceLayerItem / PolylineLayerItem
+│  │  └─ LayerPlaceDetailCard / LayerPolylineDetailCard
+│  ├─ MapViewport
+│  │  ├─ GoogleMapView → GoogleMap / TripLayer
+│  │  ├─ MapSearchToolbar
+│  │  └─ BottomContextPanel + MapToolPanel
+│  └─ MapAiRegion
+│     ├─ MapAiButton
+│     └─ MapAiPanel
+└─ TripPickerPopup
 ```
 
-LayerPanel composes its header, content and footer while retaining the aside ref
-and busy state boundary. Header owns trip summary/show-all markup; footer owns the
-route explanation. Content owns collapse state, scroll ref, selected-item reveal
-and usePlaceReorder binding, reporting reorder results through onMovePlace.
-DayLayerSection owns day headings, collapse controls and the unchanged drop-indicator
-calculation. PlaceLayerItem owns the place row, its drag handle and presentation.
-The drag algorithm and its data attributes / trip-place-item selector are unchanged.
+LayerPanel retains the aside ref and busy state boundary. Content owns collapse
+state, scroll ref, selected-item reveal and the shared `usePlaceReorder` binding,
+reporting results through `onMovePlace`. DayLayerSection renders Place and derived
+RouteSegment rows from `Day.layerItems`; only Place rows own a drag handle.
+RouteSegment order and endpoints are reconciled from adjacent Place pairs after a
+drop. Row bodies update selection, while their shared chevron control opens the
+corresponding layer detail card.
 
 MapViewport provides a relative wrapper with the same full canvas dimensions as
 before. The floating LayerPanel still overlays the canvas: physically shrinking the
 canvas would change the existing camera padding. The original sidebarRef points to
 the LayerPanel aside, so GoogleMapView keeps measuring the same panel geometry.
 GoogleMapView still owns camera effects and TripLayer; the viewport never creates
-SDK objects or mutates trip data. A tools grid column beside LayerPanel supplies
-MapToolbar's positioning boundary. It uses the existing panel-width variable;
-MapToolbar has no panel-width calculation and starts at a local 16px inset. Its
-720px maximum width shrinks to the available column width. The Google canvas still
-fills the original viewport. On mobile the tools column spans the viewport and
-the toolbar uses 12px side insets. Opening AI adjusts only the right allowance or
-visibility, leaving the left anchor fixed.
+SDK objects or mutates trip data. MapSearchToolbar owns discovery controls while
+BottomContextPanel shows a compact, non-interactive Day or Place context summary.
+RouteSegment object selection remains independent and never replaces that context.
+Its sibling MapToolPanel remains visible independently of selection and contains
+the global map-tool entry points. The Google canvas still fills the original
+viewport. Opening AI adjusts only the floating-control allowance or visibility.
 
 MapWorkspace shares only the aiOpen boolean between MapViewport and MapAiRegion.
 MapAiRegion owns toggle/close wiring, the button ref and focus restoration. Its
@@ -51,7 +50,7 @@ stays mounted on close, preserving chat history, Markdown and export behavior.
 Region root classes are layer-panel, layer-panel-scroll, day-layer-section,
 place-layer-item, map-viewport and map-ai-region. Existing trip-* classes and mobile
 breakpoints remain to preserve visuals and drag/camera behavior. The unused
-MapSearchBar and its styles were removed; MapToolbar is the only map search UI.
+MapSearchBar and its styles were removed; MapSearchToolbar is the map search UI.
 
 The region folders cannot directly import API clients, controllers, stores or SDK
 infrastructure. Components receive callbacks and render the existing specialized

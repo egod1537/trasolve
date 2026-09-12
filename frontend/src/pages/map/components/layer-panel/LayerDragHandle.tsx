@@ -1,7 +1,7 @@
 import type { KeyboardEvent, PointerEvent } from 'react';
 
 type Props = {
-  placeName: string;
+  label: string;
   dragging: boolean;
   onPointerDown: (event: PointerEvent<HTMLButtonElement>) => void;
   onPointerMove: (event: PointerEvent<HTMLButtonElement>) => void;
@@ -11,8 +11,8 @@ type Props = {
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
 };
 
-export function PlaceDragHandle({
-  placeName,
+export function LayerDragHandle({
+  label,
   dragging,
   onPointerDown,
   onPointerMove,
@@ -24,8 +24,8 @@ export function PlaceDragHandle({
   return (
     <button
       type="button"
-      className={`trip-place-drag-handle${dragging ? ' is-dragging' : ''}`}
-      aria-label={`${placeName} 순서 변경`}
+      className={`trip-layer-drag-handle${dragging ? ' is-dragging' : ''}`}
+      aria-label={`${label} 순서 변경`}
       aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
       title="드래그하거나 Alt + ↑/↓ 키로 순서 변경"
       onClick={(event) => event.stopPropagation()}

@@ -1,0 +1,72 @@
+.map-user-controls {
+  position: absolute;
+  z-index: 3100;
+  top: max(12px, calc(env(safe-area-inset-top) + 4px));
+  right: max(12px, calc(env(safe-area-inset-right) + 4px));
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  pointer-events: auto;
+}
+
+.map-app-menu-button,
+.map-profile-button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.map-app-menu-button {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #374151;
+  box-shadow: var(--shadow-floating-sm);
+  backdrop-filter: blur(4px);
+}
+
+.map-app-menu-button svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.map-app-menu-button:hover {
+  background: #f1f5f9;
+}
+
+.map-profile-button {
+  width: 42px;
+  height: 42px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-primary) 45%, transparent),
+    var(--shadow-floating-sm);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.map-profile-button:hover {
+  background: var(--color-primary-dark);
+}
+
+.map-app-menu-button:focus-visible,
+.map-profile-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .map-user-controls {
+    top: max(10px, calc(env(safe-area-inset-top) + 4px));
+    right: max(10px, calc(env(safe-area-inset-right) + 4px));
+  }
+}

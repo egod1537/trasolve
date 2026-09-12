@@ -10,23 +10,42 @@ export interface MapObjectHandle {
 
 export interface MapMarkerHandle extends MapObjectHandle {
   setPosition(position: GeoPoint): void;
-  setLabel(label?: string): void;
   setTitle(title?: string): void;
   setSelected(selected: boolean): void;
   setColor(color?: string): void;
+  setIcon(icon?: MapMarkerIcon): void;
+  setEmphasis(emphasis: MapMarkerEmphasis): void;
   onClick(callback: () => void): () => void;
+  onPointerEnter(callback: () => void): () => void;
+  onPointerLeave(callback: () => void): () => void;
 }
+
+export type MapMarkerEmphasis =
+  'none' | 'selectable' | 'source' | 'target' | 'unavailable';
+
+export type MapMarkerIcon = {
+  viewBox: string;
+  paths: readonly string[];
+};
+
+export type MapPolylinePattern = 'solid' | 'short-dash' | 'stations';
 
 export type MapPolylineStyle = {
   color?: string;
   width?: number;
   opacity?: number;
+  pattern?: MapPolylinePattern;
+  patternRepeatPx?: number;
+  directional?: boolean;
+  directionRepeatPx?: number;
+  directionScale?: number;
 };
 
 export interface MapPolylineHandle extends MapObjectHandle {
   setPath(path: readonly GeoPoint[]): void;
   /** Partial update; omitted fields retain their current values. */
   setStyle(style: MapPolylineStyle): void;
+  onClick(callback: (position: GeoPoint) => void): () => void;
 }
 
 export type MapPolygonStyle = {
@@ -58,10 +77,10 @@ export type MapObjectBaseOptions = {
 };
 export type MapMarkerOptions = MapObjectBaseOptions & {
   position: GeoPoint;
-  label?: string;
   title?: string;
   selected?: boolean;
   color?: string;
+  icon?: MapMarkerIcon;
 };
 export type MapPolylineOptions = MapObjectBaseOptions & {
   path: readonly GeoPoint[];

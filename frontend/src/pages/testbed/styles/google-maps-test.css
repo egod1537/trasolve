@@ -126,6 +126,21 @@
   color: #64748b;
   overflow-wrap: anywhere;
 }
+.maps-test-intermediate {
+  display: grid;
+  gap: 6px;
+}
+.maps-test-intermediate-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+.maps-test-page .maps-test-intermediate-remove {
+  padding-inline: 10px;
+}
+.maps-test-page .maps-test-intermediate-add {
+  justify-self: start;
+}
 .maps-test-page pre {
   overflow: auto;
   max-height: 360px;
@@ -144,6 +159,193 @@
   gap: 8px;
 }
 
+.maps-test-result-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.maps-test-route-count {
+  color: #475569;
+  font-size: 14px;
+}
+.maps-test-route-error {
+  padding: 12px;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: #fff7f7;
+}
+.maps-test-route-error > h3,
+.maps-test-route-error > p {
+  color: #991b1b;
+}
+.maps-test-route-error-note {
+  padding: 8px 10px;
+  border-left: 3px solid #f59e0b;
+  background: #fffbeb;
+  color: #92400e !important;
+  font-size: 13px;
+}
+.maps-test-route-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+.maps-test-page .maps-test-route-option {
+  display: grid;
+  gap: 3px;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #0f172a;
+  background: #f8fafc;
+  text-align: left;
+}
+.maps-test-route-option > span {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+.maps-test-route-option[aria-pressed='true'] small {
+  color: #dbeafe;
+}
+.maps-test-route-summary,
+.maps-test-itinerary-section {
+  padding-top: 4px;
+}
+.maps-test-route-summary > dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.maps-test-route-summary > dl > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+.maps-test-route-summary dt {
+  color: #64748b;
+  font-size: 12px;
+}
+.maps-test-route-summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.maps-test-itinerary,
+.maps-test-itinerary ol {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.maps-test-itinerary {
+  max-width: 800px;
+}
+.maps-test-itinerary-leg {
+  position: relative;
+}
+.maps-test-itinerary-leg::before {
+  position: absolute;
+  top: 10px;
+  bottom: -10px;
+  left: 7px;
+  width: 2px;
+  background: #cbd5e1;
+  content: '';
+}
+.maps-test-itinerary-leg:last-child::before {
+  bottom: 10px;
+}
+.maps-test-itinerary-endpoint {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding-block: 4px;
+}
+.maps-test-itinerary-endpoint > span {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border: 4px solid #2563eb;
+  border-radius: 50%;
+  background: #fff;
+  box-sizing: border-box;
+}
+.maps-test-itinerary-endpoint strong,
+.maps-test-itinerary-endpoint small,
+.maps-test-itinerary-step-content small {
+  display: block;
+}
+.maps-test-itinerary-endpoint small {
+  margin-top: 2px;
+}
+.maps-test-itinerary-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(64px, auto) minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  margin: 8px 0 8px 28px;
+}
+.maps-test-itinerary-step::before {
+  position: absolute;
+  top: 14px;
+  left: -20px;
+  width: 14px;
+  border-top: 2px solid #cbd5e1;
+  content: '';
+}
+.maps-test-itinerary-mode {
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: #1e3a8a;
+  background: #dbeafe;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+.maps-test-itinerary-step-content {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+}
+.maps-test-itinerary-step-content p {
+  color: #334155;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.maps-test-route-debug {
+  padding-top: 4px;
+  border-top: 1px solid #e2e8f0;
+}
+.maps-test-route-debug-content {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.maps-test-route-debug-content ul {
+  display: grid;
+  gap: 6px;
+  padding-left: 20px;
+  margin: 0;
+}
+
 @media (max-width: 800px) {
   .maps-test-page {
     padding: 16px;
@@ -154,5 +356,14 @@
   }
   .maps-test-map-panel .google-map {
     height: 360px;
+  }
+  .maps-test-route-summary > dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .maps-test-itinerary-step {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .maps-test-itinerary-mode {
+    justify-self: start;
   }
 }

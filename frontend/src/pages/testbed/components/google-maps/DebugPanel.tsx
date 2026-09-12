@@ -1,17 +1,12 @@
-import type {
-  DirectionsRequest,
-  DirectionsResult,
-  MapRoute,
-} from '@trasolve/shared';
+import type { DirectionsRequest, MapRoute } from '@trasolve/shared';
 
 type Props = {
   request: DirectionsRequest | null;
-  result: DirectionsResult | null;
   route: MapRoute | undefined;
   logs: string[];
 };
 
-export function DebugPanel({ request, result, route, logs }: Props) {
+export function DebugPanel({ request, route, logs }: Props) {
   return (
     <details className="maps-test-debug">
       <summary>Debug / API 정보</summary>
@@ -26,12 +21,6 @@ export function DebugPanel({ request, result, route, logs }: Props) {
             <pre>{JSON.stringify(route.path, null, 2)}</pre>
           </details>
         )}
-        <details>
-          <summary>Raw Response</summary>
-          <pre>
-            {result ? JSON.stringify(result.rawResponse, null, 2) : '응답 없음'}
-          </pre>
-        </details>
         <section aria-label="이벤트 로그">
           <h2>이벤트 로그</h2>
           <pre>{logs.join('\n') || '이벤트 대기'}</pre>

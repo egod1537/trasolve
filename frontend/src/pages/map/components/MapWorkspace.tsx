@@ -1,48 +1,83 @@
-import { useMemo, useRef, useState } from 'react';
-import { useTripEditController, useTripState } from '../hooks/useTrip';
+import { useMemo, useRef } from 'react';
+import {
+  selectTripPlace,
+  selectTripPolyline,
+} from '../domain/mapTripSelectors';
 import { tripToView } from '../domain/tripMapping';
 import { useMapUi } from '../hooks/useMapUi';
+import { useSelectedGooglePlace } from '../hooks/useSelectedGooglePlace';
+import { useTripEditController, useTripState } from '../hooks/useTrip';
 import { LayerPanel } from './layer-panel/LayerPanel';
+import { useMapWorkspaceActions } from './mapWorkspaceActions';
 import { MapViewport } from './viewport/MapViewport';
-import { MapAiRegion } from './ai/MapAiRegion';
 import '../styles/map.css';
 
 export function MapWorkspace() {
-  const { trip, routes, status } = useTripState();
+  const { trip, status, error } = useTripState();
   const controller = useTripEditController();
-  const view = useMemo(() => tripToView(trip), [trip]);
   const ui = useMapUi(trip);
-  const [aiOpen, setAiOpen] = useState(false);
+  const googlePlace = useSelectedGooglePlace();
   const sidebarRef = useRef<HTMLElement>(null);
+  const tripView = useMemo(() => tripToView(trip), [trip]);
+  const selectedTripPlace = useMemo(
+    () => selectTripPlace(trip, ui.selectedPlaceId),
+    [trip, ui.selectedPlaceId],
+  );
+  const selectedTripPolyline = useMemo(
+    () =>
+      selectTripPolyline(
+        trip,
+        ui.selectedPolylineId,
+        ui.selectedPolylineAnchor,
+      ),
+    [trip, ui.selectedPolylineAnchor, ui.selectedPolylineId],
+  );
+  const mutationBusy = status === 'saving';
+  const actions = useMapWorkspaceActions(
+    controller,
+    ui,
+    googlePlace,
+    trip.days.length,
+  );
 
   return (
     <div className="trip-map-workspace">
       <main className="trip-map-page">
         <LayerPanel
-          busy={status === 'saving'}
-          selectionRevision={ui.selectionRevision}
-          trip={view}
+          trip={tripView}
+          busy={mutationBusy}
+          saveStatus={status}
+          savedAt={trip.updatedAt}
+          mutationError={error}
           sidebarRef={sidebarRef}
+          selectionRevision={ui.selectionRevision}
           selectedPlaceId={ui.selectedPlaceId}
+          selectedPlaceIds={ui.selectedPlaceIds}
+          selectedPolylineId={ui.selectedPolylineId}
+          selectedPolylineIds={ui.selectedPolylineIds}
           selectedDayId={ui.selectedDayId}
-          onSelectPlace={ui.selectPlace}
-          onSelectDay={ui.selectDay}
-          onShowAll={ui.showAll}
-          onMovePlace={(dayId, placeId, targetIndex) =>
-            void controller.movePlace(placeId, dayId, targetIndex)
-          }
+          visibleDayIds={ui.visibleDayIds}
+          {...actions.layerPanel}
         />
         <MapViewport
           trip={trip}
-          routes={routes}
+          selectionRevision={ui.selectionRevision}
           focusTarget={ui.focusTarget}
           selectedPlaceId={ui.selectedPlaceId}
+          selectedPolylineId={ui.selectedPolylineId}
           selectedDayId={ui.selectedDayId}
-          onSelectPlace={ui.selectPlace}
+          visibleDayIds={ui.visibleDayIds}
           sidebarRef={sidebarRef}
-          aiOpen={aiOpen}
+          selectedGooglePlace={googlePlace.selection}
+          selectedTripPlace={selectedTripPlace}
+          selectedTripPolyline={selectedTripPolyline}
+          selectedPlaceIds={ui.selectedPlaceIds}
+          selectedPolylineIds={ui.selectedPolylineIds}
+          selectedItemCount={ui.selectedItemCount}
+          tripMutationBusy={mutationBusy}
+          tripMutationError={error}
+          {...actions.mapViewport}
         />
-        <MapAiRegion open={aiOpen} onOpenChange={setAiOpen} />
       </main>
     </div>
   );

@@ -1,0 +1,2 @@
+export const DEFAULT_PLACE_START_TIME = '12:00';
+export const DEFAULT_PLACE_DURATION_MINUTES = 60;

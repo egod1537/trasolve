@@ -17,7 +17,11 @@ import type { MapPolyline } from '../types/mapTypes';
 import { useMapPolyline } from '../hooks/useMapPolyline';
 import { createGoogleMapRuntime } from '../runtime/createGoogleMapRuntime';
 import { mapsAuthErrorEvent, mapsConfig } from '../runtime/googleMaps';
-import type { GoogleMapHandle, GoogleMapProps, GoogleMapStatus } from '../types/googleMapComponent';
+import type {
+  GoogleMapHandle,
+  GoogleMapProps,
+  GoogleMapStatus,
+} from '../types/googleMapComponent';
 import './google-map.css';
 
 type MapContextValue = {
@@ -80,6 +84,7 @@ export function GoogleMap(props: GoogleMapProps) {
   );
   const handle = useMemo<GoogleMapHandle>(
     () => ({
+      getCenter: () => runtimeRef.current?.adapter.getCenter() ?? null,
       panTo: (point, offset) =>
         runtimeRef.current?.adapter.panTo(point, offset),
       setZoom: (value) => runtimeRef.current?.adapter.setZoom(value),

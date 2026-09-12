@@ -1,0 +1,34 @@
+.anchored-map-card {
+  position: absolute;
+  z-index: 2000;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  contain: layout;
+  transition: none;
+  will-change: transform;
+}
+
+.anchored-map-card::after {
+  position: absolute;
+  left: var(--anchored-card-pointer-x);
+  width: 14px;
+  height: 14px;
+  background: var(--color-floating-surface);
+  content: '';
+  pointer-events: none;
+}
+
+.anchored-map-card.is-above::after {
+  bottom: -7px;
+  border-right: 1px solid var(--color-floating-border);
+  border-bottom: 1px solid var(--color-floating-border);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.anchored-map-card.is-below::after {
+  top: -7px;
+  border-top: 1px solid var(--color-floating-border);
+  border-left: 1px solid var(--color-floating-border);
+  transform: translateX(-50%) rotate(45deg);
+}

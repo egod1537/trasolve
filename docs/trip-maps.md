@@ -3,26 +3,32 @@
 `Frontend TripRepository → HttpTripRepository → api/trips.ts → backend TripHttpService → TripController → TripRepository`
 is the persistence boundary. Rendering remains separate through MapObjectController.
 
-The Trip terminology is an internal type/module naming convention. HTTP paths,
-request/response JSON fields, stored JSON and the data directory are unchanged;
-existing local files require no migration.
+The Trip terminology is an internal type/module naming convention. HTTP paths and
+the data directory are unchanged. Trip places accept optional integer
+`durationMinutes`. Existing local files without `layerItems` are migrated in memory
+when parsed and persist the generated shared order on their next save.
 
 ## Domain and commands
 
 `shared/schemas/trip.ts` validates the domain; `shared/types/trip.ts` exports
-Trip, TripInput, TripDay and TripPlace. Stored data includes owner, title,
-optional ISO dates, days (including color), places (location, order, optional Google
-placeId/address/memo/time), and UTC createdAt/updatedAt timestamps.
+Trip, TripInput, TripDay, TripPlace, TripPolyline and TripLayerItem. Stored data
+includes owner, title, optional ISO dates, days (including color), places (location,
+order, optional Google placeId/address/memo/time/durationMinutes), polylines, the
+shared `layerItems` display order, and UTC createdAt/updatedAt timestamps.
+Duration is stored in minutes from 0 through 1440; omission means that the user has
+not set it.
 
 TripController exposes listTrips, getTrip, createTrip, saveTrip and deleteTrip.
 It imports only the repository interface. All modifications, including future AI
 commands, must go through this controller. The initial API uses whole-trip PUT;
-addPlace/movePlace/updatePlace command endpoints are not implemented yet.
+fine-grained add/move/update command endpoints are not implemented yet.
 
-The backend generates trip/day/place UUIDs on creation. PUT preserves known nested
-IDs; omit an ID when adding a new day/place. Unknown or duplicated existing IDs are
-rejected. Array position determines visit order; the controller normalizes each
-day to consecutive 1-based orders, including when moving places between days.
+The backend generates canonical trip/day/place/polyline UUIDs on creation. PUT
+preserves known nested IDs and accepts frontend-only `pending-*` IDs while creating
+new nested entities; other unknown or duplicated existing IDs are rejected. The
+`Day.layerItems` array is authoritative for the combined Place/Polyline sidebar
+order. Place and Polyline arrays retain consecutive type-local `order` values for
+their existing map and visit semantics.
 createdAt is preserved and updatedAt is advanced by the backend. Neither timestamp
 nor userId belongs in an input body. PUT replaces the editable snapshot, so omitted
 optional fields are removed and omitted days/places are deleted.
@@ -53,7 +59,8 @@ POST/PUT accept TripInput as JSON, for example:
         {
           "name": "Tokyo Tower",
           "location": { "lat": 35.6586, "lng": 139.7454 },
-          "memo": "저녁에 방문"
+          "memo": "저녁에 방문",
+          "durationMinutes": 90
         }
       ]
     }
@@ -110,9 +117,13 @@ the volume; undeploy does not delete named volumes. Back up this volume separate
 the optional Tokyo example button submits sample content through the same API and
 receives canonical server IDs. No automatic seed runs inside the repository.
 The initial picker supports trip selection and creation; the map sidebar supports
-drag/drop reorder. The persistence toolbar and place editor are no longer exposed.
-TripEditController commands for title, places, coordinates/memos and days remain
-available. Trip deletion belongs to TripWorkspace and is exposed in the picker. Mutations still use the existing APIs; dates and other fields are preserved.
+day drag/drop and one shared Place/Polyline drag/drop order. Place items may retain
+their existing cross-day move behavior; polylines remain in their owning day so
+`fromPlaceId` and `toPlaceId` continue to reference that day's places. The
+persistence toolbar and place editor are no longer exposed.
+TripEditController commands for title, places, coordinates/memos, duration and days
+remain available. Trip deletion belongs to MapPage and is exposed in the picker.
+Mutations still use the existing APIs; dates and other fields are preserved.
 
 `src/pages/map/domain/tripMapping.ts` maps persisted data to the existing map view
 types; the sample creation helper maps the example to an API input. TripStore

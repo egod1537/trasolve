@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { API_ROUTES, type HealthResponse } from '@trasolve/shared';
 import { API } from './instances.js';
 
-const port = Number(process.env.PORT ?? 3000);
+const port = Number(process.env.PORT ?? 43127);
 const host = process.env.HOST ?? '127.0.0.1';
 
 const server = createServer((request, response) => {

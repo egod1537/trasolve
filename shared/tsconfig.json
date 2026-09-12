@@ -15,6 +15,7 @@
     "types/**/*.ts",
     "schemas/**/*.ts",
     "constants/**/*.ts",
+    "domain/**/*.ts",
     "builders/**/*.ts"
   ]
 }

@@ -1,4 +1,4 @@
-import type { MapPadding, ScreenPoint } from '../../../map/types/mapTypes';
+import type { MapPadding } from '../../../map/types/mapTypes';
 
 type Rect = {
   top: number;
@@ -27,17 +27,6 @@ export function calculateMapPadding({
     left:
       !mobile && sidebarRect ? sidebarRect.right - canvasRect.left + 32 : 40,
   };
-}
-
-export function calculatePlacePanOffset(padding: MapPadding): ScreenPoint {
-  return {
-    x: (padding.right - padding.left) / 2,
-    y: (padding.bottom - padding.top) / 2,
-  };
-}
-
-export function calculatePlaceZoom(currentZoom: number): number {
-  return Math.max(currentZoom, 15);
 }
 
 export function calculateBoundsZoom(currentZoom: number): number {

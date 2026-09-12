@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
+  reconcileDayRouteSegments,
   tripIdSchema,
   tripInputSchema,
   tripSchema,
@@ -25,10 +26,7 @@ export class TripController {
     return trip;
   }
 
-  public async createTrip(
-    userId: string,
-    input: TripInput,
-  ): Promise<Trip> {
+  public async createTrip(userId: string, input: TripInput): Promise<Trip> {
     this.validateIds(userId);
     const now = new Date().toISOString();
     const trip = this.normalize(input, {
@@ -80,26 +78,102 @@ export class TripController {
     const knownPlaces = new Set(
       existing?.days.flatMap((day) => day.places.map((place) => place.id)),
     );
+    const knownPolylines = new Set(
+      existing?.days.flatMap((day) =>
+        day.polylines.map((polyline) => polyline.id),
+      ),
+    );
     const canonicalId = (id: string | undefined, known: Set<string>) => {
       if (!existing || !id) return randomUUID();
-      if (!known.has(id)) throw invalidTripRequest();
-      return id;
+      if (known.has(id)) return id;
+      if (id.startsWith('pending-')) return randomUUID();
+      throw invalidTripRequest();
     };
+    const days = parsed.data.days.map((day) => {
+      const placeReferences = new Map<string, string>();
+      const polylineReferences = new Map<string, string>();
+      const places = day.places.map((place, index) => {
+        const id = canonicalId(place.id, knownPlaces);
+        if (place.id) placeReferences.set(place.id, id);
+        return { ...place, id, order: index + 1 };
+      });
+      const polylines = day.polylines.map((polyline, index) => {
+        const fromPlaceId = placeReferences.get(polyline.fromPlaceId);
+        const toPlaceId = placeReferences.get(polyline.toPlaceId);
+        if (!fromPlaceId || !toPlaceId) throw invalidTripRequest();
+        const id = canonicalId(polyline.id, knownPolylines);
+        if (polyline.id) polylineReferences.set(polyline.id, id);
+        return {
+          ...polyline,
+          id,
+          fromPlaceId,
+          toPlaceId,
+          order: index + 1,
+        };
+      });
+      const layerItems = day.layerItems.map((item) => {
+        const id =
+          item.type === 'place'
+            ? placeReferences.get(item.id)
+            : polylineReferences.get(item.id);
+        if (!id) throw invalidTripRequest();
+        return { type: item.type, id };
+      });
+      const layerItemKeys = new Set(
+        layerItems.map((item) => `${item.type}:${item.id}`),
+      );
+      for (const place of places) {
+        const key = `place:${place.id}`;
+        if (!layerItemKeys.has(key)) {
+          layerItems.push({ type: 'place', id: place.id });
+          layerItemKeys.add(key);
+        }
+      }
+      for (const polyline of polylines) {
+        const key = `polyline:${polyline.id}`;
+        if (!layerItemKeys.has(key)) {
+          layerItems.push({ type: 'polyline', id: polyline.id });
+          layerItemKeys.add(key);
+        }
+      }
+      const layerRanks = new Map(
+        layerItems.map(
+          (item, index) => [`${item.type}:${item.id}`, index] as const,
+        ),
+      );
+      places.sort(
+        (left, right) =>
+          (layerRanks.get(`place:${left.id}`) ?? Number.MAX_SAFE_INTEGER) -
+          (layerRanks.get(`place:${right.id}`) ?? Number.MAX_SAFE_INTEGER),
+      );
+      places.forEach((place, index) => {
+        place.order = index + 1;
+      });
+      polylines.sort(
+        (left, right) =>
+          (layerRanks.get(`polyline:${left.id}`) ?? Number.MAX_SAFE_INTEGER) -
+          (layerRanks.get(`polyline:${right.id}`) ?? Number.MAX_SAFE_INTEGER),
+      );
+      polylines.forEach((polyline, index) => {
+        polyline.order = index + 1;
+      });
+      const normalizedDay = {
+        ...day,
+        id: canonicalId(day.id, knownDays),
+        places,
+        polylines,
+        layerItems,
+      };
+      reconcileDayRouteSegments(normalizedDay, randomUUID);
+      return normalizedDay;
+    });
     const result = tripSchema.safeParse({
       ...parsed.data,
       id: metadata.id,
       userId: metadata.userId,
       createdAt: metadata.createdAt,
       updatedAt: metadata.updatedAt,
-      days: parsed.data.days.map((day) => ({
-        ...day,
-        id: canonicalId(day.id, knownDays),
-        places: day.places.map((place, index) => ({
-          ...place,
-          id: canonicalId(place.id, knownPlaces),
-          order: index + 1,
-        })),
-      })),
+      days,
     });
     if (!result.success) throw invalidTripRequest();
     return result.data;

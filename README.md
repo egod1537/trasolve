@@ -12,10 +12,11 @@ Frontend는 `app`, `pages`, `map`, `api`, `shared`, `assets`로 구성합니다.
 
 ### Trip persistence
 
-Frontend는 `TripWorkspace → TripRepository`로 목록·선택·생성·삭제를 처리합니다.
+Frontend는 `MapPage → TripRepository`로 목록·선택·생성·삭제를 처리합니다.
 선택 후에만 `TripSession`이 `TripStore + TripEditController`를 만들고
 `TripProvider`로 지도 화면에 주입합니다. 편집 저장은 Repository를 경유하며
-세션 종료 시 pending 편집을 취소합니다. MapPage는 route root만 담당합니다.
+세션 종료 시 pending 편집을 취소합니다. MapPage는 route root이자
+`TripPickerPopup`과 `TripSession`의 composition root입니다.
 
 `/map`은 backend에서 내 여행 목록을 불러오며 여행 생성·열기·제목/순서 저장·삭제를 지원합니다.
 `TripHttpService → TripController → TripRepository`로 처리하고,
@@ -175,11 +176,14 @@ const result = await API.Route.queryRoutes(request);
   선택값입니다. 검색어는 공백 제거 후 2~1024자, 반경은 0~50000m를 허용합니다.
   응답은 `{ suggestions: [{ placeId, text, secondaryText }] }`입니다.
 - `GET /api/google/maps/places/:placeId`: 선택적인 query parameter로 `languageCode`,
-  `regionCode`, `sessionToken`을 받습니다. 응답은 `{ id, name, address?, location: { lat, lng } }`입니다.
+  `regionCode`, `sessionToken`을 받습니다. 응답은
+  `{ id, name, address?, location, rating?, userRatingCount?, website?, phoneNumber?, googleMapsUrl?, category?, openingHours? }`입니다.
 
 언어와 지역의 기본값은 기존 지도 설정과 같은 `ko`, `JP`입니다. 지역 코드는 검색 국가를
 제한하지 않습니다. 자동완성에는 Google의 place ID와 이름·보조 설명만 요청하고,
-상세 조회에는 `id,displayName,formattedAddress,location`만 요청합니다.
+상세 조회에는 카드 표시에 필요한 이름·주소·좌표, 평점·웹사이트·전화번호·Google Maps URL·유형과
+현재·정규 영업시간 및 장소의 IANA 시간대를 요청합니다. `openingHours`는 Google 원본 객체 대신
+`timeZone`, `utcOffsetMinutes`, `current`, `regular`로 정제해서 전달합니다.
 Google 원본 응답은 서버에서 검증·변환하며, Google 오류 본문과 키는 클라이언트에 전달하지 않습니다.
 모든 Places HTTP 응답은 `Cache-Control: no-store`를 사용합니다.
 공식 형식은 [Autocomplete (New)](https://developers.google.com/maps/documentation/places/web-service/place-autocomplete)와
@@ -458,6 +462,6 @@ npm run build
 ```
 
 - frontend: `http://localhost:5173`
-- backend: `http://127.0.0.1:3000/api/health`
+- backend: `http://127.0.0.1:43127/api/health`
 
 frontend와 backend는 HTTP로만 통신하며 shared는 양쪽의 API 계약만 제공합니다.

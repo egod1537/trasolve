@@ -73,13 +73,18 @@ export async function createGoogleMapRuntime(
           instance.addListener(
             'click',
             (event: google.maps.MapMouseEvent | google.maps.IconMouseEvent) => {
+              const placeId = 'placeId' in event ? event.placeId : null;
+              if (placeId) {
+                // The application owns POI details; suppress Google's InfoWindow.
+                event.stop();
+              }
               if (!event.latLng) return;
               const point = event.latLng.toJSON();
-              events.onMapClick?.(
-                'placeId' in event && event.placeId
-                  ? { ...point, placeId: event.placeId }
-                  : point,
-              );
+              if (placeId) {
+                events.onMapClick?.({ ...point, placeId });
+                return;
+              }
+              events.onMapClick?.(point);
             },
           ),
           instance.addListener('center_changed', () => {
