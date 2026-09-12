@@ -59,7 +59,9 @@ export function LayerItemShell({
       <div
         className="trip-layer-row"
         onContextMenu={(event) => {
-          if (!onOpenDetails || disabled) return;
+          if (!onOpenDetails || disabled) {
+            return;
+          }
           const target = event.target;
           if (
             target instanceof Element &&

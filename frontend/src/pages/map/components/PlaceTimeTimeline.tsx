@@ -44,19 +44,27 @@ const TIMELINE_SNAP_MINUTES = 30;
 const DEFAULT_VISIT_DURATION_MINUTES = 60;
 
 function parseClock(value: string | undefined): number | undefined {
-  if (!value) return undefined;
+  if (!value) {
+    return undefined;
+  }
   const match = /^(\d{2}):(\d{2})$/.exec(value);
-  if (!match) return undefined;
+  if (!match) {
+    return undefined;
+  }
   const hour = Number(match[1]);
   const minute = Number(match[2]);
-  if (hour > 23 || minute > 59) return undefined;
+  if (hour > 23 || minute > 59) {
+    return undefined;
+  }
   return hour * 60 + minute;
 }
 
 function formatCompactDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const remainder = minutes % 60;
-  if (!hours) return `${remainder}분`;
+  if (!hours) {
+    return `${remainder}분`;
+  }
   return remainder ? `${hours}h ${remainder}m` : `${hours}h`;
 }
 
@@ -64,7 +72,9 @@ function getOpeningRange(
   openingHours: PlaceOpeningHours | undefined,
   now: Date,
 ): OpeningRange | undefined {
-  if (!openingHours) return undefined;
+  if (!openingHours) {
+    return undefined;
+  }
   const status = getPlaceOpeningStatus(openingHours, now);
   if (status.type === 'always-open') {
     return {
@@ -74,11 +84,17 @@ function getOpeningRange(
       endText: formatClockTime(MINUTES_PER_DAY, { endOfDay: true }),
     };
   }
-  if (!status.timeline) return undefined;
+  if (!status.timeline) {
+    return undefined;
+  }
   const start = parseClock(status.timeline.startText);
   let end = parseClock(status.timeline.endText);
-  if (start === undefined || end === undefined) return undefined;
-  if (end <= start) end += MINUTES_PER_DAY;
+  if (start === undefined || end === undefined) {
+    return undefined;
+  }
+  if (end <= start) {
+    end += MINUTES_PER_DAY;
+  }
   return {
     start,
     end,
@@ -115,7 +131,9 @@ function createTimelineModel(
   const arrivalText =
     arrival === undefined ? undefined : formatClockTime(arrival);
   const labels: string[] = [];
-  if (arrivalText) labels.push(`방문 ${arrivalText}`);
+  if (arrivalText) {
+    labels.push(`방문 ${arrivalText}`);
+  }
   if (durationMinutes !== undefined) {
     labels.push(`체류 ${formatDurationMinutes(durationMinutes)}`);
   }
@@ -180,7 +198,9 @@ export function PlaceTimeTimeline({
   );
   const canEditTimeline =
     !readOnly && variant === 'expanded' && onChangeTimeRange !== undefined;
-  if (!model.label && !canEditTimeline) return null;
+  if (!model.label && !canEditTimeline) {
+    return null;
+  }
 
   const effectiveDuration =
     canEditTimeline &&
@@ -217,7 +237,9 @@ export function PlaceTimeTimeline({
     );
   };
   const saveRangeChange = (range: TimeRangeTimelineRange) => {
-    if (!onChangeTimeRange) return;
+    if (!onChangeTimeRange) {
+      return;
+    }
     void (async () => {
       try {
         await onChangeTimeRange(
@@ -233,7 +255,9 @@ export function PlaceTimeTimeline({
     })();
   };
   const createRange = (startMinute: number) => {
-    if (!canCreateRange || busy) return;
+    if (!canCreateRange || busy) {
+      return;
+    }
     const visitDuration = Math.min(
       MINUTES_PER_DAY,
       Math.max(

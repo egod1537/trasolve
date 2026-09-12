@@ -68,7 +68,9 @@ export class Places {
       languageCode: input.languageCode ?? 'ko',
       regionCode: input.regionCode ?? 'JP',
     });
-    if (input.sessionToken) query.set('sessionToken', input.sessionToken);
+    if (input.sessionToken) {
+      query.set('sessionToken', input.sessionToken);
+    }
     const raw = await this.fetchGoogle(
       `places/${encodeURIComponent(input.placeId)}?${query}`,
       {
@@ -229,7 +231,9 @@ export class Places {
       if (!response.ok) {
         // Never relay Google's error body or request credentials to the client.
         void response.body?.cancel().catch(() => {});
-        if (response.status === 400) throw this.invalidRequest();
+        if (response.status === 400) {
+          throw this.invalidRequest();
+        }
         if (response.status === 404 && options.method === 'GET') {
           throw new ApiError(
             404,
@@ -245,7 +249,9 @@ export class Places {
       }
       return await response.json();
     } catch (cause) {
-      if (cause instanceof ApiError) throw cause;
+      if (cause instanceof ApiError) {
+        throw cause;
+      }
       if (signal.aborted) {
         throw new ApiError(
           504,
@@ -279,11 +285,15 @@ export class Places {
         );
       }
       const result = await action();
-      if (response.destroyed) return;
+      if (response.destroyed) {
+        return;
+      }
       response.writeHead(200);
       response.end(JSON.stringify(result));
     } catch (cause) {
-      if (response.destroyed) return;
+      if (response.destroyed) {
+        return;
+      }
       const error =
         cause instanceof ApiError
           ? cause
@@ -310,7 +320,9 @@ export class Places {
 
   private validateRequest<T>(schema: z.ZodType<T>, value: unknown): T {
     const parsed = schema.safeParse(value);
-    if (!parsed.success) throw this.invalidRequest();
+    if (!parsed.success) {
+      throw this.invalidRequest();
+    }
     return parsed.data;
   }
 
@@ -346,7 +358,9 @@ export class Places {
         chunks.push(chunk);
       });
       request.on('end', () => {
-        if (size > this.maxBodyBytes) return;
+        if (size > this.maxBodyBytes) {
+          return;
+        }
         try {
           resolve(
             JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown,

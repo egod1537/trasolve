@@ -62,7 +62,9 @@ export function PlaceStyleControl({
     useState<PopoverPlacement>('above');
 
   const openPopover = useCallback((focusPopover: boolean) => {
-    if (popoverOpenRef.current) return;
+    if (popoverOpenRef.current) {
+      return;
+    }
     popoverOpenRef.current = true;
     focusPopoverRef.current = focusPopover;
     setPopoverStyle({ visibility: 'hidden' });
@@ -71,14 +73,20 @@ export function PlaceStyleControl({
   const closePopover = useCallback((restoreFocus = false) => {
     popoverOpenRef.current = false;
     setPopoverOpen(false);
-    if (restoreFocus) buttonRef.current?.focus();
+    if (restoreFocus) {
+      buttonRef.current?.focus();
+    }
   }, []);
 
   useLayoutEffect(() => {
-    if (!popoverOpen) return;
+    if (!popoverOpen) {
+      return;
+    }
     const button = buttonRef.current;
     const popover = popoverRef.current;
-    if (!button || !popover) return;
+    if (!button || !popover) {
+      return;
+    }
 
     let positionFrame = 0;
     const updatePosition = () => {
@@ -156,7 +164,9 @@ export function PlaceStyleControl({
       button.closest<HTMLElement>('.trip-place-card, .trip-place-item') ??
       button;
     resizeObserver.observe(anchor);
-    if (anchor !== button) resizeObserver.observe(button);
+    if (anchor !== button) {
+      resizeObserver.observe(button);
+    }
     resizeObserver.observe(popover);
     document.addEventListener('scroll', schedulePositionUpdate, true);
     window.addEventListener('resize', schedulePositionUpdate);
@@ -178,9 +188,13 @@ export function PlaceStyleControl({
   }, [closePopover, popoverOpen]);
 
   useEffect(() => {
-    if (!popoverOpen) return;
+    if (!popoverOpen) {
+      return;
+    }
     const closeOnOutsidePointer = (event: globalThis.PointerEvent) => {
-      if (!(event.target instanceof Node)) return;
+      if (!(event.target instanceof Node)) {
+        return;
+      }
       if (
         buttonRef.current?.contains(event.target) ||
         popoverRef.current?.contains(event.target)
@@ -190,7 +204,9 @@ export function PlaceStyleControl({
       closePopover();
     };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
+      if (event.key !== 'Escape') {
+        return;
+      }
       event.preventDefault();
       closePopover(true);
     };
@@ -203,7 +219,9 @@ export function PlaceStyleControl({
   }, [closePopover, popoverOpen]);
 
   const updateType = (type: PlaceStyleType) => {
-    if (type !== style.type) onChangeStyle(placeId, { ...style, type });
+    if (type !== style.type) {
+      onChangeStyle(placeId, { ...style, type });
+    }
   };
 
   const popover = popoverOpen ? (
@@ -291,8 +309,11 @@ export function PlaceStyleControl({
         aria-controls={popoverOpen ? popoverId : undefined}
         title={triggerLabel ?? '아이콘 및 색상 변경'}
         onClick={(event) => {
-          if (popoverOpenRef.current) closePopover();
-          else openPopover(event.detail === 0);
+          if (popoverOpenRef.current) {
+            closePopover();
+          } else {
+            openPopover(event.detail === 0);
+          }
         }}
       >
         <span className="trip-place-style-icon-frame" aria-hidden="true">

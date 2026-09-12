@@ -178,7 +178,9 @@ export function useMapSelection(trip: Trip) {
             (item) => itemKey(item) !== nextKey,
           );
           const fallback = nextItems.at(-1) ?? null;
-          if (!fallback) return EMPTY_SELECTION;
+          if (!fallback) {
+            return EMPTY_SELECTION;
+          }
           const removingPrimary = sameItem(current.primary, nextItem);
           const removingAnchor = sameItem(current.anchor, nextItem);
           return {
@@ -227,7 +229,9 @@ export function useMapSelection(trip: Trip) {
           (item) => item.type !== type && validItemKeys.has(itemKey(item)),
         );
         const fallback = nextItems.at(-1) ?? null;
-        if (!fallback) return EMPTY_SELECTION;
+        if (!fallback) {
+          return EMPTY_SELECTION;
+        }
         const primary =
           current.primary?.type === type ? fallback : current.primary;
         return {

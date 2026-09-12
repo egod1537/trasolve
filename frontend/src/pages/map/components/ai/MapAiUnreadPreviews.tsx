@@ -64,7 +64,9 @@ export function MapAiUnreadPreviews({ previews, onOpen }: Props) {
         }
         return;
       }
-      if (!presentRef.current) return;
+      if (!presentRef.current) {
+        return;
+      }
       presentRef.current = false;
       motionStateRef.current = 'exiting';
       setMotionState('exiting');
@@ -92,7 +94,9 @@ export function MapAiUnreadPreviews({ previews, onOpen }: Props) {
     }
   };
 
-  if (!renderedPreviews.length) return null;
+  if (!renderedPreviews.length) {
+    return null;
+  }
 
   return (
     <section

@@ -74,10 +74,16 @@ function formatRelativeTime(timestamp: number): string {
     0,
     Math.floor((Date.now() - timestamp) / 60000),
   );
-  if (elapsedMinutes < 1) return '방금 전';
-  if (elapsedMinutes < 60) return `${elapsedMinutes}분 전`;
+  if (elapsedMinutes < 1) {
+    return '방금 전';
+  }
+  if (elapsedMinutes < 60) {
+    return `${elapsedMinutes}분 전`;
+  }
   const elapsedHours = Math.floor(elapsedMinutes / 60);
-  if (elapsedHours < 24) return `${elapsedHours}시간 전`;
+  if (elapsedHours < 24) {
+    return `${elapsedHours}시간 전`;
+  }
   const elapsedDays = Math.floor(elapsedHours / 24);
   return elapsedDays < 7
     ? `${elapsedDays}일 전`
@@ -123,7 +129,9 @@ function buildChatRequestMessages(
 function markAssistantMessagesRead(messages: UiChatMessage[]): UiChatMessage[] {
   let changed = false;
   const next = messages.map((message) => {
-    if (message.role !== 'assistant' || !message.unread) return message;
+    if (message.role !== 'assistant' || !message.unread) {
+      return message;
+    }
     changed = true;
     return { ...message, unread: false };
   });
@@ -134,7 +142,9 @@ function assertThreadMessageRefInvariant(
   threads: readonly ChatThread[],
   refs: ReadonlyMap<string, UiChatMessage[]>,
 ): void {
-  if (!import.meta.env.DEV) return;
+  if (!import.meta.env.DEV) {
+    return;
+  }
   for (const thread of threads) {
     const snapshot = refs.get(thread.id);
     if (!snapshot) {
@@ -232,7 +242,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
     }, [onUnreadPreviewsChange, unreadPreviews]);
 
     useEffect(() => {
-      if (open) textareaRef.current?.focus({ preventScroll: true });
+      if (open) {
+        textareaRef.current?.focus({ preventScroll: true });
+      }
     }, [open, selectedThreadId]);
 
     useEffect(() => {
@@ -249,7 +261,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
     ]);
 
     useEffect(() => {
-      if (!openMenuThreadId) return;
+      if (!openMenuThreadId) {
+        return;
+      }
       const closeOnOutsidePointer = (event: PointerEvent) => {
         if (
           event.target instanceof Element &&
@@ -259,7 +273,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
         }
       };
       const closeOnEscape = (event: globalThis.KeyboardEvent) => {
-        if (event.key === 'Escape') setOpenMenuThreadId(null);
+        if (event.key === 'Escape') {
+          setOpenMenuThreadId(null);
+        }
       };
       document.addEventListener('pointerdown', closeOnOutsidePointer);
       document.addEventListener('keydown', closeOnEscape);
@@ -276,12 +292,16 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
 
     const markThreadRead = useCallback((threadId: string) => {
       const messageSnapshot = threadMessagesRef.current.get(threadId);
-      if (!messageSnapshot) return;
+      if (!messageSnapshot) {
+        return;
+      }
       const nextMessages = markAssistantMessagesRead(messageSnapshot);
       threadMessagesRef.current.set(threadId, nextMessages);
       setThreads((current) => {
         const next = current.map((thread) => {
-          if (thread.id !== threadId) return thread;
+          if (thread.id !== threadId) {
+            return thread;
+          }
           return nextMessages === thread.messages
             ? thread
             : { ...thread, messages: nextMessages };
@@ -336,7 +356,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
 
     const commitRename = (threadId: string) => {
       const title = renameDraft.trim();
-      if (!title) return;
+      if (!title) {
+        return;
+      }
       setThreads((current) =>
         current.map((thread) =>
           thread.id === threadId
@@ -354,8 +376,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
         const fallback = threads.find(
           (thread) => thread.id !== threadId && !thread.archived,
         );
-        if (fallback) changeSelectedThread(fallback.id);
-        else {
+        if (fallback) {
+          changeSelectedThread(fallback.id);
+        } else {
           replacement = createThread(`chat-${nextThreadIdRef.current++}`);
           threadMessagesRef.current.set(replacement.id, replacement.messages);
           threadIdsRef.current.add(replacement.id);
@@ -409,17 +432,23 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
     const submitMessage = async () => {
       const threadId = selectedThreadIdRef.current;
       const content = (draftsRef.current[threadId] ?? '').trim();
-      if (!content || isThreadSending(threadId)) return;
+      if (!content || isThreadSending(threadId)) {
+        return;
+      }
 
       const delayCommand = parseDebugDelayCommand(content);
       const request =
         delayCommand.kind === 'invalid' ? null : beginRequest(threadId);
-      if (delayCommand.kind !== 'invalid' && !request) return;
+      if (delayCommand.kind !== 'invalid' && !request) {
+        return;
+      }
       const logLifecycle = (
         stage: ThreadRequestLifecycleStage,
         details: { messageCount?: number; reason?: unknown } = {},
       ) => {
-        if (!request) return;
+        if (!request) {
+          return;
+        }
         logThreadRequestLifecycle(stage, {
           ...request,
           ...details,
@@ -450,7 +479,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
             ? 'missing-message-snapshot'
             : 'thread-deleted',
         });
-        if (request) finishRequest(threadId, request);
+        if (request) {
+          finishRequest(threadId, request);
+        }
         return;
       }
       const nextMessages = [...currentMessages, userMessage];
@@ -474,8 +505,12 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
       );
       draftsRef.current = { ...draftsRef.current, [threadId]: '' };
       setDrafts(draftsRef.current);
-      if (delayCommand.kind === 'invalid') return;
-      if (!request) return;
+      if (delayCommand.kind === 'invalid') {
+        return;
+      }
+      if (!request) {
+        return;
+      }
       const { controller } = request;
       try {
         if (delayCommand.kind === 'valid') {
@@ -498,7 +533,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
           controller.signal,
         );
         logLifecycle('SEND_CHAT_RESOLVED');
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {
+          return;
+        }
         const completedAt = Date.now();
         const message: UiChatMessage = {
           ...result.message,
@@ -540,7 +577,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
           ),
         );
       } catch (cause) {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {
+          return;
+        }
         setThreads((current) =>
           current.map((thread) =>
             thread.id === threadId
@@ -599,7 +638,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
               maxLength={80}
               onChange={(event) => setRenameDraft(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key !== 'Escape') return;
+                if (event.key !== 'Escape') {
+                  return;
+                }
                 setRenamingThreadId(null);
                 setRenameDraft('');
               }}

@@ -110,7 +110,9 @@ export function useMapWorkspaceActions(
         dayId,
         createTripPlaceFromGooglePlace(place),
       );
-      if (saved) closeGooglePlace();
+      if (saved) {
+        closeGooglePlace();
+      }
       return saved;
     },
     [closeGooglePlace, controller],
@@ -118,7 +120,9 @@ export function useMapWorkspaceActions(
   const removeTripPlace = useCallback(
     async (placeId: string) => {
       const saved = await controller.removePlace(placeId);
-      if (saved) clearPlaceSelection();
+      if (saved) {
+        clearPlaceSelection();
+      }
       return saved;
     },
     [clearPlaceSelection, controller],

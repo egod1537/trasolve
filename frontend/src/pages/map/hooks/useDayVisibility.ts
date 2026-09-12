@@ -16,8 +16,11 @@ export function useDayVisibility(days: readonly TripDay[]) {
   const toggleDayVisibility = useCallback((dayId: string) => {
     setHiddenDayIds((current) => {
       const next = new Set(current);
-      if (next.has(dayId)) next.delete(dayId);
-      else next.add(dayId);
+      if (next.has(dayId)) {
+        next.delete(dayId);
+      } else {
+        next.add(dayId);
+      }
       return next;
     });
   }, []);

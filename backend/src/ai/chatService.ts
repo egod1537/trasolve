@@ -25,12 +25,16 @@ export class ChatService {
 
   public async chat(request: ChatRequest): Promise<ChatResponse> {
     const parsed = chatRequestSchema.safeParse(request);
-    if (!parsed.success) throw this.invalidRequest();
+    if (!parsed.success) {
+      throw this.invalidRequest();
+    }
     try {
       const result = chatResponseSchema.safeParse(
         await this.provider.chat(parsed.data),
       );
-      if (!result.success) throw this.unavailable();
+      if (!result.success) {
+        throw this.unavailable();
+      }
       return result.data;
     } catch {
       // Provider errors and raw responses must not reach the client.
@@ -61,13 +65,19 @@ export class ChatService {
         );
       }
       const parsed = chatRequestSchema.safeParse(await this.readJson(request));
-      if (!parsed.success) throw this.invalidRequest();
+      if (!parsed.success) {
+        throw this.invalidRequest();
+      }
       const result = await this.chat(parsed.data);
-      if (response.destroyed) return;
+      if (response.destroyed) {
+        return;
+      }
       response.writeHead(200);
       response.end(JSON.stringify(result));
     } catch (cause) {
-      if (response.destroyed) return;
+      if (response.destroyed) {
+        return;
+      }
       const error = cause instanceof ChatError ? cause : this.unavailable();
       const body: ApiErrorResponse = {
         error: { code: error.code, message: error.message },
@@ -113,7 +123,9 @@ export class ChatService {
         chunks.push(chunk);
       });
       request.on('end', () => {
-        if (size > CHAT_LIMITS.bodyBytes) return;
+        if (size > CHAT_LIMITS.bodyBytes) {
+          return;
+        }
         try {
           resolve(
             JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown,

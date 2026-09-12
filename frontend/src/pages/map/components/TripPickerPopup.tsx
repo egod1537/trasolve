@@ -31,8 +31,9 @@ export function TripPickerPopup({
     const previousFocus = document.activeElement;
     popupRef.current?.focus();
     return () => {
-      if (previousFocus instanceof HTMLElement && previousFocus.isConnected)
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
         previousFocus.focus({ preventScroll: true });
+      }
     };
   }, []);
 
@@ -49,7 +50,9 @@ export function TripPickerPopup({
           if (event.key === 'Escape') {
             event.preventDefault();
             event.stopPropagation();
-            if (canClose) onClose();
+            if (canClose) {
+              onClose();
+            }
           }
         }}
       >

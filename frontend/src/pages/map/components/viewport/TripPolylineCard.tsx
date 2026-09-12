@@ -71,14 +71,18 @@ export const TripPolylineCard = forwardRef<TripPolylineCardHandle, Props>(
       ref,
       () => ({
         openModeEditor: () => {
-          if (!disabled) setModeEditorOpen(true);
+          if (!disabled) {
+            setModeEditorOpen(true);
+          }
         },
       }),
       [disabled],
     );
 
     const saveMode = async (mode: TripPolylineMode) => {
-      if (disabled || mode === polyline.mode) return;
+      if (disabled || mode === polyline.mode) {
+        return;
+      }
       setSubmitting(true);
       try {
         await onUpdateMode(mode);

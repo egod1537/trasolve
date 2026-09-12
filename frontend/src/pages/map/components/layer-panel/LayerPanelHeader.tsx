@@ -82,7 +82,9 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
         : saved.label;
 
   useEffect(() => {
-    if (!menuOpen && !previewNoticeOpen) return;
+    if (!menuOpen && !previewNoticeOpen) {
+      return;
+    }
     const closeOnOutsidePointerDown = (event: PointerEvent) => {
       if (
         event.target instanceof Node &&
@@ -93,7 +95,9 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
       }
     };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
+      if (event.key !== 'Escape') {
+        return;
+      }
       event.preventDefault();
       setMenuOpen(false);
       setPreviewNoticeOpen(false);
@@ -109,7 +113,9 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
   const commitTitle = (draft: string) => {
     const title = draft.trim();
     setTitleEditing(false);
-    if (title && title !== trip.title) onRenameTrip(title);
+    if (title && title !== trip.title) {
+      onRenameTrip(title);
+    }
   };
   const startTitleEditing = () => {
     setMenuOpen(false);

@@ -29,10 +29,15 @@ export function InlineRename({
   }, []);
 
   const finish = (save: boolean) => {
-    if (finishedRef.current) return;
+    if (finishedRef.current) {
+      return;
+    }
     finishedRef.current = true;
-    if (save) onCommit(draft);
-    else onCancel();
+    if (save) {
+      onCommit(draft);
+    } else {
+      onCancel();
+    }
   };
 
   return (

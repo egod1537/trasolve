@@ -72,7 +72,9 @@ export function DayColorControl({
     pressOriginRef.current = null;
   }, []);
   const openPicker = useCallback((focusPicker: boolean) => {
-    if (pickerOpenRef.current) return;
+    if (pickerOpenRef.current) {
+      return;
+    }
     pickerOpenRef.current = true;
     focusPickerRef.current = focusPicker;
     setPickerStyle({ visibility: 'hidden' });
@@ -81,16 +83,22 @@ export function DayColorControl({
   const closePicker = useCallback((restoreFocus = false) => {
     pickerOpenRef.current = false;
     setPickerOpen(false);
-    if (restoreFocus) buttonRef.current?.focus();
+    if (restoreFocus) {
+      buttonRef.current?.focus();
+    }
   }, []);
 
   useEffect(() => clearLongPressTimer, [clearLongPressTimer]);
 
   useLayoutEffect(() => {
-    if (!pickerOpen) return;
+    if (!pickerOpen) {
+      return;
+    }
     const button = buttonRef.current;
     const picker = pickerRef.current;
-    if (!button || !picker) return;
+    if (!button || !picker) {
+      return;
+    }
 
     let positionFrame = 0;
     const updatePosition = () => {
@@ -151,9 +159,13 @@ export function DayColorControl({
   }, [closePicker, pickerOpen]);
 
   useEffect(() => {
-    if (!pickerOpen) return;
+    if (!pickerOpen) {
+      return;
+    }
     const closeOnOutsidePointer = (event: globalThis.PointerEvent) => {
-      if (!(event.target instanceof Node)) return;
+      if (!(event.target instanceof Node)) {
+        return;
+      }
       if (
         buttonRef.current?.contains(event.target) ||
         pickerRef.current?.contains(event.target)
@@ -163,7 +175,9 @@ export function DayColorControl({
       closePicker();
     };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
+      if (event.key !== 'Escape') {
+        return;
+      }
       event.preventDefault();
       closePicker(true);
     };
@@ -176,7 +190,9 @@ export function DayColorControl({
   }, [closePicker, pickerOpen]);
 
   const startLongPress = (event: PointerEvent<HTMLButtonElement>) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0) {
+      return;
+    }
     clearLongPressTimer();
     longPressTriggeredRef.current = false;
     pressOriginRef.current = { x: event.clientX, y: event.clientY };
@@ -188,7 +204,9 @@ export function DayColorControl({
   };
   const trackLongPress = (event: PointerEvent<HTMLButtonElement>) => {
     const origin = pressOriginRef.current;
-    if (!origin) return;
+    if (!origin) {
+      return;
+    }
     if (
       Math.hypot(event.clientX - origin.x, event.clientY - origin.y) >
       LONG_PRESS_MOVE_TOLERANCE

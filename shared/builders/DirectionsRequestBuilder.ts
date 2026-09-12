@@ -26,7 +26,9 @@ export class DirectionsRequestBuilder {
   }
 
   public setIntermediates(intermediates: readonly RouteLocation[]): this {
-    this.request.intermediates = intermediates.map((location) => ({ ...location }));
+    this.request.intermediates = intermediates.map((location) => ({
+      ...location,
+    }));
     return this;
   }
 

@@ -13,7 +13,9 @@ export function reconcileDayRouteSegments(
   const existingByPair = new Map<string, TripPolyline>();
   for (const polyline of day.polylines) {
     const key = pairKey(polyline.fromPlaceId, polyline.toPlaceId);
-    if (!existingByPair.has(key)) existingByPair.set(key, polyline);
+    if (!existingByPair.has(key)) {
+      existingByPair.set(key, polyline);
+    }
   }
 
   day.places.forEach((place, index) => {

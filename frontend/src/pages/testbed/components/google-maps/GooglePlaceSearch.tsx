@@ -66,19 +66,25 @@ export function GooglePlaceSearch({
   useEffect(() => cancelRequests, [cancelRequests]);
 
   useEffect(() => {
-    if (!query) return;
+    if (!query) {
+      return;
+    }
     const request = ++revision.current;
     const current = new AbortController();
     controller.current = current;
     const timer = window.setTimeout(async () => {
-      if (current.signal.aborted || request !== revision.current) return;
+      if (current.signal.aborted || request !== revision.current) {
+        return;
+      }
       try {
         sessionToken.current ??= crypto.randomUUID();
         const result = await searchPlaces(query.input, {
           sessionToken: sessionToken.current,
           signal: current.signal,
         });
-        if (current.signal.aborted || request !== revision.current) return;
+        if (current.signal.aborted || request !== revision.current) {
+          return;
+        }
         setSuggestions(result.suggestions);
         setActiveIndex(-1);
         setOpen(result.suggestions.length > 0);
@@ -88,8 +94,9 @@ export function GooglePlaceSearch({
             : '검색 결과가 없습니다.',
         );
       } catch (cause) {
-        if (!current.signal.aborted && request === revision.current)
+        if (!current.signal.aborted && request === revision.current) {
           fail(cause);
+        }
       }
     }, 300);
     return () => {
@@ -117,7 +124,9 @@ export function GooglePlaceSearch({
     const ready = value.trim().length >= 2 && !composing.current;
     setQuery(ready ? { input: value.trim() } : null);
     setStatus(ready ? '장소를 검색하고 있습니다.' : '2자 이상 입력해 주세요.');
-    if (!value.trim()) sessionToken.current = undefined;
+    if (!value.trim()) {
+      sessionToken.current = undefined;
+    }
   }
 
   function dismiss() {
@@ -149,7 +158,9 @@ export function GooglePlaceSearch({
         sessionToken: token,
         signal: current.signal,
       });
-      if (current.signal.aborted || request !== revision.current) return;
+      if (current.signal.aborted || request !== revision.current) {
+        return;
+      }
       setInput(place.name);
       setStatus(`${place.name} 선택 완료`);
       callbacks.current.onSelect({
@@ -159,7 +170,9 @@ export function GooglePlaceSearch({
         location: place.location,
       });
     } catch (cause) {
-      if (!current.signal.aborted && request === revision.current) fail(cause);
+      if (!current.signal.aborted && request === revision.current) {
+        fail(cause);
+      }
     }
   }
 
@@ -184,7 +197,9 @@ export function GooglePlaceSearch({
           value={input}
           onChange={(event) => updateInput(event.target.value)}
           onFocus={() => {
-            if (input.trim().length >= 2) updateInput(input);
+            if (input.trim().length >= 2) {
+              updateInput(input);
+            }
           }}
           onBlur={dismiss}
           onCompositionStart={() => {
@@ -198,7 +213,9 @@ export function GooglePlaceSearch({
             updateInput(event.currentTarget.value);
           }}
           onKeyDown={(event) => {
-            if (event.nativeEvent.isComposing || composing.current) return;
+            if (event.nativeEvent.isComposing || composing.current) {
+              return;
+            }
             if (event.key === 'Escape') {
               event.preventDefault();
               dismiss();

@@ -52,7 +52,9 @@ function getDayDropIndicator(
 
   const stationaryDays = days.filter((day) => day.id !== dragState.dayId);
   const nextDay = stationaryDays[dragState.targetIndex];
-  if (nextDay) return { dayId: nextDay.id, position: 'before' };
+  if (nextDay) {
+    return { dayId: nextDay.id, position: 'before' };
+  }
 
   const lastDay = stationaryDays.at(-1);
   return lastDay ? { dayId: lastDay.id, position: 'after' } : null;
@@ -63,7 +65,9 @@ function getLayerItemDayPreviewOffset(
   dragState: PlaceDragState | null,
   dayIndex: number,
 ): number {
-  if (!dragState || dragState.sourceDayId === dragState.targetDayId) return 0;
+  if (!dragState || dragState.sourceDayId === dragState.targetDayId) {
+    return 0;
+  }
 
   const sourceDayIndex = days.findIndex(
     (day) => day.id === dragState.sourceDayId,
@@ -71,7 +75,9 @@ function getLayerItemDayPreviewOffset(
   const targetDayIndex = days.findIndex(
     (day) => day.id === dragState.targetDayId,
   );
-  if (sourceDayIndex < 0 || targetDayIndex < 0) return 0;
+  if (sourceDayIndex < 0 || targetDayIndex < 0) {
+    return 0;
+  }
 
   if (
     sourceDayIndex < targetDayIndex &&
@@ -167,8 +173,11 @@ export const LayerPanelContent = memo(function LayerPanelContent({
       }
       setCollapsed((previous) => {
         const next = new Set(previous);
-        if (next.has(dayId)) next.delete(dayId);
-        else next.add(dayId);
+        if (next.has(dayId)) {
+          next.delete(dayId);
+        } else {
+          next.add(dayId);
+        }
         return next;
       });
     },
@@ -185,7 +194,9 @@ export const LayerPanelContent = memo(function LayerPanelContent({
     }
     const expandFrame = requestAnimationFrame(() => {
       setCollapsed((previous) => {
-        if (!previous.has(selectedDayId)) return previous;
+        if (!previous.has(selectedDayId)) {
+          return previous;
+        }
         const next = new Set(previous);
         next.delete(selectedDayId);
         return next;
@@ -195,7 +206,9 @@ export const LayerPanelContent = memo(function LayerPanelContent({
   }, [selectedDayId, selectedPlaceId, selectedPolylineId, selectionRevision]);
 
   useEffect(() => {
-    if (!selectedPlaceId && !selectedPolylineId) return;
+    if (!selectedPlaceId && !selectedPolylineId) {
+      return;
+    }
     const panel = scrollRef.current;
     const item = Array.from(
       panel?.querySelectorAll<HTMLElement>(
@@ -206,12 +219,16 @@ export const LayerPanelContent = memo(function LayerPanelContent({
         element.dataset.placeId === selectedPlaceId ||
         element.dataset.polylineId === selectedPolylineId,
     );
-    if (!panel || !item) return;
+    if (!panel || !item) {
+      return;
+    }
     const outer = panel.getBoundingClientRect(),
       inner = item.getBoundingClientRect();
-    if (inner.top < outer.top) panel.scrollTop += inner.top - outer.top;
-    else if (inner.bottom > outer.bottom)
+    if (inner.top < outer.top) {
+      panel.scrollTop += inner.top - outer.top;
+    } else if (inner.bottom > outer.bottom) {
       panel.scrollTop += inner.bottom - outer.bottom;
+    }
   }, [selectedPlaceId, selectedPolylineId, collapsed, selectionRevision]);
 
   return (

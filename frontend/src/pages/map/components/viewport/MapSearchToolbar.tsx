@@ -58,7 +58,9 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
   const dropdownOpen = searchStatus !== 'idle';
 
   const clearSearchDebounce = useCallback(() => {
-    if (debounceTimerRef.current === null) return;
+    if (debounceTimerRef.current === null) {
+      return;
+    }
     window.clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = null;
   }, []);
@@ -96,14 +98,16 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
           locationBias: getSearchBias(),
           signal: request.signal,
         });
-        if (request.signal.aborted || searchRequestRef.current !== request)
+        if (request.signal.aborted || searchRequestRef.current !== request) {
           return;
+        }
         searchRequestRef.current = null;
         setSuggestions(result.suggestions.slice(0, 8));
         setSearchStatus('ready');
       } catch {
-        if (request.signal.aborted || searchRequestRef.current !== request)
+        if (request.signal.aborted || searchRequestRef.current !== request) {
           return;
+        }
         searchRequestRef.current = null;
         setSearchStatus('error');
         setSearchError('장소 검색에 실패했습니다. 다시 시도해 주세요.');
@@ -189,8 +193,9 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
         sessionToken: sessionTokenRef.current ?? undefined,
         signal: request.signal,
       });
-      if (request.signal.aborted || detailsRequestRef.current !== request)
+      if (request.signal.aborted || detailsRequestRef.current !== request) {
         return;
+      }
       detailsRequestRef.current = null;
       sessionTokenRef.current = null;
       onSelectPlace(place);
@@ -201,8 +206,9 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
       setSuggestions([]);
       setSearchStatus('idle');
     } catch {
-      if (request.signal.aborted || detailsRequestRef.current !== request)
+      if (request.signal.aborted || detailsRequestRef.current !== request) {
         return;
+      }
       detailsRequestRef.current = null;
       setSearchStatus('error');
       setSearchError('장소 정보를 불러오지 못했습니다. 다시 선택해 주세요.');
@@ -217,7 +223,9 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
             ref={searchRootRef}
             className="map-toolbar-search-root"
             onKeyDown={(event) => {
-              if (event.key !== 'Escape') return;
+              if (event.key !== 'Escape') {
+                return;
+              }
               event.preventDefault();
               event.stopPropagation();
               closeResults();

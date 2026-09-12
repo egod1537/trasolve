@@ -33,7 +33,9 @@ function GoogleMapsTestContent() {
   const { route } = directions;
 
   const handleFitBounds = useCallback(() => {
-    if (route?.bounds) mapRef.current?.fitBounds(route.bounds, routePadding);
+    if (route?.bounds) {
+      mapRef.current?.fitBounds(route.bounds, routePadding);
+    }
   }, [route]);
   useEffect(handleFitBounds, [handleFitBounds]);
 
@@ -52,8 +54,9 @@ function GoogleMapsTestContent() {
       setCamera(initialCenter);
       setZoom(initialZoom);
       appendLog('지도 준비 완료');
-      if (route?.bounds) map.fitBounds(route.bounds, routePadding);
-      else if (selectedPlace) {
+      if (route?.bounds) {
+        map.fitBounds(route.bounds, routePadding);
+      } else if (selectedPlace) {
         map.setZoom(15);
         map.panTo(selectedPlace.location);
       }

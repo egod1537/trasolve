@@ -5,10 +5,5 @@ type Props = {
 };
 
 export function LoadingSpinner({ size = 'sm' }: Props) {
-  return (
-    <span
-      className={`loading-spinner is-${size}`}
-      aria-hidden="true"
-    />
-  );
+  return <span className={`loading-spinner is-${size}`} aria-hidden="true" />;
 }

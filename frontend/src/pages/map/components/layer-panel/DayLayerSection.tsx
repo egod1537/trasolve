@@ -93,7 +93,9 @@ function getPreviewOffset(
   dragState: PlaceDragState | null,
   dayPreviewOffset: number,
 ): number {
-  if (!dragState) return 0;
+  if (!dragState) {
+    return 0;
+  }
   const dragging =
     dragState.sourceDayId === dayId && dragState.placeId === placeId;
   if (dragging) {
@@ -227,7 +229,9 @@ export const DayLayerSection = memo(function DayLayerSection({
   const commitTitle = (draft: string) => {
     const nextTitle = draft.trim();
     setTitleEditing(false);
-    if (nextTitle && nextTitle !== day.title) onRenameDay(day.id, nextTitle);
+    if (nextTitle && nextTitle !== day.title) {
+      onRenameDay(day.id, nextTitle);
+    }
   };
 
   return (
@@ -270,7 +274,9 @@ export const DayLayerSection = memo(function DayLayerSection({
               aria-disabled={!visible}
               tabIndex={visible ? undefined : -1}
               onClick={() => {
-                if (visible) onSelectDay(day.id);
+                if (visible) {
+                  onSelectDay(day.id);
+                }
               }}
               aria-pressed={active}
             >

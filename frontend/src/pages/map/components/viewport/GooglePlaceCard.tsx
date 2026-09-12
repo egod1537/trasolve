@@ -59,7 +59,9 @@ function InfoRow({
 }
 
 function Rating({ place }: { place: PlaceDetails }) {
-  if (place.rating === undefined) return null;
+  if (place.rating === undefined) {
+    return null;
+  }
   return (
     <p
       className="place-info-rating"
@@ -92,11 +94,15 @@ export function GooglePlaceCard({
   const disabled = busy || submitting;
 
   const addToDay = async (dayId: string) => {
-    if (!place || disabled) return;
+    if (!place || disabled) {
+      return;
+    }
     setSubmitting(true);
     setAddFailed(false);
     try {
-      if (!(await onAddToTrip(dayId, place))) setAddFailed(true);
+      if (!(await onAddToTrip(dayId, place))) {
+        setAddFailed(true);
+      }
     } catch {
       setAddFailed(true);
     } finally {
@@ -190,7 +196,9 @@ export function GooglePlaceCard({
                 aria-busy={submitting}
                 disabled={disabled || !activeDayId}
                 onClick={() => {
-                  if (activeDayId) void addToDay(activeDayId);
+                  if (activeDayId) {
+                    void addToDay(activeDayId);
+                  }
                 }}
               >
                 <span aria-hidden="true">＋</span>

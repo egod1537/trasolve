@@ -25,12 +25,14 @@ export class LandingPage extends Component<
     this.request = request;
     void checkApiHealth(request.signal)
       .then((available) => {
-        if (!request.signal.aborted)
+        if (!request.signal.aborted) {
           this.setState({ apiHealth: available ? 'available' : 'unavailable' });
+        }
       })
       .catch(() => {
-        if (!request.signal.aborted)
+        if (!request.signal.aborted) {
           this.setState({ apiHealth: 'unavailable' });
+        }
       });
   }
 

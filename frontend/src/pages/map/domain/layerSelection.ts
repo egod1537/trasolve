@@ -16,7 +16,9 @@ export function resolveLayerSelection(
     const day = trip.days.find((candidate) =>
       candidate.places.some((place) => place.id === selectedPlaceId),
     );
-    if (day) return { type: 'place', dayId: day.id, placeId: selectedPlaceId };
+    if (day) {
+      return { type: 'place', dayId: day.id, placeId: selectedPlaceId };
+    }
   }
   if (selectedPolylineId) {
     const day = trip.days.find((candidate) =>

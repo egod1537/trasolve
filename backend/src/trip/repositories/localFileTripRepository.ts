@@ -26,39 +26,42 @@ export class LocalFileTripRepository implements TripRepository {
         .filter((name) => name.endsWith('.json'))
         .sort()) {
         const trip = await this.getById(userId, file.slice(0, -5));
-        if (trip) trips.push(trip);
+        if (trip) {
+          trips.push(trip);
+        }
       }
       return trips.sort((left, right) =>
         right.updatedAt.localeCompare(left.updatedAt),
       );
     } catch (error) {
-      if (this.isMissing(error)) return [];
+      if (this.isMissing(error)) {
+        return [];
+      }
       throw tripStorageUnavailable();
     }
   }
 
-  public async getById(
-    userId: string,
-    tripId: string,
-  ): Promise<Trip | null> {
+  public async getById(userId: string, tripId: string): Promise<Trip | null> {
     const path = this.path(userId, tripId);
     try {
-      const trip = tripSchema.parse(
-        JSON.parse(await readFile(path, 'utf8')),
-      );
-      if (trip.userId !== userId || trip.id !== tripId)
+      const trip = tripSchema.parse(JSON.parse(await readFile(path, 'utf8')));
+      if (trip.userId !== userId || trip.id !== tripId) {
         throw tripStorageUnavailable();
+      }
       return trip;
     } catch (error) {
-      if (this.isMissing(error)) return null;
+      if (this.isMissing(error)) {
+        return null;
+      }
       throw tripStorageUnavailable();
     }
   }
 
   public async save(userId: string, input: Trip): Promise<void> {
     const parsed = tripSchema.safeParse(input);
-    if (!parsed.success || parsed.data.userId !== userId)
+    if (!parsed.success || parsed.data.userId !== userId) {
       throw invalidTripRequest();
+    }
     const trip = parsed.data;
     const path = this.path(userId, trip.id);
     await this.serialize(path, async () => {
@@ -87,7 +90,9 @@ export class LocalFileTripRepository implements TripRepository {
       try {
         await unlink(path);
       } catch (error) {
-        if (!this.isMissing(error)) throw tripStorageUnavailable();
+        if (!this.isMissing(error)) {
+          throw tripStorageUnavailable();
+        }
       }
     });
   }
@@ -96,17 +101,21 @@ export class LocalFileTripRepository implements TripRepository {
   private readonly writes = new Map<string, Promise<void>>();
 
   private directory(userId: string): string {
-    if (!tripIdSchema.safeParse(userId).success) throw invalidTripRequest();
+    if (!tripIdSchema.safeParse(userId).success) {
+      throw invalidTripRequest();
+    }
     return join(this.rootDir, 'users', userId, 'trips');
   }
 
   private path(userId: string, tripId: string): string {
-    if (!tripIdSchema.safeParse(tripId).success)
+    if (!tripIdSchema.safeParse(tripId).success) {
       throw invalidTripRequest();
+    }
     const path = resolve(this.directory(userId), `${tripId}.json`);
     const within = relative(this.rootDir, path);
-    if (within.startsWith('..') || isAbsolute(within))
+    if (within.startsWith('..') || isAbsolute(within)) {
       throw invalidTripRequest();
+    }
     return path;
   }
 
@@ -120,7 +129,9 @@ export class LocalFileTripRepository implements TripRepository {
     try {
       await current;
     } finally {
-      if (this.writes.get(path) === current) this.writes.delete(path);
+      if (this.writes.get(path) === current) {
+        this.writes.delete(path);
+      }
     }
   }
 

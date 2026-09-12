@@ -57,17 +57,25 @@ export type ItineraryLegModel = {
 };
 
 export function formatDistance(meters: number | null): string {
-  if (meters === null) return NOT_AVAILABLE;
-  if (meters < 1000) return `${Math.round(meters).toLocaleString('ko-KR')} m`;
+  if (meters === null) {
+    return NOT_AVAILABLE;
+  }
+  if (meters < 1000) {
+    return `${Math.round(meters).toLocaleString('ko-KR')} m`;
+  }
   return `${new Intl.NumberFormat('ko-KR', {
     maximumFractionDigits: 1,
   }).format(meters / 1000)} km`;
 }
 
 export function formatDuration(milliseconds: number | null): string {
-  if (milliseconds === null) return NOT_AVAILABLE;
+  if (milliseconds === null) {
+    return NOT_AVAILABLE;
+  }
   const minutes = Math.round(milliseconds / 60_000);
-  if (minutes < 60) return `${minutes}분`;
+  if (minutes < 60) {
+    return `${minutes}분`;
+  }
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   return remainingMinutes
@@ -76,7 +84,9 @@ export function formatDuration(milliseconds: number | null): string {
 }
 
 export function formatFare(fare: MapRoute['fare']): string {
-  if (!fare) return NOT_AVAILABLE;
+  if (!fare) {
+    return NOT_AVAILABLE;
+  }
   try {
     return new Intl.NumberFormat('ko-KR', {
       style: 'currency',
@@ -225,7 +235,9 @@ export function buildRouteItinerary(
 }
 
 function formatTransitTime(value: string | null | undefined): string | null {
-  if (!value) return null;
+  if (!value) {
+    return null;
+  }
   return value.match(/T(\d{2}:\d{2})/)?.[1] ?? value;
 }
 
@@ -246,7 +258,9 @@ function buildEndpoint(
 }
 
 function formatRouteLocation(location: RouteLocation | undefined): string {
-  if (!location) return NOT_AVAILABLE;
+  if (!location) {
+    return NOT_AVAILABLE;
+  }
   switch (location.type) {
     case 'address':
       return location.address;

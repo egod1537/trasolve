@@ -20,11 +20,15 @@ export function useAnchoredSideCardPlacement({
     useState<AnchoredSideCardPlacement>('right');
 
   useLayoutEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
 
     const mainCard = mainCardRef.current;
     const sideCard = sideCardRef.current;
-    if (!mainCard || !sideCard) return;
+    if (!mainCard || !sideCard) {
+      return;
+    }
 
     let animationFrame = 0;
     const measurePlacement = () => {

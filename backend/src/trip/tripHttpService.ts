@@ -75,11 +75,15 @@ export class TripHttpService {
           status = 204;
           break;
       }
-      if (response.destroyed) return;
+      if (response.destroyed) {
+        return;
+      }
       response.writeHead(status);
       response.end(status === 204 ? undefined : JSON.stringify(body));
     } catch (cause) {
-      if (response.destroyed) return;
+      if (response.destroyed) {
+        return;
+      }
       const error =
         cause instanceof TripError ? cause : tripStorageUnavailable();
       response.writeHead(error.status);
@@ -114,10 +118,14 @@ export class TripHttpService {
               '요청 본문은 2MiB 이하여야 합니다.',
             ),
           );
-        } else chunks.push(chunk);
+        } else {
+          chunks.push(chunk);
+        }
       });
       request.on('end', () => {
-        if (size > TRIP_BODY_LIMIT) return;
+        if (size > TRIP_BODY_LIMIT) {
+          return;
+        }
         try {
           resolve(
             JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown,
@@ -130,7 +138,9 @@ export class TripHttpService {
       request.on('aborted', () => reject(invalidTripRequest()));
     });
     const result = tripInputSchema.safeParse(json);
-    if (!result.success) throw invalidTripRequest();
+    if (!result.success) {
+      throw invalidTripRequest();
+    }
     return result.data;
   }
 }

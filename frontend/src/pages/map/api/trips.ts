@@ -27,14 +27,18 @@ async function request(
       signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
     });
   } catch (cause) {
-    if (signal?.aborted) throw cause;
+    if (signal?.aborted) {
+      throw cause;
+    }
     throw new Error(
       timeout.aborted
         ? '여행 요청 시간이 초과됐습니다. 목록을 새로고침해 저장 여부를 확인해 주세요.'
         : '여행 서버에 연결할 수 없습니다.',
     );
   }
-  if (response.ok && response.status === 204) return undefined;
+  if (response.ok && response.status === 204) {
+    return undefined;
+  }
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const parsed = apiErrorSchema.safeParse(body);

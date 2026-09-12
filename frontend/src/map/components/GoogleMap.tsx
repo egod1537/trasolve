@@ -53,8 +53,9 @@ function RuntimePolyline({
 // Custom overlays can use the existing provider-neutral boundaries.
 export function useGoogleMap() {
   const map = useContext(MapContext);
-  if (!map)
+  if (!map) {
     throw new Error('useGoogleMap must be used inside a ready GoogleMap.');
+  }
   return map;
 }
 
@@ -97,10 +98,14 @@ export function GoogleMap(props: GoogleMapProps) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      return;
+    }
     setRuntime(null);
     setStatus(mapsConfig.apiKey ? 'loading' : 'missing-key');
-    if (!mapsConfig.apiKey) return;
+    if (!mapsConfig.apiKey) {
+      return;
+    }
     const controller = new AbortController();
     let ownedRuntime: MapRuntime | null = null;
     const authFailed = () => {
@@ -126,7 +131,9 @@ export function GoogleMap(props: GoogleMapProps) {
         setStatus('ready');
       },
       (error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {
+          return;
+        }
         setStatus('error');
         latest.current.onError?.(
           error instanceof Error ? error : new Error(String(error)),
@@ -154,20 +161,28 @@ export function GoogleMap(props: GoogleMapProps) {
   const lat = center?.lat;
   const lng = center?.lng;
   useEffect(() => {
-    if (!runtime || lat === undefined || lng === undefined) return;
+    if (!runtime || lat === undefined || lng === undefined) {
+      return;
+    }
     const current = runtime.adapter.getCenter();
-    if (current?.lat !== lat || current?.lng !== lng)
+    if (current?.lat !== lat || current?.lng !== lng) {
       runtime.adapter.panTo({ lat, lng });
+    }
   }, [runtime, lat, lng]);
   useEffect(() => {
-    if (runtime && zoom !== undefined && runtime.adapter.getZoom() !== zoom)
+    if (runtime && zoom !== undefined && runtime.adapter.getZoom() !== zoom) {
       runtime.adapter.setZoom(zoom);
+    }
   }, [runtime, zoom]);
   useEffect(() => {
-    if (options) runtime?.setOptions(options);
+    if (options) {
+      runtime?.setOptions(options);
+    }
   }, [runtime, options]);
   useEffect(() => {
-    if (runtime) latest.current.onReady?.(handle);
+    if (runtime) {
+      latest.current.onReady?.(handle);
+    }
   }, [runtime, handle]);
 
   const context = useMemo(

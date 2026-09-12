@@ -31,7 +31,9 @@ export class TripEditController {
 
   public renameTrip(title: string): Promise<boolean> {
     const normalizedTitle = title.trim();
-    if (!normalizedTitle) return Promise.resolve(false);
+    if (!normalizedTitle) {
+      return Promise.resolve(false);
+    }
 
     return this.mutate((trip) => ({ ...trip, title: normalizedTitle }));
   }
@@ -55,11 +57,15 @@ export class TripEditController {
 
   public renameDay(dayId: string, title: string): Promise<boolean> {
     const normalizedTitle = title.trim();
-    if (!normalizedTitle) return Promise.resolve(false);
+    if (!normalizedTitle) {
+      return Promise.resolve(false);
+    }
 
     return this.mutate((trip) => {
       const day = trip.days.find((day) => day.id === dayId);
-      if (!day) throw new Error('이름을 변경할 날짜를 찾을 수 없습니다.');
+      if (!day) {
+        throw new Error('이름을 변경할 날짜를 찾을 수 없습니다.');
+      }
       day.title = normalizedTitle;
       return trip;
     });
@@ -68,7 +74,9 @@ export class TripEditController {
   public updateDayColor(dayId: string, color: string): Promise<boolean> {
     return this.mutate((trip) => {
       const day = trip.days.find((candidate) => candidate.id === dayId);
-      if (!day) throw new Error('색상을 변경할 날짜를 찾을 수 없습니다.');
+      if (!day) {
+        throw new Error('색상을 변경할 날짜를 찾을 수 없습니다.');
+      }
       day.color = color;
       return trip;
     });
@@ -77,7 +85,9 @@ export class TripEditController {
   public addPlace(dayId: string, input: PlaceInput): Promise<boolean> {
     return this.mutate((trip) => {
       const day = trip.days.find((day) => day.id === dayId);
-      if (!day) throw new Error('장소를 추가할 날짜를 선택해 주세요.');
+      if (!day) {
+        throw new Error('장소를 추가할 날짜를 선택해 주세요.');
+      }
       day.places.push({
         ...input,
         time: input.time ?? DEFAULT_PLACE_START_TIME,
@@ -100,9 +110,13 @@ export class TripEditController {
 
   public removePlaces(placeIds: readonly string[]): Promise<boolean> {
     const uniquePlaceIds = new Set(placeIds);
-    if (uniquePlaceIds.size === 0) return Promise.resolve(false);
+    if (uniquePlaceIds.size === 0) {
+      return Promise.resolve(false);
+    }
     return this.mutate((trip) => {
-      for (const placeId of uniquePlaceIds) this.findPlace(trip, placeId);
+      for (const placeId of uniquePlaceIds) {
+        this.findPlace(trip, placeId);
+      }
       for (const day of trip.days) {
         day.places = day.places.filter(
           (place) => !uniquePlaceIds.has(place.id),
@@ -138,12 +152,15 @@ export class TripEditController {
   ): Promise<boolean> {
     return this.mutate((trip) => {
       const target = trip.days.find((day) => day.id === targetDayId);
-      if (!target || !Number.isInteger(targetIndex))
+      if (!target || !Number.isInteger(targetIndex)) {
         throw new Error('이동할 날짜와 순서를 확인해 주세요.');
+      }
       const source = trip.days.find((day) =>
         day.places.some((place) => place.id === placeId),
       );
-      if (!source) throw new Error('이동할 장소를 찾을 수 없습니다.');
+      if (!source) {
+        throw new Error('이동할 장소를 찾을 수 없습니다.');
+      }
       const sourceIndex = source.places.findIndex(
         (place) => place.id === placeId,
       );
@@ -199,7 +216,9 @@ export class TripEditController {
     mode: TripPolylineMode,
   ): Promise<boolean> {
     const uniquePolylineIds = new Set(polylineIds);
-    if (uniquePolylineIds.size === 0) return Promise.resolve(false);
+    if (uniquePolylineIds.size === 0) {
+      return Promise.resolve(false);
+    }
     return this.mutate((trip) => {
       for (const polylineId of uniquePolylineIds) {
         this.findPolyline(trip, polylineId).mode = mode;
@@ -210,7 +229,9 @@ export class TripEditController {
 
   public cancelPending(): void {
     const pending = this.pending;
-    if (!pending) return;
+    if (!pending) {
+      return;
+    }
     this.pending = null;
     pending.controller.abort();
     this.store.setState(pending.before);
@@ -227,7 +248,9 @@ export class TripEditController {
     const place = trip.days
       .flatMap((day) => day.places)
       .find((place) => place.id === placeId);
-    if (!place) throw new Error('장소를 찾을 수 없습니다.');
+    if (!place) {
+      throw new Error('장소를 찾을 수 없습니다.');
+    }
     return place;
   }
 
@@ -235,13 +258,17 @@ export class TripEditController {
     const polyline = trip.days
       .flatMap((day) => day.polylines)
       .find((item) => item.id === polylineId);
-    if (!polyline) throw new Error('연결선을 찾을 수 없습니다.');
+    if (!polyline) {
+      throw new Error('연결선을 찾을 수 없습니다.');
+    }
     return polyline;
   }
 
   private async mutate(update: (trip: Trip) => Trip): Promise<boolean> {
     const before = this.store.getState().trip;
-    if (this.pending) return false;
+    if (this.pending) {
+      return false;
+    }
     let next: Trip;
     try {
       next = update(structuredClone(before));
@@ -278,7 +305,9 @@ export class TripEditController {
     operation: (signal: AbortSignal) => Promise<Trip>,
     optimistic: Trip,
   ): Promise<boolean> {
-    if (this.pending) return false;
+    if (this.pending) {
+      return false;
+    }
     const pending = {
       controller: new AbortController(),
       before: this.store.getState(),
@@ -287,15 +316,18 @@ export class TripEditController {
     this.publish(optimistic, 'saving');
     try {
       const saved = await operation(pending.controller.signal);
-      if (this.pending !== pending || pending.controller.signal.aborted)
+      if (this.pending !== pending || pending.controller.signal.aborted) {
         return false;
-      if (saved.id !== this.tripId)
+      }
+      if (saved.id !== this.tripId) {
         throw new Error('저장된 여행이 현재 세션과 다릅니다.');
+      }
       this.publish(saved, 'ready');
       return true;
     } catch (cause) {
-      if (this.pending !== pending || pending.controller.signal.aborted)
+      if (this.pending !== pending || pending.controller.signal.aborted) {
         return false;
+      }
       this.store.setState({
         ...pending.before,
         status: 'error',
@@ -303,7 +335,9 @@ export class TripEditController {
       });
       return false;
     } finally {
-      if (this.pending === pending) this.pending = null;
+      if (this.pending === pending) {
+        this.pending = null;
+      }
     }
   }
 

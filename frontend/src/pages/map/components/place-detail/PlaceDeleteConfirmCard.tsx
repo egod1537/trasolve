@@ -72,7 +72,9 @@ export function PlaceDeleteConfirmCard({
   });
 
   useLayoutEffect(() => {
-    if (layout.ready) cancelButtonRef.current?.focus();
+    if (layout.ready) {
+      cancelButtonRef.current?.focus();
+    }
   }, [layout.ready]);
 
   useLayoutEffect(() => {
@@ -80,7 +82,9 @@ export function PlaceDeleteConfirmCard({
       const anchor = anchorRef.current;
       const card = cardRef.current;
       const group = anchor?.parentElement;
-      if (!anchor || !card || !group) return;
+      if (!anchor || !card || !group) {
+        return;
+      }
 
       const anchorRect = anchor.getBoundingClientRect();
       const groupRect = group.getBoundingClientRect();
@@ -123,7 +127,9 @@ export function PlaceDeleteConfirmCard({
     const anchor = anchorRef.current;
     const card = cardRef.current;
     const group = anchor?.parentElement;
-    if (!anchor || !card || !group) return;
+    if (!anchor || !card || !group) {
+      return;
+    }
 
     const resizeObserver = new ResizeObserver(updateLayout);
     resizeObserver.observe(anchor);
@@ -154,13 +160,17 @@ export function PlaceDeleteConfirmCard({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || busy) return;
+      if (event.key !== 'Escape' || busy) {
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       onCancel(true);
     };
     const handlePointerDown = (event: PointerEvent) => {
-      if (busy || !(event.target instanceof Node)) return;
+      if (busy || !(event.target instanceof Node)) {
+        return;
+      }
       if (
         cardRef.current?.contains(event.target) ||
         anchorRef.current?.contains(event.target)

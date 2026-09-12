@@ -21,8 +21,9 @@ export class TripController {
   public async getTrip(userId: string, tripId: string): Promise<Trip> {
     this.validateIds(userId, tripId);
     const trip = await this.repository.getById(userId, tripId);
-    if (!trip)
+    if (!trip) {
       throw new TripError(404, 'TRIP_NOT_FOUND', '여행을 찾을 수 없습니다.');
+    }
     return trip;
   }
 
@@ -73,7 +74,9 @@ export class TripController {
     existing?: Trip,
   ): Trip {
     const parsed = tripInputSchema.safeParse(input);
-    if (!parsed.success) throw invalidTripRequest();
+    if (!parsed.success) {
+      throw invalidTripRequest();
+    }
     const knownDays = new Set(existing?.days.map((day) => day.id));
     const knownPlaces = new Set(
       existing?.days.flatMap((day) => day.places.map((place) => place.id)),
@@ -84,9 +87,15 @@ export class TripController {
       ),
     );
     const canonicalId = (id: string | undefined, known: Set<string>) => {
-      if (!existing || !id) return randomUUID();
-      if (known.has(id)) return id;
-      if (id.startsWith('pending-')) return randomUUID();
+      if (!existing || !id) {
+        return randomUUID();
+      }
+      if (known.has(id)) {
+        return id;
+      }
+      if (id.startsWith('pending-')) {
+        return randomUUID();
+      }
       throw invalidTripRequest();
     };
     const days = parsed.data.days.map((day) => {
@@ -94,15 +103,21 @@ export class TripController {
       const polylineReferences = new Map<string, string>();
       const places = day.places.map((place, index) => {
         const id = canonicalId(place.id, knownPlaces);
-        if (place.id) placeReferences.set(place.id, id);
+        if (place.id) {
+          placeReferences.set(place.id, id);
+        }
         return { ...place, id, order: index + 1 };
       });
       const polylines = day.polylines.map((polyline, index) => {
         const fromPlaceId = placeReferences.get(polyline.fromPlaceId);
         const toPlaceId = placeReferences.get(polyline.toPlaceId);
-        if (!fromPlaceId || !toPlaceId) throw invalidTripRequest();
+        if (!fromPlaceId || !toPlaceId) {
+          throw invalidTripRequest();
+        }
         const id = canonicalId(polyline.id, knownPolylines);
-        if (polyline.id) polylineReferences.set(polyline.id, id);
+        if (polyline.id) {
+          polylineReferences.set(polyline.id, id);
+        }
         return {
           ...polyline,
           id,
@@ -116,7 +131,9 @@ export class TripController {
           item.type === 'place'
             ? placeReferences.get(item.id)
             : polylineReferences.get(item.id);
-        if (!id) throw invalidTripRequest();
+        if (!id) {
+          throw invalidTripRequest();
+        }
         return { type: item.type, id };
       });
       const layerItemKeys = new Set(
@@ -175,13 +192,16 @@ export class TripController {
       updatedAt: metadata.updatedAt,
       days,
     });
-    if (!result.success) throw invalidTripRequest();
+    if (!result.success) {
+      throw invalidTripRequest();
+    }
     return result.data;
   }
 
   private validateIds(...ids: string[]): void {
-    if (ids.some((id) => !tripIdSchema.safeParse(id).success))
+    if (ids.some((id) => !tripIdSchema.safeParse(id).success)) {
       throw invalidTripRequest();
+    }
   }
 
   private async serialize<T>(
@@ -197,7 +217,9 @@ export class TripController {
     try {
       return await current;
     } finally {
-      if (this.mutations.get(key) === current) this.mutations.delete(key);
+      if (this.mutations.get(key) === current) {
+        this.mutations.delete(key);
+      }
     }
   }
 }

@@ -109,7 +109,9 @@ function createLegacyLayerItems(day: Record<string, unknown>) {
     ['polyline', 1],
   ] as const) {
     const values = day[type === 'place' ? 'places' : 'polylines'];
-    if (!Array.isArray(values)) continue;
+    if (!Array.isArray(values)) {
+      continue;
+    }
     values.forEach((value, index) => {
       if (
         !value ||
@@ -144,16 +146,22 @@ function createLegacyLayerItems(day: Record<string, unknown>) {
 }
 
 function migratePlace(value: unknown): unknown {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return value;
+  }
   const place = value as Record<string, unknown>;
-  if (!('preferredTimeRange' in place)) return place;
+  if (!('preferredTimeRange' in place)) {
+    return place;
+  }
   const migrated = { ...place };
   delete migrated.preferredTimeRange;
   return migrated;
 }
 
 function migrateDay(value: unknown): unknown {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return value;
+  }
   const day = value as Record<string, unknown>;
   let migrated = Array.isArray(day.places)
     ? { ...day, places: day.places.map(migratePlace) }
@@ -177,7 +185,9 @@ function migrateDay(value: unknown): unknown {
       })),
     };
   }
-  if ('layerItems' in migrated) return migrated;
+  if ('layerItems' in migrated) {
+    return migrated;
+  }
   return { ...migrated, layerItems: createLegacyLayerItems(migrated) };
 }
 
@@ -260,8 +270,9 @@ export const tripSchema = z
       context.addIssue({ code: 'custom', message: 'Invalid dates.' });
     }
     for (const day of trip.days) {
-      if (days.has(day.id))
+      if (days.has(day.id)) {
         context.addIssue({ code: 'custom', message: 'Duplicate day ID.' });
+      }
       days.add(day.id);
       day.places.forEach((place, index) => {
         if (places.has(place.id) || place.order !== index + 1) {
