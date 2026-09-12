@@ -1,9 +1,11 @@
 import { createHash, randomBytes } from 'node:crypto';
+import type { GoogleOAuthUser } from '@trasolve/shared';
 
 const authorizationEndpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
 const tokenEndpoint = 'https://oauth2.googleapis.com/token';
 const userInfoEndpoint = 'https://openidconnect.googleapis.com/v1/userinfo';
 const oauthScopes = ['openid', 'email', 'profile'] as const;
+const localHostnames = ['localhost', '127.0.0.1', '[::1]'];
 const upstreamTimeoutMs = 10_000;
 
 interface GoogleOAuthConfig {
@@ -20,14 +22,6 @@ export interface GoogleOAuthAuthorizationRequest {
   authorizationUrl: string;
   state: string;
   codeVerifier: string;
-}
-
-export interface GoogleOAuthUser {
-  id: string;
-  email: string;
-  emailVerified: boolean;
-  name?: string;
-  pictureUrl?: string;
 }
 
 export type GoogleOAuthErrorCode =
@@ -200,8 +194,12 @@ export class GoogleOAuthClient {
     const name = readOptionalString(body, 'name');
     const pictureUrl = readOptionalHttpsUrl(body, 'picture');
 
-    if (name) user.name = name;
-    if (pictureUrl) user.pictureUrl = pictureUrl;
+    if (name) {
+      user.name = name;
+    }
+    if (pictureUrl) {
+      user.pictureUrl = pictureUrl;
+    }
 
     return user;
   }
@@ -241,9 +239,7 @@ function readRedirectUri(environment: NodeJS.ProcessEnv): string {
 
   const isLocalHttp =
     redirectUri.protocol === 'http:' &&
-    (redirectUri.hostname === 'localhost' ||
-      redirectUri.hostname === '127.0.0.1' ||
-      redirectUri.hostname === '[::1]');
+    localHostnames.includes(redirectUri.hostname);
 
   if (
     (redirectUri.protocol !== 'https:' && !isLocalHttp) ||
@@ -324,7 +320,9 @@ function readOptionalHttpsUrl(
   field: string,
 ): string | undefined {
   const value = readOptionalString(body, field);
-  if (!value) return undefined;
+  if (!value) {
+    return undefined;
+  }
 
   try {
     const url = new URL(value);

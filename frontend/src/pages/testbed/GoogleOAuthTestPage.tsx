@@ -31,16 +31,22 @@ function GoogleOAuthTestContent() {
   );
 
   useEffect(() => {
-    if (!shouldConsumeResult) return;
+    if (!shouldConsumeResult) {
+      return;
+    }
 
     let active = true;
 
     void consumeGoogleOAuthResult()
       .then((result) => {
-        if (active) setPageState({ status: 'result', result });
+        if (active) {
+          setPageState({ status: 'result', result });
+        }
       })
       .catch(() => {
-        if (active) setPageState({ status: 'request_error' });
+        if (active) {
+          setPageState({ status: 'request_error' });
+        }
       });
 
     return () => {

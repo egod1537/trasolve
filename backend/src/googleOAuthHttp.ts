@@ -4,7 +4,6 @@ import {
   API_ROUTES,
   type ApiErrorResponse,
   type GoogleOAuthResult,
-  type GoogleOAuthUser,
 } from '@trasolve/shared';
 import { GoogleOAuthClient, GoogleOAuthError } from './googleOAuth.js';
 
@@ -36,7 +35,9 @@ class ExpiringStore<T> {
 
     while (this.entries.size >= maximumEntries) {
       const oldestKey = this.entries.keys().next().value;
-      if (typeof oldestKey !== 'string') break;
+      if (typeof oldestKey !== 'string') {
+        break;
+      }
       this.entries.delete(oldestKey);
     }
 
@@ -55,7 +56,9 @@ class ExpiringStore<T> {
 
   public consume(id: string | undefined): T | undefined {
     this.removeExpired();
-    if (!id) return undefined;
+    if (!id) {
+      return undefined;
+    }
 
     const entry = this.entries.get(id);
     this.entries.delete(id);
@@ -66,7 +69,9 @@ class ExpiringStore<T> {
     const now = Date.now();
 
     for (const [id, entry] of this.entries) {
-      if (entry.expiresAt <= now) this.entries.delete(id);
+      if (entry.expiresAt <= now) {
+        this.entries.delete(id);
+      }
     }
   }
 }
@@ -86,7 +91,9 @@ export class GoogleOAuthHttpFlow {
       pathname === API_ROUTES.googleOAuthCallback ||
       pathname === API_ROUTES.googleOAuthResult;
 
-    if (!isOAuthRoute) return false;
+    if (!isOAuthRoute) {
+      return false;
+    }
 
     if (request.method !== 'GET') {
       response.setHeader('Allow', 'GET');
@@ -195,11 +202,7 @@ export class GoogleOAuthHttpFlow {
         authorizationCode,
         transaction.codeVerifier,
       );
-      this.redirectWithResult(
-        response,
-        { status: 'success', user: toSharedUser(user) },
-        secure,
-      );
+      this.redirectWithResult(response, { status: 'success', user }, secure);
     } catch (error) {
       this.redirectWithResult(response, mapOAuthError(error), secure);
     }
@@ -264,7 +267,9 @@ function usesSecureOAuthCookies(): boolean {
 }
 
 function securelyMatches(candidate: string | null, expected: string): boolean {
-  if (!candidate) return false;
+  if (!candidate) {
+    return false;
+  }
 
   const candidateBuffer = Buffer.from(candidate, 'utf8');
   const expectedBuffer = Buffer.from(expected, 'utf8');
@@ -280,16 +285,22 @@ function readOpaqueCookie(
   cookieName: string,
 ): string | undefined {
   const cookieHeader = request.headers.cookie;
-  if (!cookieHeader) return undefined;
+  if (!cookieHeader) {
+    return undefined;
+  }
 
   for (const cookie of cookieHeader.split(';')) {
     const separatorIndex = cookie.indexOf('=');
-    if (separatorIndex < 0) continue;
+    if (separatorIndex < 0) {
+      continue;
+    }
 
     const name = cookie.slice(0, separatorIndex).trim();
     const value = cookie.slice(separatorIndex + 1).trim();
 
-    if (name === cookieName && opaqueIdPattern.test(value)) return value;
+    if (name === cookieName && opaqueIdPattern.test(value)) {
+      return value;
+    }
   }
 
   return undefined;
@@ -325,10 +336,6 @@ function clearCookie(name: string, path: string, secure: boolean): string {
   ]
     .filter(Boolean)
     .join('; ');
-}
-
-function toSharedUser(user: GoogleOAuthUser): GoogleOAuthUser {
-  return user;
 }
 
 function mapOAuthError(error: unknown): GoogleOAuthResult {
