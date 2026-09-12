@@ -12,7 +12,7 @@ export async function sendChat(
   signal?: AbortSignal,
 ): Promise<ChatResponse> {
   const payload = chatRequestSchema.parse(request);
-  const timeout = AbortSignal.timeout(30000);
+  const timeout = AbortSignal.timeout(130000);
   let response: Response;
   try {
     response = await fetch(API_ROUTES.chat, {
