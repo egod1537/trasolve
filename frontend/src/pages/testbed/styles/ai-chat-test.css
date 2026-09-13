@@ -39,8 +39,7 @@
   background: var(--color-surface);
 }
 
-.ai-chat-test-models > div,
-.ai-chat-test-models li {
+.ai-chat-test-models > div {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -57,16 +56,21 @@
   padding: 8px 12px;
 }
 
-.ai-chat-test-models ul {
+.ai-chat-test-model-selector {
   display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
-.ai-chat-test-models code {
-  overflow-wrap: anywhere;
+.ai-chat-test-model-selector select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
 }
 
 .ai-chat-test-panel .trip-map-ai-panel {

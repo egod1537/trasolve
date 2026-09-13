@@ -11,6 +11,7 @@ function AiChatTestContent() {
   const [modelsPending, setModelsPending] = useState(false);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [modelsError, setModelsError] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState('');
 
   const loadModels = async () => {
     if (modelsPending) {
@@ -22,9 +23,13 @@ function AiChatTestContent() {
       const response = await listOpenWebUIModels();
       setModels(response.models);
       setModelsLoaded(true);
+      setSelectedModel((current) =>
+        response.models.some((model) => model.id === current) ? current : '',
+      );
     } catch (cause) {
       setModels([]);
       setModelsLoaded(false);
+      setSelectedModel('');
       setModelsError(
         cause instanceof Error
           ? cause.message
@@ -73,14 +78,20 @@ function AiChatTestContent() {
         {modelsError ? <p role="alert">{modelsError}</p> : null}
         {modelsLoaded ? (
           models.length ? (
-            <ul>
-              {models.map((model) => (
-                <li key={model.id}>
-                  <strong>{model.name}</strong>
-                  <code>{model.id}</code>
-                </li>
-              ))}
-            </ul>
+            <label className="ai-chat-test-model-selector">
+              요청 모델
+              <select
+                value={selectedModel}
+                onChange={(event) => setSelectedModel(event.target.value)}
+              >
+                <option value="">서버 기본 모델 (OPENWEBUI_MODEL)</option>
+                {models.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name} ({model.id})
+                  </option>
+                ))}
+              </select>
+            </label>
           ) : (
             <p role="status">사용 가능한 모델이 없습니다.</p>
           )
@@ -90,6 +101,7 @@ function AiChatTestContent() {
         <MapAiPanel
           key={conversation}
           open
+          model={selectedModel || undefined}
           onClose={() => window.location.assign('/testbed')}
         />
       </div>
