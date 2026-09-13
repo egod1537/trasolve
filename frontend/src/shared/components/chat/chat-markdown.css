@@ -1,0 +1,117 @@
+.chat-markdown {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.chat-markdown h1,
+.chat-markdown h2,
+.chat-markdown h3,
+.chat-markdown h4,
+.chat-markdown h5,
+.chat-markdown h6 {
+  margin: 12px 0 6px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.chat-markdown h1 {
+  font-size: 20px;
+}
+.chat-markdown h2 {
+  font-size: 18px;
+}
+.chat-markdown h3 {
+  font-size: 16px;
+}
+.chat-markdown h4,
+.chat-markdown h5,
+.chat-markdown h6 {
+  font-size: 14px;
+}
+.chat-markdown p,
+.chat-markdown ul,
+.chat-markdown ol,
+.chat-markdown blockquote,
+.chat-markdown pre,
+.chat-markdown .chat-markdown-table {
+  margin: 8px 0;
+  color: inherit;
+}
+.chat-markdown ul,
+.chat-markdown ol {
+  padding-left: 22px;
+}
+.chat-markdown li + li {
+  margin-top: 4px;
+}
+.chat-markdown li > p {
+  margin: 4px 0;
+}
+.chat-markdown blockquote {
+  padding-left: 12px;
+  border-left: 3px solid #cbd5e1;
+  color: var(--color-muted);
+}
+.chat-markdown code {
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: #e8edf3;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.9em;
+}
+.chat-markdown pre {
+  max-width: 100%;
+  padding: 12px;
+  overflow-x: auto;
+  border-radius: 6px;
+  background: #e8edf3;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+.chat-markdown pre code {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 13px;
+}
+.chat-markdown a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+.chat-markdown-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.chat-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.chat-markdown th,
+.chat-markdown td {
+  min-width: 90px;
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  text-align: left;
+}
+.chat-markdown th {
+  background: #eef2f7;
+  font-weight: 600;
+}
+.chat-markdown hr {
+  margin: 12px 0;
+  border: 0;
+  border-top: 1px solid #cbd5e1;
+}
+.chat-markdown img {
+  max-width: 100%;
+  height: auto;
+}
+.chat-markdown > :first-child {
+  margin-top: 0;
+}
+.chat-markdown > :last-child {
+  margin-bottom: 0;
+}

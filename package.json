@@ -3,17 +3,22 @@
   "private": true,
   "version": "0.0.0",
   "workspaces": ["frontend", "backend", "shared"],
-  "engines": { "node": ">=24" },
+  "engines": { "node": ">=24.11" },
   "scripts": {
     "predev": "npm run build -w @trasolve/shared",
     "dev": "concurrently -k -n shared,backend,frontend \"npm run dev -w @trasolve/shared\" \"npm run dev -w @trasolve/backend\" \"npm run dev -w @trasolve/frontend\"",
     "build": "npm run build -w @trasolve/shared && npm run build -w @trasolve/backend && npm run build -w @trasolve/frontend",
     "typecheck": "npm run build -w @trasolve/shared && npm run typecheck --workspaces",
-    "lint": "oxlint .",
-    "lint:fix": "oxlint . --fix"
+    "lint": "oxlint . && eslint .",
+    "lint:fix": "oxlint . --fix && eslint . --fix",
+    "format": "prettier --write \"frontend/**/*.{ts,tsx,css,html,json}\" \"backend/**/*.{ts,json}\" \"shared/**/*.{ts,json}\" \"eslint.config.mjs\" \".github/**/*.yml\"",
+    "format:check": "prettier --check \"frontend/**/*.{ts,tsx,css,html,json}\" \"backend/**/*.{ts,json}\" \"shared/**/*.{ts,json}\" \"eslint.config.mjs\" \".github/**/*.yml\""
   },
   "devDependencies": {
+    "@babel/core": "^8.0.5",
+    "@babel/eslint-parser": "^8.0.5",
     "concurrently": "^10.0.5",
+    "eslint": "^10.10.0",
     "oxlint": "^1.81.0",
     "prettier": "^3.9.6",
     "typescript": "^7.0.2"

@@ -10,5 +10,12 @@
     "outDir": "dist",
     "declaration": true
   },
-  "include": ["index.ts", "types/**/*.ts", "schemas/**/*.ts", "constants/**/*.ts"]
+  "include": [
+    "index.ts",
+    "types/**/*.ts",
+    "schemas/**/*.ts",
+    "constants/**/*.ts",
+    "domain/**/*.ts",
+    "builders/**/*.ts"
+  ]
 }

@@ -5,6 +5,8 @@ dist/
 .env.*
 !.env.example
 *.log
+backend/data/
+*.tmp
 __pycache__/
 *.pyc
 .DS_Store

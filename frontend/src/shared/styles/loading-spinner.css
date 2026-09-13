@@ -1,0 +1,35 @@
+.loading-spinner {
+  display: inline-block;
+  flex: none;
+  border-style: solid;
+  border-color: color-mix(in srgb, currentColor 24%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  color: var(--color-primary);
+  vertical-align: middle;
+  animation: loading-spinner-rotate 0.8s linear infinite;
+}
+
+.loading-spinner.is-sm {
+  width: 13px;
+  height: 13px;
+  border-width: 1.5px;
+}
+
+.loading-spinner.is-md {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+}
+
+@keyframes loading-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
+}

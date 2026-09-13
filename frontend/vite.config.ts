@@ -23,7 +23,9 @@ function readGitValue(args: string[]) {
 function firstNonEmpty(...values: Array<string | undefined>) {
   for (const value of values) {
     const trimmedValue = value?.trim();
-    if (trimmedValue) return trimmedValue;
+    if (trimmedValue) {
+      return trimmedValue;
+    }
   }
 
   return '';
@@ -43,7 +45,7 @@ function parseBuildChannel(value: string): BuildChannel | undefined {
 }
 
 const proxy = {
-  '/api': 'http://127.0.0.1:3000',
+  '/api': 'http://127.0.0.1:43127',
 };
 
 export default defineConfig(({ command, mode, isPreview }) => {

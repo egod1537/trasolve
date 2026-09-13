@@ -8,5 +8,233 @@
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "warn"
   },
-  "ignorePatterns": ["**/dist/**", "**/node_modules/**"]
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**"],
+  "overrides": [
+    {
+      "files": ["frontend/src/**/*.{ts,tsx,js,mjs,cjs}"],
+      "excludeFiles": [
+        "frontend/src/map/runtime/**",
+        "frontend/src/map/adapters/**",
+        "frontend/src/api/**",
+        "frontend/src/pages/map/api/**"
+      ],
+      "rules": {
+        "no-restricted-globals": [
+          "error",
+          {
+            "name": "google",
+            "message": "Google SDK access belongs in map/runtime or map/adapters. Use provider-neutral contracts."
+          },
+          {
+            "name": "fetch",
+            "message": "HTTP requests belong in api clients."
+          }
+        ],
+        "no-restricted-properties": [
+          "error",
+          {
+            "object": "window",
+            "property": "google",
+            "message": "Google SDK access belongs in map/runtime or map/adapters."
+          },
+          {
+            "object": "globalThis",
+            "property": "google",
+            "message": "Google SDK access belongs in map/runtime or map/adapters."
+          },
+          {
+            "object": "window",
+            "property": "fetch",
+            "message": "HTTP requests belong in api clients."
+          },
+          {
+            "object": "globalThis",
+            "property": "fetch",
+            "message": "HTTP requests belong in api clients."
+          }
+        ],
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(^|/)Google(MapAdapter|MapObjectController|OverlayHost)(\\.[^/]*)?$",
+                "message": "Use MapAdapter, MapObjectController, MapOverlayHost and MapRuntime contracts instead of concrete Google adapters."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["backend/src/**/*.{ts,tsx,js,mjs,cjs}"],
+      "excludeFiles": [
+        "backend/src/instances.ts",
+        "backend/src/google/maps/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(?i)(^|/)(google/maps(/|$)|routes(\\.[^/]*)?$)",
+                "message": "Import API from instances.js and use API.Route.queryRoutes() or API.Route.handle()."
+              },
+              {
+                "regex": "(^|/)localFileTripRepository(\\.[^/]*)?$",
+                "message": "Only instances.ts constructs the file repository. Use TripController and the TripRepository contract."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["backend/src/google/maps/**/*.{ts,tsx,js,mjs,cjs}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(?i)(^|/)instances(\\.[^/]*)?$",
+                "message": "Importing API inside its implementation creates a circular dependency."
+              },
+              {
+                "regex": "(?i)(^|/)routes(\\.[^/]*)?$",
+                "allowTypeImports": true,
+                "message": "Only instances.ts constructs Routes. Use import type when only the type is needed."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "frontend/src/pages/map/controller/**/*.ts",
+        "frontend/src/pages/map/store/**/*.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["react", "react/*", "react-dom", "react-dom/*"],
+                "message": "React binding belongs in Provider/hooks, not the store or controller."
+              },
+              {
+                "regex": "(^|/)(adapters|runtime|components|hooks|api)(/|$)|(^|/)HttpTripRepository(\\.[^/]*)?$",
+                "message": "Domain state and commands must not depend on map rendering or React bindings."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["frontend/src/pages/map/components/viewport/TripLayer.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(^|/)(api|controller|store|repository)(/|$)",
+                "message": "TripLayer only projects props to map primitives; no persistence or domain mutation."
+              },
+              {
+                "regex": "(^|/)Google(MapAdapter|MapObjectController|OverlayHost)(\\.[^/]*)?$",
+                "message": "Use the provider-neutral object controller contract."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "frontend/src/pages/map/components/layer-panel/**/*.tsx",
+        "frontend/src/pages/map/components/viewport/MapViewport.tsx",
+        "frontend/src/pages/map/components/ai/**/*.tsx"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(^|/)(api|controller|store|repository|adapters|runtime)(/|$)",
+                "message": "Visual regions compose UI through props; keep API, domain commands and SDK infrastructure in their existing owners."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["frontend/src/pages/map/repository/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["react", "react/*", "react-dom", "react-dom/*"],
+                "message": "Trip repositories are independent of React."
+              },
+              {
+                "regex": "(^|/)(controller|store|hooks|components|adapters|runtime)(/|$)",
+                "message": "Repositories depend on persistence contracts and HTTP clients, not sessions or rendering."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["frontend/src/pages/map/components/**/*.tsx"],
+      "excludeFiles": [
+        "frontend/src/pages/map/components/TripSession.tsx",
+        "frontend/src/pages/map/components/viewport/**",
+        "frontend/src/pages/map/components/layer-panel/**",
+        "frontend/src/pages/map/components/ai/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(^|/)(api|repository|controller|store|adapters|runtime)(/|$)",
+                "message": "UI uses callbacks or session hooks; MapPage and TripSession compose persistence dependencies."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "frontend/src/map/**/*.{ts,tsx}",
+        "frontend/src/shared/**/*.{ts,tsx}",
+        "frontend/src/api/**/*.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(^|/)pages(/|$)",
+                "message": "Shared code, HTTP clients and map infrastructure must not import page features."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }
