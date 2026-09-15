@@ -2,7 +2,7 @@ import type { Trip } from '@trasolve/shared';
 
 export type TripState = Readonly<{
   trip: Trip;
-  status: 'ready' | 'saving' | 'error';
+  status: 'ready' | 'dirty' | 'saving' | 'error';
   error: string | null;
 }>;
 

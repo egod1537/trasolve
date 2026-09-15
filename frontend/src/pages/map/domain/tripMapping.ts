@@ -47,8 +47,12 @@ export function tripViewToInput(view: TripView, stored?: Trip): TripInput {
         memo: place.description,
         openingHours: place.openingHours ?? places.get(place.id)?.openingHours,
         placeStyle: place.placeStyle ?? places.get(place.id)?.placeStyle,
-        durationMinutes:
-          place.durationMinutes ?? places.get(place.id)?.durationMinutes,
+        visitDurationMinutes:
+          place.visitDurationMinutes ??
+          places.get(place.id)?.visitDurationMinutes,
+        preferredDurationMinutes:
+          place.preferredDurationMinutes ??
+          places.get(place.id)?.preferredDurationMinutes,
         time: place.time,
       })),
       polylines: day.polylines.map((polyline) => ({

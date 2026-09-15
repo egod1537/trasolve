@@ -18,7 +18,8 @@ export type TripPlace = Coordinates & {
   description: string;
   openingHours?: PlaceOpeningHours;
   placeStyle?: PlaceStyle;
-  durationMinutes?: number;
+  visitDurationMinutes?: number;
+  preferredDurationMinutes?: number;
   time?: string;
   order: number;
 };

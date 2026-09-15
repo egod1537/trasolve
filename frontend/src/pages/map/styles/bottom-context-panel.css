@@ -12,7 +12,7 @@
   border: 1px solid var(--color-floating-border);
   border-radius: 12px;
   background: var(--color-floating-surface);
-  box-shadow: var(--shadow-floating-md);
+  box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
   pointer-events: none;
   animation: bottom-context-panel-in 150ms ease-out;
@@ -30,7 +30,7 @@
   border: 1px solid var(--color-floating-border);
   border-radius: 12px;
   background: var(--color-floating-surface);
-  box-shadow: var(--shadow-floating-md);
+  box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
   pointer-events: auto;
 }
@@ -85,14 +85,14 @@
   width: min(480px, 100%);
   height: var(--map-floating-bar-height);
   min-height: var(--map-floating-bar-height);
-  flex: 1 1 480px;
+  flex: none;
   min-width: 0;
   gap: 14px;
   padding: 8px 10px 8px 14px;
   border: 1px solid var(--color-floating-border);
   border-radius: 12px;
   background: var(--color-floating-surface);
-  box-shadow: var(--shadow-floating-md);
+  box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
   pointer-events: auto;
   animation: bottom-context-panel-in 150ms ease-out;
@@ -221,7 +221,7 @@
   border: 1px solid var(--color-floating-border);
   border-radius: 12px;
   background: var(--color-floating-surface);
-  box-shadow: var(--shadow-floating-md);
+  box-shadow: var(--shadow-map-overlay);
 }
 
 .layer-bulk-mode-popover {
@@ -350,7 +350,7 @@
   border: 1px solid var(--color-floating-border);
   border-radius: 14px;
   background: var(--color-floating-surface);
-  box-shadow: var(--shadow-floating-lg);
+  box-shadow: var(--shadow-map-overlay);
   color: var(--color-text);
   animation: route-optimization-modal-in 180ms ease-out;
 }
@@ -609,13 +609,8 @@
 }
 
 @media (max-width: 520px) {
-  .bottom-map-controls.has-bulk-selection {
-    flex-wrap: wrap;
-  }
-
   .layer-bulk-action-bar {
     width: 100%;
-    flex-basis: 100%;
   }
 
   .bottom-context-panel {

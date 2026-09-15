@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Trip } from '@trasolve/shared';
 import { getDirections } from '../../../api/routes';
 import { TripEditController } from '../controller/TripEditController';
@@ -23,10 +23,30 @@ export function TripSession({
 }) {
   const [application] = useState(() => {
     const store = createTripStore(trip);
-    return { store, controller: new TripEditController(store, repository) };
+    return {
+      store,
+      controller: new TripEditController(store, repository, {
+        debouncedAutosave: true,
+      }),
+    };
   });
+  const destroyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => () => application.controller.cancelPending(), [application]);
+  useEffect(() => {
+    if (destroyTimerRef.current !== null) {
+      clearTimeout(destroyTimerRef.current);
+      destroyTimerRef.current = null;
+    }
+
+    return () => {
+      // StrictMode immediately sets the effect up again after its development
+      // cleanup check. Defer permanent disposal so that setup can cancel it.
+      destroyTimerRef.current = setTimeout(() => {
+        application.controller.destroy();
+        destroyTimerRef.current = null;
+      }, 0);
+    };
+  }, [application]);
 
   return (
     <TripProvider value={application}>

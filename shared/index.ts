@@ -28,6 +28,16 @@ export type {
   TripPolylineMode,
 } from './types/trip.js';
 
+export {
+  routeOptimizationPlaceSchema,
+  routeOptimizationRequestSchema,
+} from './schemas/routeOptimization.js';
+
+export type {
+  RouteOptimizationPlace,
+  RouteOptimizationRequest,
+} from './types/routeOptimization.js';
+
 export { DirectionsRequestBuilder } from './builders/DirectionsRequestBuilder.js';
 export { reconcileDayRouteSegments } from './domain/tripRoutes.js';
 

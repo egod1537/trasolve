@@ -177,7 +177,7 @@ function getLabelPosition(segments: readonly PositionedRange[]): number {
   const widestSegment = segments.reduce<PositionedRange | undefined>(
     (widest, segment) =>
       !widest ||
-      segment.endPosition - segment.startPosition >
+        segment.endPosition - segment.startPosition >
         widest.endPosition - widest.startPosition
         ? segment
         : widest,
@@ -185,7 +185,7 @@ function getLabelPosition(segments: readonly PositionedRange[]): number {
   );
   return widestSegment
     ? widestSegment.startPosition +
-        (widestSegment.endPosition - widestSegment.startPosition) / 2
+    (widestSegment.endPosition - widestSegment.startPosition) / 2
     : 0;
 }
 
@@ -205,12 +205,12 @@ function prepareClippedRange(
   const segments = pointOnly
     ? []
     : [
-        {
-          key: `${index}-${start}-${end}`,
-          startPosition,
-          endPosition,
-        },
-      ];
+      {
+        key: `${index}-${start}-${end}`,
+        startPosition,
+        endPosition,
+      },
+    ];
   const events: TimelineEvent[] = [
     {
       key: `${index}-start`,
@@ -502,10 +502,10 @@ export function TimeRangeTimeline({
       currentEdit?.edge === edge
         ? currentEdit
         : {
-            edge,
-            initialRange: editableRange,
-            lastRange: editableRange,
-          };
+          edge,
+          initialRange: editableRange,
+          lastRange: editableRange,
+        };
     const currentMinute =
       edge === 'start' ? edit.lastRange.start : edit.lastRange.end;
     const direction = event.key === 'ArrowLeft' ? -1 : 1;
@@ -513,7 +513,7 @@ export function TimeRangeTimeline({
       edit.lastRange,
       edge,
       snapTimelineMinute(currentMinute, normalizedStepMinutes) +
-        direction * normalizedStepMinutes,
+      direction * normalizedStepMinutes,
       normalizedStepMinutes,
       normalizedMinimumRangeMinutes,
     );
@@ -586,7 +586,7 @@ export function TimeRangeTimeline({
       const direction = event.key === 'ArrowLeft' ? -1 : 1;
       return clamp(
         snapTimelineMinute(current, normalizedStepMinutes) +
-          direction * normalizedStepMinutes,
+        direction * normalizedStepMinutes,
         0,
         MINUTES_PER_DAY,
       );
@@ -780,19 +780,6 @@ export function TimeRangeTimeline({
             )}
           </span>
         ))}
-        {rangeLabel && labelPosition !== undefined && (
-          <small
-            className={`time-range-timeline-range-label${getTimelinePositionClass(labelPosition)}`}
-            aria-hidden="true"
-            style={
-              {
-                '--timeline-position': `${labelPosition}%`,
-              } as PositionedStyle
-            }
-          >
-            {rangeLabel}
-          </small>
-        )}
       </span>
     </span>
   );

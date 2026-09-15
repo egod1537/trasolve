@@ -26,7 +26,7 @@
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.88);
   color: #374151;
-  box-shadow: var(--shadow-floating-sm);
+  box-shadow: var(--shadow-map-overlay);
   backdrop-filter: blur(4px);
 }
 
@@ -47,9 +47,7 @@
   border-radius: 50%;
   background: var(--color-primary);
   color: #fff;
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-primary) 45%, transparent),
-    var(--shadow-floating-sm);
+  box-shadow: var(--shadow-map-overlay);
   font-size: 12px;
   font-weight: 650;
 }

@@ -8,6 +8,7 @@ import { tripToView } from '../domain/tripMapping';
 import { useMapUi } from '../hooks/useMapUi';
 import { useSelectedGooglePlace } from '../hooks/useSelectedGooglePlace';
 import { useTripEditController, useTripState } from '../hooks/useTrip';
+import { useTripHistoryShortcuts } from '../hooks/useTripHistoryShortcuts';
 import { LayerPanel } from './layer-panel/LayerPanel';
 import { useMapWorkspaceActions } from './mapWorkspaceActions';
 import { MapViewport } from './viewport/MapViewport';
@@ -20,6 +21,7 @@ export function MapWorkspace({
 }) {
   const { trip, status, error } = useTripState();
   const controller = useTripEditController();
+  useTripHistoryShortcuts(controller);
   const ui = useMapUi(trip);
   const googlePlace = useSelectedGooglePlace();
   const sidebarRef = useRef<HTMLElement>(null);
@@ -37,7 +39,8 @@ export function MapWorkspace({
       ),
     [trip, ui.selectedPolylineAnchor, ui.selectedPolylineId],
   );
-  const mutationBusy = status === 'saving';
+  // Autosave runs in the background; persistence never blocks local editing.
+  const mutationBusy = false;
   const actions = useMapWorkspaceActions(
     controller,
     ui,

@@ -8,7 +8,6 @@ type Props = {
   isLast: boolean;
   selected: boolean;
   detailsOpen?: boolean;
-  disabled: boolean;
   dragging?: boolean;
   dropPosition?: 'before' | 'after' | null;
   previewOffset?: number;
@@ -31,7 +30,6 @@ export function LayerItemShell({
   isLast,
   selected,
   detailsOpen = false,
-  disabled,
   dragging = false,
   dropPosition = null,
   previewOffset = 0,
@@ -48,8 +46,7 @@ export function LayerItemShell({
 
   return (
     <li
-      className={`trip-layer-item trip-${type}-item${isLast ? ' is-last' : ''}${selected ? ' is-selected' : ''}${detailsOpen ? ' is-details-open' : ''}${disabled ? ' is-disabled' : ''}${dragging ? ' is-dragging' : ''}${dropPosition ? ` is-drop-${dropPosition}` : ''}`}
-      aria-disabled={disabled}
+      className={`trip-layer-item trip-${type}-item${isLast ? ' is-last' : ''}${selected ? ' is-selected' : ''}${detailsOpen ? ' is-details-open' : ''}${dragging ? ' is-dragging' : ''}${dropPosition ? ` is-drop-${dropPosition}` : ''}`}
       data-day-id={dayId}
       data-layer-item-key={`${type}:${itemId}`}
       data-place-id={type === 'place' ? itemId : undefined}
@@ -59,7 +56,7 @@ export function LayerItemShell({
       <div
         className="trip-layer-row"
         onContextMenu={(event) => {
-          if (!onOpenDetails || disabled) {
+          if (!onOpenDetails) {
             return;
           }
           const target = event.target;

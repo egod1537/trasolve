@@ -5,6 +5,7 @@ import {
   type CSSProperties,
   type MouseEvent,
 } from 'react';
+import type { PlaceStyle } from '@trasolve/shared';
 import type { useDayReorder } from '../../hooks/useDayReorder';
 import type { LayerSelectionModifiers } from '../../hooks/useMapUi';
 import {
@@ -111,6 +112,7 @@ function layerItemKey(item: LayerItem): string {
 export const DayLayerSection = memo(function DayLayerSection({
   day,
   expanded,
+  placeDropTargetPending,
   active,
   selectedPlaceIds,
   selectedPolylineIds,
@@ -132,6 +134,7 @@ export const DayLayerSection = memo(function DayLayerSection({
   onRenameDay,
   onUpdateDayColor,
   onRenamePlace,
+  onUpdatePlaceStyle,
   onStartPlaceNameEditing,
   onFinishPlaceNameEditing,
   onOpenPlaceDetails,
@@ -154,6 +157,7 @@ export const DayLayerSection = memo(function DayLayerSection({
   dayIndex: number;
   layerItemDayPreviewOffset: number;
   expanded: boolean;
+  placeDropTargetPending: boolean;
   reorder: ReorderControls;
   dayReorder: DayReorderControls;
   dayDropIndicator: 'before' | 'after' | null;
@@ -164,6 +168,7 @@ export const DayLayerSection = memo(function DayLayerSection({
   onRenameDay: (dayId: string, title: string) => void;
   onUpdateDayColor: (dayId: string, color: string) => void;
   onRenamePlace: (placeId: string, name: string) => void;
+  onUpdatePlaceStyle: (placeId: string, style: PlaceStyle) => void;
   onStartPlaceNameEditing: (placeId: string) => void;
   onFinishPlaceNameEditing: (placeId: string) => void;
   onOpenPlaceDetails: (placeId: string) => void;
@@ -238,7 +243,7 @@ export const DayLayerSection = memo(function DayLayerSection({
 
   return (
     <section
-      className={`day-layer-section trip-day${active ? ' is-active' : ''}${visible ? '' : ' is-hidden'}${dayDragging ? ' is-dragging' : ''}${dayDropIndicator ? ` is-day-drop-${dayDropIndicator}` : ''}`}
+      className={`day-layer-section trip-day${active ? ' is-active' : ''}${visible ? '' : ' is-hidden'}${placeDropTargetPending ? ' is-place-drop-target-pending' : ''}${dayDragging ? ' is-dragging' : ''}${dayDropIndicator ? ` is-day-drop-${dayDropIndicator}` : ''}`}
       style={
         {
           '--day-color': day.color,
@@ -273,13 +278,7 @@ export const DayLayerSection = memo(function DayLayerSection({
           {!titleEditing ? (
             <button
               type="button"
-              aria-disabled={!visible}
-              tabIndex={visible ? undefined : -1}
-              onClick={() => {
-                if (visible) {
-                  onActivateDay(day.id);
-                }
-              }}
+              onClick={() => onActivateDay(day.id)}
               aria-pressed={active}
             >
               <span
@@ -307,7 +306,6 @@ export const DayLayerSection = memo(function DayLayerSection({
           expanded={expanded}
           controls={`layers-${day.id}`}
           label={`${day.title} ${expanded ? '접기' : '펼치기'}`}
-          disabled={!visible}
           onClick={() => onToggleExpanded(day.id)}
         />
       </div>
@@ -338,7 +336,6 @@ export const DayLayerSection = memo(function DayLayerSection({
                   (place) => place.id === polyline.toPlaceId,
                 )}
                 selected={selectedPolylineIds.has(polyline.id)}
-                visible={visible}
                 detailsOpen={detailPolylineId === polyline.id}
                 validation={validationByItemKey?.[renderedItem.key]}
                 onSelect={onSelectPolyline}
@@ -374,13 +371,13 @@ export const DayLayerSection = memo(function DayLayerSection({
               index={placeIndex}
               isLast={isLast}
               selected={selectedPlaceIds.has(place.id)}
-              visible={visible}
               editing={editingPlaceId === place.id}
               detailsOpen={detailPlaceId === place.id}
               routeRole={routeRole}
               validation={validationByItemKey?.[renderedItem.key]}
               onSelect={onSelectPlace}
               onRename={onRenamePlace}
+              onUpdatePlaceStyle={onUpdatePlaceStyle}
               onStartNameEditing={onStartPlaceNameEditing}
               onFinishNameEditing={onFinishPlaceNameEditing}
               onOpenDetails={onOpenPlaceDetails}

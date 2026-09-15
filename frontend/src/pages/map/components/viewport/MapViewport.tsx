@@ -12,6 +12,7 @@ import {
 import type {
   PlaceDetails,
   PlaceStyle,
+  RouteOptimizationRequest,
   TripDay,
   TripPlace,
   TripPolyline,
@@ -23,12 +24,9 @@ import type { GeoPoint } from '../../../../map/types/mapTypes';
 import type { SelectedGooglePlace } from '../../domain/selectedGooglePlace';
 import { MapAiRegion } from '../ai/MapAiRegion';
 import { BottomContextPanel } from '../bottom-panel/BottomContextPanel';
-import { LayerBulkActionBar } from '../bottom-panel/LayerBulkActionBar';
 import { MapToolPanel } from '../bottom-panel/MapToolPanel';
-import {
-  RouteOptimizationModal,
-  type RouteOptimizationOptions,
-} from '../bottom-panel/RouteOptimizationModal';
+import { MultiSelectionActionPanel } from '../bottom-panel/MultiSelectionActionPanel';
+import { RouteOptimizationModal } from '../bottom-panel/RouteOptimizationModal';
 import {
   getQuickSearchShortcutLabel,
   QuickSearch,
@@ -63,10 +61,14 @@ type Props = Omit<
   tripMutationBusy: boolean;
   tripMutationError: string | null;
   onCloseTripPlace: () => void;
-  onUpdateTripPlaceTimeRange: (
+  onUpdateTripPlaceVisitTimeRange: (
     placeId: string,
     time: string,
-    durationMinutes: number,
+    visitDurationMinutes: number,
+  ) => Promise<boolean>;
+  onUpdateTripPlacePreferredDuration: (
+    placeId: string,
+    preferredDurationMinutes: number,
   ) => Promise<boolean>;
   onUpdateTripPlaceMemo: (placeId: string, memo: string) => Promise<boolean>;
   onRenameTripPlace: (placeId: string, name: string) => Promise<boolean>;
@@ -83,7 +85,7 @@ type Props = Omit<
   ) => Promise<boolean>;
   onRemoveSelectedPlaces: (placeIds: readonly string[]) => Promise<boolean>;
   onClearSelection: () => void;
-  onOptimizeRoute?: (options: RouteOptimizationOptions) => Promise<void> | void;
+  onOptimizeRoute?: (request: RouteOptimizationRequest) => Promise<void> | void;
 };
 
 type MapDetailTarget =
@@ -153,7 +155,8 @@ export const MapViewport = memo(function MapViewport({
   tripMutationBusy,
   tripMutationError,
   onCloseTripPlace,
-  onUpdateTripPlaceTimeRange,
+  onUpdateTripPlaceVisitTimeRange,
+  onUpdateTripPlacePreferredDuration,
   onUpdateTripPlaceMemo,
   onRenameTripPlace,
   onUpdateTripPlaceStyle,
@@ -289,7 +292,8 @@ export const MapViewport = memo(function MapViewport({
         busy={tripMutationBusy}
         mutationError={tripMutationError}
         onClose={closeTripPlace}
-        onUpdateTimeRange={onUpdateTripPlaceTimeRange}
+        onUpdateVisitTimeRange={onUpdateTripPlaceVisitTimeRange}
+        onUpdatePreferredDuration={onUpdateTripPlacePreferredDuration}
         onUpdateMemo={onUpdateTripPlaceMemo}
         onRename={onRenameTripPlace}
         onUpdateStyle={onUpdateTripPlaceStyle}
@@ -331,24 +335,19 @@ export const MapViewport = memo(function MapViewport({
         overlay={anchoredCard}
       />
       <div className="bottom-map-controls-positioner">
-        <div
-          className={`bottom-map-controls${
-            selectedItemCount >= 2 ? ' has-bulk-selection' : ''
-          }`}
-        >
-          {selectedItemCount >= 2 ? (
-            <LayerBulkActionBar
-              selectedPlaceIds={bulkSelectedPlaceIds}
-              selectedPolylines={bulkSelectedPolylines}
-              busy={tripMutationBusy}
-              mutationError={tripMutationError}
-              onUpdatePolylineModes={onUpdateSelectedPolylineModes}
-              onDeletePlaces={onRemoveSelectedPlaces}
-              onClearSelection={onClearSelection}
-            />
-          ) : (
-            <BottomContextPanel activeDay={activeDay} />
-          )}
+        {selectedItemCount >= 2 && (
+          <MultiSelectionActionPanel
+            selectedPlaceIds={bulkSelectedPlaceIds}
+            selectedPolylines={bulkSelectedPolylines}
+            busy={tripMutationBusy}
+            mutationError={tripMutationError}
+            onUpdatePolylineModes={onUpdateSelectedPolylineModes}
+            onDeletePlaces={onRemoveSelectedPlaces}
+            onClearSelection={onClearSelection}
+          />
+        )}
+        <div className="bottom-map-controls">
+          <BottomContextPanel activeDay={activeDay} />
           <MapToolPanel
             canUndo={false}
             canRedo={false}

@@ -23,7 +23,7 @@
   border: 1px solid var(--color-floating-border);
   border-radius: 8px;
   background: var(--color-floating-surface);
-  box-shadow: var(--shadow-floating-lg);
+  box-shadow: var(--shadow-map-overlay);
 }
 .trip-map-picker-popup header {
   display: flex;

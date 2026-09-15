@@ -1,17 +1,14 @@
 import { useMemo, useState } from 'react';
 import type { TripDay } from '@trasolve/shared';
 
-export function useActiveDay(
-  days: readonly TripDay[],
-  visibleDayIds: ReadonlySet<string>,
-) {
+export function useActiveDay(days: readonly TripDay[]) {
   const [activeDayId, setActiveDayId] = useState<string | null>(
     () => days[0]?.id ?? null,
   );
   const selectedDayId =
-    activeDayId && visibleDayIds.has(activeDayId)
+    activeDayId && days.some((day) => day.id === activeDayId)
       ? activeDayId
-      : (days.find((day) => visibleDayIds.has(day.id))?.id ?? null);
+      : (days[0]?.id ?? null);
 
   return useMemo(
     () => ({ activeDayId, selectedDayId, setActiveDayId }),
