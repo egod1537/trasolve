@@ -4,6 +4,10 @@ import {
   type ApiErrorResponse,
 } from '@trasolve/shared';
 import { TrouteClientError, TrouteHttpError } from './errors.js';
+import {
+  TrouteJobRepository,
+  TrouteJobRepositoryError,
+} from '../internal/troute/trouteJobRepository.js';
 import type { TrouteClient } from './trouteClient.js';
 
 type TrouteApiErrorResponse = ApiErrorResponse & {
@@ -11,7 +15,10 @@ type TrouteApiErrorResponse = ApiErrorResponse & {
 };
 
 export class TrouteHttpService {
-  public constructor(private readonly client: TrouteClient | null) {}
+  public constructor(
+    private readonly client: TrouteClient | null,
+    private readonly jobs: TrouteJobRepository,
+  ) {}
 
   public async handle(
     request: IncomingMessage,
@@ -53,7 +60,9 @@ export class TrouteHttpService {
         );
       }
 
+      this.jobs.create(parsed.data.job_id);
       const result = await this.client.optimize(parsed.data);
+      this.jobs.recordSynchronousResult(parsed.data.job_id, result);
       if (response.destroyed) {
         return;
       }
@@ -133,6 +142,19 @@ export class TrouteHttpService {
   private toHttpError(cause: unknown): TrouteHttpError {
     if (cause instanceof TrouteHttpError) {
       return cause;
+    }
+    if (cause instanceof TrouteJobRepositoryError) {
+      return cause.kind === 'job_already_exists'
+        ? new TrouteHttpError(
+            409,
+            'TROUTE_JOB_ALREADY_EXISTS',
+            '같은 ID의 troute job이 이미 존재합니다.',
+          )
+        : new TrouteHttpError(
+            400,
+            'INVALID_TROUTE_REQUEST',
+            'troute 최적화 요청의 job_id를 확인해 주세요.',
+          );
     }
     if (!(cause instanceof TrouteClientError)) {
       return new TrouteHttpError(

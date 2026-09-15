@@ -15,6 +15,8 @@ import { OpenWebUIModelHttpService } from './ai/openWebUIModelHttpService.js';
 import { TrouteClient } from './troute/trouteClient.js';
 import { TrouteClientError } from './troute/errors.js';
 import { TrouteHttpService } from './troute/trouteHttpService.js';
+import { TrouteInboundHttpService } from './internal/troute/trouteInboundHttpService.js';
+import { TrouteJobRepository } from './internal/troute/trouteJobRepository.js';
 
 // Load configuration before constructing the shared instances, regardless of
 // which backend module imports them first.
@@ -76,7 +78,9 @@ try {
     throw cause;
   }
 }
-const trouteHttp = new TrouteHttpService(troute);
+const trouteJobs = new TrouteJobRepository();
+const trouteHttp = new TrouteHttpService(troute, trouteJobs);
+const trouteInboundHttp = new TrouteInboundHttpService(trouteJobs);
 
 export const API = {
   Route: routes,
@@ -87,4 +91,5 @@ export const API = {
   TripHttp: tripHttp,
   Troute: troute,
   TrouteHttp: trouteHttp,
+  TrouteInboundHttp: trouteInboundHttp,
 };

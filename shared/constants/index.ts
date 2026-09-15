@@ -6,6 +6,8 @@ export const API_ROUTES = {
   chat: '/api/chat',
   openWebUIModels: '/api/openwebui/models',
   trouteOptimize: '/api/troute/optimize',
+  trouteInternalHealth: '/api/internal/troute/health',
+  trouteInternalJobs: '/api/internal/troute/jobs',
   trips: '/api/trips',
   routes: '/api/routes',
   placesAutocomplete: '/api/google/maps/places/autocomplete',

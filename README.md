@@ -89,12 +89,88 @@ upstream 오류 분류를 담당합니다. 요청·응답의 v0 wire 계약은
 ```sh
 curl --fail-with-body -X POST http://127.0.0.1:43127/api/troute/optimize \
   -H 'Content-Type: application/json' \
-  -d '{"locations":[{"id":"place-1","place_id":"GOOGLE_PLACE_ID","open_time":"09:00","close_time":"18:00","stay_minutes":60}],"start_location_id":"place-1","start_time":"09:00"}'
+  -d '{"job_id":"route-example-001","locations":[{"id":"place-1","place_id":"GOOGLE_PLACE_ID","open_time":"09:00","close_time":"18:00","stay_minutes":60}],"start_location_id":"place-1","start_time":"09:00"}'
 ```
 
 현재 troute 서버가 아직 `POST /optimize`를 노출하지 않는 버전이면 gateway는 해당
 upstream HTTP 상태를 정규화된 오류로 반환합니다. 배포 환경에서는 host의
 `TROUTE_BASE_URL`이 backend container에만 전달됩니다.
+
+### troute inbound internal API
+
+반대 방향인 `troute → Trasolve Backend` 서버 간 연동은
+`/api/internal/troute/*` namespace를 전용 계약으로 사용합니다. 브라우저용 Trip API를
+troute 연동 계약으로 직접 노출하지 않습니다.
+
+첫 연결 확인 endpoint는 `GET /api/internal/troute/health`입니다.
+
+```json
+{"status":"ok","service":"trasolve"}
+```
+
+GET 이외의 method는 `Allow: GET`과 정규화된 JSON 오류를 포함한 HTTP 405를 반환합니다.
+이 endpoint는 연결 확인만 담당하며 browser cookie에 의존하지 않습니다. 인증 방식과
+Trip/Place 조회는 후속 작업으로 미룹니다.
+
+`POST /api/troute/optimize` 요청의 `job_id`는 공백이 아닌 최대 128자의 opaque 문자열입니다.
+Backend는 troute 호출 전에 해당 ID의 in-memory job을 `pending`, progress `0`으로 만들며,
+이미 사용 중인 ID는 재사용하지 않습니다. troute는 아래 callback으로 같은 ID를 돌려줍니다.
+
+```text
+POST /api/internal/troute/jobs/{job_id}/events
+GET  /api/internal/troute/jobs/{job_id}
+```
+
+공통 event envelope는 `{ "sequence": 1, "type": "progress", "data": {} }`이고 sequence는
+job마다 1부터 빈틈없이 증가합니다. 동일 sequence와 내용의 재전송은 한 번만 저장되는
+idempotent retry로 처리합니다.
+
+Progress payload의 `status`는 `queued | running`, `stage`는 아래 허용값 중 하나입니다.
+
+- `accepted`
+- `building_matrix`
+- `solving`
+- `scheduling`
+
+`progress`는 정수 `0..100`이며 감소할 수 없습니다. 첫 progress event부터 job의 파생 상태는
+`running`입니다. 첫 progress 이후의 event payload status는 `running`이어야 합니다.
+선택적인 `message`는 최대 1024자의 표시·진단용 텍스트이며 프로그램 로직의 근거로 쓰지
+않습니다.
+
+Error payload는 `code`, `message`, 선택적인 `detail`로 구성됩니다. `code`는 최대 128자의
+대문자 snake-case 식별자이고 message는 최대 1024자, 진단 전용 detail은 최대 4096자입니다.
+Error event를 받으면 job은 `failed` terminal 상태가 됩니다. 이후 새 progress/error/result는
+HTTP 409 `TROUTE_JOB_TERMINAL`로 거절하며, 이미 수락한 event의 정확한 재전송만 허용합니다.
+조회 응답은 `status`, `stage`, `progress`, `last_message`, `error`, `result`, `diagnostic`,
+`events`를 포함합니다.
+현재 저장소는 프로세스 메모리 전용이며 재시작 시 초기화됩니다.
+
+Result event의 `data`는 별도 schema를 만들지 않고 동기 `POST /optimize` 응답과 같은
+`trouteOptimizeResponseSchema`를 사용합니다. route는 한 개 이상의 stop을 포함하고 시간은
+기존과 동일한 `HH:MM` 형식입니다. 유효한 result callback을 받으면 job은 `completed`,
+progress `100`, stage `null`이 되며 error를 비우고 결과를 저장합니다. `completed`도 terminal
+상태이므로 정확한 idempotent retry 외의 후속 event는 거절합니다.
+
+전환 기간에는 troute의 동기 optimize 응답과 result callback이 함께 도착할 수 있습니다.
+동기 응답은 기존처럼 브라우저 요청에 직접 반환하고, callback 결과는 job record와 event
+history에 저장합니다. 두 결과는 같은 schema로 정규화한 canonical JSON을 비교합니다.
+일치하지 않으면 callback 결과를 덮어쓰지 않고 job의 `diagnostic.code`에
+`RESULT_MISMATCH`를 기록하며 backend 로그에도 남깁니다. callback이 먼저 도착해도 나중에
+동기 응답을 받을 때 같은 비교를 수행하며 이미 반환된 사용자 응답을 소급해 실패시키지 않습니다.
+
+`/testbed/troute`는 요청의 job ID를 표시하고 pending/running 동안 약 1초마다 조회합니다.
+failed/completed 상태에서는 polling을 중단합니다. production 지도 UI, SSE, WebSocket에는
+아직 연결하지 않습니다. 완료된 callback 결과의 최종 경로, 총 이동 시간과 raw job/event
+상태는 testbed에서 확인할 수 있습니다.
+
+다음 경로는 namespace 확장 방향일 뿐 현재 구현된 API가 아닙니다.
+
+- `GET /api/internal/troute/trips/:tripId`
+- `GET /api/internal/troute/places/:placeId`
+
+```sh
+curl -i http://127.0.0.1:43127/api/internal/troute/health
+```
 
 ### Google Maps
 

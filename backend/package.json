@@ -8,6 +8,7 @@
     "dev": "node --watch --import tsx src/index.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tsconfig.test.json --noEmit && node --import tsx --test test/trouteInboundHttpService.test.ts",
     "start": "node dist/index.js"
   },
   "dependencies": {

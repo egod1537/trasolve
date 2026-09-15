@@ -68,6 +68,14 @@ const server = createServer((request, response) => {
   }
 
   if (
+    pathname === API_ROUTES.trouteInternalHealth ||
+    pathname.startsWith(`${API_ROUTES.trouteInternalJobs}/`)
+  ) {
+    void API.TrouteInboundHttp.handle(request, response, pathname);
+    return;
+  }
+
+  if (
     pathname === API_ROUTES.googleOAuthStart ||
     pathname === API_ROUTES.googleOAuthCallback ||
     pathname === API_ROUTES.googleOAuthResult

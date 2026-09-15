@@ -1,11 +1,14 @@
 import {
   API_ROUTES,
+  trouteJobStateSchema,
   trouteOptimizeResponseSchema,
+  type TrouteJobState,
   type TrouteOptimizeRequest,
   type TrouteOptimizeResponse,
 } from '@trasolve/shared';
 
 const REQUEST_TIMEOUT_MS = 35_000;
+const JOB_INSPECTION_TIMEOUT_MS = 5_000;
 
 export type TrouteGatewayResult = {
   httpStatus: number;
@@ -27,6 +30,29 @@ export class TrouteNetworkError extends Error {
     super(message);
     this.name = 'TrouteNetworkError';
   }
+}
+
+export async function getTrouteJob(
+  jobId: string,
+  signal?: AbortSignal,
+): Promise<TrouteJobState> {
+  const timeout = AbortSignal.timeout(JOB_INSPECTION_TIMEOUT_MS);
+  const requestSignal = signal ? AbortSignal.any([signal, timeout]) : timeout;
+  const response = await fetch(
+    `${API_ROUTES.trouteInternalJobs}/${encodeURIComponent(jobId)}`,
+    { signal: requestSignal },
+  );
+  if (!response.ok) {
+    throw new Error(
+      `troute job 조회가 HTTP ${response.status}로 실패했습니다.`,
+    );
+  }
+
+  const parsed = trouteJobStateSchema.safeParse(await response.json());
+  if (!parsed.success) {
+    throw new Error('troute job 조회 응답 형식이 올바르지 않습니다.');
+  }
+  return parsed.data;
 }
 
 export async function optimizeRouteWithTroute(

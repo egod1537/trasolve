@@ -1,301 +1,522 @@
-import { Component, useState } from 'react';
+import { Component, useEffect, useState } from 'react';
+import {
+  Alignment,
+  Button,
+  ButtonGroup,
+  Callout,
+  Card,
+  Classes,
+  Divider,
+  Intent,
+  Navbar,
+  NavbarDivider,
+  NavbarGroup,
+  NavbarHeading,
+  Tag,
+  TextArea,
+} from '@blueprintjs/core';
 import {
   API_ROUTES,
+  isTrouteJobTerminalStatus,
   trouteOptimizeRequestSchema,
+  type TrouteJobState,
   type TrouteOptimizeRequest,
   type TrouteOptimizeResponse,
 } from '@trasolve/shared';
 import { checkApiHealth } from '../../api/health';
 import {
+  getTrouteJob,
   optimizeRouteWithTroute,
   TrouteNetworkError,
   type TrouteGatewayResult,
 } from '../../api/troute';
-import './styles/testbed.css';
+import '@blueprintjs/core/lib/css/blueprint.css';
 import './styles/troute-test.css';
 
-const sampleRequest: TrouteOptimizeRequest = {
-  locations: [
-    {
-      id: 'start',
-      place_id: 'SAMPLE_PLACE_ID_1',
-      open_time: '09:00',
-      close_time: '18:00',
-      stay_minutes: 60,
-    },
-    {
-      id: 'place-2',
-      place_id: 'SAMPLE_PLACE_ID_2',
-      open_time: '10:00',
-      close_time: '19:00',
-      stay_minutes: 90,
-    },
-  ],
-  start_location_id: 'start',
-  start_time: '09:00',
+type HealthState = 'checking' | 'online' | 'offline';
+
+type ValidationState = {
+  valid: boolean;
+  message: string;
 };
 
-const sampleRequestText = JSON.stringify(sampleRequest, null, 2);
-
-type RequestPhase =
-  | 'idle'
-  | 'invalid_json'
-  | 'invalid_request'
-  | 'loading'
-  | 'success'
-  | 'client_error'
-  | 'server_error'
-  | 'invalid_response'
-  | 'network_error';
-
-type HealthState = 'idle' | 'checking' | 'reachable' | 'unreachable';
-
-type CompletedAttempt = {
-  result: TrouteGatewayResult | null;
-  requestBody: string;
-  requestedAt: Date;
-  networkDurationMs?: number;
+type InspectionTarget = {
+  jobId: string;
 };
+
+function createSampleRequestText(): string {
+  const sampleRequest: TrouteOptimizeRequest = {
+    job_id: `route-testbed-${crypto.randomUUID()}`,
+    locations: [
+      {
+        id: 'start',
+        place_id: 'SAMPLE_PLACE_ID_1',
+        open_time: '09:00',
+        close_time: '18:00',
+        stay_minutes: 60,
+      },
+      {
+        id: 'place-2',
+        place_id: 'SAMPLE_PLACE_ID_2',
+        open_time: '10:00',
+        close_time: '19:00',
+        stay_minutes: 90,
+      },
+    ],
+    start_location_id: 'start',
+    start_time: '09:00',
+  };
+  return JSON.stringify(sampleRequest, null, 2);
+}
 
 function TrouteTestContent() {
-  const [editorText, setEditorText] = useState(sampleRequestText);
-  const [phase, setPhase] = useState<RequestPhase>('idle');
-  const [error, setError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState<CompletedAttempt | null>(null);
-  const [healthState, setHealthState] = useState<HealthState>('idle');
+  const [input, setInput] = useState(createSampleRequestText);
+  const [health, setHealth] = useState<HealthState>('checking');
+  const [busy, setBusy] = useState(false);
+  const [validation, setValidation] = useState<ValidationState | null>(null);
+  const [error, setError] = useState('');
+  const [response, setResponse] = useState<TrouteGatewayResult | null>(null);
+  const [networkDurationMs, setNetworkDurationMs] = useState<number | null>(
+    null,
+  );
+  const [inspectionTarget, setInspectionTarget] =
+    useState<InspectionTarget | null>(null);
+  const [job, setJob] = useState<TrouteJobState | null>(null);
+  const [jobInspectionError, setJobInspectionError] = useState('');
+  const [copied, setCopied] = useState(false);
 
-  const checkBackend = async () => {
-    if (healthState === 'checking') {
+  async function refreshHealth(): Promise<void> {
+    setHealth('checking');
+    setHealth(await getHealthState());
+  }
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void getHealthState(controller.signal).then((nextHealth) => {
+      if (!controller.signal.aborted) {
+        setHealth(nextHealth);
+      }
+    });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!inspectionTarget) {
       return;
     }
-    setHealthState('checking');
-    try {
-      setHealthState(
-        (await checkApiHealth(AbortSignal.timeout(5_000)))
-          ? 'reachable'
-          : 'unreachable',
-      );
-    } catch {
-      setHealthState('unreachable');
-    }
-  };
 
-  const sendRequest = async () => {
-    if (phase === 'loading') {
-      return;
-    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const controller = new AbortController();
+    const poll = async () => {
+      try {
+        const nextJob = await getTrouteJob(
+          inspectionTarget.jobId,
+          controller.signal,
+        );
+        setJob(nextJob);
+        setJobInspectionError('');
+        if (isTrouteJobTerminalStatus(nextJob.status)) {
+          return;
+        }
+      } catch (cause) {
+        if (controller.signal.aborted) {
+          return;
+        }
+        setJobInspectionError(
+          cause instanceof Error
+            ? cause.message
+            : 'troute job 상태를 조회할 수 없습니다.',
+        );
+        return;
+      }
+      timer = setTimeout(() => void poll(), 1_000);
+    };
 
+    timer = setTimeout(() => void poll(), 1_000);
+    return () => {
+      controller.abort();
+      if (timer !== undefined) {
+        clearTimeout(timer);
+      }
+    };
+  }, [inspectionTarget]);
+
+  function validate(): TrouteOptimizeRequest | null {
     let json: unknown;
     try {
-      json = JSON.parse(editorText) as unknown;
+      json = JSON.parse(input) as unknown;
     } catch (cause) {
-      setPhase('invalid_json');
-      setError(
-        `JSON 파싱 오류: ${cause instanceof Error ? cause.message : '올바른 JSON인지 확인해 주세요.'}`,
-      );
-      return;
+      setValidation({
+        valid: false,
+        message: `JSON parsing failed: ${cause instanceof Error ? cause.message : 'Check that the editor contains valid JSON.'}`,
+      });
+      return null;
     }
 
     const parsed = trouteOptimizeRequestSchema.safeParse(json);
     if (!parsed.success) {
-      setPhase('invalid_request');
-      setError(
-        `요청 검증 오류: ${parsed.error.issues
+      setValidation({
+        valid: false,
+        message: `Request validation failed: ${parsed.error.issues
           .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
           .join('; ')}`,
-      );
+      });
+      return null;
+    }
+
+    setValidation({ valid: true, message: 'Valid' });
+    return parsed.data;
+  }
+
+  async function run(): Promise<void> {
+    if (busy) {
       return;
     }
 
-    const request = json as TrouteOptimizeRequest;
-    const requestedAt = new Date();
-    setPhase('loading');
-    setError(null);
+    const request = validate();
+    if (!request) {
+      return;
+    }
+
+    setBusy(true);
+    setError('');
+    setResponse(null);
+    setNetworkDurationMs(null);
+    setJob(null);
+    setJobInspectionError('');
+    setCopied(false);
+    setInspectionTarget({ jobId: request.job_id });
 
     try {
       const result = await optimizeRouteWithTroute(request);
-      setHealthState('reachable');
-      setAttempt({ result, requestBody: result.requestBody, requestedAt });
+      setHealth('online');
+      setResponse(result);
+      try {
+        const reconciledJob = await getTrouteJob(request.job_id);
+        setJob(reconciledJob);
+        setJobInspectionError('');
+      } catch {
+        // The polling request reports inspection failures in the response card.
+      }
+
       if (result.httpStatus >= 400) {
-        setPhase(result.httpStatus < 500 ? 'client_error' : 'server_error');
         setError(describeHttpError(result));
       } else if (!result.optimization) {
-        setPhase('invalid_response');
         setError(
-          `응답 검증 오류: ${result.responseValidationError ?? '성공 응답이 troute 계약과 일치하지 않습니다.'}`,
+          `Response validation failed: ${result.responseValidationError ?? 'The success response does not match the troute contract.'}`,
         );
-      } else {
-        setPhase('success');
       }
     } catch (cause) {
-      setHealthState('unreachable');
-      const requestBody =
-        cause instanceof TrouteNetworkError
-          ? cause.requestBody
-          : JSON.stringify(request);
-      setAttempt({
-        result: null,
-        requestBody,
-        requestedAt,
-        ...(cause instanceof TrouteNetworkError
-          ? { networkDurationMs: cause.durationMs }
-          : {}),
-      });
-      setPhase('network_error');
+      if (cause instanceof TrouteNetworkError) {
+        setNetworkDurationMs(cause.durationMs);
+      }
+      setHealth('offline');
       setError(
         cause instanceof Error
           ? cause.message
           : 'Trasolve backend 요청 중 알 수 없는 오류가 발생했습니다.',
       );
+    } finally {
+      setBusy(false);
     }
-  };
+  }
 
-  const status = requestStatus(phase);
-  const latency = attempt?.result?.durationMs ?? attempt?.networkDurationMs;
+  const finalOptimization = job?.result ?? response?.optimization;
+  const visibleError =
+    error || (job?.error ? describeJobError(job) : '') || jobInspectionError;
+  const raw = response ? formatRawResponse(response) : '';
+  const healthLabel =
+    health === 'online'
+      ? 'Online'
+      : health === 'offline'
+        ? 'Offline'
+        : 'Checking';
 
   return (
-    <main className="testbed-page troute-test-page">
-      <header className="testbed-header">
-        <a href="/testbed">← 테스트베드 목록</a>
-        <h1>troute Integration Test</h1>
-        <p>Trasolve Backend → troute integration testbed</p>
-      </header>
-
-      <section className="troute-status-panel" aria-labelledby="status-title">
-        <div className="troute-section-heading">
-          <div>
-            <h2 id="status-title">연결 및 요청 상태</h2>
-            <code>POST {API_ROUTES.trouteOptimize}</code>
-          </div>
-          <button
-            type="button"
-            disabled={healthState === 'checking'}
-            onClick={() => void checkBackend()}
+    <div className="app-shell troute-testbed-shell">
+      <Navbar className="app-navbar">
+        <NavbarGroup align={Alignment.START}>
+          <Button
+            aria-label="Back to testbed index"
+            title="Back to testbed index"
+            icon="arrow-left"
+            variant="minimal"
+            onClick={() => window.location.assign('/testbed')}
+          />
+          <NavbarHeading>trasolve testbed</NavbarHeading>
+          <NavbarDivider />
+          <code className={`${Classes.MONOSPACE_TEXT} navbar-endpoint`}>
+            /api · POST {API_ROUTES.trouteOptimize}
+          </code>
+        </NavbarGroup>
+        <NavbarGroup align={Alignment.END}>
+          <span className={Classes.TEXT_MUTED}>API</span>
+          <Tag
+            aria-label={`API ${healthLabel}`}
+            icon={
+              health === 'online'
+                ? 'tick-circle'
+                : health === 'offline'
+                  ? 'error'
+                  : 'time'
+            }
+            intent={healthIntent(health)}
+            minimal
           >
-            {healthState === 'checking' ? '확인 중…' : 'Backend 상태 확인'}
-          </button>
-        </div>
-        <dl className="troute-status-grid">
-          <div>
-            <dt>Backend</dt>
-            <dd data-state={healthState}>{healthLabel(healthState)}</dd>
-          </div>
-          <div>
-            <dt>요청 상태</dt>
-            <dd data-state={phase}>{status}</dd>
-          </div>
-          <div>
-            <dt>최신 HTTP 상태</dt>
-            <dd>
-              {attempt?.result
-                ? `${attempt.result.httpStatus} ${attempt.result.statusText}`.trim()
-                : '—'}
-            </dd>
-          </div>
-          <div>
-            <dt>브라우저 왕복 latency</dt>
-            <dd>{latency === undefined ? '—' : `${latency.toFixed(1)} ms`}</dd>
-          </div>
-          <div>
-            <dt>최신 요청 시각</dt>
-            <dd>{attempt ? attempt.requestedAt.toLocaleString() : '—'}</dd>
-          </div>
-        </dl>
-      </section>
+            {healthLabel}
+          </Tag>
+          <Button
+            aria-label="Refresh API health"
+            title="Refresh API health"
+            icon="refresh"
+            loading={health === 'checking'}
+            disabled={busy || health === 'checking'}
+            variant="minimal"
+            onClick={() => void refreshHealth()}
+          />
+        </NavbarGroup>
+      </Navbar>
 
-      <section className="troute-editor-panel" aria-labelledby="editor-title">
-        <div className="troute-section-heading">
-          <div>
-            <h2 id="editor-title">요청 편집기</h2>
-            <p>표시된 JSON을 그대로 파싱해 Trasolve backend로 전송합니다.</p>
+      <main className="playground">
+        <Card className="workspace-card request-card" elevation={1} compact>
+          <div className="card-heading">
+            <h1 className={Classes.HEADING}>Request</h1>
+            <ButtonGroup size="small" variant="minimal">
+              <Button
+                icon="code"
+                disabled={busy}
+                onClick={() => {
+                  const parsed = validate();
+                  if (parsed) {
+                    setInput(JSON.stringify(parsed, null, 2));
+                  }
+                }}
+              >
+                Format
+              </Button>
+              <Button
+                icon="reset"
+                disabled={busy}
+                onClick={() => {
+                  setInput(createSampleRequestText());
+                  setValidation(null);
+                }}
+              >
+                Reset sample
+              </Button>
+            </ButtonGroup>
           </div>
-          <div className="troute-actions">
-            <button
-              type="button"
-              disabled={phase === 'loading'}
-              onClick={() => setEditorText(sampleRequestText)}
-            >
-              샘플 복원
-            </button>
-            <button
-              className="troute-primary-action"
-              type="button"
-              disabled={phase === 'loading'}
-              onClick={() => void sendRequest()}
-            >
-              {phase === 'loading' ? '요청 중…' : '요청 보내기'}
-            </button>
+          <Divider />
+
+          <div className="request-content">
+            <TextArea
+              aria-label="Request JSON"
+              className="json-editor"
+              fill
+              intent={
+                validation && !validation.valid ? Intent.DANGER : Intent.NONE
+              }
+              spellCheck={false}
+              autoCapitalize="off"
+              value={input}
+              onChange={(event) => {
+                setInput(event.target.value);
+                setValidation(null);
+              }}
+            />
+
+            {validation && !validation.valid ? (
+              <Callout
+                compact
+                intent={Intent.DANGER}
+                role="alert"
+                title="Invalid request"
+              >
+                {validation.message}
+              </Callout>
+            ) : null}
+
+            <div className="request-actions">
+              <div aria-live="polite">
+                {validation?.valid ? (
+                  <Tag icon="tick" intent={Intent.SUCCESS} minimal>
+                    Valid
+                  </Tag>
+                ) : null}
+              </div>
+              <ButtonGroup>
+                <Button icon="tick" disabled={busy} onClick={validate}>
+                  Validate
+                </Button>
+                <Button
+                  icon="play"
+                  intent={Intent.PRIMARY}
+                  loading={busy}
+                  disabled={busy}
+                  onClick={() => void run()}
+                >
+                  Run
+                </Button>
+              </ButtonGroup>
+            </div>
           </div>
-        </div>
-        <textarea
-          aria-label="troute 최적화 요청 JSON"
-          spellCheck={false}
-          value={editorText}
-          onChange={(event) => setEditorText(event.target.value)}
-        />
-      </section>
+        </Card>
 
-      {error ? (
-        <section className="troute-error-panel" role="alert">
-          <h2>오류</h2>
-          <p>{error}</p>
-        </section>
-      ) : null}
+        <Card className="workspace-card response-card" elevation={1} compact>
+          <div className="card-heading">
+            <h1 className={Classes.HEADING}>Response</h1>
+            <div className="response-metadata" aria-live="polite">
+              {response ? (
+                <>
+                  <Tag intent={statusIntent(response.httpStatus)}>
+                    HTTP {response.httpStatus}
+                  </Tag>
+                  <Tag icon="stopwatch" minimal>
+                    {response.durationMs.toFixed(1)} ms
+                  </Tag>
+                </>
+              ) : networkDurationMs !== null ? (
+                <>
+                  <Tag intent={Intent.DANGER}>Network error</Tag>
+                  <Tag icon="stopwatch" minimal>
+                    {networkDurationMs.toFixed(1)} ms
+                  </Tag>
+                </>
+              ) : (
+                <span className={Classes.TEXT_MUTED}>No response yet</span>
+              )}
+            </div>
+          </div>
+          <Divider />
 
-      <OptimizationSummary optimization={attempt?.result?.optimization} />
+          <div className="response-content">
+            {job || inspectionTarget ? (
+              <JobStatus job={job} jobId={inspectionTarget?.jobId ?? null} />
+            ) : null}
 
-      <div className="troute-debug-grid">
-        <DebugBody
-          title="실제 전송 요청"
-          empty="아직 전송한 요청이 없습니다."
-          value={attempt?.requestBody}
-        />
-        <DebugBody
-          title="Raw 응답"
-          empty={
-            attempt?.result === null
-              ? 'HTTP 응답을 받지 못했습니다.'
-              : '아직 받은 응답이 없습니다.'
-          }
-          value={attempt?.result?.rawResponse}
-        />
-      </div>
-    </main>
+            {visibleError ? (
+              <Callout
+                compact
+                intent={Intent.DANGER}
+                role="alert"
+                title="Request failed"
+              >
+                {visibleError}
+              </Callout>
+            ) : null}
+
+            {finalOptimization ? (
+              <>
+                <RouteSummary optimization={finalOptimization} />
+                <Divider />
+              </>
+            ) : null}
+
+            <section className="raw-response" aria-labelledby="raw-title">
+              <div className="raw-heading">
+                <h2 id="raw-title" className={Classes.HEADING}>
+                  Raw response
+                </h2>
+                <Button
+                  icon={copied ? 'tick' : 'clipboard'}
+                  intent={copied ? Intent.SUCCESS : Intent.NONE}
+                  variant="minimal"
+                  size="small"
+                  disabled={!response}
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(raw);
+                      setCopied(true);
+                    } catch {
+                      setError(
+                        'Copy failed. Select and copy the response manually.',
+                      );
+                    }
+                  }}
+                >
+                  {copied ? 'Copied' : 'Copy'}
+                </Button>
+              </div>
+              <pre
+                className={`${Classes.CODE_BLOCK} raw-output`}
+                aria-label="Raw API response"
+                aria-busy={busy}
+              >
+                {response
+                  ? raw || '(empty body)'
+                  : busy
+                    ? 'Waiting for the API…'
+                    : 'No response yet.'}
+              </pre>
+            </section>
+
+            {job ? (
+              <details className="job-state-details">
+                <summary>Raw job state</summary>
+                <pre className={Classes.CODE_BLOCK}>
+                  {JSON.stringify(job, null, 2)}
+                </pre>
+              </details>
+            ) : null}
+          </div>
+        </Card>
+      </main>
+    </div>
   );
 }
 
-function OptimizationSummary({
+function JobStatus({
+  job,
+  jobId,
+}: {
+  job: TrouteJobState | null;
+  jobId: string | null;
+}) {
+  return (
+    <section className="job-status" aria-label="Troute job status">
+      <code className={Classes.MONOSPACE_TEXT}>{jobId}</code>
+      <div>
+        <Tag intent={jobStatusIntent(job?.status)} minimal>
+          {job?.status ?? 'pending'}
+        </Tag>
+        {job?.stage ? <Tag minimal>{job.stage}</Tag> : null}
+        <Tag minimal>{job?.progress ?? 0}%</Tag>
+      </div>
+    </section>
+  );
+}
+
+function RouteSummary({
   optimization,
 }: {
-  optimization: TrouteOptimizeResponse | null | undefined;
+  optimization: TrouteOptimizeResponse;
 }) {
-  if (!optimization) {
-    return null;
-  }
-
   return (
-    <section className="troute-summary-panel" aria-labelledby="summary-title">
-      <div className="troute-section-heading">
-        <h2 id="summary-title">최적화 응답 요약</h2>
-        <dl>
-          <div>
-            <dt>총 이동 시간</dt>
-            <dd>{optimization.total_travel_minutes}분</dd>
+    <section className="route-summary" aria-labelledby="route-title">
+      <div className="route-overview">
+        <div>
+          <h2 id="route-title" className={Classes.HEADING}>
+            Route
+          </h2>
+          <div aria-label="Visit order">
+            {optimization.route.map((stop) => stop.location_id).join(' → ')}
           </div>
-          <div>
-            <dt>경로 길이</dt>
-            <dd>{optimization.route.length}</dd>
-          </div>
-        </dl>
+        </div>
+        <div>
+          <span className={Classes.TEXT_MUTED}>Total travel</span>
+          <strong>{optimization.total_travel_minutes} min</strong>
+        </div>
       </div>
-      <div className="troute-table-scroll">
-        <table>
+      <div className="table-scroll">
+        <table
+          className={`${Classes.HTML_TABLE} ${Classes.HTML_TABLE_BORDERED} ${Classes.HTML_TABLE_STRIPED}`}
+        >
           <thead>
             <tr>
-              <th>order</th>
-              <th>location_id</th>
-              <th>arrival_time</th>
-              <th>departure_time</th>
+              <th>Order</th>
+              <th>Location</th>
+              <th>Arrival</th>
+              <th>Departure</th>
             </tr>
           </thead>
           <tbody>
@@ -314,21 +535,57 @@ function OptimizationSummary({
   );
 }
 
-function DebugBody({
-  title,
-  empty,
-  value,
-}: {
-  title: string;
-  empty: string;
-  value: string | undefined;
-}) {
-  return (
-    <section className="troute-debug-panel">
-      <h2>{title}</h2>
-      {value === undefined ? <p>{empty}</p> : <pre>{value || '(빈 본문)'}</pre>}
-    </section>
-  );
+function healthIntent(health: HealthState): Intent {
+  if (health === 'online') {
+    return Intent.SUCCESS;
+  }
+  if (health === 'offline') {
+    return Intent.DANGER;
+  }
+  return Intent.PRIMARY;
+}
+
+async function getHealthState(signal?: AbortSignal): Promise<HealthState> {
+  try {
+    const timeout = AbortSignal.timeout(5_000);
+    const requestSignal = signal ? AbortSignal.any([signal, timeout]) : timeout;
+    return (await checkApiHealth(requestSignal)) ? 'online' : 'offline';
+  } catch {
+    return 'offline';
+  }
+}
+
+function statusIntent(status: number): Intent {
+  if (status >= 500) {
+    return Intent.DANGER;
+  }
+  if (status >= 400) {
+    return Intent.WARNING;
+  }
+  if (status >= 200 && status < 300) {
+    return Intent.SUCCESS;
+  }
+  return Intent.NONE;
+}
+
+function jobStatusIntent(status: TrouteJobState['status'] | undefined): Intent {
+  if (status === 'completed') {
+    return Intent.SUCCESS;
+  }
+  if (status === 'failed') {
+    return Intent.DANGER;
+  }
+  return Intent.PRIMARY;
+}
+
+function formatRawResponse(result: TrouteGatewayResult): string {
+  if (result.responseBody === null) {
+    return result.rawResponse;
+  }
+  if (typeof result.responseBody === 'string') {
+    return result.rawResponse;
+  }
+  return JSON.stringify(result.responseBody, null, 2);
 }
 
 function describeHttpError(result: TrouteGatewayResult): string {
@@ -355,29 +612,13 @@ function describeHttpError(result: TrouteGatewayResult): string {
   return `Trasolve backend가 HTTP ${result.httpStatus} 응답을 반환했습니다.`;
 }
 
-function requestStatus(phase: RequestPhase): string {
-  const labels: Record<RequestPhase, string> = {
-    idle: '대기',
-    invalid_json: 'JSON 오류',
-    invalid_request: '요청 검증 오류',
-    loading: '요청 중',
-    success: '성공',
-    client_error: 'Backend 4xx',
-    server_error: 'Backend 5xx',
-    invalid_response: '응답 검증 오류',
-    network_error: '네트워크 오류',
-  };
-  return labels[phase];
-}
-
-function healthLabel(state: HealthState): string {
-  const labels: Record<HealthState, string> = {
-    idle: '확인 전',
-    checking: '확인 중',
-    reachable: '연결 가능',
-    unreachable: '연결 실패',
-  };
-  return labels[state];
+function describeJobError(job: TrouteJobState): string {
+  if (!job.error) {
+    return '';
+  }
+  return [job.error.code, job.error.message, job.error.detail]
+    .filter(Boolean)
+    .join(' · ');
 }
 
 export default class TrouteTestPage extends Component {

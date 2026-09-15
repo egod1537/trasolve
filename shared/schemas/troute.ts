@@ -7,6 +7,86 @@ const nonEmptyStringSchema = z
   .min(1)
   .max(512)
   .refine((value) => value.trim().length > 0);
+const humanMessageSchema = z
+  .string()
+  .min(1)
+  .max(1024)
+  .refine((value) => value.trim().length > 0);
+
+export const trouteJobIdSchema = z
+  .string()
+  .min(1)
+  .max(128)
+  .refine((value) => value.trim().length > 0);
+
+export const trouteProgressStatusSchema = z.enum(['queued', 'running']);
+export const trouteProgressStageSchema = z.enum([
+  'accepted',
+  'building_matrix',
+  'solving',
+  'scheduling',
+]);
+export const trouteJobStatusSchema = z.enum([
+  'pending',
+  'running',
+  'failed',
+  'completed',
+]);
+
+export const trouteProgressPayloadSchema = z
+  .strictObject({
+    status: trouteProgressStatusSchema,
+    stage: trouteProgressStageSchema,
+    progress: z.number().int().min(0).max(100),
+    message: humanMessageSchema.optional(),
+  })
+  .superRefine((payload, context) => {
+    if (payload.stage !== 'accepted' && payload.status !== 'running') {
+      context.addIssue({
+        code: 'custom',
+        message: 'Progress after the accepted stage must be running.',
+        path: ['status'],
+      });
+    }
+  });
+
+export const trouteErrorPayloadSchema = z.strictObject({
+  code: z
+    .string()
+    .min(1)
+    .max(128)
+    .regex(/^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$/),
+  message: humanMessageSchema,
+  detail: z.string().max(4096).optional(),
+});
+
+const trouteEventSequenceSchema = z.number().int().min(1).max(MAX_U32);
+
+export const trouteProgressEventSchema = z.strictObject({
+  sequence: trouteEventSequenceSchema,
+  type: z.literal('progress'),
+  data: trouteProgressPayloadSchema,
+});
+
+export const trouteErrorEventSchema = z.strictObject({
+  sequence: trouteEventSequenceSchema,
+  type: z.literal('error'),
+  data: trouteErrorPayloadSchema,
+});
+
+export const trouteJobEventAcceptedResponseSchema = z.strictObject({
+  status: z.literal('accepted'),
+});
+
+export const trouteJobDiagnosticSchema = z.strictObject({
+  code: z.literal('RESULT_MISMATCH'),
+});
+
+export function isTrouteJobTerminalStatus(
+  status: z.infer<typeof trouteJobStatusSchema>,
+): boolean {
+  return status === 'failed' || status === 'completed';
+}
 
 export const trouteLocationSchema = z.strictObject({
   id: nonEmptyStringSchema,
@@ -18,6 +98,7 @@ export const trouteLocationSchema = z.strictObject({
 
 export const trouteOptimizeRequestSchema = z
   .strictObject({
+    job_id: trouteJobIdSchema,
     locations: z.array(trouteLocationSchema).min(1).max(500),
     start_location_id: nonEmptyStringSchema,
     start_time: timeOfDaySchema,
@@ -62,4 +143,28 @@ export const trouteRouteStopSchema = z.object({
 export const trouteOptimizeResponseSchema = z.object({
   route: z.array(trouteRouteStopSchema).min(1),
   total_travel_minutes: z.number().int().min(0).max(MAX_U32),
+});
+
+export const trouteResultEventSchema = z.strictObject({
+  sequence: trouteEventSequenceSchema,
+  type: z.literal('result'),
+  data: trouteOptimizeResponseSchema,
+});
+
+export const trouteJobEventSchema = z.discriminatedUnion('type', [
+  trouteProgressEventSchema,
+  trouteErrorEventSchema,
+  trouteResultEventSchema,
+]);
+
+export const trouteJobStateSchema = z.strictObject({
+  job_id: trouteJobIdSchema,
+  status: trouteJobStatusSchema,
+  stage: trouteProgressStageSchema.nullable(),
+  progress: z.number().int().min(0).max(100),
+  last_message: humanMessageSchema.nullable(),
+  error: trouteErrorPayloadSchema.nullable(),
+  result: trouteOptimizeResponseSchema.nullable(),
+  diagnostic: trouteJobDiagnosticSchema.nullable(),
+  events: z.array(trouteJobEventSchema),
 });

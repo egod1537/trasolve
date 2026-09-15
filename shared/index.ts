@@ -125,15 +125,41 @@ export type {
 } from './types/openwebui.js';
 
 export {
+  isTrouteJobTerminalStatus,
+  trouteErrorEventSchema,
+  trouteErrorPayloadSchema,
+  trouteJobDiagnosticSchema,
+  trouteJobEventAcceptedResponseSchema,
+  trouteJobEventSchema,
+  trouteJobIdSchema,
+  trouteJobStateSchema,
+  trouteJobStatusSchema,
   trouteLocationSchema,
   trouteOptimizeRequestSchema,
   trouteOptimizeResponseSchema,
+  trouteProgressEventSchema,
+  trouteProgressPayloadSchema,
+  trouteProgressStageSchema,
+  trouteProgressStatusSchema,
+  trouteResultEventSchema,
   trouteRouteStopSchema,
 } from './schemas/troute.js';
 
 export type {
+  TrouteErrorEvent,
+  TrouteErrorPayload,
+  TrouteJobDiagnostic,
+  TrouteJobEvent,
+  TrouteJobEventAcceptedResponse,
+  TrouteJobState,
+  TrouteJobStatus,
   TrouteLocation,
   TrouteOptimizeRequest,
   TrouteOptimizeResponse,
+  TrouteProgressEvent,
+  TrouteProgressPayload,
+  TrouteProgressStage,
+  TrouteProgressStatus,
+  TrouteResultEvent,
   TrouteRouteStop,
 } from './types/troute.js';
