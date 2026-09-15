@@ -9,10 +9,9 @@ import { TripHttpService } from './trip/tripHttpService.js';
 import { Routes } from './google/maps/routes.js';
 import { Places } from './google/maps/places.js';
 import { ChatService } from './ai/chatService.js';
+import { createChatProvider } from './ai/chatProviderFactory.js';
 import { OpenWebUIClient, OpenWebUIClientError } from './ai/openWebUIClient.js';
 import { OpenWebUIModelHttpService } from './ai/openWebUIModelHttpService.js';
-import { OpenWebUIChatProvider } from './ai/providers/openWebUIChatProvider.js';
-import { RandomChatProvider } from './ai/providers/randomChatProvider.js';
 
 // Load configuration before constructing the shared instances, regardless of
 // which backend module imports them first.
@@ -40,13 +39,16 @@ try {
     throw cause;
   }
 }
-const chatProvider =
-  openWebUIClient && openWebUIApiKey
-    ? new OpenWebUIChatProvider(
-        openWebUIClient,
-        process.env.OPENWEBUI_MODEL ?? '',
-      )
-    : new RandomChatProvider();
+const chatProvider = createChatProvider(
+  {
+    provider: process.env.AI_PROVIDER,
+    openWebUIApiKey,
+    openWebUIModel: process.env.OPENWEBUI_MODEL ?? '',
+    geminiApiKey: process.env.GEMINI_API_KEY ?? '',
+    geminiModel: process.env.GEMINI_MODEL ?? '',
+  },
+  openWebUIClient,
+);
 const chat = new ChatService(chatProvider);
 const openWebUIModels = new OpenWebUIModelHttpService(openWebUIClient);
 const backendRoot = fileURLToPath(new URL('../', import.meta.url));

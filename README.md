@@ -46,15 +46,17 @@ Frontend는 `MapPage → TripRepository`로 목록·선택·생성·삭제를 �
 405 `METHOD_NOT_ALLOWED`, 413 `REQUEST_TOO_LARGE`, 415 `UNSUPPORTED_MEDIA_TYPE`,
 502 `CHAT_UNAVAILABLE`를 사용합니다. 응답은 JSON이고 `Cache-Control: no-store`를 설정합니다.
 
-`backend/src/instances.ts`에서 `new RandomChatProvider()`를 `new ChatService(chatProvider)`에
-주입하고 `API.Chat`으로 노출합니다. RandomChatProvider는 실제 개발 환경에서 동작하는
-기본 provider로, 요청마다 0.5~3초의 무작위 지연 후 준비된 문장 중 하나를 무작위로 반환합니다.
-대기는 비동기로 처리하며 실제 LLM 호출이나 일정 변경은 하지 않습니다.
-`ChatService`는 HTTP 처리·검증·오류 정규화를 맡으며 provider 구현을 생성하지 않습니다.
+`backend/.env.local`의 `AI_PROVIDER`는 `openwebui`, `gemini`, `random` 중 하나를 선택합니다.
+명시적으로 선택하면 해당 provider의 필수 설정이 잘못된 경우 서버 시작이 실패합니다.
+`AI_PROVIDER`를 비우면 기존 로컬 동작을 유지해 `OPENWEBUI_API_KEY`가 있을 때 OpenWebUI를,
+없을 때 개발용 Random provider를 사용합니다. Gemini는 `GEMINI_API_KEY`와 `GEMINI_MODEL`,
+OpenWebUI는 `OPENWEBUI_API_KEY`와 `OPENWEBUI_MODEL`이 필요합니다. 키는 backend에만 둡니다.
 
-향후 Ollama를 연결할 때는 `backend/src/ai/providers/ollamaChatProvider.ts`에서
-`ChatProvider.chat(request): Promise<ChatResponse>`를 구현하고 `instances.ts`의 provider 생성만
-교체합니다. frontend와 HTTP 계약은 그대로 사용합니다. 현재 provider 선택 환경변수는 없습니다.
+`backend/src/instances.ts`는 선택된 `ChatProvider`를 `ChatService`에 주입합니다.
+`OpenWebUIChatProvider`, `GeminiChatProvider`, `RandomChatProvider`가 vendor별 요청과 응답을
+처리하고, `ChatService`는 HTTP 처리·공용 계약 검증·`CHAT_UNAVAILABLE` 오류 정규화만 맡습니다.
+Random provider는 요청마다 0.5~3초의 무작위 지연 후 준비된 문장 중 하나를 반환합니다.
+frontend와 `/api/chat` HTTP 계약은 provider 선택과 무관하게 동일합니다.
 
 패널의 환영 문구는 전송하지 않습니다. 실제 대화 중 최근 100개 메시지만 서버로 보내며
 화면의 대화 이력은 유지합니다. 닫기·열기는 이력과 진행 중 요청을 유지하고, `/map`을 떠나
