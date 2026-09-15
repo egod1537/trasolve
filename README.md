@@ -71,6 +71,31 @@ assistant 응답은 `react-markdown`과 `remark-gfm`으로 렌더링하며 user 
 `frontend/src/shared/utils/chatMarkdown.ts`에서 처리하며 backend 계약은 `content: string` 그대로입니다.
 RandomChatProvider의 응답 두 개는 Markdown 일정 예시입니다.
 
+### troute backend gateway
+
+Trasolve backend는 `POST /api/troute/optimize`를 통해서만 troute 최적화 API를
+호출합니다. 브라우저가 troute를 직접 호출하지 않으며, `backend/src/troute/`의
+`TrouteClient`가 `${TROUTE_BASE_URL}/optimize` 요청, 30초 제한 시간, 응답 검증과
+upstream 오류 분류를 담당합니다. 요청·응답의 v0 wire 계약은
+`shared/schemas/troute.ts`에 있고 시간은 `HH:MM` 문자열입니다.
+
+로컬 수동 확인:
+
+1. troute 저장소에서 최적화 HTTP endpoint를 구현한 뒤 `cargo run`으로 실행합니다.
+2. `backend/.env.local`에 `TROUTE_BASE_URL=http://127.0.0.1:8080`을 설정하고 Trasolve를
+   `npm run dev`로 실행합니다.
+3. 다음 요청을 보내 troute 로그와 Trasolve 응답을 함께 확인합니다.
+
+```sh
+curl --fail-with-body -X POST http://127.0.0.1:43127/api/troute/optimize \
+  -H 'Content-Type: application/json' \
+  -d '{"locations":[{"id":"place-1","place_id":"GOOGLE_PLACE_ID","open_time":"09:00","close_time":"18:00","stay_minutes":60}],"start_location_id":"place-1","start_time":"09:00"}'
+```
+
+현재 troute 서버가 아직 `POST /optimize`를 노출하지 않는 버전이면 gateway는 해당
+upstream HTTP 상태를 정규화된 오류로 반환합니다. 배포 환경에서는 host의
+`TROUTE_BASE_URL`이 backend container에만 전달됩니다.
+
 ### Google Maps
 
 로컬 경로 조회는 `frontend → POST /api/routes → Google Routes API`를 사용합니다.

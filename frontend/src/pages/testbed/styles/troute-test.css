@@ -1,0 +1,231 @@
+.troute-test-page {
+  display: grid;
+  gap: 20px;
+}
+
+.troute-test-page .testbed-header {
+  margin-bottom: 12px;
+}
+
+.troute-status-panel,
+.troute-editor-panel,
+.troute-summary-panel,
+.troute-debug-panel,
+.troute-error-panel {
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.troute-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.troute-section-heading > div:first-child {
+  display: grid;
+  gap: 6px;
+}
+
+.troute-test-page h2 {
+  font-size: 18px;
+}
+
+.troute-test-page button {
+  padding: 9px 13px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.troute-test-page button:hover:not(:disabled) {
+  border-color: var(--color-primary);
+}
+
+.troute-test-page button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.troute-test-page .troute-primary-action {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+}
+
+.troute-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 18px 0 0;
+}
+
+.troute-status-grid > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.troute-status-grid dt {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.troute-status-grid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 14px;
+}
+
+.troute-status-grid dd[data-state='success'],
+.troute-status-grid dd[data-state='reachable'] {
+  color: #15803d;
+}
+
+.troute-status-grid dd[data-state='loading'],
+.troute-status-grid dd[data-state='checking'] {
+  color: #b45309;
+}
+
+.troute-status-grid dd[data-state='invalid_json'],
+.troute-status-grid dd[data-state='invalid_request'],
+.troute-status-grid dd[data-state='client_error'],
+.troute-status-grid dd[data-state='server_error'],
+.troute-status-grid dd[data-state='invalid_response'],
+.troute-status-grid dd[data-state='network_error'],
+.troute-status-grid dd[data-state='unreachable'] {
+  color: #b91c1c;
+}
+
+.troute-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.troute-editor-panel textarea {
+  width: 100%;
+  min-height: 380px;
+  margin-top: 16px;
+  padding: 14px;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-background);
+  color: var(--color-text);
+  font:
+    13px/1.55 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+  tab-size: 2;
+}
+
+.troute-editor-panel textarea:focus {
+  border-color: var(--color-primary);
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.troute-error-panel {
+  border-color: #dc262666;
+  background: #dc26260a;
+}
+
+.troute-error-panel p {
+  margin-top: 8px;
+  color: #b91c1c;
+  overflow-wrap: anywhere;
+}
+
+.troute-summary-panel .troute-section-heading dl {
+  display: flex;
+  gap: 24px;
+  margin: 0;
+}
+
+.troute-summary-panel .troute-section-heading dl > div {
+  display: grid;
+  gap: 2px;
+}
+
+.troute-summary-panel dt {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.troute-summary-panel dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.troute-table-scroll {
+  margin-top: 16px;
+  overflow-x: auto;
+}
+
+.troute-summary-panel table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+}
+
+.troute-summary-panel th,
+.troute-summary-panel td {
+  padding: 10px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.troute-debug-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.troute-debug-panel {
+  min-width: 0;
+}
+
+.troute-debug-panel > p {
+  margin-top: 12px;
+}
+
+.troute-debug-panel pre {
+  max-height: 420px;
+  margin: 12px 0 0;
+  padding: 14px;
+  overflow: auto;
+  border-radius: 7px;
+  background: var(--color-background);
+  color: var(--color-text);
+  font:
+    12px/1.55 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .troute-debug-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .troute-editor-panel textarea {
+    min-height: 320px;
+  }
+}

@@ -123,3 +123,17 @@ export type {
   OpenWebUIModel,
   OpenWebUIModelListResponse,
 } from './types/openwebui.js';
+
+export {
+  trouteLocationSchema,
+  trouteOptimizeRequestSchema,
+  trouteOptimizeResponseSchema,
+  trouteRouteStopSchema,
+} from './schemas/troute.js';
+
+export type {
+  TrouteLocation,
+  TrouteOptimizeRequest,
+  TrouteOptimizeResponse,
+  TrouteRouteStop,
+} from './types/troute.js';

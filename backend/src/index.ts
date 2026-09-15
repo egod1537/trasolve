@@ -62,6 +62,11 @@ const server = createServer((request, response) => {
     return;
   }
 
+  if (pathname === API_ROUTES.trouteOptimize) {
+    void API.TrouteHttp.handle(request, response);
+    return;
+  }
+
   if (
     pathname === API_ROUTES.googleOAuthStart ||
     pathname === API_ROUTES.googleOAuthCallback ||
