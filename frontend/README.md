@@ -243,22 +243,22 @@ session shares a token with its details request and then discards the token.
 responses with `@trasolve/shared`; it does not load a Google SDK.
 `src/api/routes.ts` calls
 `POST /api/routes`; request/response schemas and types live in `@trasolve/shared`.
-Google Maps backend code lives in `backend/src/google/maps/routes.ts`: the single
-`Routes` class handles HTTP, validates requests, calls Google REST, and normalizes
-responses. `ApiError` in `errors.ts` defines API errors.
-`backend/src/instances.ts` loads the environment and creates one `Routes` instance
-per Node.js process. Backend consumers import only `API` from that module and use
-`API.Route.queryRoutes(request)` with a typed `DirectionsRequest`, or
-`API.Route.handle(request, response)` for HTTP input validation and responses.
+Route backend code lives in `backend/src/routes/`. `RouteHttpService` handles HTTP
+validation, `RouteService` assembles the backward-compatible response, and
+`GoogleRoutesProvider` calls Google REST and normalizes routes behind the
+provider-neutral `RouteProvider` contract. `backend/src/instances.ts` loads the
+environment and wires these objects once per Node.js process. `API.Route` exposes
+`handle(request, response)` for HTTP input validation and responses.
 `DirectionsRequestBuilder` from `@trasolve/shared` can build requests for either
-the frontend `getDirections` function or backend `queryRoutes` method. Its fluent
+the frontend `getDirections` function or a backend route service/provider. Its fluent
 setters configure endpoints, travel mode, intermediates, and alternative routes;
 `build()` validates the shared schema and returns an independent request object,
 throwing `ZodError` for invalid or incomplete settings.
-`API.Route` directly references the shared `Routes` instance. Lint rules reject direct implementation imports
-outside the Maps module and instance wiring, and reject value imports of `Routes`
-inside the Maps implementation. `Routes` receives its API key and optional timeout (default 15000ms) through its
-constructor; request construction and response normalization are private methods.
+`API.Route` references `RouteHttpService`. `GoogleRoutesProvider` receives its API
+key and optional timeout (default 15000ms) through its constructor; Google request
+construction and response normalization are private methods. A different routing
+provider only needs to return normalized routes; raw provider data is optional
+diagnostic metadata rather than a required domain result.
 Requests support tagged address, coordinate, and place-ID endpoints, travel mode,
 up to 25 intermediate waypoints for all travel modes, and alternative routes.
 For transit with waypoints, the backend queries each adjacent pair in parallel

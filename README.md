@@ -182,8 +182,9 @@ Maps JavaScript API 전용으로 HTTP referrer 제한을 적용합니다.
 각각 설정한 뒤 `npm run dev`를 실행합니다. 각각 Routes API와 Places API (New)를
 활성화하고 서버용 제한을 적용합니다. 배포 시에는 `~/.config/jjs/deploy.env`의
 두 서버 키가 백엔드 컨테이너에만 전달되며 프런트엔드 빌드 인자로 사용되지 않습니다.
-요청·응답 계약은 `shared/schemas/routes.ts`, `shared/schemas/places.ts`에 있으며, Google Maps 백엔드 구현은
-`backend/src/google/maps/`에 모여 있습니다.
+요청·응답 계약은 `shared/schemas/routes.ts`, `shared/schemas/places.ts`에 있습니다.
+Google Routes 구현은 `backend/src/routes/providers/`에, Google Places 구현은
+`backend/src/google/maps/`에 있습니다.
 
 프런트엔드의 두 Google 연결 경로는 분리합니다.
 
@@ -207,37 +208,42 @@ Maps JavaScript API 전용으로 HTTP referrer 제한을 적용합니다.
 일정 도메인과 페이지의 지도 데이터 계약은 유지합니다.
 
 ```text
+backend/src/routes/
+├── routeProvider.ts      # provider-neutral 경로 조회 계약
+├── routeService.ts       # provider 결과를 HTTP 응답 계약으로 조립
+├── routeHttpService.ts   # HTTP 검증과 응답 처리
+└── providers/
+    └── googleRoutesProvider.ts  # Google 요청·응답 변환과 호출
+
 backend/src/google/maps/
-├── routes.ts  # Routes: 요청 검증, Google API 호출·변환, HTTP 처리
 ├── places.ts  # Places: 자동완성·상세 조회, 검증·변환, HTTP 처리
-└── errors.ts  # ApiError: 공통 API 오류
+└── errors.ts  # Places API 오류
 ```
 
 `backend/src/instances.ts`에서 환경 변수를 읽은 뒤 클래스 인스턴스를 한 번 생성합니다.
 다른 백엔드 모듈은 이 파일에서 `API`만 import해서 사용합니다.
-`API.Route`는 생성한 `Routes` 인스턴스를 직접 참조합니다.
+`API.Route`는 `RouteHttpService`를 참조합니다.
 공용 인스턴스는 Node.js 프로세스마다 하나이며, 서버 재시작 시 새로 생성됩니다.
 `API.Place`는 같은 방식으로 생성한 `Places` 인스턴스이며 `searchAutocomplete`,
 `getPlace`, `handleAutocomplete`, `handlePlace`를 제공합니다.
-`instances.ts`에서 `new Routes(apiKey)` 한 번으로 경로 객체를 생성합니다.
-`Routes`는 키와 타임아웃을 보관하며, 공개 메서드는 `queryRoutes`와 `handle`입니다.
-JSON 읽기, Google 요청 생성·호출, 응답 변환은 private 메서드로 캡슐화합니다.
-요청별 데이터는 메서드 내부에서만 관리합니다.
+`instances.ts`에서 `GoogleRoutesProvider → RouteService → RouteHttpService`를 조립합니다.
+HTTP 계층은 provider를 알지 못하며, Google 키·타임아웃·요청 생성·호출·응답 변환은
+`GoogleRoutesProvider` 안에만 둡니다.
 
 ```ts
 import { API } from './instances.js';
 
 // HTTP 요청: API.Route.handle(request, response)
-// 다른 백엔드 로직에서 경로 조회: API.Route.queryRoutes(request)
 ```
 
-`queryRoutes(request: DirectionsRequest)`는 타입이 지정된 요청 객체를 받습니다.
-HTTP JSON 입력은 `handle`에서 스키마로 검증한 뒤 전달합니다.
+`RouteProvider.queryRoutes(request: DirectionsRequest)`는 타입이 지정된 요청 객체를 받고
+정규화된 경로와 선택적인 진단 메타데이터를 반환합니다. `RouteService`는 이를 기존
+`DirectionsResult` HTTP 계약으로 조립합니다. HTTP JSON 입력은 `handle`에서 스키마로
+검증한 뒤 전달합니다.
 프런트엔드와 백엔드에서 공용 `DirectionsRequestBuilder`로 요청을 구성할 수도 있습니다.
 
 ```ts
 import { DirectionsRequestBuilder, TravelMode } from '@trasolve/shared';
-import { API } from './instances.js';
 
 const request = new DirectionsRequestBuilder()
   .setOrigin({ type: 'address', address: '도쿄역' })
@@ -245,8 +251,6 @@ const request = new DirectionsRequestBuilder()
   .setTravelMode(TravelMode.TRANSIT)
   .setComputeAlternativeRoutes(false)
   .build();
-
-const result = await API.Route.queryRoutes(request);
 ```
 
 `setIntermediates(locations)`로 경유지를 설정하며, 빈 배열을 전달하면 제거합니다.
@@ -268,9 +272,12 @@ const result = await API.Route.queryRoutes(request);
 이 제한은 결과의 `warnings`에도 포함됩니다. 구간별 요청과 원본 응답은
 `rawResponse.segments`에 순서대로 보관합니다.
 
-`npm run lint`는 호출부의 Google Maps 구현 직접 import/re-export를 금지합니다.
-`Routes` 생성용 import는 `instances.ts`에서 수행합니다.
-구현 내부에서 `instances.ts`를 가져오는 것도 금지합니다.
+Google provider 생성과 연결은 `instances.ts`에서만 수행합니다. provider 및 서비스 구현에서
+`instances.ts`를 가져오지 않습니다.
+
+`RouteProvider`는 외부 routing provider에서 실제 이동 경로 데이터를 조회해 정규화하는
+경계입니다. 경로 최적화와 일정 스케줄링을 담당하는 troute는 별도 상위 서비스이며, 이
+provider 계약이나 현재 backend wiring에는 포함하지 않습니다.
 
 ### Places API
 
