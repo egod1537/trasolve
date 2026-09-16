@@ -106,8 +106,8 @@ export const mapRouteSchema = z.object({
 export const directionsResultSchema = z.object({
   request: directionsRequestSchema,
   routes: z.array(mapRouteSchema),
-  /** Google REST response, or ordered segment requests/responses for transit waypoints. */
-  rawResponse: z.unknown(),
+  /** Opaque provider response retained only for developer diagnostics. */
+  rawResponse: z.unknown().optional(),
   debug: directionsDebugDetailsSchema.optional(),
 });
 
