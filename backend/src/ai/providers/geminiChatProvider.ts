@@ -76,6 +76,16 @@ export class GeminiChatProvider implements ChatProvider {
 
   public async chat(request: ChatRequest): Promise<ChatResponse> {
     const signal = AbortSignal.timeout(this.timeoutMs);
+    const systemInstruction = request.messages
+      .filter((message) => message.role === 'system')
+      .map((message) => message.content)
+      .join('\n\n');
+    const contents = request.messages
+      .filter((message) => message.role !== 'system')
+      .map((message) => ({
+        role: message.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: message.content }],
+      }));
     let response: Response;
 
     try {
@@ -92,10 +102,10 @@ export class GeminiChatProvider implements ChatProvider {
             'x-goog-api-client': 'trasolve/0.0.0',
           },
           body: JSON.stringify({
-            contents: request.messages.map((message) => ({
-              role: message.role === 'assistant' ? 'model' : 'user',
-              parts: [{ text: message.content }],
-            })),
+            ...(systemInstruction
+              ? { systemInstruction: { parts: [{ text: systemInstruction }] } }
+              : {}),
+            contents,
           }),
           signal,
         },
