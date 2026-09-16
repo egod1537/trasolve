@@ -69,9 +69,10 @@ const server = createServer((request, response) => {
 
   if (
     pathname === API_ROUTES.trouteInternalHealth ||
+    pathname === API_ROUTES.trouteInternalJobs ||
     pathname.startsWith(`${API_ROUTES.trouteInternalJobs}/`)
   ) {
-    void API.TrouteInboundHttp.handle(request, response, pathname);
+    void API.TrouteJobHttp.handle(request, response, pathname);
     return;
   }
 
@@ -98,7 +99,7 @@ const server = createServer((request, response) => {
   response.writeHead(404);
   response.end(JSON.stringify({ error: 'Not found' }));
 });
-server.requestTimeout = 10000;
+server.requestTimeout = 35000;
 
 function sendOAuthInternalError(response: ServerResponse): void {
   if (response.headersSent) {

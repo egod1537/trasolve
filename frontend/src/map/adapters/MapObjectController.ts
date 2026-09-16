@@ -14,6 +14,7 @@ export interface MapMarkerHandle extends MapObjectHandle {
   setSelected(selected: boolean): void;
   setColor(color?: string): void;
   setIcon(icon?: MapMarkerIcon): void;
+  setLabel(label?: string): void;
   setEmphasis(emphasis: MapMarkerEmphasis): void;
   onClick(callback: () => void): () => void;
   onPointerEnter(callback: () => void): () => void;
@@ -81,6 +82,7 @@ export type MapMarkerOptions = MapObjectBaseOptions & {
   selected?: boolean;
   color?: string;
   icon?: MapMarkerIcon;
+  label?: string;
 };
 export type MapPolylineOptions = MapObjectBaseOptions & {
   path: readonly GeoPoint[];

@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import type { Trip } from '@trasolve/shared';
+import { ThemeControl } from '../../../shared/theme/ThemeControl';
 
 type Props = {
   trips: readonly Trip[];
@@ -66,18 +67,21 @@ export function TripPickerPopup({
       >
         <header className="trip-map-picker-header">
           <h2 id="trip-map-picker-title">내 여행</h2>
-          <button
-            type="button"
-            className="trip-map-picker-close"
-            aria-label="여행 선택 닫기"
-            title="닫기"
-            disabled={!canClose}
-            onClick={onClose}
-          >
-            <Icon>
-              <path d="m6 6 12 12M18 6 6 18" />
-            </Icon>
-          </button>
+          <div className="trip-map-picker-header-actions">
+            <ThemeControl />
+            <button
+              type="button"
+              className="trip-map-picker-close"
+              aria-label="여행 선택 닫기"
+              title="닫기"
+              disabled={!canClose}
+              onClick={onClose}
+            >
+              <Icon>
+                <path d="m6 6 12 12M18 6 6 18" />
+              </Icon>
+            </button>
+          </div>
         </header>
 
         <div className="trip-map-picker-actions">

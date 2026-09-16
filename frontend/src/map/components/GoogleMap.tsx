@@ -13,7 +13,8 @@ import type { MapAdapter } from '../adapters/MapAdapter';
 import type { MapOverlayHost } from '../adapters/MapOverlayHost';
 import type { MapRuntime } from '../adapters/MapRuntime';
 import type { MapObjectController } from '../adapters/MapObjectController';
-import type { MapPolyline } from '../types/mapTypes';
+import { useTheme } from '../../shared/theme/useTheme';
+import type { MapCameraState, MapPolyline } from '../types/mapTypes';
 import { useMapPolyline } from '../hooks/useMapPolyline';
 import { createGoogleMapRuntime } from '../runtime/createGoogleMapRuntime';
 import { mapsAuthErrorEvent, mapsConfig } from '../runtime/googleMaps';
@@ -61,6 +62,7 @@ export function useGoogleMap() {
 }
 
 export function GoogleMap(props: GoogleMapProps) {
+  const { resolvedTheme } = useTheme();
   const {
     ref,
     center,
@@ -76,6 +78,11 @@ export function GoogleMap(props: GoogleMapProps) {
   } = props;
   const canvasRef = useRef<HTMLDivElement>(null);
   const runtimeRef = useRef<MapRuntime | null>(null);
+  const cameraRef = useRef<MapCameraState | null>(null);
+  const readyMapIdRef = useRef<{
+    initialized: boolean;
+    mapId: string | undefined;
+  }>({ initialized: false, mapId: undefined });
   const latest = useRef(props);
   useLayoutEffect(() => {
     latest.current = props;
@@ -111,6 +118,7 @@ export function GoogleMap(props: GoogleMapProps) {
     }
     const controller = new AbortController();
     let ownedRuntime: MapRuntime | null = null;
+    const preservedCamera = cameraRef.current;
     const authFailed = () => {
       controller.abort();
       setStatus('error');
@@ -118,10 +126,11 @@ export function GoogleMap(props: GoogleMapProps) {
     };
     window.addEventListener(mapsAuthErrorEvent, authFailed);
     void createGoogleMapRuntime(canvas, controller.signal, {
-      center: latest.current.center,
-      zoom: latest.current.zoom,
+      center: preservedCamera?.center ?? latest.current.center,
+      zoom: preservedCamera?.zoom ?? latest.current.zoom,
       options: latest.current.options,
       mapId,
+      theme: resolvedTheme,
     }).then(
       (created) => {
         if (controller.signal.aborted) {
@@ -146,10 +155,12 @@ export function GoogleMap(props: GoogleMapProps) {
     return () => {
       controller.abort();
       window.removeEventListener(mapsAuthErrorEvent, authFailed);
+      cameraRef.current =
+        ownedRuntime?.adapter.getCamera() ?? cameraRef.current;
       runtimeRef.current = null;
       ownedRuntime?.dispose();
     };
-  }, [mapId]);
+  }, [mapId, resolvedTheme]);
 
   useEffect(() => {
     if (!runtime) {
@@ -194,10 +205,15 @@ export function GoogleMap(props: GoogleMapProps) {
     }
   }, [runtime, options]);
   useEffect(() => {
-    if (runtime) {
+    if (
+      runtime &&
+      (!readyMapIdRef.current.initialized ||
+        readyMapIdRef.current.mapId !== mapId)
+    ) {
+      readyMapIdRef.current = { initialized: true, mapId };
       latest.current.onReady?.(handle);
     }
-  }, [runtime, handle]);
+  }, [runtime, handle, mapId]);
 
   const context = useMemo(
     () =>

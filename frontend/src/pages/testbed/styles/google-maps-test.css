@@ -51,9 +51,9 @@
 .maps-test-results,
 .maps-test-debug {
   padding: 16px;
-  border: 1px solid #d9dee5;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  background: white;
+  background: var(--color-surface-raised);
   align-content: start;
 }
 .maps-test-data {
@@ -63,7 +63,7 @@
   margin: 0;
 }
 .maps-test-data dt {
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 .maps-test-data dd {
   margin: 0;
@@ -87,19 +87,19 @@
 .maps-test-api-status {
   padding: 3px 8px;
   border-radius: 4px;
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
 }
 .maps-test-api-status[data-status='success'] {
-  color: #166534;
-  background: #dcfce7;
+  color: var(--color-success-strong);
+  background: var(--color-success-soft);
 }
 .maps-test-api-status[data-status='error'] {
-  color: #991b1b;
-  background: #fee2e2;
+  color: var(--color-danger-strong);
+  background: var(--color-danger-soft);
 }
 .maps-test-api-status[data-status='loading'] {
-  color: #1e40af;
-  background: #dbeafe;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 .maps-test-page label {
   display: grid;
@@ -119,11 +119,11 @@
   cursor: not-allowed;
 }
 .maps-test-page button[aria-pressed='true'] {
-  color: #fff;
-  background: #2563eb;
+  color: var(--color-accent-contrast);
+  background: var(--color-accent);
 }
 .maps-test-page small {
-  color: #64748b;
+  color: var(--color-text-muted);
   overflow-wrap: anywhere;
 }
 .maps-test-intermediate {
@@ -146,7 +146,7 @@
   max-height: 360px;
   padding: 12px;
   margin: 0;
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
@@ -167,24 +167,24 @@
   gap: 8px 16px;
 }
 .maps-test-route-count {
-  color: #475569;
+  color: var(--color-text-secondary);
   font-size: 14px;
 }
 .maps-test-route-error {
   padding: 12px;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--color-danger-border);
   border-radius: 6px;
-  background: #fff7f7;
+  background: var(--color-danger-soft);
 }
 .maps-test-route-error > h3,
 .maps-test-route-error > p {
-  color: #991b1b;
+  color: var(--color-danger-strong);
 }
 .maps-test-route-error-note {
   padding: 8px 10px;
-  border-left: 3px solid #f59e0b;
-  background: #fffbeb;
-  color: #92400e !important;
+  border-left: 3px solid var(--color-warning);
+  background: var(--color-warning-soft);
+  color: var(--color-warning-strong) !important;
   font-size: 13px;
 }
 .maps-test-route-selector {
@@ -196,10 +196,10 @@
   display: grid;
   gap: 3px;
   padding: 12px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-strong);
   border-radius: 6px;
-  color: #0f172a;
-  background: #f8fafc;
+  color: var(--color-text-primary);
+  background: var(--color-surface-subtle);
   text-align: left;
 }
 .maps-test-route-option > span {
@@ -207,7 +207,7 @@
   font-variant-numeric: tabular-nums;
 }
 .maps-test-route-option[aria-pressed='true'] small {
-  color: #dbeafe;
+  color: var(--color-accent-contrast);
 }
 .maps-test-route-summary,
 .maps-test-itinerary-section {
@@ -224,18 +224,18 @@
   gap: 4px;
   min-width: 0;
   padding: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  background: #f8fafc;
+  background: var(--color-surface-subtle);
 }
 .maps-test-route-summary dt {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 12px;
 }
 .maps-test-route-summary dd {
   margin: 0;
   overflow-wrap: anywhere;
-  color: #0f172a;
+  color: var(--color-text-primary);
   font-size: 18px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -258,7 +258,7 @@
   bottom: -10px;
   left: 7px;
   width: 2px;
-  background: #cbd5e1;
+  background: var(--color-border-strong);
   content: '';
 }
 .maps-test-itinerary-leg:last-child::before {
@@ -277,9 +277,9 @@
   width: 16px;
   height: 16px;
   margin-top: 2px;
-  border: 4px solid #2563eb;
+  border: 4px solid var(--color-accent);
   border-radius: 50%;
-  background: #fff;
+  background: var(--color-surface-raised);
   box-sizing: border-box;
 }
 .maps-test-itinerary-endpoint strong,
@@ -303,14 +303,14 @@
   top: 14px;
   left: -20px;
   width: 14px;
-  border-top: 2px solid #cbd5e1;
+  border-top: 2px solid var(--color-border-strong);
   content: '';
 }
 .maps-test-itinerary-mode {
   padding: 4px 7px;
   border-radius: 999px;
-  color: #1e3a8a;
-  background: #dbeafe;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
   font-size: 12px;
   font-weight: 700;
   text-align: center;
@@ -321,18 +321,18 @@
   gap: 3px;
   min-width: 0;
   padding: 10px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  background: #fff;
+  background: var(--color-surface-raised);
 }
 .maps-test-itinerary-step-content p {
-  color: #334155;
+  color: var(--color-text-secondary);
   font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
 .maps-test-route-debug {
   padding-top: 4px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--color-border);
 }
 .maps-test-route-debug-content {
   display: grid;

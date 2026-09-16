@@ -24,6 +24,7 @@ export class TrouteHttpService {
     request: IncomingMessage,
     response: ServerResponse,
   ): Promise<void> {
+    let createdJobId: string | null = null;
     response.setHeader('Content-Type', 'application/json; charset=utf-8');
     response.setHeader('Cache-Control', 'no-store');
     try {
@@ -60,19 +61,62 @@ export class TrouteHttpService {
         );
       }
 
-      this.jobs.create(parsed.data.job_id);
+      this.jobs.create(parsed.data);
+      createdJobId = parsed.data.job_id;
+      this.jobs.markGatewayRequestStarted(createdJobId);
       const result = await this.client.optimize(parsed.data);
-      this.jobs.recordSynchronousResult(parsed.data.job_id, result);
+      this.jobs.recordGatewayResult(parsed.data.job_id, result);
+      try {
+        this.jobs.syncRemoteJob(await this.client.getJob(parsed.data.job_id));
+      } catch (syncCause) {
+        console.warn(
+          'troute optimize 응답 이후 원격 Job mirror를 동기화하지 못했습니다.',
+          { jobId: parsed.data.job_id, cause: syncCause },
+        );
+      }
       if (response.destroyed) {
         return;
       }
       response.writeHead(200);
       response.end(JSON.stringify(result));
     } catch (cause) {
-      if (response.destroyed) {
+      if (response.destroyed || response.writableEnded) {
         return;
       }
       const error = this.toHttpError(cause);
+      if (createdJobId !== null) {
+        let synchronized = false;
+        try {
+          if (this.client) {
+            this.jobs.syncRemoteJob(await this.client.getJob(createdJobId));
+            synchronized = true;
+          }
+        } catch (persistenceCause) {
+          console.warn(
+            '실패한 optimize 요청의 원격 Job을 조회하지 못했습니다.',
+            {
+              jobId: createdJobId,
+              cause: persistenceCause,
+            },
+          );
+        }
+        if (!synchronized && this.isDefinitiveRejection(cause)) {
+          try {
+            this.jobs.markGatewayFailed(createdJobId, {
+              code: error.code,
+              message: error.message,
+              ...(error.upstreamStatus === undefined
+                ? {}
+                : { detail: `upstream HTTP ${error.upstreamStatus}` }),
+            });
+          } catch (persistenceCause) {
+            console.error('troute Job 실패 상태를 저장하지 못했습니다.', {
+              jobId: createdJobId,
+              cause: persistenceCause,
+            });
+          }
+        }
+      }
       const body: TrouteApiErrorResponse = {
         error: {
           code: error.code,
@@ -82,8 +126,16 @@ export class TrouteHttpService {
             : { upstreamStatus: error.upstreamStatus }),
         },
       };
+      if (response.headersSent) {
+        response.end();
+        return;
+      }
       response.writeHead(error.status);
       response.end(JSON.stringify(body));
+    } finally {
+      if (createdJobId !== null) {
+        this.jobs.markGatewayRequestFinished(createdJobId);
+      }
     }
   }
 
@@ -207,6 +259,16 @@ export class TrouteHttpService {
         );
       }
     }
+  }
+
+  private isDefinitiveRejection(cause: unknown): boolean {
+    return (
+      cause instanceof TrouteClientError &&
+      cause.kind === 'upstream_http' &&
+      cause.upstreamStatus !== undefined &&
+      cause.upstreamStatus >= 400 &&
+      cause.upstreamStatus < 500
+    );
   }
 
   private notConfiguredError(): TrouteHttpError {

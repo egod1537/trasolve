@@ -6,6 +6,8 @@ dist/
 !.env.example
 *.log
 backend/data/
+.local/
+runtime/
 frontend/src/shared/i18n/generated-local/
 *.tmp
 __pycache__/

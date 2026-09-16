@@ -1,4 +1,5 @@
 import { buildInfo, isBuildMetadataVisible } from '../../../app/buildInfo';
+import { ThemeControl } from '../../../shared/theme/ThemeControl';
 
 export function Header() {
   const showBuildMetadata =
@@ -50,9 +51,12 @@ export function Header() {
             </span>
           )}
         </div>
-        <a className="button button-small button-outline" href="/map">
-          서비스로 이동
-        </a>
+        <div className="header-actions">
+          <ThemeControl />
+          <a className="button button-small button-outline" href="/map">
+            서비스로 이동
+          </a>
+        </div>
       </nav>
     </header>
   );

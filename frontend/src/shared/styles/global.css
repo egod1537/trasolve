@@ -1,5 +1,4 @@
 :root {
-  color-scheme: light;
   font-family:
     Inter,
     Pretendard,
@@ -9,24 +8,6 @@
     sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --color-primary: #2563eb;
-  --color-primary-dark: #1d4ed8;
-  --color-text: #0f172a;
-  --color-muted: #64748b;
-  --color-border: #e2e8f0;
-  --color-floating-border: #d7dee8;
-  --color-floating-surface: #fff;
-  --shadow-floating-sm:
-    0 2px 8px rgba(15, 23, 42, 0.15), 0 1px 2px rgba(15, 23, 42, 0.09);
-  --shadow-floating-md:
-    0 10px 26px rgba(15, 23, 42, 0.25), 0 2px 7px rgba(15, 23, 42, 0.11);
-  --shadow-map-overlay: var(--shadow-floating-md);
-  --shadow-floating-md-hover:
-    0 12px 30px rgba(15, 23, 42, 0.24), 0 3px 8px rgba(15, 23, 42, 0.12);
-  --shadow-floating-lg:
-    0 18px 46px rgba(15, 23, 42, 0.27), 0 4px 12px rgba(15, 23, 42, 0.14);
-  --color-surface: #ffffff;
-  --color-background: #fafafa;
 }
 
 * {
@@ -34,15 +15,21 @@
 }
 
 html {
+  min-height: 100%;
   scroll-behavior: smooth;
+  background: var(--color-bg);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: var(--color-background);
-  color: var(--color-text);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
+#root {
+  min-height: 100vh;
 }
 
 button,
@@ -59,7 +46,7 @@ button:disabled {
 }
 
 :focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.36);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 3px;
 }
 

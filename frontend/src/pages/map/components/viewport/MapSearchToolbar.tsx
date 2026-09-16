@@ -26,6 +26,7 @@ type Props = {
   getSearchBias: () => SearchBias;
   onOpenQuickSearch: () => void;
   onSelectPlace: (place: PlaceDetails) => void;
+  showQuickSearch?: boolean;
 };
 
 function Icon({ path }: { path: string }) {
@@ -42,6 +43,7 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
   getSearchBias,
   onOpenQuickSearch,
   onSelectPlace,
+  showQuickSearch = true,
 }: Props) {
   const [query, setQuery] = useState('');
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle');
@@ -317,16 +319,18 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
               </div>
             )}
           </div>
-          <button
-            type="button"
-            className="map-toolbar-quick-search-trigger"
-            aria-label={`빠른 검색 열기 (${quickSearchShortcutLabel})`}
-            title={`빠른 검색 (${quickSearchShortcutLabel})`}
-            onClick={onOpenQuickSearch}
-          >
-            <Icon path="M5 6h14M5 12h9M5 18h6" />
-            <kbd>{quickSearchShortcutLabel}</kbd>
-          </button>
+          {showQuickSearch ? (
+            <button
+              type="button"
+              className="map-toolbar-quick-search-trigger"
+              aria-label={`빠른 검색 열기 (${quickSearchShortcutLabel})`}
+              title={`빠른 검색 (${quickSearchShortcutLabel})`}
+              onClick={onOpenQuickSearch}
+            >
+              <Icon path="M5 6h14M5 12h9M5 18h6" />
+              <kbd>{quickSearchShortcutLabel}</kbd>
+            </button>
+          ) : null}
         </div>
       </div>
     </div>

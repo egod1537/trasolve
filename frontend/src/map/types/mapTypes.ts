@@ -27,6 +27,8 @@ export type MapCameraState = {
   zoom: number;
 };
 
+export type MapTheme = 'light' | 'dark';
+
 export type LatLng = GeoPoint;
 export type MapBounds = GeoBounds;
 

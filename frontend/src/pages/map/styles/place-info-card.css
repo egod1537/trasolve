@@ -172,7 +172,7 @@
 }
 
 .place-info-card-close:hover {
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
   color: var(--color-text);
 }
 
@@ -202,7 +202,7 @@
 
 .trip-place-header-action:hover:not(:disabled),
 .trip-place-header-action:focus-visible {
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
   color: var(--color-text);
 }
 
@@ -227,19 +227,19 @@
 }
 
 .trip-place-delete-trigger {
-  background: #fff7f7;
-  color: #b42318;
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
 }
 
 .trip-place-delete-trigger:hover:not(:disabled),
 .trip-place-delete-trigger[aria-expanded='true'] {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-danger-soft);
+  color: var(--color-danger-strong);
 }
 
 .trip-place-delete-trigger:focus-visible {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-danger-soft);
+  color: var(--color-danger-strong);
   outline: 2px solid rgb(220 38 38 / 38%);
   outline-offset: 2px;
 }
@@ -251,7 +251,7 @@
   gap: 14px;
   max-width: calc(100vw - 24px);
   padding: 15px 16px;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--color-danger-border);
   border-radius: 12px;
   background: var(--color-floating-surface);
   box-shadow: var(--shadow-map-overlay);
@@ -265,7 +265,7 @@
 }
 
 .place-delete-confirm-copy strong {
-  color: #991b1b;
+  color: var(--color-danger-strong);
   font-size: 14px;
   line-height: 1.4;
 }
@@ -273,7 +273,7 @@
 .place-delete-confirm-copy p {
   margin: 0;
   overflow: hidden;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 12px;
   line-height: 1.45;
   text-overflow: ellipsis;
@@ -291,10 +291,10 @@
   min-width: 56px;
   height: 32px;
   padding: 0 10px;
-  border: 1px solid #d8dee7;
+  border: 1px solid var(--color-border-floating);
   border-radius: 7px;
-  background: #fff;
-  color: #475569;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
   font: inherit;
   font-size: 12px;
   font-weight: 650;
@@ -303,19 +303,19 @@
 
 .place-delete-confirm-actions button:hover:not(:disabled),
 .place-delete-confirm-actions button:focus-visible {
-  border-color: #94a3b8;
+  border-color: var(--color-border-strong);
 }
 
 .place-delete-confirm-actions button.is-destructive {
-  border-color: #b42318;
-  background: #b42318;
-  color: #fff;
+  border-color: var(--color-danger);
+  background: var(--color-danger);
+  color: var(--color-accent-contrast);
 }
 
 .place-delete-confirm-actions button.is-destructive:hover:not(:disabled),
 .place-delete-confirm-actions button.is-destructive:focus-visible {
-  border-color: #991b1b;
-  background: #991b1b;
+  border-color: var(--color-danger-strong);
+  background: var(--color-danger-strong);
 }
 
 .place-delete-confirm-actions button:disabled {
@@ -330,8 +330,8 @@
 .place-opening-hours {
   padding: 14px 20px 13px;
   border-bottom: 1px solid var(--color-border);
-  background: #f8fafc;
-  color: #475569;
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
 }
 
 .place-opening-status {
@@ -339,7 +339,7 @@
   align-items: center;
   gap: 8px;
   margin: 0 0 7px;
-  color: #475569;
+  color: var(--color-text-secondary);
   font-size: 14px;
   line-height: 1.4;
 }
@@ -409,7 +409,7 @@
 .place-opening-hours.is-always-open .place-opening-status,
 .place-opening-details.is-open .place-opening-status,
 .place-opening-details.is-always-open .place-opening-status {
-  color: #15803d;
+  color: var(--color-success);
 }
 
 .place-opening-hours.is-open .place-opening-status-dot,
@@ -421,7 +421,7 @@
 
 .place-opening-hours.is-closing-soon .place-opening-status,
 .place-opening-details.is-closing-soon .place-opening-status {
-  color: #b45309;
+  color: var(--color-warning);
 }
 
 .place-opening-hours.is-closing-soon .place-opening-status-dot,
@@ -433,7 +433,7 @@
 
 .place-opening-hours.is-unknown .place-opening-status,
 .place-opening-details.is-unknown .place-opening-status {
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .place-opening-today,
@@ -446,7 +446,7 @@
 }
 
 .place-opening-today {
-  color: #334155;
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
@@ -470,7 +470,7 @@
 }
 
 .place-opening-next {
-  color: #334155;
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
@@ -481,7 +481,7 @@
 
 .place-opening-details {
   padding: 14px 16px 16px;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 .place-opening-details > .place-opening-status {
@@ -510,7 +510,7 @@
 
 .place-opening-detail-summary dd {
   margin: 0;
-  color: #334155;
+  color: var(--color-text-secondary);
   font-size: 12px;
   font-weight: 550;
   line-height: 1.5;
@@ -525,7 +525,7 @@
   gap: 5px;
   margin: 8px 0 0;
   padding: 0;
-  color: #475569;
+  color: var(--color-text-secondary);
   font-size: 11px;
   line-height: 1.5;
   list-style: none;
@@ -566,7 +566,7 @@
 .place-info-row dt {
   display: grid;
   place-items: center;
-  color: #7c8798;
+  color: var(--color-text-muted);
 }
 
 .place-info-row svg {
@@ -580,7 +580,7 @@
 }
 
 .place-info-row dd {
-  color: #334155;
+  color: var(--color-text-secondary);
   font-size: 13px;
   line-height: 1.55;
   overflow-wrap: anywhere;
@@ -609,7 +609,7 @@
   align-items: baseline;
   gap: 6px;
   margin: 0;
-  color: #b45309;
+  color: var(--color-warning);
   font-size: 14px;
 }
 
@@ -635,7 +635,7 @@
 .place-info-card-footer {
   padding: 14px 20px 16px;
   border-top: 1px solid var(--color-border);
-  background: #f8fafc;
+  background: var(--color-surface-subtle);
 }
 
 .place-info-add-button {
@@ -649,7 +649,7 @@
   border: 1px solid var(--color-primary);
   border-radius: 6px;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-accent-contrast);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -683,9 +683,9 @@
   max-width: 220px;
   padding: 6px 8px;
   border-radius: 5px;
-  background: #1e293b;
+  background: var(--color-tooltip-bg);
   box-shadow: var(--shadow-map-overlay);
-  color: #fff;
+  color: var(--color-tooltip-text);
   content: attr(data-tooltip);
   font-size: 11px;
   line-height: 1.35;
@@ -711,7 +711,7 @@
 
 .place-info-action-error {
   margin: 9px 0 0;
-  color: #b42318;
+  color: var(--color-danger);
   font-size: 11px;
   line-height: 1.45;
   text-align: center;
@@ -842,7 +842,7 @@
 }
 
 .side-detail-card-header button:hover {
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
   color: var(--color-text);
 }
 
@@ -880,10 +880,10 @@
   height: 34px;
   margin-top: -8px;
   padding: 0 7px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-strong);
   border-radius: 6px;
-  background: #fff;
-  color: #475569;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
   cursor: pointer;
 }
 
@@ -894,7 +894,7 @@
 .trip-polyline-mode-trigger:hover:not(:disabled),
 .trip-polyline-mode-trigger[aria-expanded='true'] {
   border-color: var(--color-primary);
-  background: #eff6ff;
+  background: var(--color-accent-soft);
   color: var(--color-primary);
 }
 
@@ -950,7 +950,7 @@
 
 .trip-polyline-details dd {
   min-width: 0;
-  color: #334155;
+  color: var(--color-text-secondary);
   text-align: right;
 }
 
@@ -1032,10 +1032,10 @@
   max-height: 180px;
   padding: 8px 10px;
   resize: vertical;
-  border: 1px solid #b8c4d3;
+  border: 1px solid var(--color-border-strong);
   border-radius: 6px;
   outline: 0;
-  background: #fff;
+  background: var(--color-surface-raised);
   color: var(--color-text);
   font: inherit;
   font-size: 13px;
@@ -1049,7 +1049,7 @@
 }
 
 .trip-place-memo-editor textarea:disabled {
-  background: #f8fafc;
+  background: var(--color-surface-subtle);
   cursor: wait;
 }
 
@@ -1070,10 +1070,10 @@
   min-width: 48px;
   height: 28px;
   padding: 0 9px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-strong);
   border-radius: 5px;
-  background: #fff;
-  color: #475569;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
   font: inherit;
   font-size: 11px;
   font-weight: 600;
@@ -1083,7 +1083,7 @@
 .trip-place-memo-editor-actions button[type='submit'] {
   border-color: var(--color-primary);
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-accent-contrast);
 }
 
 .trip-place-memo-editor-actions button:hover:not(:disabled) {
@@ -1097,7 +1097,7 @@
 
 .trip-place-mutation-error {
   margin: 0;
-  color: #b42318;
+  color: var(--color-danger);
   font-size: 11px;
   line-height: 1.5;
 }
@@ -1111,7 +1111,7 @@
 .trip-place-memo,
 .trip-place-address {
   margin: 0;
-  color: #334155;
+  color: var(--color-text-secondary);
   font-size: 13px;
   line-height: 1.6;
   overflow-wrap: anywhere;
@@ -1157,7 +1157,7 @@
 }
 
 .trip-place-memo:hover:not([aria-disabled='true']) {
-  background: #f8fafc;
+  background: var(--color-surface-subtle);
 }
 
 .trip-place-memo[aria-disabled='true'] {
@@ -1169,14 +1169,14 @@
   margin: 14px 20px;
   padding: 10px 12px;
   border-radius: 6px;
-  background: #fff1f0;
+  background: var(--color-danger-soft);
 }
 
 .place-info-card-spinner {
   width: 18px;
   height: 18px;
   flex: none;
-  border: 2px solid #cbd5e1;
+  border: 2px solid var(--color-border-strong);
   border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: place-info-spin 700ms linear infinite;

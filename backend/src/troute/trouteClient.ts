@@ -1,8 +1,15 @@
 import {
+  trouteJobIdSchema,
   trouteOptimizeRequestSchema,
   trouteOptimizeResponseSchema,
+  trouteRemoteJobListResponseSchema,
+  trouteRemoteJobSchema,
+  trouteRemoteTimelineSchema,
   type TrouteOptimizeRequest,
   type TrouteOptimizeResponse,
+  type TrouteRemoteJob,
+  type TrouteRemoteJobSummary,
+  type TrouteRemoteTimeline,
 } from '@trasolve/shared';
 import { TrouteClientError } from './errors.js';
 
@@ -32,15 +39,125 @@ export class TrouteClient {
       );
     }
 
+    const body = await this.requestJson('optimize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(parsedRequest.data),
+    });
+    const parsedResponse = trouteOptimizeResponseSchema.safeParse(body);
+    if (!parsedResponse.success) {
+      throw this.invalidResponseError();
+    }
+    return parsedResponse.data;
+  }
+
+  public async getJob(jobId: string): Promise<TrouteRemoteJob> {
+    const normalizedJobId = this.parseJobId(jobId);
+    const endpoint = `integration/jobs/${encodeURIComponent(normalizedJobId)}`;
+    const body = await this.requestJson(endpoint);
+    const parsed = trouteRemoteJobSchema.safeParse(body);
+    if (!parsed.success) {
+      console.error('troute remote Job 응답 검증에 실패했습니다.', {
+        endpoint,
+        jobId: normalizedJobId,
+        issues: parsed.error.issues.map((issue) => ({
+          code: issue.code,
+          path: issue.path.join('.'),
+          message: issue.message,
+        })),
+      });
+      throw this.invalidResponseError();
+    }
+    return parsed.data;
+  }
+
+  public async listJobs(limit: number): Promise<TrouteRemoteJobSummary[]> {
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
+      throw new TrouteClientError(
+        'invalid_request',
+        'The troute job list limit must be between 1 and 100.',
+      );
+    }
+    const query = new URLSearchParams({ limit: String(limit) });
+    const body = await this.requestJson(`integration/jobs?${query}`);
+    const parsed = trouteRemoteJobListResponseSchema.safeParse(body);
+    if (!parsed.success) {
+      throw this.invalidResponseError();
+    }
+    return parsed.data.jobs;
+  }
+
+  public async getTimeline(jobId: string): Promise<TrouteRemoteTimeline> {
+    const normalizedJobId = this.parseJobId(jobId);
+    const body = await this.requestJson(
+      `integration/jobs/${encodeURIComponent(normalizedJobId)}/timeline`,
+    );
+    const parsed = trouteRemoteTimelineSchema.safeParse(body);
+    if (!parsed.success) {
+      throw this.invalidResponseError();
+    }
+    return parsed.data;
+  }
+
+  public async cancelJob(jobId: string): Promise<void> {
+    const normalizedJobId = this.parseJobId(jobId);
+    await this.requestWithoutBody(
+      `integration/jobs/${encodeURIComponent(normalizedJobId)}/cancel`,
+      { method: 'POST' },
+    );
+  }
+
+  public async checkHealth(): Promise<void> {
+    const body = await this.requestJson('health');
+    if (
+      typeof body !== 'object' ||
+      body === null ||
+      !('status' in body) ||
+      body.status !== 'ok'
+    ) {
+      throw this.invalidResponseError();
+    }
+  }
+
+  private readonly baseUrl: URL;
+  private readonly timeoutMs: number;
+
+  private parseJobId(jobId: string): string {
+    const parsed = trouteJobIdSchema.safeParse(jobId);
+    if (!parsed.success) {
+      throw new TrouteClientError(
+        'invalid_request',
+        'The troute job id is invalid.',
+      );
+    }
+    return parsed.data;
+  }
+
+  private async requestJson(
+    path: string,
+    init?: RequestInit,
+  ): Promise<unknown> {
+    return this.request(path, init, true);
+  }
+
+  private async requestWithoutBody(
+    path: string,
+    init?: RequestInit,
+  ): Promise<void> {
+    await this.request(path, init, false);
+  }
+
+  private async request(
+    path: string,
+    init: RequestInit | undefined,
+    parseJson: boolean,
+  ): Promise<unknown> {
     const signal = AbortSignal.timeout(this.timeoutMs);
     try {
-      const response = await fetch(new URL('optimize', this.baseUrl), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsedRequest.data),
+      const response = await fetch(new URL(path, this.baseUrl), {
+        ...init,
         signal,
       });
-
       if (!response.ok) {
         const upstreamBody = await this.readResponseBody(response);
         throw new TrouteClientError(
@@ -50,22 +167,18 @@ export class TrouteClient {
           upstreamBody,
         );
       }
-
-      let body: unknown;
+      if (!parseJson) {
+        await response.arrayBuffer();
+        return null;
+      }
       try {
-        body = (await response.json()) as unknown;
+        return (await response.json()) as unknown;
       } catch {
         if (signal.aborted) {
           throw this.timeoutError();
         }
         throw this.invalidResponseError();
       }
-
-      const parsedResponse = trouteOptimizeResponseSchema.safeParse(body);
-      if (!parsedResponse.success) {
-        throw this.invalidResponseError();
-      }
-      return parsedResponse.data;
     } catch (cause) {
       if (cause instanceof TrouteClientError) {
         throw cause;
@@ -79,9 +192,6 @@ export class TrouteClient {
       );
     }
   }
-
-  private readonly baseUrl: URL;
-  private readonly timeoutMs: number;
 
   private normalizeBaseUrl(value: string): URL {
     try {

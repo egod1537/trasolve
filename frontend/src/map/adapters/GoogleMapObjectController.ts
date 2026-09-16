@@ -154,7 +154,9 @@ export class GoogleMapObjectController implements MapObjectController {
     const markerIcon = document.createElementNS(SVG_NAMESPACE, 'svg');
     markerIcon.classList.add('trip-map-marker-icon');
     markerIcon.setAttribute('fill', 'none');
-    content.replaceChildren(markerIcon);
+    const markerLabel = document.createElement('span');
+    markerLabel.className = 'trip-map-marker-label';
+    content.replaceChildren(markerIcon, markerLabel);
     let marker: google.maps.marker.AdvancedMarkerElement | null =
       new google.maps.marker.AdvancedMarkerElement({
         map: options.visible === false ? null : this.map,
@@ -229,6 +231,13 @@ export class GoogleMapObjectController implements MapObjectController {
           applyMarkerIcon(markerIcon, icon);
         }
       },
+      setLabel: (label) => {
+        if (!marker) {
+          return;
+        }
+        markerLabel.textContent = label ?? '';
+        content.classList.toggle('has-label', Boolean(label));
+      },
       setEmphasis: (emphasis) => {
         if (!marker) {
           return;
@@ -277,6 +286,7 @@ export class GoogleMapObjectController implements MapObjectController {
     handle.setSelected(options.selected ?? false);
     handle.setColor(options.color);
     handle.setIcon(options.icon);
+    handle.setLabel(options.label);
     handle.setEmphasis('none');
     return handle;
   }

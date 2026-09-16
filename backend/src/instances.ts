@@ -23,8 +23,8 @@ import { InMemoryConversationSessionStore } from './ai/conversation/conversation
 import { TrouteClient } from './troute/trouteClient.js';
 import { TrouteClientError } from './troute/errors.js';
 import { TrouteHttpService } from './troute/trouteHttpService.js';
-import { TrouteInboundHttpService } from './internal/troute/trouteInboundHttpService.js';
-import { TrouteJobRepository } from './internal/troute/trouteJobRepository.js';
+import { TrouteJobHttpService } from './internal/troute/trouteJobHttpService.js';
+import { FileTrouteJobRepository } from './internal/troute/fileTrouteJobRepository.js';
 
 // Load configuration before constructing the shared instances, regardless of
 // which backend module imports them first.
@@ -73,12 +73,13 @@ const conversation = new ConversationService(
   new ConversationContextComposer(),
 );
 const openWebUIModels = new OpenWebUIModelHttpService(openWebUIClient);
-const backendRoot = fileURLToPath(new URL('../', import.meta.url));
+const repositoryRoot = fileURLToPath(new URL('../../', import.meta.url));
+const dataRoot = resolve(
+  repositoryRoot,
+  process.env.TRASOLVE_DATA_DIR?.trim() || '.local/trasolve',
+);
 const tripRepository = new LocalFileTripRepository({
-  rootDir: resolve(
-    backendRoot,
-    process.env.TRASOLVE_DATA_DIR?.trim() || 'data',
-  ),
+  rootDir: dataRoot,
 });
 const trip = new TripController(tripRepository);
 const localUserId = tripIdSchema.parse(
@@ -95,9 +96,9 @@ try {
     throw cause;
   }
 }
-const trouteJobs = new TrouteJobRepository();
+const trouteJobs = new FileTrouteJobRepository({ rootDir: dataRoot });
 const trouteHttp = new TrouteHttpService(troute, trouteJobs);
-const trouteInboundHttp = new TrouteInboundHttpService(trouteJobs);
+const trouteJobHttp = new TrouteJobHttpService(trouteJobs, troute);
 
 export const API = {
   Route: routes,
@@ -109,5 +110,5 @@ export const API = {
   TripHttp: tripHttp,
   Troute: troute,
   TrouteHttp: trouteHttp,
-  TrouteInboundHttp: trouteInboundHttp,
+  TrouteJobHttp: trouteJobHttp,
 };

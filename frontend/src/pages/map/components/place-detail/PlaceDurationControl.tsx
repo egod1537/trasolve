@@ -9,9 +9,11 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { TRIP_PLACE_MAX_DURATION_MINUTES } from '@trasolve/shared';
+import {
+  MIN_VISIT_DURATION_MINUTES,
+  VISIT_TIME_GRANULARITY_MINUTES,
+} from '../../domain/timeGranularity';
 
-const MIN_PLACE_DURATION_MINUTES = 30;
-const PLACE_DURATION_STEP_MINUTES = 30;
 const PLACE_DURATION_OPTIONS = [30, 60, 90, 120, 180] as const;
 const POPUP_GAP = 10;
 const VIEWPORT_GAP = 8;
@@ -33,9 +35,9 @@ function normalizeDuration(durationMinutes: number): number {
   return Math.min(
     TRIP_PLACE_MAX_DURATION_MINUTES,
     Math.max(
-      MIN_PLACE_DURATION_MINUTES,
-      Math.round(durationMinutes / PLACE_DURATION_STEP_MINUTES) *
-        PLACE_DURATION_STEP_MINUTES,
+      MIN_VISIT_DURATION_MINUTES,
+      Math.round(durationMinutes / VISIT_TIME_GRANULARITY_MINUTES) *
+        VISIT_TIME_GRANULARITY_MINUTES,
     ),
   );
 }
@@ -299,9 +301,9 @@ export function PlaceDurationControl({
             <input
               ref={customInputRef}
               type="number"
-              min={MIN_PLACE_DURATION_MINUTES}
+              min={MIN_VISIT_DURATION_MINUTES}
               max={TRIP_PLACE_MAX_DURATION_MINUTES}
-              step={PLACE_DURATION_STEP_MINUTES}
+              step={VISIT_TIME_GRANULARITY_MINUTES}
               value={customDraft}
               disabled={controlDisabled}
               onChange={(event) => setCustomDraft(event.target.value)}
@@ -319,7 +321,7 @@ export function PlaceDurationControl({
           disabled={controlDisabled}
           onClick={openCustomInput}
         >
-          직접 입력
+          직접 입력 ({VISIT_TIME_GRANULARITY_MINUTES}분 단위)
         </button>
       )}
     </div>

@@ -31,7 +31,13 @@
   gap: 8px 16px;
 }
 
-.header-inner > .button {
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-actions > .button {
   flex: none;
 }
 
@@ -126,7 +132,7 @@ a.build-commit:hover {
 
 .button-primary {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-accent-contrast);
 }
 
 .button-primary:not(:disabled):hover {
@@ -142,7 +148,7 @@ a.build-commit:hover {
 
 .button-secondary:hover,
 .button-outline:not(:disabled):hover {
-  border-color: #94a3b8;
+  border-color: var(--color-border-strong);
   background: var(--color-background);
 }
 
@@ -181,10 +187,10 @@ a.build-commit:hover {
 .hero-background-overlay {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.92) 0%,
-    rgba(255, 255, 255, 0.8) 30%,
-    rgba(255, 255, 255, 0.45) 55%,
-    rgba(255, 255, 255, 0.05) 100%
+    rgb(var(--hero-overlay-color) / 92%) 0%,
+    rgb(var(--hero-overlay-color) / 80%) 30%,
+    rgb(var(--hero-overlay-color) / 45%) 55%,
+    rgb(var(--hero-overlay-color) / 5%) 100%
   );
 }
 
@@ -245,7 +251,7 @@ a.build-commit:hover {
   width: 100%;
   height: auto;
   transform: scale(0.5);
-  filter: drop-shadow(0 8px 12px rgba(15, 23, 42, 0.08));
+  filter: drop-shadow(var(--shadow-sm));
 }
 
 .features {
@@ -350,10 +356,10 @@ a.build-commit:hover {
   .hero-background-overlay {
     background: linear-gradient(
       135deg,
-      rgba(255, 255, 255, 0.96) 0%,
-      rgba(255, 255, 255, 0.88) 35%,
-      rgba(255, 255, 255, 0.35) 65%,
-      rgba(255, 255, 255, 0.08) 100%
+      rgb(var(--hero-overlay-color) / 96%) 0%,
+      rgb(var(--hero-overlay-color) / 88%) 35%,
+      rgb(var(--hero-overlay-color) / 35%) 65%,
+      rgb(var(--hero-overlay-color) / 8%) 100%
     );
   }
 
@@ -417,10 +423,10 @@ a.build-commit:hover {
   .hero-background-overlay {
     background: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.96) 0%,
-      rgba(255, 255, 255, 0.9) 35%,
-      rgba(255, 255, 255, 0.4) 60%,
-      rgba(255, 255, 255, 0.1) 100%
+      rgb(var(--hero-overlay-color) / 96%) 0%,
+      rgb(var(--hero-overlay-color) / 90%) 35%,
+      rgb(var(--hero-overlay-color) / 40%) 60%,
+      rgb(var(--hero-overlay-color) / 10%) 100%
     );
   }
 

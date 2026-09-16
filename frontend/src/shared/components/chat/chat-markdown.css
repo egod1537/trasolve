@@ -49,13 +49,13 @@
 }
 .chat-markdown blockquote {
   padding-left: 12px;
-  border-left: 3px solid #cbd5e1;
+  border-left: 3px solid var(--color-border-strong);
   color: var(--color-muted);
 }
 .chat-markdown code {
   padding: 2px 4px;
   border-radius: 4px;
-  background: #e8edf3;
+  background: var(--color-surface-hover);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 0.9em;
 }
@@ -64,7 +64,7 @@
   padding: 12px;
   overflow-x: auto;
   border-radius: 6px;
-  background: #e8edf3;
+  background: var(--color-surface-hover);
   white-space: pre;
   word-break: normal;
   overflow-wrap: normal;
@@ -93,17 +93,17 @@
 .chat-markdown td {
   min-width: 90px;
   padding: 6px 8px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-strong);
   text-align: left;
 }
 .chat-markdown th {
-  background: #eef2f7;
+  background: var(--color-surface-hover);
   font-weight: 600;
 }
 .chat-markdown hr {
   margin: 12px 0;
   border: 0;
-  border-top: 1px solid #cbd5e1;
+  border-top: 1px solid var(--color-border-strong);
 }
 .chat-markdown img {
   max-width: 100%;

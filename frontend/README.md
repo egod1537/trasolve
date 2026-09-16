@@ -162,8 +162,10 @@ are not continually overwritten. `options` applies partial option updates withou
 recreating the map; use `null` to clear min/max zoom limits. Changing `mapId`
 recreates the runtime because Google does not support changing it on an existing
 map. Callback changes do not recreate the map or accumulate event listeners.
-`onReady(handle)` runs once per runtime; use it for commands that need a loaded
-map. Ref commands before readiness or after disposal have no effect.
+`onReady(handle)` runs for the initial runtime and after a `mapId` change; an
+internal theme refresh preserves the stable handle and camera without notifying
+consumers as a new map. Ref commands before readiness or after disposal have no
+effect.
 
 `onMapClick`, `onCenterChanged`, and `onZoomChanged` receive plain data. The map
 click event is a `MapClickEvent`: `{ lat, lng, placeId?: string }`. Google POI
@@ -175,6 +177,23 @@ paths and optional color, weight, and opacity; it performs no directions request
 For custom React overlays, children can call `useGoogleMap()` to access the
 existing `MapAdapter`, `MapObjectController` (`objects`), `MapOverlayHost`, and canvas ref. Children mount when the
 runtime is ready; the component owns their runtime's lifecycle.
+
+## Frontend theme
+
+Trasolve supports Light, Dark, and System themes. System is the default and follows
+live operating-system/browser color-scheme changes. The selected mode is stored in
+browser local storage under `trasolve.theme`; theme state is frontend-only and does
+not affect API payloads or backend behavior.
+
+`src/shared/theme/` owns preference parsing, persistence, system synchronization,
+the document theme contract, and the shared theme control. Semantic light/dark CSS
+tokens live in `src/shared/styles/theme.css`. Product pages consume these tokens
+without maintaining page-local theme state. The Google Maps color-scheme adapter is
+isolated in `src/map/runtime/googleMapTheme.ts`; changing theme rebuilds only the SDK
+runtime because the Maps API accepts `colorScheme` only at initialization, while the
+component preserves its camera and the surrounding product state. The Blueprint
+troute testbed derives its mode from the same global provider and applies Blueprint's
+dark class at its own shell boundary.
 
 ## Testbeds
 

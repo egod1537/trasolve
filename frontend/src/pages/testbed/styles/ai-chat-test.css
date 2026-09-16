@@ -80,6 +80,6 @@
   width: 100%;
   height: min(680px, 70dvh);
   min-height: 360px;
-  box-shadow: 0 4px 16px #0f172a0a;
+  box-shadow: var(--shadow-sm);
   will-change: auto;
 }

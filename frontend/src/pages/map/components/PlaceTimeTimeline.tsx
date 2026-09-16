@@ -5,6 +5,10 @@ import { formatClockTime } from '../domain/clockFormat';
 import { formatDurationMinutes } from '../domain/placeDuration';
 import { getPlaceOpeningStatus } from '../domain/placeOpeningHours';
 import {
+  MIN_VISIT_DURATION_MINUTES,
+  VISIT_TIME_GRANULARITY_MINUTES,
+} from '../domain/timeGranularity';
+import {
   MINUTES_PER_DAY,
   TimeRangeTimeline,
   type TimeRangeTimelineRange,
@@ -40,8 +44,29 @@ type TimelineModel = {
   label: string;
 };
 
-const TIMELINE_SNAP_MINUTES = 30;
 const DEFAULT_VISIT_DURATION_MINUTES = 60;
+
+function snapVisitMinute(minute: number): number {
+  return (
+    Math.round(minute / VISIT_TIME_GRANULARITY_MINUTES) *
+    VISIT_TIME_GRANULARITY_MINUTES
+  );
+}
+
+function normalizeEditableVisitRange(
+  range: TimeRangeTimelineRange,
+): TimeRangeTimelineRange {
+  let start = Math.max(
+    0,
+    Math.min(snapVisitMinute(range.start), MINUTES_PER_DAY),
+  );
+  let end = Math.max(0, Math.min(snapVisitMinute(range.end), MINUTES_PER_DAY));
+  if (end - start < MIN_VISIT_DURATION_MINUTES) {
+    end = Math.min(MINUTES_PER_DAY, start + MIN_VISIT_DURATION_MINUTES);
+    start = Math.max(0, end - MIN_VISIT_DURATION_MINUTES);
+  }
+  return { start, end };
+}
 
 function parseClock(value: string | undefined): number | undefined {
   if (!value) {
@@ -235,28 +260,30 @@ export function PlaceTimeTimeline({
     visitRange !== undefined &&
     visitRange.start >= 0 &&
     visitRange.end <= MINUTES_PER_DAY &&
-    visitRange.end - visitRange.start >= TIMELINE_SNAP_MINUTES;
+    visitRange.end - visitRange.start >= MIN_VISIT_DURATION_MINUTES;
   const canCreateRange = canEditTimeline && model.arrival === undefined;
   const awaitingRangeCreation =
     canCreateRange && displayedVisitRange === undefined;
   const previewRangeChange = (range: TimeRangeTimelineRange) => {
+    const normalizedRange = normalizeEditableVisitRange(range);
     setPreviewRange(
       visitRange &&
-        range.start === visitRange.start &&
-        range.end === visitRange.end
+        normalizedRange.start === visitRange.start &&
+        normalizedRange.end === visitRange.end
         ? null
-        : range,
+        : normalizedRange,
     );
   };
   const saveRangeChange = (range: TimeRangeTimelineRange) => {
     if (!onChangeTimeRange || timelineDisabled) {
       return;
     }
+    const normalizedRange = normalizeEditableVisitRange(range);
     void (async () => {
       try {
         await onChangeTimeRange(
-          formatClockTime(range.start),
-          range.end - range.start,
+          formatClockTime(normalizedRange.start),
+          normalizedRange.end - normalizedRange.start,
         );
       } catch {
         // The owning card surfaces mutation failures and the controlled data
@@ -270,18 +297,20 @@ export function PlaceTimeTimeline({
     if (!canCreateRange || timelineDisabled) {
       return;
     }
-    const visitDuration = Math.min(
-      MINUTES_PER_DAY,
-      Math.max(
-        TIMELINE_SNAP_MINUTES,
-        model.visitDurationMinutes ?? DEFAULT_VISIT_DURATION_MINUTES,
+    const visitDuration = snapVisitMinute(
+      Math.min(
+        MINUTES_PER_DAY,
+        Math.max(
+          MIN_VISIT_DURATION_MINUTES,
+          model.visitDurationMinutes ?? DEFAULT_VISIT_DURATION_MINUTES,
+        ),
       ),
     );
     const maximumStart =
-      Math.floor((MINUTES_PER_DAY - visitDuration) / TIMELINE_SNAP_MINUTES) *
-      TIMELINE_SNAP_MINUTES;
-    const snappedStart =
-      Math.round(startMinute / TIMELINE_SNAP_MINUTES) * TIMELINE_SNAP_MINUTES;
+      Math.floor(
+        (MINUTES_PER_DAY - visitDuration) / VISIT_TIME_GRANULARITY_MINUTES,
+      ) * VISIT_TIME_GRANULARITY_MINUTES;
+    const snappedStart = snapVisitMinute(startMinute);
     const start = Math.max(0, Math.min(snappedStart, maximumStart));
     const range = { start, end: start + visitDuration };
     setPreviewRange(range);
@@ -318,8 +347,8 @@ export function PlaceTimeTimeline({
       wrapAroundMidnight
       editable={canEditTimeline}
       disabled={timelineDisabled}
-      stepMinutes={TIMELINE_SNAP_MINUTES}
-      minimumRangeMinutes={TIMELINE_SNAP_MINUTES}
+      stepMinutes={VISIT_TIME_GRANULARITY_MINUTES}
+      minimumRangeMinutes={MIN_VISIT_DURATION_MINUTES}
       onRangeChange={canEditExistingRange ? previewRangeChange : undefined}
       onRangeChangeEnd={canEditExistingRange ? saveRangeChange : undefined}
       onCreateRange={canCreateRange ? createRange : undefined}

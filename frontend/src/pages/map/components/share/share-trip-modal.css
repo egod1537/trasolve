@@ -7,7 +7,7 @@
   padding: 24px 16px;
   overflow: auto;
   overscroll-behavior: contain;
-  background: rgba(15, 23, 42, 0.42);
+  background: var(--color-overlay);
   pointer-events: auto;
   animation: share-trip-backdrop-in 160ms ease-out;
 }
@@ -57,7 +57,7 @@
 
 .share-trip-modal-close:hover,
 .share-trip-modal-close:focus-visible {
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
   color: var(--color-text);
 }
 
@@ -96,7 +96,7 @@
 }
 
 .share-trip-option.is-disabled {
-  color: #94a3b8;
+  color: var(--color-text-muted);
   cursor: not-allowed;
 }
 
@@ -115,7 +115,7 @@
   width: 40px;
   height: 22px;
   border-radius: 999px;
-  background: #cbd5e1;
+  background: var(--color-border-strong);
   transition: background-color 140ms ease;
 }
 
@@ -126,7 +126,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--color-surface-raised);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
   content: '';
   transition: transform 140ms ease;
@@ -146,7 +146,7 @@
 }
 
 .share-trip-option input:disabled + .share-trip-switch {
-  background: #e2e8f0;
+  background: var(--color-border);
 }
 
 .share-trip-description {
@@ -163,7 +163,7 @@
   padding: 13px 14px;
   border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: #f8fafc;
+  background: var(--color-surface-subtle);
 }
 
 .share-trip-profile strong {
@@ -178,7 +178,7 @@
   height: 36px;
   flex: none;
   border-radius: 50%;
-  background: #dbeafe;
+  background: var(--color-accent-soft);
   color: var(--color-primary-dark);
   font-size: 14px;
   font-weight: 700;
@@ -190,7 +190,7 @@
 }
 
 .share-trip-link-group > label {
-  color: #475569;
+  color: var(--color-text-secondary);
   font-size: 12px;
   font-weight: 650;
 }
@@ -207,10 +207,10 @@
   height: 38px;
   padding: 0 11px;
   overflow: hidden;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-strong);
   border-radius: 8px;
-  background: #f8fafc;
-  color: #475569;
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
   font: inherit;
   font-size: 12px;
   text-overflow: ellipsis;
@@ -225,17 +225,17 @@
   height: 38px;
   gap: 6px;
   padding: 0 11px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-strong);
   border-radius: 8px;
-  background: #fff;
-  color: #475569;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
   cursor: pointer;
 }
 
 .share-trip-copy-button:hover,
 .share-trip-copy-button:focus-visible {
   border-color: var(--color-primary);
-  background: #eff6ff;
+  background: var(--color-accent-soft);
   color: var(--color-primary);
 }
 
@@ -268,10 +268,10 @@
 .share-trip-modal-actions button {
   min-height: 38px;
   padding: 7px 14px;
-  border: 1px solid #d7dee8;
+  border: 1px solid var(--color-border-floating);
   border-radius: 8px;
-  background: #fff;
-  color: #475569;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
   font: inherit;
   font-size: 12px;
   font-weight: 650;
@@ -281,7 +281,7 @@
 .share-trip-modal-actions button.is-primary {
   border-color: var(--color-primary);
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-accent-contrast);
 }
 
 .share-trip-modal-actions button:hover:not(:disabled),

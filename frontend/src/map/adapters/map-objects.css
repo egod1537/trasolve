@@ -27,6 +27,21 @@
   stroke-linejoin: round;
   stroke-width: 1.7;
 }
+.trip-map-marker-label {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1;
+}
+.trip-map-marker.has-label .trip-map-marker-icon {
+  display: none;
+}
+.trip-map-marker.has-label .trip-map-marker-label {
+  display: grid;
+}
 .trip-map-marker.is-selected {
   outline: 3px solid var(--place-color);
   outline-offset: 3px;

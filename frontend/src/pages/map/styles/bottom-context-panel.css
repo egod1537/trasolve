@@ -44,19 +44,19 @@
   border: 0;
   border-radius: 9px;
   background: transparent;
-  color: #64748b;
+  color: var(--color-text-muted);
   cursor: pointer;
 }
 
 .map-tool-panel button:hover:not(:disabled),
 .map-tool-panel button:focus-visible,
 .map-tool-panel button[aria-pressed='true'] {
-  background: #eff6ff;
+  background: var(--color-accent-soft);
   color: var(--color-primary);
 }
 
 .map-tool-panel button:disabled {
-  color: #cbd5e1;
+  color: var(--color-border-strong);
   cursor: default;
 }
 
@@ -118,7 +118,7 @@
 
 .layer-bulk-status-error {
   overflow: hidden;
-  color: #b42318;
+  color: var(--color-danger);
   font-size: 11px;
   font-weight: 650;
   text-overflow: ellipsis;
@@ -145,10 +145,10 @@
   height: 38px;
   gap: 6px;
   padding: 0 10px;
-  border: 1px solid #d7dee8;
+  border: 1px solid var(--color-border-floating);
   border-radius: 9px;
-  background: #fff;
-  color: #475569;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
   font: inherit;
   font-size: 12px;
   font-weight: 650;
@@ -160,22 +160,22 @@
 .layer-bulk-mode-trigger:focus-visible,
 .layer-bulk-mode-trigger[aria-expanded='true'] {
   border-color: var(--color-primary);
-  background: #eff6ff;
+  background: var(--color-accent-soft);
   color: var(--color-primary);
 }
 
 .layer-bulk-delete-trigger {
-  border-color: #fecaca;
-  background: #fff7f7;
-  color: #b42318;
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
 }
 
 .layer-bulk-delete-trigger:hover:not(:disabled),
 .layer-bulk-delete-trigger:focus-visible,
 .layer-bulk-delete-trigger[aria-expanded='true'] {
-  border-color: #fca5a5;
-  background: #fee2e2;
-  color: #991b1b;
+  border-color: var(--color-danger);
+  background: var(--color-danger-soft);
+  color: var(--color-danger-strong);
 }
 
 .layer-bulk-mode-trigger:disabled,
@@ -258,7 +258,7 @@
 .layer-bulk-mode-popover > p,
 .layer-bulk-error {
   margin: 0;
-  color: #b42318;
+  color: var(--color-danger);
   font-size: 11px;
   line-height: 1.4;
 }
@@ -266,7 +266,7 @@
 .layer-bulk-delete-popover {
   display: grid;
   gap: 13px;
-  border-color: #fecaca;
+  border-color: var(--color-danger-border);
 }
 
 .layer-bulk-delete-popover > div:first-child {
@@ -275,7 +275,7 @@
 }
 
 .layer-bulk-delete-popover strong {
-  color: #991b1b;
+  color: var(--color-danger-strong);
   font-size: 13px;
   line-height: 1.4;
 }
@@ -297,10 +297,10 @@
   min-width: 58px;
   height: 34px;
   padding: 0 11px;
-  border: 1px solid #d7dee8;
+  border: 1px solid var(--color-border-floating);
   border-radius: 8px;
-  background: #fff;
-  color: #475569;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
   font: inherit;
   font-size: 12px;
   font-weight: 650;
@@ -308,9 +308,9 @@
 }
 
 .layer-bulk-delete-actions button.is-destructive {
-  border-color: #b42318;
-  background: #b42318;
-  color: #fff;
+  border-color: var(--color-danger);
+  background: var(--color-danger);
+  color: var(--color-accent-contrast);
 }
 
 .layer-bulk-delete-actions button:hover:not(:disabled),
@@ -320,8 +320,8 @@
 
 .layer-bulk-delete-actions button.is-destructive:hover:not(:disabled),
 .layer-bulk-delete-actions button.is-destructive:focus-visible {
-  border-color: #991b1b;
-  background: #991b1b;
+  border-color: var(--color-danger-strong);
+  background: var(--color-danger-strong);
 }
 
 .layer-bulk-delete-actions button:disabled {
@@ -338,7 +338,7 @@
   padding: 24px 16px;
   overflow: auto;
   overscroll-behavior: contain;
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--color-overlay);
   pointer-events: auto;
   animation: route-optimization-backdrop-in 160ms ease-out;
 }
@@ -388,7 +388,7 @@
 
 .route-optimization-modal-header strong {
   margin-top: 5px;
-  color: #475569;
+  color: var(--color-text-secondary);
   font-size: 12px;
   font-weight: 650;
 }
@@ -410,7 +410,7 @@
 
 .route-optimization-modal-close:hover:not(:disabled),
 .route-optimization-modal-close:focus-visible {
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
   color: var(--color-text);
 }
 
@@ -446,7 +446,7 @@
   padding: 12px;
   border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: #f8fafc;
+  background: var(--color-surface-subtle);
   cursor: pointer;
 }
 
@@ -486,7 +486,7 @@
 }
 
 .route-optimization-modal-error {
-  color: #b42318;
+  color: var(--color-danger);
 }
 
 .route-optimization-modal-actions {
@@ -499,10 +499,10 @@
 .route-optimization-modal-actions button {
   min-height: 36px;
   padding: 7px 12px;
-  border: 1px solid #d7dee8;
+  border: 1px solid var(--color-border-floating);
   border-radius: 8px;
-  background: #fff;
-  color: #475569;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
   font: inherit;
   font-size: 12px;
   font-weight: 650;
@@ -512,7 +512,7 @@
 .route-optimization-modal-actions button.is-primary {
   border-color: var(--color-primary);
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-accent-contrast);
 }
 
 .route-optimization-modal-actions button:hover:not(:disabled),

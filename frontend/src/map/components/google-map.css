@@ -3,7 +3,7 @@
   width: 100%;
   height: 400px;
   overflow: hidden;
-  background: #eef0ed;
+  background: var(--color-map-background);
 }
 
 .google-map-canvas {

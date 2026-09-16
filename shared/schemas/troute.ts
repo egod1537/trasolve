@@ -19,7 +19,6 @@ export const trouteJobIdSchema = z
   .max(128)
   .refine((value) => value.trim().length > 0);
 
-export const trouteProgressStatusSchema = z.enum(['queued', 'running']);
 export const trouteProgressStageSchema = z.enum([
   'accepted',
   'building_matrix',
@@ -31,24 +30,8 @@ export const trouteJobStatusSchema = z.enum([
   'running',
   'failed',
   'completed',
+  'cancelled',
 ]);
-
-export const trouteProgressPayloadSchema = z
-  .strictObject({
-    status: trouteProgressStatusSchema,
-    stage: trouteProgressStageSchema,
-    progress: z.number().int().min(0).max(100),
-    message: humanMessageSchema.optional(),
-  })
-  .superRefine((payload, context) => {
-    if (payload.stage !== 'accepted' && payload.status !== 'running') {
-      context.addIssue({
-        code: 'custom',
-        message: 'Progress after the accepted stage must be running.',
-        path: ['status'],
-      });
-    }
-  });
 
 export const trouteErrorPayloadSchema = z.strictObject({
   code: z
@@ -60,32 +43,12 @@ export const trouteErrorPayloadSchema = z.strictObject({
   detail: z.string().max(4096).optional(),
 });
 
-const trouteEventSequenceSchema = z.number().int().min(1).max(MAX_U32);
-
-export const trouteProgressEventSchema = z.strictObject({
-  sequence: trouteEventSequenceSchema,
-  type: z.literal('progress'),
-  data: trouteProgressPayloadSchema,
-});
-
-export const trouteErrorEventSchema = z.strictObject({
-  sequence: trouteEventSequenceSchema,
-  type: z.literal('error'),
-  data: trouteErrorPayloadSchema,
-});
-
-export const trouteJobEventAcceptedResponseSchema = z.strictObject({
-  status: z.literal('accepted'),
-});
-
-export const trouteJobDiagnosticSchema = z.strictObject({
-  code: z.literal('RESULT_MISMATCH'),
-});
-
 export function isTrouteJobTerminalStatus(
   status: z.infer<typeof trouteJobStatusSchema>,
 ): boolean {
-  return status === 'failed' || status === 'completed';
+  return (
+    status === 'failed' || status === 'completed' || status === 'cancelled'
+  );
 }
 
 export const trouteLocationSchema = z.strictObject({
@@ -99,8 +62,7 @@ export const trouteLocationSchema = z.strictObject({
 export const trouteOptimizeRequestSchema = z
   .strictObject({
     job_id: trouteJobIdSchema,
-    locations: z.array(trouteLocationSchema).min(1).max(500),
-    start_location_id: nonEmptyStringSchema,
+    locations: z.array(trouteLocationSchema).min(2).max(500),
     start_time: timeOfDaySchema,
   })
   .superRefine((request, context) => {
@@ -123,14 +85,6 @@ export const trouteOptimizeRequestSchema = z
         });
       }
     });
-
-    if (!ids.has(request.start_location_id)) {
-      context.addIssue({
-        code: 'custom',
-        message: 'The start location must exist in locations.',
-        path: ['start_location_id'],
-      });
-    }
   });
 
 export const trouteRouteStopSchema = z.object({
@@ -145,18 +99,6 @@ export const trouteOptimizeResponseSchema = z.object({
   total_travel_minutes: z.number().int().min(0).max(MAX_U32),
 });
 
-export const trouteResultEventSchema = z.strictObject({
-  sequence: trouteEventSequenceSchema,
-  type: z.literal('result'),
-  data: trouteOptimizeResponseSchema,
-});
-
-export const trouteJobEventSchema = z.discriminatedUnion('type', [
-  trouteProgressEventSchema,
-  trouteErrorEventSchema,
-  trouteResultEventSchema,
-]);
-
 export const trouteJobStateSchema = z.strictObject({
   job_id: trouteJobIdSchema,
   status: trouteJobStatusSchema,
@@ -165,6 +107,74 @@ export const trouteJobStateSchema = z.strictObject({
   last_message: humanMessageSchema.nullable(),
   error: trouteErrorPayloadSchema.nullable(),
   result: trouteOptimizeResponseSchema.nullable(),
-  diagnostic: trouteJobDiagnosticSchema.nullable(),
-  events: z.array(trouteJobEventSchema),
+});
+
+export const trouteJobHistoryItemSchema = z.strictObject({
+  request: trouteOptimizeRequestSchema,
+  state: trouteJobStateSchema,
+  created_at: z.number().int().nonnegative(),
+  updated_at: z.number().int().nonnegative(),
+  completed_at: z.number().int().nonnegative().nullable(),
+});
+
+export const trouteJobHistoryResponseSchema = z.strictObject({
+  jobs: z.array(trouteJobHistoryItemSchema),
+});
+
+export const trouteRemoteJobSchema = z
+  .strictObject({
+    request: trouteOptimizeRequestSchema,
+    job_id: trouteJobIdSchema,
+    status: trouteJobStatusSchema,
+    stage: trouteProgressStageSchema.nullable(),
+    progress: z.number().int().min(0).max(100),
+    last_message: humanMessageSchema.nullable(),
+    created_at: z.number().int().nonnegative(),
+    updated_at: z.number().int().nonnegative(),
+    completed_at: z.number().int().nonnegative().nullable(),
+    result: trouteOptimizeResponseSchema.nullable(),
+    error: trouteErrorPayloadSchema.nullable(),
+  })
+  .superRefine((job, context) => {
+    if (job.request.job_id !== job.job_id) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Remote Job ID must match request.job_id.',
+        path: ['job_id'],
+      });
+    }
+  });
+
+export const trouteRemoteJobSummarySchema = z.strictObject({
+  job_id: trouteJobIdSchema,
+  status: trouteJobStatusSchema,
+  created_at: z.number().int().nonnegative(),
+  updated_at: z.number().int().nonnegative(),
+});
+
+export const trouteRemoteJobListResponseSchema = z.strictObject({
+  jobs: z.array(trouteRemoteJobSummarySchema),
+});
+
+export const trouteRemoteTimelineEntrySchema = z.strictObject({
+  id: z.string(),
+  pair_id: z.string(),
+  timestamp_ms: z.number().int().nonnegative(),
+  direction: z.enum(['REQUEST', 'RESPONSE']),
+  source: z.string(),
+  target: z.string(),
+  method: z.string().nullable(),
+  path: z.string().nullable(),
+  status: z.number().int().nullable(),
+  latency_ms: z.number().nonnegative().nullable(),
+  headers: z.record(z.string(), z.string()).nullable(),
+  query: z.record(z.string(), z.unknown()).nullable(),
+  body: z.unknown().nullable(),
+  raw: z.string().nullable(),
+  error: z.string().nullable(),
+});
+
+export const trouteRemoteTimelineSchema = z.strictObject({
+  job_id: trouteJobIdSchema,
+  entries: z.array(trouteRemoteTimelineEntrySchema),
 });

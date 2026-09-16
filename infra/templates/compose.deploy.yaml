@@ -15,11 +15,11 @@ services:
       DATABASE_URL: ${DATABASE_URL:-}
       GOOGLE_ROUTES_API_KEY: ${GOOGLE_ROUTES_API_KEY:-}
       GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
-      TROUTE_BASE_URL: ${TROUTE_BASE_URL:-}
-      TRASOLVE_DATA_DIR: /app/backend/data
+      TROUTE_BASE_URL: ${TROUTE_BASE_URL:-https://troute.mangagaki.net/api/}
+      TRASOLVE_DATA_DIR: /data
       TRASOLVE_LOCAL_USER_ID: ${TRASOLVE_LOCAL_USER_ID:-local-user}
     volumes:
-      - trip-data:/app/backend/data
+      - ./runtime/trasolve:/data
     networks: [jjs-edge]
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
@@ -68,10 +68,6 @@ services:
       driver: json-file
       options: {max-size: "10m", max-file: "5"}
     restart: unless-stopped
-
-volumes:
-  trip-data:
-    name: jjs-${JJS_BRANCH_SLUG}-trip-data
 
 networks:
   jjs-edge:

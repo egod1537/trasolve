@@ -1,4 +1,5 @@
 import type { KeyboardEvent, PointerEvent } from 'react';
+import { DragHandle } from '../../../../shared/components/DragHandle';
 
 type Props = {
   label: string;
@@ -22,28 +23,16 @@ export function LayerDragHandle({
   onKeyDown,
 }: Props) {
   return (
-    <button
-      type="button"
-      className={`trip-layer-drag-handle${dragging ? ' is-dragging' : ''}`}
-      aria-label={`${label} 순서 변경`}
-      aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
-      title="드래그하거나 Alt + ↑/↓ 키로 순서 변경"
-      onClick={(event) => event.stopPropagation()}
+    <DragHandle
+      className="trip-layer-drag-handle"
+      label={label}
+      dragging={dragging}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
       onLostPointerCapture={onLostPointerCapture}
       onKeyDown={onKeyDown}
-    >
-      <svg viewBox="0 0 16 20" aria-hidden="true">
-        <circle cx="5" cy="5" r="1.25" />
-        <circle cx="11" cy="5" r="1.25" />
-        <circle cx="5" cy="10" r="1.25" />
-        <circle cx="11" cy="10" r="1.25" />
-        <circle cx="5" cy="15" r="1.25" />
-        <circle cx="11" cy="15" r="1.25" />
-      </svg>
-    </button>
+    />
   );
 }

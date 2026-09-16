@@ -21,11 +21,11 @@ Frontend는 `MapPage → TripRepository`로 목록·선택·생성·삭제를 �
 `/map`은 backend에서 내 여행 목록을 불러오며 여행 생성·열기·제목/순서 저장·삭제를 지원합니다.
 `TripHttpService → TripController → TripRepository`로 처리하고,
 `instances.ts`에서 `LocalFileTripRepository`를 주입합니다. shared Trip 계약을 사용하며
-기본 저장 위치는 `backend/data/users/local-user/trips/<tripId>.json`입니다.
+기본 저장 위치는 `.local/trasolve/users/local-user/trips/<tripId>.json`입니다.
 `TRASOLVE_DATA_DIR`와 `TRASOLVE_LOCAL_USER_ID`로 저장 루트와 임시 사용자를 설정합니다.
 파일은 검증 후 임시 파일에 쓰고 rename하며 사용자 범위를 분리합니다. 실제 인증은 아직 없고
 같은 서버의 클라이언트는 설정된 local user를 공유합니다.
-배포는 branch별 named volume에 저장합니다. [API·저장소·PostgreSQL 교체 안내](docs/trip-maps.md)를 참고하세요.
+배포는 host의 `runtime/trasolve`를 container `/data`에 연결해 저장합니다. [API·저장소·PostgreSQL 교체 안내](docs/trip-maps.md)를 참고하세요.
 
 ### AI chat
 
@@ -37,11 +37,16 @@ Frontend는 `MapPage → TripRepository`로 목록·선택·생성·삭제를 �
 ```
 
 ```json
-{ "message": { "role": "assistant", "content": "주변 장소를 함께 묶으면 이동 시간을 줄일 수 있어요." } }
+{
+  "message": {
+    "role": "assistant",
+    "content": "주변 장소를 함께 묶으면 이동 시간을 줄일 수 있어요."
+  }
+}
 ```
 
-요청 메시지는 `user` 또는 `assistant`이며, 내용은 공백 제거 후 1~4000자입니다.
-요청은 1~100개의 메시지와 최대 2MiB JSON 본문을 허용합니다. 응답 역할은 항상 `assistant`입니다.
+요청 메시지는 `user` 또는 `assistant`이며, 내용은 공백 제거 후 1~~4000자입니다.
+요청은 1~~100개의 메시지와 최대 2MiB JSON 본문을 허용합니다. 응답 역할은 항상 `assistant`입니다.
 오류는 기존 API와 같은 `{ error: { code, message } }` 형태이며, 400 `INVALID_CHAT_REQUEST`,
 405 `METHOD_NOT_ALLOWED`, 413 `REQUEST_TOO_LARGE`, 415 `UNSUPPORTED_MEDIA_TYPE`,
 502 `CHAT_UNAVAILABLE`를 사용합니다. 응답은 JSON이고 `Cache-Control: no-store`를 설정합니다.
@@ -75,93 +80,120 @@ RandomChatProvider의 응답 두 개는 Markdown 일정 예시입니다.
 
 Trasolve backend는 `POST /api/troute/optimize`를 통해서만 troute 최적화 API를
 호출합니다. 브라우저가 troute를 직접 호출하지 않으며, `backend/src/troute/`의
-`TrouteClient`가 `${TROUTE_BASE_URL}/optimize` 요청, 30초 제한 시간, 응답 검증과
+`TrouteClient`가 `TROUTE_BASE_URL`을 기준으로 `optimize` 요청, 30초 제한 시간, 응답 검증과
 upstream 오류 분류를 담당합니다. 요청·응답의 v0 wire 계약은
-`shared/schemas/troute.ts`에 있고 시간은 `HH:MM` 문자열입니다.
+`shared/schemas/troute.ts`에 있고 시간은 `HH:MM` 문자열입니다. `locations[0]`은
+고정 출발지, 마지막 location은 고정 도착지이며 그 사이 location들만 최적화
+후보입니다. 이 순서가 endpoint 의미를 전달하므로 별도 출발지 ID 필드는 없습니다.
+Trasolve와 이 계약을 지원하는 troute 버전은 함께 배포해야 합니다.
 
 로컬 수동 확인:
 
-1. troute 저장소에서 최적화 HTTP endpoint를 구현한 뒤 `cargo run`으로 실행합니다.
-2. `backend/.env.local`에 `TROUTE_BASE_URL=http://127.0.0.1:8080`을 설정하고 Trasolve를
+1. troute 저장소에서 Job HTTP API를 구현한 뒤 `cargo run`으로 실행합니다.
+2. `backend/.env.local`에 `TROUTE_BASE_URL=http://127.0.0.1:18080`을 설정하고 Trasolve를
    `npm run dev`로 실행합니다.
 3. 다음 요청을 보내 troute 로그와 Trasolve 응답을 함께 확인합니다.
 
 ```sh
 curl --fail-with-body -X POST http://127.0.0.1:43127/api/troute/optimize \
   -H 'Content-Type: application/json' \
-  -d '{"job_id":"route-example-001","locations":[{"id":"place-1","place_id":"GOOGLE_PLACE_ID","open_time":"09:00","close_time":"18:00","stay_minutes":60}],"start_location_id":"place-1","start_time":"09:00"}'
+  -d '{"job_id":"route-example-001","locations":[{"id":"start","place_id":"GOOGLE_PLACE_ID_START","open_time":"09:00","close_time":"18:00","stay_minutes":0},{"id":"destination","place_id":"GOOGLE_PLACE_ID_DESTINATION","open_time":"09:00","close_time":"18:00","stay_minutes":0}],"start_time":"09:00"}'
 ```
 
 현재 troute 서버가 아직 `POST /optimize`를 노출하지 않는 버전이면 gateway는 해당
 upstream HTTP 상태를 정규화된 오류로 반환합니다. 배포 환경에서는 host의
-`TROUTE_BASE_URL`이 backend container에만 전달됩니다.
+`TROUTE_BASE_URL`이 backend container에만 전달됩니다. 공개 troute는 API가 `/api/`
+아래에 있으므로 `https://troute.mangagaki.net/api/`처럼 API prefix와 마지막 `/`까지
+포함합니다. 로컬에서는 실제 troute API port에 맞춘
+`http://127.0.0.1:18080` 같은 주소를 사용합니다.
 
-### troute inbound internal API
+### troute Job polling API
 
-반대 방향인 `troute → Trasolve Backend` 서버 간 연동은
-`/api/internal/troute/*` namespace를 전용 계약으로 사용합니다. 브라우저용 Trip API를
-troute 연동 계약으로 직접 노출하지 않습니다.
+troute 통합은 `Trasolve → troute` 단방향입니다. troute는 Trasolve 주소를 알지 않으며
+callback을 보내지 않습니다. 브라우저는 Trasolve의 `/api/internal/troute/*`만 호출하고,
+Trasolve backend가 `TROUTE_BASE_URL` 기준으로 다음 troute API를 조회합니다.
 
-첫 연결 확인 endpoint는 `GET /api/internal/troute/health`입니다.
+- `GET health`
+- `GET integration/jobs?limit=50`
+- `GET integration/jobs/{job_id}`
+- `GET integration/jobs/{job_id}/timeline`
+- `POST integration/jobs/{job_id}/cancel`
+
+Job 상세 응답은 troute의 `#[serde(flatten)]` 계약을 따라 실행 상태가 최상위에 있는 flat
+구조입니다. `state` 중첩 객체는 사용하지 않습니다.
 
 ```json
-{"status":"ok","service":"trasolve"}
+{
+  "request": {
+    "job_id": "route-example-001",
+    "locations": [
+      {
+        "id": "start",
+        "place_id": "GOOGLE_PLACE_ID_START",
+        "open_time": "09:00",
+        "close_time": "18:00",
+        "stay_minutes": 0
+      },
+      {
+        "id": "destination",
+        "place_id": "GOOGLE_PLACE_ID_DESTINATION",
+        "open_time": "09:00",
+        "close_time": "18:00",
+        "stay_minutes": 0
+      }
+    ],
+    "start_time": "09:00"
+  },
+  "job_id": "route-example-001",
+  "status": "running",
+  "stage": "solving",
+  "progress": 60,
+  "last_message": "Solving route",
+  "created_at": 1789530000000,
+  "updated_at": 1789530005000,
+  "completed_at": null,
+  "result": null,
+  "error": null
+}
 ```
 
-GET 이외의 method는 `Allow: GET`과 정규화된 JSON 오류를 포함한 HTTP 405를 반환합니다.
-이 endpoint는 연결 확인만 담당하며 browser cookie에 의존하지 않습니다. 인증 방식과
-Trip/Place 조회는 후속 작업으로 미룹니다.
+Trasolve의 `GET /api/internal/troute/health`도 troute의 `GET health`를 실제 호출하므로 원격
+연결 상태를 반영합니다. 브라우저 cookie나 CORS에는 의존하지 않습니다.
 
 `POST /api/troute/optimize` 요청의 `job_id`는 공백이 아닌 최대 128자의 opaque 문자열입니다.
-Backend는 troute 호출 전에 해당 ID의 in-memory job을 `pending`, progress `0`으로 만들며,
-이미 사용 중인 ID는 재사용하지 않습니다. troute는 아래 callback으로 같은 ID를 돌려줍니다.
+Backend는 troute 호출 전에 해당 ID의 로컬 Job과 `request.json`을 만들며 이미 사용 중인
+ID는 재사용하지 않습니다. 이후 frontend는 다음 Trasolve API만 사용합니다.
 
-```text
-POST /api/internal/troute/jobs/{job_id}/events
-GET  /api/internal/troute/jobs/{job_id}
-```
+- `GET /api/internal/troute/jobs?limit=50`
+- `GET /api/internal/troute/jobs/{job_id}`
+- `POST /api/internal/troute/jobs/{job_id}/cancel`
 
-공통 event envelope는 `{ "sequence": 1, "type": "progress", "data": {} }`이고 sequence는
-job마다 1부터 빈틈없이 증가합니다. 동일 sequence와 내용의 재전송은 한 번만 저장되는
-idempotent retry로 처리합니다.
+단일 active Job 조회는 매번 troute `GET integration/jobs/{job_id}`를 호출하여 progress,
+stage, message, result, error, cancelled 상태를 동기화합니다. 최근 목록 조회는 troute 목록과
+로컬 목록을 비교해 새 Job이나 변경된 Job만 상세 동기화합니다. 따라서 다른 client가 troute에
+직접 만든 Job도 testbed 목록에 나타납니다. 강제 종료도 Trasolve가 troute cancel API로
+전달한 뒤 최신 원격 상태를 다시 조회합니다. 이미 completed/failed/cancelled인 Job은 HTTP
+409 `TROUTE_JOB_NOT_CANCELLABLE`로 거절합니다.
 
-Progress payload의 `status`는 `queued | running`, `stage`는 아래 허용값 중 하나입니다.
+Job은 기본적으로 `.local/trasolve/troute-jobs/<job_id>/`에 저장하는 원격 상태 mirror입니다.
+파일명으로 안전하지 않은 opaque ID만 경로 이탈을 막기 위해 별도 인코딩합니다.
+`request.json`, `state.json`, `result.json` 또는 `error.json`과 최근 Job index를 atomic write로
+보존하며 `state.json`에는 마지막 원격 동기화 시각인 `last_synced_at`도 기록합니다. callback
+event archive와 sequence 처리는 사용하지 않습니다. 기존 callback-era `events.jsonl` 파일은
+복구 시 무시하지만 삭제하지 않습니다. `TRASOLVE_DATA_DIR`로 저장 루트를 바꿀 수 있고 배포
+환경은 `/data`를 사용합니다.
 
-- `accepted`
-- `building_matrix`
-- `solving`
-- `scheduling`
+Trasolve 재시작 후 pending/running mirror는 그대로 복구되고 다음 조회에서 troute 상태와
+다시 동기화됩니다. troute가 일시적으로 응답하지 않으면 마지막 로컬 상태를 지우거나 임의로
+terminal 처리하지 않으며 다음 polling에서 재시도합니다. `/testbed/troute`는 선택한 active
+Job을 약 1초, 최근 목록을 약 2초 간격으로 갱신하고 completed/failed/cancelled 상태에서는
+상세 polling을 중단합니다. frontend Timeline에는 실제 browser → Trasolve 요청/응답만
+기록하며 callback traffic을 만들어내지 않습니다.
 
-`progress`는 정수 `0..100`이며 감소할 수 없습니다. 첫 progress event부터 job의 파생 상태는
-`running`입니다. 첫 progress 이후의 event payload status는 `running`이어야 합니다.
-선택적인 `message`는 최대 1024자의 표시·진단용 텍스트이며 프로그램 로직의 근거로 쓰지
-않습니다.
-
-Error payload는 `code`, `message`, 선택적인 `detail`로 구성됩니다. `code`는 최대 128자의
-대문자 snake-case 식별자이고 message는 최대 1024자, 진단 전용 detail은 최대 4096자입니다.
-Error event를 받으면 job은 `failed` terminal 상태가 됩니다. 이후 새 progress/error/result는
-HTTP 409 `TROUTE_JOB_TERMINAL`로 거절하며, 이미 수락한 event의 정확한 재전송만 허용합니다.
-조회 응답은 `status`, `stage`, `progress`, `last_message`, `error`, `result`, `diagnostic`,
-`events`를 포함합니다.
-현재 저장소는 프로세스 메모리 전용이며 재시작 시 초기화됩니다.
-
-Result event의 `data`는 별도 schema를 만들지 않고 동기 `POST /optimize` 응답과 같은
-`trouteOptimizeResponseSchema`를 사용합니다. route는 한 개 이상의 stop을 포함하고 시간은
-기존과 동일한 `HH:MM` 형식입니다. 유효한 result callback을 받으면 job은 `completed`,
-progress `100`, stage `null`이 되며 error를 비우고 결과를 저장합니다. `completed`도 terminal
-상태이므로 정확한 idempotent retry 외의 후속 event는 거절합니다.
-
-전환 기간에는 troute의 동기 optimize 응답과 result callback이 함께 도착할 수 있습니다.
-동기 응답은 기존처럼 브라우저 요청에 직접 반환하고, callback 결과는 job record와 event
-history에 저장합니다. 두 결과는 같은 schema로 정규화한 canonical JSON을 비교합니다.
-일치하지 않으면 callback 결과를 덮어쓰지 않고 job의 `diagnostic.code`에
-`RESULT_MISMATCH`를 기록하며 backend 로그에도 남깁니다. callback이 먼저 도착해도 나중에
-동기 응답을 받을 때 같은 비교를 수행하며 이미 반환된 사용자 응답을 소급해 실패시키지 않습니다.
-
-`/testbed/troute`는 요청의 job ID를 표시하고 pending/running 동안 약 1초마다 조회합니다.
-failed/completed 상태에서는 polling을 중단합니다. production 지도 UI, SSE, WebSocket에는
-아직 연결하지 않습니다. 완료된 callback 결과의 최종 경로, 총 이동 시간과 raw job/event
-상태는 testbed에서 확인할 수 있습니다.
+Trasolve 프런트엔드는 Light, Dark, System 테마를 지원하며 기본값은 System입니다. 선택은
+브라우저의 `trasolve.theme` 로컬 저장소에 유지되고 System 모드는 운영 체제의 색상 설정
+변경을 따릅니다. `/testbed/troute`도 같은 전역 설정을 사용하며 Blueprint 컴포넌트에는
+해석된 테마에 맞춰 Blueprint dark class를 적용합니다. 테마는 API 요청에 영향을 주지 않습니다.
 
 다음 경로는 namespace 확장 방향일 뿐 현재 구현된 API가 아닙니다.
 
@@ -283,7 +315,7 @@ provider 계약이나 현재 backend wiring에는 포함하지 않습니다.
 
 - `POST /api/google/maps/places/autocomplete`: JSON 본문 `{ "input": "Tokyo tower" }`.
   `languageCode`, `regionCode`, `sessionToken`, `locationBias: { lat, lng, radiusMeters }`는
-  선택값입니다. 검색어는 공백 제거 후 2~1024자, 반경은 0~50000m를 허용합니다.
+  선택값입니다. 검색어는 공백 제거 후 2~~1024자, 반경은 0~~50000m를 허용합니다.
   응답은 `{ suggestions: [{ placeId, text, secondaryText }] }`입니다.
 - `GET /api/google/maps/places/:placeId`: 선택적인 query parameter로 `languageCode`,
   `regionCode`, `sessionToken`을 받습니다. 응답은
@@ -301,16 +333,16 @@ Google 원본 응답은 서버에서 검증·변환하며, Google 오류 본문�
 
 오류 형식은 Routes와 같은 `{ error: { code, message } }`입니다.
 
-| HTTP | code | 상황 |
-| --- | --- | --- |
-| 400 | `INVALID_PLACE_REQUEST` | 잘못된 JSON·검색어·ID·옵션 또는 Google의 요청 거부 |
-| 404 | `PLACE_NOT_FOUND` | Google 상세 조회에서 장소를 찾지 못함 |
-| 405 | `METHOD_NOT_ALLOWED` | 잘못된 HTTP method (`Allow` 헤더 포함) |
-| 413 | `REQUEST_TOO_LARGE` | JSON 본문이 16KB 초과 |
-| 415 | `UNSUPPORTED_MEDIA_TYPE` | 자동완성 요청의 Content-Type이 JSON이 아님 |
-| 502 | `PLACES_UNAVAILABLE` | Google 권한·쿼터·연결 오류 또는 잘못된 응답 |
-| 503 | `PLACES_NOT_CONFIGURED` | 서버 Places 키 미설정 |
-| 504 | `PLACES_TIMEOUT` | Google 요청 제한 시간 초과 (기본 15초) |
+| HTTP | code                     | 상황                                               |
+| ---- | ------------------------ | -------------------------------------------------- |
+| 400  | `INVALID_PLACE_REQUEST`  | 잘못된 JSON·검색어·ID·옵션 또는 Google의 요청 거부 |
+| 404  | `PLACE_NOT_FOUND`        | Google 상세 조회에서 장소를 찾지 못함              |
+| 405  | `METHOD_NOT_ALLOWED`     | 잘못된 HTTP method (`Allow` 헤더 포함)             |
+| 413  | `REQUEST_TOO_LARGE`      | JSON 본문이 16KB 초과                              |
+| 415  | `UNSUPPORTED_MEDIA_TYPE` | 자동완성 요청의 Content-Type이 JSON이 아님         |
+| 502  | `PLACES_UNAVAILABLE`     | Google 권한·쿼터·연결 오류 또는 잘못된 응답        |
+| 503  | `PLACES_NOT_CONFIGURED`  | 서버 Places 키 미설정                              |
+| 504  | `PLACES_TIMEOUT`         | Google 요청 제한 시간 초과 (기본 15초)             |
 
 수동 확인은 `/testbed/google-maps`에서 검색어 입력, 결과 클릭 또는 ↑/↓/Enter 선택,
 지도 이동과 장소 정보 확인, 선택 장소를 경로의 출발지·도착지로 지정하는 순서로 진행합니다.
@@ -340,11 +372,11 @@ container는 external Docker network `jjs-edge`에서 이름으로 통신합니�
 
 ## URL 및 이름 규칙
 
-| Branch | Compose project | URL | GitHub environment |
-| --- | --- | --- | --- |
-| `main` | `jjs-main` | `https://jjs.mangagaki.net` | `production` |
-| `w1` | `jjs-w1` | `https://w1-jjs.mangagaki.net` | `w1` |
-| `feat-auth` | `jjs-feat-auth` | `https://feat-auth-jjs.mangagaki.net` | `feat-auth` |
+| Branch      | Compose project | URL                                   | GitHub environment |
+| ----------- | --------------- | ------------------------------------- | ------------------ |
+| `main`      | `jjs-main`      | `https://jjs.mangagaki.net`           | `production`       |
+| `w1`        | `jjs-w1`        | `https://w1-jjs.mangagaki.net`        | `w1`               |
+| `feat-auth` | `jjs-feat-auth` | `https://feat-auth-jjs.mangagaki.net` | `feat-auth`        |
 
 이미 DNS/Docker-safe인 소문자 branch는 그대로 사용합니다. `/`, 대문자, 비 ASCII 문자,
 길이 초과 또는 `main` 충돌이 있으면 정규화한 뒤 branch SHA-256의 앞 8자를 붙입니다.

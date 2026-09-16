@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { ThemeControl } from '../../../../shared/theme/ThemeControl';
 import '../../styles/map-user-controls.css';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { AccountSettingsModal } from './AccountSettingsModal';
@@ -138,7 +139,9 @@ export function MapUserControls() {
 
   const user = state.status === 'signed-in' ? state.user : null;
   const displayName = user ? (user.name ?? user.email) : null;
-  const profileLabel = user ? `${displayName} 프로필` : 'Google 계정으로 로그인';
+  const profileLabel = user
+    ? `${displayName} 프로필`
+    : 'Google 계정으로 로그인';
 
   return (
     <div
@@ -147,6 +150,7 @@ export function MapUserControls() {
       role="group"
       aria-label="사용자 메뉴"
     >
+      <ThemeControl className="map-theme-control" />
       <span className="map-user-control-anchor">
         <button
           type="button"

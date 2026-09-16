@@ -3,6 +3,7 @@ import { GoogleOverlayHost } from '../adapters/GoogleOverlayHost';
 import { GoogleMapObjectController } from '../adapters/GoogleMapObjectController';
 import type { MapRuntime, MapRuntimeConfig } from '../adapters/MapRuntime';
 import { loadGoogleMaps, mapsConfig } from './googleMaps';
+import { getGoogleMapThemeOptions } from './googleMapTheme';
 
 // Browser rendering infrastructure; data queries belong to src/api.
 export async function createGoogleMapRuntime(
@@ -57,6 +58,7 @@ export async function createGoogleMapRuntime(
       streetViewControl: false,
       mapTypeControl: false,
       fullscreenControl: false,
+      ...getGoogleMapThemeOptions(config.theme ?? 'light'),
       ...config.options,
     });
     adapter = new GoogleMapAdapter(instance);
