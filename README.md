@@ -46,15 +46,17 @@ Frontend는 `MapPage → TripRepository`로 목록·선택·생성·삭제를 �
 405 `METHOD_NOT_ALLOWED`, 413 `REQUEST_TOO_LARGE`, 415 `UNSUPPORTED_MEDIA_TYPE`,
 502 `CHAT_UNAVAILABLE`를 사용합니다. 응답은 JSON이고 `Cache-Control: no-store`를 설정합니다.
 
-`backend/src/instances.ts`에서 `new RandomChatProvider()`를 `new ChatService(chatProvider)`에
-주입하고 `API.Chat`으로 노출합니다. RandomChatProvider는 실제 개발 환경에서 동작하는
-기본 provider로, 요청마다 0.5~3초의 무작위 지연 후 준비된 문장 중 하나를 무작위로 반환합니다.
-대기는 비동기로 처리하며 실제 LLM 호출이나 일정 변경은 하지 않습니다.
-`ChatService`는 HTTP 처리·검증·오류 정규화를 맡으며 provider 구현을 생성하지 않습니다.
+`backend/.env.local`의 `AI_PROVIDER`는 `openwebui`, `gemini`, `random` 중 하나를 선택합니다.
+명시적으로 선택하면 해당 provider의 필수 설정이 잘못된 경우 서버 시작이 실패합니다.
+`AI_PROVIDER`를 비우면 기존 로컬 동작을 유지해 `OPENWEBUI_API_KEY`가 있을 때 OpenWebUI를,
+없을 때 개발용 Random provider를 사용합니다. Gemini는 `GEMINI_API_KEY`와 `GEMINI_MODEL`,
+OpenWebUI는 `OPENWEBUI_API_KEY`와 `OPENWEBUI_MODEL`이 필요합니다. 키는 backend에만 둡니다.
 
-향후 Ollama를 연결할 때는 `backend/src/ai/providers/ollamaChatProvider.ts`에서
-`ChatProvider.chat(request): Promise<ChatResponse>`를 구현하고 `instances.ts`의 provider 생성만
-교체합니다. frontend와 HTTP 계약은 그대로 사용합니다. 현재 provider 선택 환경변수는 없습니다.
+`backend/src/instances.ts`는 선택된 `ChatProvider`를 `ChatService`에 주입합니다.
+`OpenWebUIChatProvider`, `GeminiChatProvider`, `RandomChatProvider`가 vendor별 요청과 응답을
+처리하고, `ChatService`는 HTTP 처리·공용 계약 검증·`CHAT_UNAVAILABLE` 오류 정규화만 맡습니다.
+Random provider는 요청마다 0.5~3초의 무작위 지연 후 준비된 문장 중 하나를 반환합니다.
+frontend와 `/api/chat` HTTP 계약은 provider 선택과 무관하게 동일합니다.
 
 패널의 환영 문구는 전송하지 않습니다. 실제 대화 중 최근 100개 메시지만 서버로 보내며
 화면의 대화 이력은 유지합니다. 닫기·열기는 이력과 진행 중 요청을 유지하고, `/map`을 떠나
@@ -68,6 +70,107 @@ assistant 응답은 `react-markdown`과 `remark-gfm`으로 렌더링하며 user 
 응답 대기 중에도 이미 전송된 메시지를 저장할 수 있습니다. Markdown 생성과 다운로드는
 `frontend/src/shared/utils/chatMarkdown.ts`에서 처리하며 backend 계약은 `content: string` 그대로입니다.
 RandomChatProvider의 응답 두 개는 Markdown 일정 예시입니다.
+
+### troute backend gateway
+
+Trasolve backend는 `POST /api/troute/optimize`를 통해서만 troute 최적화 API를
+호출합니다. 브라우저가 troute를 직접 호출하지 않으며, `backend/src/troute/`의
+`TrouteClient`가 `${TROUTE_BASE_URL}/optimize` 요청, 30초 제한 시간, 응답 검증과
+upstream 오류 분류를 담당합니다. 요청·응답의 v0 wire 계약은
+`shared/schemas/troute.ts`에 있고 시간은 `HH:MM` 문자열입니다.
+
+로컬 수동 확인:
+
+1. troute 저장소에서 최적화 HTTP endpoint를 구현한 뒤 `cargo run`으로 실행합니다.
+2. `backend/.env.local`에 `TROUTE_BASE_URL=http://127.0.0.1:8080`을 설정하고 Trasolve를
+   `npm run dev`로 실행합니다.
+3. 다음 요청을 보내 troute 로그와 Trasolve 응답을 함께 확인합니다.
+
+```sh
+curl --fail-with-body -X POST http://127.0.0.1:43127/api/troute/optimize \
+  -H 'Content-Type: application/json' \
+  -d '{"job_id":"route-example-001","locations":[{"id":"place-1","place_id":"GOOGLE_PLACE_ID","open_time":"09:00","close_time":"18:00","stay_minutes":60}],"start_location_id":"place-1","start_time":"09:00"}'
+```
+
+현재 troute 서버가 아직 `POST /optimize`를 노출하지 않는 버전이면 gateway는 해당
+upstream HTTP 상태를 정규화된 오류로 반환합니다. 배포 환경에서는 host의
+`TROUTE_BASE_URL`이 backend container에만 전달됩니다.
+
+### troute inbound internal API
+
+반대 방향인 `troute → Trasolve Backend` 서버 간 연동은
+`/api/internal/troute/*` namespace를 전용 계약으로 사용합니다. 브라우저용 Trip API를
+troute 연동 계약으로 직접 노출하지 않습니다.
+
+첫 연결 확인 endpoint는 `GET /api/internal/troute/health`입니다.
+
+```json
+{"status":"ok","service":"trasolve"}
+```
+
+GET 이외의 method는 `Allow: GET`과 정규화된 JSON 오류를 포함한 HTTP 405를 반환합니다.
+이 endpoint는 연결 확인만 담당하며 browser cookie에 의존하지 않습니다. 인증 방식과
+Trip/Place 조회는 후속 작업으로 미룹니다.
+
+`POST /api/troute/optimize` 요청의 `job_id`는 공백이 아닌 최대 128자의 opaque 문자열입니다.
+Backend는 troute 호출 전에 해당 ID의 in-memory job을 `pending`, progress `0`으로 만들며,
+이미 사용 중인 ID는 재사용하지 않습니다. troute는 아래 callback으로 같은 ID를 돌려줍니다.
+
+```text
+POST /api/internal/troute/jobs/{job_id}/events
+GET  /api/internal/troute/jobs/{job_id}
+```
+
+공통 event envelope는 `{ "sequence": 1, "type": "progress", "data": {} }`이고 sequence는
+job마다 1부터 빈틈없이 증가합니다. 동일 sequence와 내용의 재전송은 한 번만 저장되는
+idempotent retry로 처리합니다.
+
+Progress payload의 `status`는 `queued | running`, `stage`는 아래 허용값 중 하나입니다.
+
+- `accepted`
+- `building_matrix`
+- `solving`
+- `scheduling`
+
+`progress`는 정수 `0..100`이며 감소할 수 없습니다. 첫 progress event부터 job의 파생 상태는
+`running`입니다. 첫 progress 이후의 event payload status는 `running`이어야 합니다.
+선택적인 `message`는 최대 1024자의 표시·진단용 텍스트이며 프로그램 로직의 근거로 쓰지
+않습니다.
+
+Error payload는 `code`, `message`, 선택적인 `detail`로 구성됩니다. `code`는 최대 128자의
+대문자 snake-case 식별자이고 message는 최대 1024자, 진단 전용 detail은 최대 4096자입니다.
+Error event를 받으면 job은 `failed` terminal 상태가 됩니다. 이후 새 progress/error/result는
+HTTP 409 `TROUTE_JOB_TERMINAL`로 거절하며, 이미 수락한 event의 정확한 재전송만 허용합니다.
+조회 응답은 `status`, `stage`, `progress`, `last_message`, `error`, `result`, `diagnostic`,
+`events`를 포함합니다.
+현재 저장소는 프로세스 메모리 전용이며 재시작 시 초기화됩니다.
+
+Result event의 `data`는 별도 schema를 만들지 않고 동기 `POST /optimize` 응답과 같은
+`trouteOptimizeResponseSchema`를 사용합니다. route는 한 개 이상의 stop을 포함하고 시간은
+기존과 동일한 `HH:MM` 형식입니다. 유효한 result callback을 받으면 job은 `completed`,
+progress `100`, stage `null`이 되며 error를 비우고 결과를 저장합니다. `completed`도 terminal
+상태이므로 정확한 idempotent retry 외의 후속 event는 거절합니다.
+
+전환 기간에는 troute의 동기 optimize 응답과 result callback이 함께 도착할 수 있습니다.
+동기 응답은 기존처럼 브라우저 요청에 직접 반환하고, callback 결과는 job record와 event
+history에 저장합니다. 두 결과는 같은 schema로 정규화한 canonical JSON을 비교합니다.
+일치하지 않으면 callback 결과를 덮어쓰지 않고 job의 `diagnostic.code`에
+`RESULT_MISMATCH`를 기록하며 backend 로그에도 남깁니다. callback이 먼저 도착해도 나중에
+동기 응답을 받을 때 같은 비교를 수행하며 이미 반환된 사용자 응답을 소급해 실패시키지 않습니다.
+
+`/testbed/troute`는 요청의 job ID를 표시하고 pending/running 동안 약 1초마다 조회합니다.
+failed/completed 상태에서는 polling을 중단합니다. production 지도 UI, SSE, WebSocket에는
+아직 연결하지 않습니다. 완료된 callback 결과의 최종 경로, 총 이동 시간과 raw job/event
+상태는 testbed에서 확인할 수 있습니다.
+
+다음 경로는 namespace 확장 방향일 뿐 현재 구현된 API가 아닙니다.
+
+- `GET /api/internal/troute/trips/:tripId`
+- `GET /api/internal/troute/places/:placeId`
+
+```sh
+curl -i http://127.0.0.1:43127/api/internal/troute/health
+```
 
 ### Google Maps
 

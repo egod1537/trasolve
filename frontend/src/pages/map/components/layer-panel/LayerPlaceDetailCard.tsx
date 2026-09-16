@@ -14,10 +14,14 @@ type Props = {
   anchorKey: string;
   sidebarRef: RefObject<HTMLElement | null>;
   onClose: () => void;
-  onUpdateTimeRange: (
+  onUpdateVisitTimeRange: (
     placeId: string,
     time: string,
-    durationMinutes: number,
+    visitDurationMinutes: number,
+  ) => Promise<boolean>;
+  onUpdatePreferredDuration: (
+    placeId: string,
+    preferredDurationMinutes: number,
   ) => Promise<boolean>;
   onUpdateMemo: (placeId: string, memo: string) => Promise<boolean>;
   onRename: (placeId: string, name: string) => Promise<boolean>;
@@ -33,7 +37,8 @@ export function LayerPlaceDetailCard({
   anchorKey,
   sidebarRef,
   onClose,
-  onUpdateTimeRange,
+  onUpdateVisitTimeRange,
+  onUpdatePreferredDuration,
   onUpdateMemo,
   onRename,
   onUpdateStyle,
@@ -57,7 +62,8 @@ export function LayerPlaceDetailCard({
       groupStyle={style}
       layerDetail
       onClose={onClose}
-      onUpdateTimeRange={onUpdateTimeRange}
+      onUpdateVisitTimeRange={onUpdateVisitTimeRange}
+      onUpdatePreferredDuration={onUpdatePreferredDuration}
       onUpdateMemo={onUpdateMemo}
       onRename={onRename}
       onUpdateStyle={onUpdateStyle}

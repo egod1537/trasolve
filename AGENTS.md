@@ -10,6 +10,20 @@
 - TypeScript 클래스의 공개 생성자와 공개 메서드에는 `public`을 명시한다.
 - 클래스 멤버는 공개 생성자, 공개 메서드, 비공개 멤버 순서로 배치한다. `public` 멤버는 `private` 및 `protected` 멤버보다 위에 둔다.
 
+## 현지화 개발 규칙
+
+- 새로운 사용자 노출 문구를 추가할 때는 먼저 한국어 문구를 코드에 직접 작성한다.
+- 현지화 키를 자동으로 만들거나 Google Spreadsheet의 현지화 데이터를 자동으로 수정하지 않는다.
+- 사용자가 현지화 또는 현지화 리팩터링을 명시적으로 요청하지 않은 경우 새 문구를 `L()` 호출로 대체하지 않는다.
+- 기능 구현을 우선하며, 기존 문구의 현지화 마이그레이션은 별도 작업으로 진행한다.
+
+## UI 스타일 규칙
+
+- 지도 위에 떠 있는 팝업, 카드, 드롭다운, 설정 패널 등 floating surface는 모두 전역 `--shadow-map-overlay` 토큰을 사용한다.
+- map floating surface에 개별 `box-shadow` 값을 직접 작성하거나 `--shadow-floating-*` 토큰을 임의로 선택하지 않는다.
+- 새로운 map overlay UI를 추가할 때 기존 floating surface와 동일한 shadow가 적용되었는지 확인한다.
+- marker, focus ring, selection halo, timeline handle처럼 상태 표현 목적의 shadow는 이 규칙의 대상이 아니다.
+
 ## 검증 방식
 
 - 자동 unit / integration 테스트 파일(`*.test.*`, `*.spec.*`), 실행 스크립트, 테스트 전용 의존성·fixture·helper를 추가하거나 유지하지 않는다.

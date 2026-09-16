@@ -3,6 +3,12 @@ import './styles/testbed.css';
 
 const testbeds = [
   {
+    href: '/testbed/troute',
+    title: 'troute Integration',
+    description:
+      'Trasolve backend를 통한 troute 최적화 요청과 원본 응답, HTTP 상태 및 왕복 시간을 확인합니다.',
+  },
+  {
     href: '/testbed/google-maps',
     title: 'Google Maps',
     description:

@@ -29,6 +29,7 @@ type MapContextValue = {
   objects: MapObjectController;
   overlayHost: MapOverlayHost;
   canvasRef: RefObject<HTMLDivElement | null>;
+  isZooming: boolean;
 };
 
 const MapContext = createContext<MapContextValue | null>(null);
@@ -80,6 +81,7 @@ export function GoogleMap(props: GoogleMapProps) {
     latest.current = props;
   });
   const [runtime, setRuntime] = useState<MapRuntime | null>(null);
+  const [isZooming, setIsZooming] = useState(false);
   const [status, setStatus] = useState<GoogleMapStatus>(
     mapsConfig.apiKey ? 'loading' : 'missing-key',
   );
@@ -102,6 +104,7 @@ export function GoogleMap(props: GoogleMapProps) {
       return;
     }
     setRuntime(null);
+    setIsZooming(false);
     setStatus(mapsConfig.apiKey ? 'loading' : 'missing-key');
     if (!mapsConfig.apiKey) {
       return;
@@ -148,15 +151,26 @@ export function GoogleMap(props: GoogleMapProps) {
     };
   }, [mapId]);
 
-  useEffect(
-    () =>
-      runtime?.subscribeEvents({
-        onMapClick: (event) => latest.current.onMapClick?.(event),
-        onCenterChanged: (point) => latest.current.onCenterChanged?.(point),
-        onZoomChanged: (value) => latest.current.onZoomChanged?.(value),
-      }),
-    [runtime],
-  );
+  useEffect(() => {
+    if (!runtime) {
+      return;
+    }
+    const unsubscribeEvents = runtime.subscribeEvents({
+      onMapClick: (event) => latest.current.onMapClick?.(event),
+      onCenterChanged: (point) => latest.current.onCenterChanged?.(point),
+      onZoomChanged: (value) => {
+        setIsZooming(true);
+        latest.current.onZoomChanged?.(value);
+      },
+    });
+    const unsubscribeIdle = runtime.adapter.subscribeCameraChange(() => {
+      setIsZooming(false);
+    });
+    return () => {
+      unsubscribeEvents();
+      unsubscribeIdle();
+    };
+  }, [runtime]);
 
   const lat = center?.lat;
   const lng = center?.lng;
@@ -193,9 +207,10 @@ export function GoogleMap(props: GoogleMapProps) {
             objects: runtime.objects,
             overlayHost: runtime.overlayHost,
             canvasRef,
+            isZooming,
           }
         : null,
-    [runtime],
+    [isZooming, runtime],
   );
 
   return (

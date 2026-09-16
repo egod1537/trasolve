@@ -18,7 +18,7 @@
   border: 1px solid var(--color-floating-border);
   border-radius: 10px;
   background: var(--color-floating-surface);
-  box-shadow: var(--shadow-floating-lg);
+  box-shadow: var(--shadow-map-overlay);
   color: var(--color-text);
 }
 
@@ -140,7 +140,7 @@
   border: 1px solid var(--color-floating-border);
   border-radius: 8px;
   background: var(--color-floating-surface);
-  box-shadow: var(--shadow-floating-sm);
+  box-shadow: var(--shadow-map-overlay);
 }
 
 .quick-search-mode-menu button {

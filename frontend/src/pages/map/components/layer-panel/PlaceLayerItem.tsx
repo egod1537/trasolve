@@ -1,15 +1,17 @@
-import { memo, type CSSProperties, type MouseEvent } from 'react';
+import { memo, type MouseEvent } from 'react';
+import type { PlaceStyle } from '@trasolve/shared';
 import type { usePlaceReorder } from '../../hooks/usePlaceReorder';
 import type { LayerSelectionModifiers } from '../../hooks/useMapUi';
 import type { LayerValidationState, TripPlace } from '../../domain/trip';
+import { formatDurationMinutes } from '../../domain/placeDuration';
 import { resolvePlaceStyle } from '../../domain/placeStyle';
-import { PlaceStyleIcon } from '../PlaceStyleIcon';
 import { PlaceTimeTimeline } from '../PlaceTimeTimeline';
 import { InlineRename } from './InlineRename';
 import { LayerDragHandle } from './LayerDragHandle';
 import { LayerItemChevron } from './LayerItemChevron';
 import { LayerItemShell } from './LayerItemShell';
 import { LayerValidationIndicator } from './LayerValidationIndicator';
+import { PlaceStyleControl } from './PlaceStyleControl';
 
 type ReorderControls = ReturnType<typeof usePlaceReorder>;
 type RouteRole = 'start' | 'destination';
@@ -21,13 +23,13 @@ type Props = {
   index: number;
   isLast: boolean;
   selected: boolean;
-  visible: boolean;
   editing: boolean;
   detailsOpen: boolean;
   routeRole?: RouteRole;
   validation?: LayerValidationState;
   onSelect: (id: string, modifiers: LayerSelectionModifiers) => void;
   onRename: (id: string, name: string) => void;
+  onUpdatePlaceStyle: (id: string, style: PlaceStyle) => void;
   onStartNameEditing: (id: string) => void;
   onFinishNameEditing: (id: string) => void;
   onOpenDetails: (id: string) => void;
@@ -51,13 +53,13 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
   index,
   isLast,
   selected,
-  visible,
   editing,
   detailsOpen,
   routeRole,
   validation,
   onSelect,
   onRename,
+  onUpdatePlaceStyle,
   onStartNameEditing,
   onFinishNameEditing,
   onOpenDetails,
@@ -89,9 +91,6 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
   };
   const finishNameEditing = () => onFinishNameEditing(place.id);
   const openDetails = () => {
-    if (!visible) {
-      return;
-    }
     onCancelDrag();
     onOpenDetails(place.id);
   };
@@ -117,10 +116,15 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
             {routeRole === 'start' ? '출발 장소' : '도착 장소'}
           </span>
         )}
+        {place.preferredDurationMinutes !== undefined && (
+          <span className="trip-place-stay-duration">
+            체류 {formatDurationMinutes(place.preferredDurationMinutes)}
+          </span>
+        )}
       </span>
       <PlaceTimeTimeline
         time={place.time}
-        durationMinutes={place.durationMinutes}
+        visitDurationMinutes={place.visitDurationMinutes}
         openingHours={place.openingHours}
         variant="compact"
       />
@@ -135,7 +139,6 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
       isLast={isLast}
       selected={selected}
       detailsOpen={detailsOpen}
-      disabled={!visible}
       dragging={dragging}
       dropPosition={dropPosition}
       previewOffset={previewOffset}
@@ -149,7 +152,6 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
           controls={detailsOpen ? 'layer-place-detail-card' : undefined}
           label={`${place.name} 상세 ${detailsOpen ? '닫기' : '열기'}`}
           detailControl
-          disabled={!visible}
           onClick={(event) => {
             event.stopPropagation();
             openDetails();
@@ -182,15 +184,15 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
         />
       }
     >
-      <span
-        className="trip-place-style-marker"
-        style={{ '--place-color': placeStyle.color } as CSSProperties}
-        aria-hidden="true"
-      >
-        <span className="trip-place-style-icon-frame">
-          <PlaceStyleIcon type={placeStyle.type} />
-        </span>
-      </span>
+      <PlaceStyleControl
+        placeId={place.id}
+        placeName={place.name}
+        style={placeStyle}
+        visible
+        busy={false}
+        triggerLabel={`${place.name} 아이콘 및 색상 변경`}
+        onChangeStyle={onUpdatePlaceStyle}
+      />
       {editing ? (
         <div
           className={`trip-layer-item-content trip-place is-editing${selected ? ' is-selected' : ''}`}
@@ -201,16 +203,12 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
         <button
           type="button"
           className={`trip-layer-item-content trip-place${selected ? ' is-selected' : ''}${dragging ? ' is-dragging' : ''}`}
-          aria-disabled={!visible}
-          tabIndex={visible ? undefined : -1}
           aria-pressed={selected}
           onClick={(event) => {
-            if (visible) {
-              onSelect(place.id, {
-                additive: event.ctrlKey || event.metaKey,
-                range: event.shiftKey,
-              });
-            }
+            onSelect(place.id, {
+              additive: event.ctrlKey || event.metaKey,
+              range: event.shiftKey,
+            });
           }}
         >
           {content}

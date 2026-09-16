@@ -229,6 +229,7 @@ export function PlaceStyleControl({
       ref={popoverRef}
       id={popoverId}
       className="trip-place-style-popover"
+      data-layer-interactive-popover=""
       data-placement={popoverPlacement}
       role="dialog"
       aria-label={`${placeName} 아이콘 및 색상 설정`}
@@ -309,6 +310,7 @@ export function PlaceStyleControl({
         aria-controls={popoverOpen ? popoverId : undefined}
         title={triggerLabel ?? '아이콘 및 색상 변경'}
         onClick={(event) => {
+          event.stopPropagation();
           if (popoverOpenRef.current) {
             closePopover();
           } else {

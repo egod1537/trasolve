@@ -24,6 +24,7 @@ type Props = {
   selectedPolylineId: string | null;
   selectedDayId: string | null;
   visibleDayIds: ReadonlySet<string>;
+  isZooming: boolean;
   onSelectPlace: (id: string) => void;
   onSelectPolyline: (id: string, anchor: GeoPoint) => void;
 };
@@ -197,6 +198,33 @@ function getMarkerZIndex(selected: boolean, order: number): number {
   return selected ? 10_000 : order;
 }
 
+function getMarkerVisibility(
+  dayId: string,
+  placeId: string,
+  visibleDayIds: ReadonlySet<string>,
+  selectedPlaceId: string | null,
+  isZooming: boolean,
+): boolean {
+  return (
+    visibleDayIds.has(dayId) && (!isZooming || selectedPlaceId === placeId)
+  );
+}
+
+function getPolylineVisibility(
+  dayId: string,
+  polylineId: string,
+  pathLength: number,
+  visibleDayIds: ReadonlySet<string>,
+  selectedPolylineId: string | null,
+  isZooming: boolean,
+): boolean {
+  return (
+    visibleDayIds.has(dayId) &&
+    pathLength > 1 &&
+    (!isZooming || selectedPolylineId === polylineId)
+  );
+}
+
 /** Projects Trip data to provider-neutral map objects; owns no domain mutations. */
 export const TripLayer = memo(function TripLayer({
   objects,
@@ -205,6 +233,7 @@ export const TripLayer = memo(function TripLayer({
   selectedPolylineId,
   selectedDayId,
   visibleDayIds,
+  isZooming,
   onSelectPlace,
   onSelectPolyline,
 }: Props) {
@@ -231,12 +260,20 @@ export const TripLayer = memo(function TripLayer({
   const selectedPolylineIdRef = useRef(selectedPolylineId);
   const selectedDayIdRef = useRef(selectedDayId);
   const visibleDayIdsRef = useRef(visibleDayIds);
+  const isZoomingRef = useRef(isZooming);
   useLayoutEffect(() => {
     selectedPlaceIdRef.current = selectedPlaceId;
     selectedPolylineIdRef.current = selectedPolylineId;
     selectedDayIdRef.current = selectedDayId;
     visibleDayIdsRef.current = visibleDayIds;
-  }, [selectedDayId, selectedPlaceId, selectedPolylineId, visibleDayIds]);
+    isZoomingRef.current = isZooming;
+  }, [
+    isZooming,
+    selectedDayId,
+    selectedPlaceId,
+    selectedPolylineId,
+    visibleDayIds,
+  ]);
 
   useEffect(() => {
     const ownedMarkers = markers.current,
@@ -258,7 +295,6 @@ export const TripLayer = memo(function TripLayer({
   useEffect(() => {
     const remaining = new Set<string>();
     for (const day of trip.days) {
-      const visible = visibleDayIdsRef.current.has(day.id);
       const layerOrder = new Map(
         day.layerItems.map(
           (item, index) => [`${item.type}:${item.id}`, index + 1] as const,
@@ -296,7 +332,15 @@ export const TripLayer = memo(function TripLayer({
         marker.handle.setIcon(getPlaceStyleOption(placeStyle.type).icon);
         marker.handle.setSelected(selectedPlaceIdRef.current === place.id);
         marker.handle.setEmphasis('none');
-        marker.handle.setVisible(visible);
+        marker.handle.setVisible(
+          getMarkerVisibility(
+            day.id,
+            place.id,
+            visibleDayIdsRef.current,
+            selectedPlaceIdRef.current,
+            isZoomingRef.current,
+          ),
+        );
         marker.handle.setZIndex(
           getMarkerZIndex(selectedPlaceIdRef.current === place.id, order),
         );
@@ -323,7 +367,14 @@ export const TripLayer = memo(function TripLayer({
         const path = getPolylinePath(day, polyline);
         const selected = selectedPolylineIdRef.current === polyline.id;
         const active = selectedDayIdRef.current === day.id;
-        const visible = visibleDayIdsRef.current.has(day.id) && path.length > 1;
+        const visible = getPolylineVisibility(
+          day.id,
+          polyline.id,
+          path.length,
+          visibleDayIdsRef.current,
+          selectedPolylineIdRef.current,
+          isZoomingRef.current,
+        );
         let line = lines.current.get(polyline.id);
         if (!line) {
           const styleKey = getPolylineStyleKey(polyline.mode, selected, active);
@@ -396,19 +447,31 @@ export const TripLayer = memo(function TripLayer({
   }, [selectedDayId, selectedPolylineId]);
 
   useEffect(() => {
-    for (const day of trip.days) {
-      const visible = visibleDayIds.has(day.id);
-      for (const place of day.places) {
-        markers.current.get(place.id)?.handle.setVisible(visible);
-      }
-    }
-    for (const line of lines.current.values()) {
-      syncPolylineVisibility(
-        line,
-        visibleDayIds.has(line.dayId) && line.path.length > 1,
+    for (const [placeId, marker] of markers.current) {
+      marker.handle.setVisible(
+        getMarkerVisibility(
+          marker.dayId,
+          placeId,
+          visibleDayIds,
+          selectedPlaceId,
+          isZooming,
+        ),
       );
     }
-  }, [trip.days, visibleDayIds]);
+    for (const [polylineId, line] of lines.current) {
+      syncPolylineVisibility(
+        line,
+        getPolylineVisibility(
+          line.dayId,
+          polylineId,
+          line.path.length,
+          visibleDayIds,
+          selectedPolylineId,
+          isZooming,
+        ),
+      );
+    }
+  }, [isZooming, selectedPlaceId, selectedPolylineId, visibleDayIds]);
 
   return null;
 });

@@ -4,20 +4,22 @@ import {
   useId,
   useRef,
   useState,
+  type RefObject,
   type ReactNode,
 } from 'react';
+import { LoadingSpinner } from '../../../../shared/components/LoadingSpinner';
 import type { Trip } from '../../domain/trip';
 import { InlineRename } from './InlineRename';
 
-type SaveStatus = 'ready' | 'saving' | 'error';
+type SaveStatus = 'ready' | 'dirty' | 'saving' | 'error';
 
 type Props = {
   trip: Trip;
   saveStatus: SaveStatus;
   savedAt: string;
   onAddLayer: () => void;
-  onShareTrip?: () => void;
-  onPreviewTrip?: () => void;
+  onShareTrip: () => void;
+  shareButtonRef: RefObject<HTMLButtonElement | null>;
   onRenameTrip: (title: string) => void;
 };
 
@@ -60,15 +62,13 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
   savedAt,
   onAddLayer,
   onShareTrip,
-  onPreviewTrip,
+  shareButtonRef,
   onRenameTrip,
 }: Props) {
   const [titleEditing, setTitleEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [previewNoticeOpen, setPreviewNoticeOpen] = useState(false);
   const rootRef = useRef<HTMLElement>(null);
   const menuId = useId();
-  const previewNoticeId = useId();
   const saved = formatSavedAt(savedAt);
   const placeCount = trip.days.reduce(
     (total, day) => total + day.places.length,
@@ -79,10 +79,12 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
       ? '저장 중…'
       : saveStatus === 'error'
         ? '저장 실패'
-        : saved.label;
+        : saveStatus === 'dirty'
+          ? '저장 대기 중'
+          : saved.label;
 
   useEffect(() => {
-    if (!menuOpen && !previewNoticeOpen) {
+    if (!menuOpen) {
       return;
     }
     const closeOnOutsidePointerDown = (event: PointerEvent) => {
@@ -91,7 +93,6 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
         !rootRef.current?.contains(event.target)
       ) {
         setMenuOpen(false);
-        setPreviewNoticeOpen(false);
       }
     };
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -100,7 +101,6 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
       }
       event.preventDefault();
       setMenuOpen(false);
-      setPreviewNoticeOpen(false);
     };
     document.addEventListener('pointerdown', closeOnOutsidePointerDown);
     document.addEventListener('keydown', closeOnEscape);
@@ -108,7 +108,7 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
       document.removeEventListener('pointerdown', closeOnOutsidePointerDown);
       document.removeEventListener('keydown', closeOnEscape);
     };
-  }, [menuOpen, previewNoticeOpen]);
+  }, [menuOpen]);
 
   const commitTitle = (draft: string) => {
     const title = draft.trim();
@@ -119,17 +119,7 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
   };
   const startTitleEditing = () => {
     setMenuOpen(false);
-    setPreviewNoticeOpen(false);
     setTitleEditing(true);
-  };
-  const previewTrip = () => {
-    setMenuOpen(false);
-    if (onPreviewTrip) {
-      setPreviewNoticeOpen(false);
-      onPreviewTrip();
-    } else {
-      setPreviewNoticeOpen((open) => !open);
-    }
   };
 
   return (
@@ -165,7 +155,21 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
             aria-atomic="true"
             title={saveStatus === 'ready' ? saved.title : undefined}
           >
-            {saveLabel}
+            {(saveStatus === 'dirty' || saveStatus === 'saving') && (
+              <span
+                className={`trip-save-status-spinner${saveStatus === 'dirty' ? ' is-dirty' : ''}`}
+                aria-hidden="true"
+              >
+                <LoadingSpinner size="sm" />
+              </span>
+            )}
+            <span
+              className={
+                saveStatus === 'dirty' ? 'sr-only' : 'trip-last-saved-label'
+              }
+            >
+              {saveLabel}
+            </span>
           </p>
         </div>
 
@@ -178,10 +182,7 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             aria-controls={menuOpen ? menuId : undefined}
-            onClick={() => {
-              setPreviewNoticeOpen(false);
-              setMenuOpen((open) => !open);
-            }}
+            onClick={() => setMenuOpen((open) => !open)}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="12" cy="5" r="1.25" />
@@ -212,11 +213,11 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
           <span>레이어 추가</span>
         </button>
         <button
+          ref={shareButtonRef}
           type="button"
           className="trip-panel-header-action"
           aria-label="여행 공유"
-          title={onShareTrip ? '여행 공유' : '공유 기능 준비 중'}
-          disabled={!onShareTrip}
+          title="여행 공유"
           onClick={onShareTrip}
         >
           <ActionIcon>
@@ -227,33 +228,6 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
           </ActionIcon>
           <span>공유</span>
         </button>
-        <span className="trip-panel-preview-anchor">
-          <button
-            type="button"
-            className="trip-panel-header-action"
-            aria-label="여행 미리보기"
-            aria-expanded={previewNoticeOpen}
-            aria-controls={
-              previewNoticeOpen && !onPreviewTrip ? previewNoticeId : undefined
-            }
-            onClick={previewTrip}
-          >
-            <ActionIcon>
-              <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
-              <circle cx="12" cy="12" r="2.75" />
-            </ActionIcon>
-            <span>미리보기</span>
-          </button>
-          {previewNoticeOpen && !onPreviewTrip && (
-            <span
-              id={previewNoticeId}
-              className="trip-panel-preview-notice"
-              role="status"
-            >
-              미리보기 기능을 준비하고 있습니다.
-            </span>
-          )}
-        </span>
       </div>
     </header>
   );

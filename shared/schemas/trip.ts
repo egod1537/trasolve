@@ -36,7 +36,13 @@ const placeFields = {
   memo: z.string().max(4000).optional(),
   openingHours: placeOpeningHoursSchema.optional(),
   placeStyle: placeStyleSchema.optional(),
-  durationMinutes: z
+  visitDurationMinutes: z
+    .number()
+    .int()
+    .min(0)
+    .max(TRIP_PLACE_MAX_DURATION_MINUTES)
+    .optional(),
+  preferredDurationMinutes: z
     .number()
     .int()
     .min(0)
@@ -150,11 +156,15 @@ function migratePlace(value: unknown): unknown {
     return value;
   }
   const place = value as Record<string, unknown>;
-  if (!('preferredTimeRange' in place)) {
+  if (!('preferredTimeRange' in place) && !('durationMinutes' in place)) {
     return place;
   }
   const migrated = { ...place };
   delete migrated.preferredTimeRange;
+  if ('durationMinutes' in migrated && !('visitDurationMinutes' in migrated)) {
+    migrated.visitDurationMinutes = migrated.durationMinutes;
+  }
+  delete migrated.durationMinutes;
   return migrated;
 }
 

@@ -1,0 +1,240 @@
+.troute-testbed-shell {
+  min-height: 100vh;
+  background: #f6f7f9;
+}
+
+.app-navbar {
+  padding-inline: max(15px, calc((100vw - 1440px) / 2));
+}
+
+.navbar-endpoint {
+  color: #5f6b7c;
+  font-size: 12px;
+}
+
+.playground {
+  width: min(1440px, 100%);
+  min-height: calc(100vh - 50px);
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 45fr) minmax(0, 55fr);
+  gap: 16px;
+}
+
+.workspace-card {
+  min-width: 0;
+  min-height: calc(100vh - 90px);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-heading,
+.request-actions,
+.response-metadata,
+.raw-heading,
+.route-overview,
+.job-status,
+.job-status > div {
+  display: flex;
+  align-items: center;
+}
+
+.card-heading,
+.request-actions,
+.raw-heading,
+.route-overview,
+.job-status {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card-heading {
+  min-height: 38px;
+}
+
+.card-heading h1,
+.raw-heading h2,
+.route-overview h2 {
+  margin: 0;
+}
+
+.card-heading h1 {
+  font-size: 16px;
+}
+
+.request-content,
+.response-content,
+.raw-response {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.request-content,
+.response-content {
+  flex: 1;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.json-editor {
+  min-height: 360px;
+  flex: 1;
+  resize: none;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre;
+}
+
+.request-actions {
+  min-height: 32px;
+}
+
+.response-metadata,
+.job-status > div {
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.job-status {
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid #d8e1e8;
+  border-radius: 3px;
+  background: #f6f7f9;
+}
+
+.job-status code {
+  min-width: 0;
+  overflow: hidden;
+  color: #5f6b7c;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.route-overview > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.route-overview > div:first-child {
+  overflow-wrap: anywhere;
+}
+
+.route-overview > div:last-child {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.table-scroll table {
+  width: 100%;
+}
+
+.table-scroll th,
+.table-scroll td {
+  white-space: nowrap;
+}
+
+.raw-response {
+  flex: 1;
+  gap: 8px;
+}
+
+.raw-heading {
+  min-height: 30px;
+}
+
+.raw-heading h2,
+.route-overview h2 {
+  font-size: 14px;
+}
+
+.raw-output {
+  min-height: 240px;
+  max-height: calc(100vh - 180px);
+  flex: 1;
+  margin: 0;
+  overflow: auto;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.job-state-details summary {
+  color: #5f6b7c;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.job-state-details pre {
+  max-height: 240px;
+  margin: 8px 0 0;
+  overflow: auto;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 800px) {
+  .navbar-endpoint,
+  .app-navbar .bp6-navbar-divider {
+    display: none;
+  }
+
+  .playground {
+    min-height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 12px;
+  }
+
+  .workspace-card {
+    min-height: 560px;
+  }
+
+  .json-editor {
+    min-height: 380px;
+  }
+
+  .raw-output {
+    max-height: 520px;
+  }
+}
+
+@media (max-width: 520px) {
+  .card-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .card-heading .bp6-button-group {
+    width: 100%;
+  }
+
+  .card-heading .bp6-button {
+    flex: 1;
+  }
+
+  .job-status {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

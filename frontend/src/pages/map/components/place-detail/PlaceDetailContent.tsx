@@ -6,7 +6,11 @@ import {
   type CSSProperties,
   type RefObject,
 } from 'react';
-import type { PlaceStyle, TripDay, TripPlace } from '@trasolve/shared';
+import {
+  type PlaceStyle,
+  type TripDay,
+  type TripPlace,
+} from '@trasolve/shared';
 import { resolvePlaceStyle } from '../../domain/placeStyle';
 import { usePlaceDetails } from '../../hooks/usePlaceDetails';
 import { PlaceStyleIcon } from '../PlaceStyleIcon';
@@ -14,6 +18,7 @@ import { PlaceTimeTimeline } from '../PlaceTimeTimeline';
 import { InlineRename } from '../layer-panel/InlineRename';
 import { PlaceStyleControl } from '../layer-panel/PlaceStyleControl';
 import { PlaceDeleteConfirmCard } from './PlaceDeleteConfirmCard';
+import { PlaceDurationControl } from './PlaceDurationControl';
 import { MapPopupCardShell } from '../viewport/MapPopupCardShell';
 import { PlaceOpeningHours } from '../viewport/PlaceOpeningHours';
 import { PlaceOpeningHoursDetails } from '../viewport/PlaceOpeningHoursDetails';
@@ -33,10 +38,14 @@ type Props = {
   layerDetail?: boolean;
   cardRef?: RefObject<HTMLElement | null>;
   onClose: () => void;
-  onUpdateTimeRange?: (
+  onUpdateVisitTimeRange?: (
     placeId: string,
     time: string,
-    durationMinutes: number,
+    visitDurationMinutes: number,
+  ) => Promise<boolean>;
+  onUpdatePreferredDuration?: (
+    placeId: string,
+    preferredDurationMinutes: number,
   ) => Promise<boolean>;
   onUpdateMemo?: (placeId: string, memo: string) => Promise<boolean>;
   onRename?: (placeId: string, name: string) => Promise<boolean> | void;
@@ -55,7 +64,8 @@ export function PlaceDetailContent({
   layerDetail = false,
   cardRef,
   onClose,
-  onUpdateTimeRange,
+  onUpdateVisitTimeRange,
+  onUpdatePreferredDuration,
   onUpdateMemo,
   onRename,
   onUpdateStyle,
@@ -79,9 +89,10 @@ export function PlaceDetailContent({
   const deleteTriggerRef = useRef<HTMLButtonElement>(null);
   const memoTextareaRef = useRef<HTMLTextAreaElement>(null);
   const disabled =
-    busy || titleSubmitting || timeSubmitting || memoSubmitting || removing;
+    (busy && !timeSubmitting) || titleSubmitting || memoSubmitting || removing;
   const canRename = !readOnly && onRename !== undefined;
-  const canEditTime = !readOnly && onUpdateTimeRange !== undefined;
+  const canEditTime = !readOnly && onUpdateVisitTimeRange !== undefined;
+  const canEditDuration = !readOnly && onUpdatePreferredDuration !== undefined;
   const canEditMemo = !readOnly && onUpdateMemo !== undefined;
   const canEditStyle = !readOnly && onUpdateStyle !== undefined;
   const canRemove = !readOnly && onRemove !== undefined;
@@ -105,16 +116,19 @@ export function PlaceDetailContent({
     textarea?.setSelectionRange(textarea.value.length, textarea.value.length);
   }, [memoEditing]);
 
-  const saveTimeRange = async (time: string, durationMinutes: number) => {
-    if (disabled || !canEditTime) {
+  const saveTimeRange = async (time: string, visitDurationMinutes: number) => {
+    if (disabled || timeSubmitting || !canEditTime) {
       return false;
     }
-    if (place.time === time && place.durationMinutes === durationMinutes) {
+    if (
+      place.time === time &&
+      place.visitDurationMinutes === visitDurationMinutes
+    ) {
       return true;
     }
     setTimeSubmitting(true);
     try {
-      return await onUpdateTimeRange(place.id, time, durationMinutes);
+      return await onUpdateVisitTimeRange(place.id, time, visitDurationMinutes);
     } finally {
       setTimeSubmitting(false);
     }
@@ -309,7 +323,7 @@ export function PlaceDetailContent({
 
         <PlaceTimeTimeline
           time={place.time}
-          durationMinutes={place.durationMinutes}
+          visitDurationMinutes={place.visitDurationMinutes}
           openingHours={openingHours}
           variant="expanded"
           readOnly={!canEditTime}
@@ -317,6 +331,27 @@ export function PlaceDetailContent({
           saving={timeSubmitting}
           onChangeTimeRange={canEditTime ? saveTimeRange : undefined}
         />
+
+        <section className="trip-place-duration-section">
+          <div className="trip-place-duration-heading">
+            <h3>희망 체류 시간</h3>
+            <small>이 장소에서 머무를 시간을 설정해 주세요</small>
+          </div>
+          <PlaceDurationControl
+            preferredDurationMinutes={place.preferredDurationMinutes}
+            editable={canEditDuration}
+            disabled={disabled}
+            onChange={
+              canEditDuration
+                ? (preferredDurationMinutes) =>
+                    onUpdatePreferredDuration(
+                      place.id,
+                      preferredDurationMinutes,
+                    )
+                : undefined
+            }
+          />
+        </section>
 
         <div className="trip-place-card-body">
           <section className="trip-place-management-section">

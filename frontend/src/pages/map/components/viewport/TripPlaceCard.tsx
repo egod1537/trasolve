@@ -9,10 +9,14 @@ type Props = {
   mutationError: string | null;
   cardRef?: RefObject<HTMLElement | null>;
   onClose: () => void;
-  onUpdateTimeRange: (
+  onUpdateVisitTimeRange: (
     placeId: string,
     time: string,
-    durationMinutes: number,
+    visitDurationMinutes: number,
+  ) => Promise<boolean>;
+  onUpdatePreferredDuration: (
+    placeId: string,
+    preferredDurationMinutes: number,
   ) => Promise<boolean>;
   onUpdateMemo: (placeId: string, memo: string) => Promise<boolean>;
   onRename: (placeId: string, name: string) => Promise<boolean>;
@@ -27,7 +31,8 @@ export function TripPlaceCard({
   mutationError,
   cardRef,
   onClose,
-  onUpdateTimeRange,
+  onUpdateVisitTimeRange,
+  onUpdatePreferredDuration,
   onUpdateMemo,
   onRename,
   onUpdateStyle,
@@ -43,7 +48,8 @@ export function TripPlaceCard({
       groupClassName="map-popup-card-group"
       cardRef={cardRef}
       onClose={onClose}
-      onUpdateTimeRange={onUpdateTimeRange}
+      onUpdateVisitTimeRange={onUpdateVisitTimeRange}
+      onUpdatePreferredDuration={onUpdatePreferredDuration}
       onUpdateMemo={onUpdateMemo}
       onRename={onRename}
       onUpdateStyle={onUpdateStyle}

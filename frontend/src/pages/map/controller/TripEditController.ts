@@ -1,32 +1,148 @@
 import {
-  reconcileDayRouteSegments,
   tripSchema,
   type PlaceStyle,
   type Trip,
   type TripInput,
-  type TripPlace,
-  type TripPolyline,
   type TripPolylineMode,
 } from '@trasolve/shared';
+import type { TripCommand } from '../command/TripCommand';
+import { TripCommandDispatcher } from '../command/TripCommandDispatcher';
+import { parseTripCommandString } from '../command/TripCommandParser';
+import type { RegisteredTripCommand } from '../command/TripCommandRegistry';
 import {
-  DEFAULT_PLACE_DURATION_MINUTES,
-  DEFAULT_PLACE_START_TIME,
-} from '../domain/placeDefaults';
+  createAddDayCommand,
+  createAddPlaceCommand,
+  createMoveDayCommand,
+  createMovePlaceCommand,
+  createRemovePlaceCommand,
+  createRemovePlacesCommand,
+  createRenameDayCommand,
+  createRenameTripCommand,
+  createUpdateDayColorCommand,
+  createUpdateMemoCommand,
+  createUpdatePlaceCommand,
+  createUpdatePlaceStyleCommand,
+  createUpdatePreferredDurationCommand,
+  createUpdatePolylineModeCommand,
+  createUpdatePolylineModesCommand,
+  createUpdateVisitTimeRangeCommand,
+  type PlaceInput,
+} from '../command/tripCommands';
 import type { TripRepository } from '../repository/TripRepository';
-import type { TripState, TripStore } from '../store/TripStore';
+import type { TripStore } from '../store/TripStore';
 
-export type PlaceInput = Omit<TripPlace, 'id' | 'order'>;
+export type { PlaceInput } from '../command/tripCommands';
+
+export type CommandExecutionResult = {
+  success: boolean;
+  commandName: string | null;
+  error: string | null;
+};
+
+export type TripEditControllerOptions = {
+  debouncedAutosave: boolean;
+};
+
+type PendingSave = {
+  controller: AbortController;
+  revision: number;
+};
+
+const AUTOSAVE_DELAY_MS = 700;
 
 export class TripEditController {
   public constructor(
     private readonly store: TripStore,
     private readonly repository: TripRepository,
+    options: TripEditControllerOptions,
   ) {
     this.tripId = tripSchema.parse(store.getState().trip).id;
+    this.debouncedAutosave = options.debouncedAutosave;
+    this.commandDispatcher = new TripCommandDispatcher(store);
   }
 
-  public save(): Promise<boolean> {
-    return this.mutate((trip) => trip);
+  public async save(): Promise<boolean> {
+    if (this.destroyed) {
+      return false;
+    }
+    await this.commandCompletion;
+    if (this.destroyed) {
+      return false;
+    }
+
+    const targetRevision = this.revision;
+    const currentStatus = this.store.getState().status;
+    this.clearAutosaveTimer();
+    if (this.lastSavedRevision >= targetRevision && currentStatus !== 'error') {
+      return true;
+    }
+
+    const activeSave = this.pendingPromise;
+    const activeRevision = this.pending?.revision;
+    if (activeSave) {
+      if (activeRevision !== undefined && targetRevision > activeRevision) {
+        this.flushAfterPending = true;
+      }
+      const saved = await activeSave;
+      if (this.destroyed) {
+        return false;
+      }
+      if (this.lastSavedRevision >= targetRevision) {
+        return true;
+      }
+      if (!saved && activeRevision === targetRevision) {
+        return false;
+      }
+    }
+
+    return this.pendingPromise ?? this.startSave();
+  }
+
+  public get canUndo(): boolean {
+    return !this.destroyed && this.commandDispatcher.canUndo;
+  }
+
+  public get canRedo(): boolean {
+    return !this.destroyed && this.commandDispatcher.canRedo;
+  }
+
+  public undo(): Promise<boolean> {
+    if (this.destroyed) {
+      return Promise.resolve(false);
+    }
+    return this.completeLocalChange(this.commandDispatcher.undo());
+  }
+
+  public redo(): Promise<boolean> {
+    if (this.destroyed) {
+      return Promise.resolve(false);
+    }
+    return this.completeLocalChange(this.commandDispatcher.redo());
+  }
+
+  public async executeTripCommandString(
+    input: string,
+  ): Promise<CommandExecutionResult> {
+    if (this.destroyed) {
+      return {
+        success: false,
+        commandName: null,
+        error: '종료된 여행 편집기에서는 명령을 실행할 수 없습니다.',
+      };
+    }
+
+    const parsed = parseTripCommandString(input);
+    if (!parsed.success) {
+      return parsed;
+    }
+
+    const { commandName, operation } = parsed.parsed;
+    const success = await this.executeRegisteredCommand(operation);
+    return {
+      success,
+      commandName,
+      error: success ? null : this.getCommandExecutionError(commandName),
+    };
   }
 
   public renameTrip(title: string): Promise<boolean> {
@@ -35,24 +151,11 @@ export class TripEditController {
       return Promise.resolve(false);
     }
 
-    return this.mutate((trip) => ({ ...trip, title: normalizedTitle }));
+    return this.dispatch(createRenameTripCommand(normalizedTitle));
   }
 
   public addDay(title: string): Promise<boolean> {
-    return this.mutate((trip) => ({
-      ...trip,
-      days: [
-        ...trip.days,
-        {
-          id: `pending-${crypto.randomUUID()}`,
-          title,
-          color: '#2563eb',
-          places: [],
-          polylines: [],
-          layerItems: [],
-        },
-      ],
-    }));
+    return this.dispatch(createAddDayCommand(title));
   }
 
   public renameDay(dayId: string, title: string): Promise<boolean> {
@@ -61,51 +164,19 @@ export class TripEditController {
       return Promise.resolve(false);
     }
 
-    return this.mutate((trip) => {
-      const day = trip.days.find((day) => day.id === dayId);
-      if (!day) {
-        throw new Error('이름을 변경할 날짜를 찾을 수 없습니다.');
-      }
-      day.title = normalizedTitle;
-      return trip;
-    });
+    return this.dispatch(createRenameDayCommand(dayId, normalizedTitle));
   }
 
   public updateDayColor(dayId: string, color: string): Promise<boolean> {
-    return this.mutate((trip) => {
-      const day = trip.days.find((candidate) => candidate.id === dayId);
-      if (!day) {
-        throw new Error('색상을 변경할 날짜를 찾을 수 없습니다.');
-      }
-      day.color = color;
-      return trip;
-    });
+    return this.dispatch(createUpdateDayColorCommand(dayId, color));
   }
 
   public addPlace(dayId: string, input: PlaceInput): Promise<boolean> {
-    return this.mutate((trip) => {
-      const day = trip.days.find((day) => day.id === dayId);
-      if (!day) {
-        throw new Error('장소를 추가할 날짜를 선택해 주세요.');
-      }
-      day.places.push({
-        ...input,
-        time: input.time ?? DEFAULT_PLACE_START_TIME,
-        durationMinutes:
-          input.durationMinutes ?? DEFAULT_PLACE_DURATION_MINUTES,
-        id: `pending-${crypto.randomUUID()}`,
-        order: day.places.length + 1,
-      });
-      day.layerItems.push({
-        type: 'place',
-        id: day.places.at(-1)!.id,
-      });
-      return trip;
-    });
+    return this.dispatch(createAddPlaceCommand(dayId, input));
   }
 
   public removePlace(placeId: string): Promise<boolean> {
-    return this.removePlaces([placeId]);
+    return this.dispatch(createRemovePlaceCommand(placeId));
   }
 
   public removePlaces(placeIds: readonly string[]): Promise<boolean> {
@@ -113,35 +184,12 @@ export class TripEditController {
     if (uniquePlaceIds.size === 0) {
       return Promise.resolve(false);
     }
-    return this.mutate((trip) => {
-      for (const placeId of uniquePlaceIds) {
-        this.findPlace(trip, placeId);
-      }
-      for (const day of trip.days) {
-        day.places = day.places.filter(
-          (place) => !uniquePlaceIds.has(place.id),
-        );
-      }
-      return trip;
-    });
+    return this.dispatch(createRemovePlacesCommand([...uniquePlaceIds]));
   }
 
   /** targetIndex is zero-based, matching the sidebar drag/drop contract. */
   public moveDay(dayId: string, targetIndex: number): Promise<boolean> {
-    return this.mutate((trip) => {
-      const sourceIndex = trip.days.findIndex((day) => day.id === dayId);
-      if (sourceIndex < 0 || !Number.isInteger(targetIndex)) {
-        throw new Error('이동할 날짜와 순서를 확인해 주세요.');
-      }
-
-      const [day] = trip.days.splice(sourceIndex, 1);
-      trip.days.splice(
-        Math.max(0, Math.min(targetIndex, trip.days.length)),
-        0,
-        day,
-      );
-      return trip;
-    });
+    return this.dispatch(createMoveDayCommand(dayId, targetIndex));
   }
 
   /** targetIndex is zero-based in the target Day's Place order. */
@@ -150,65 +198,53 @@ export class TripEditController {
     targetDayId: string,
     targetIndex: number,
   ): Promise<boolean> {
-    return this.mutate((trip) => {
-      const target = trip.days.find((day) => day.id === targetDayId);
-      if (!target || !Number.isInteger(targetIndex)) {
-        throw new Error('이동할 날짜와 순서를 확인해 주세요.');
-      }
-      const source = trip.days.find((day) =>
-        day.places.some((place) => place.id === placeId),
-      );
-      if (!source) {
-        throw new Error('이동할 장소를 찾을 수 없습니다.');
-      }
-      const sourceIndex = source.places.findIndex(
-        (place) => place.id === placeId,
-      );
-      const [place] = source.places.splice(sourceIndex, 1);
-      const insertionIndex = Math.max(
-        0,
-        Math.min(targetIndex, target.places.length),
-      );
-      target.places.splice(insertionIndex, 0, place);
-      return trip;
-    });
+    return this.dispatch(
+      createMovePlaceCommand(placeId, targetDayId, targetIndex),
+    );
   }
 
   public updatePlace(
     placeId: string,
     patch: Partial<PlaceInput>,
   ): Promise<boolean> {
-    return this.mutate((trip) => {
-      const place = this.findPlace(trip, placeId);
-      Object.assign(place, patch);
-      return trip;
-    });
+    return this.dispatch(createUpdatePlaceCommand(placeId, patch));
   }
 
   public updateMemo(placeId: string, memo: string): Promise<boolean> {
-    return this.updatePlace(placeId, { memo });
+    return this.dispatch(createUpdateMemoCommand(placeId, memo));
   }
 
-  public updateTimeRange(
+  public updateVisitTimeRange(
     placeId: string,
     time: string,
-    durationMinutes: number,
+    visitDurationMinutes: number,
   ): Promise<boolean> {
-    return this.updatePlace(placeId, { time, durationMinutes });
+    return this.dispatch(
+      createUpdateVisitTimeRangeCommand(placeId, time, visitDurationMinutes),
+    );
+  }
+
+  public updatePreferredDuration(
+    placeId: string,
+    preferredDurationMinutes: number,
+  ): Promise<boolean> {
+    return this.dispatch(
+      createUpdatePreferredDurationCommand(placeId, preferredDurationMinutes),
+    );
   }
 
   public updatePlaceStyle(
     placeId: string,
     placeStyle: PlaceStyle,
   ): Promise<boolean> {
-    return this.updatePlace(placeId, { placeStyle });
+    return this.dispatch(createUpdatePlaceStyleCommand(placeId, placeStyle));
   }
 
   public updatePolylineMode(
     polylineId: string,
     mode: TripPolylineMode,
   ): Promise<boolean> {
-    return this.updatePolylineModes([polylineId], mode);
+    return this.dispatch(createUpdatePolylineModeCommand(polylineId, mode));
   }
 
   public updatePolylineModes(
@@ -219,129 +255,220 @@ export class TripEditController {
     if (uniquePolylineIds.size === 0) {
       return Promise.resolve(false);
     }
-    return this.mutate((trip) => {
-      for (const polylineId of uniquePolylineIds) {
-        this.findPolyline(trip, polylineId).mode = mode;
-      }
-      return trip;
-    });
+    return this.dispatch(
+      createUpdatePolylineModesCommand([...uniquePolylineIds], mode),
+    );
   }
 
-  public cancelPending(): void {
+  public destroy(): void {
+    this.destroyed = true;
+    this.clearAutosaveTimer();
+    this.flushAfterPending = false;
     const pending = this.pending;
-    if (!pending) {
-      return;
-    }
     this.pending = null;
-    pending.controller.abort();
-    this.store.setState(pending.before);
+    this.pendingPromise = null;
+    pending?.controller.abort();
   }
 
   private readonly tripId: string;
 
-  private pending: {
-    controller: AbortController;
-    before: TripState;
-  } | null = null;
+  private readonly debouncedAutosave: boolean;
 
-  private findPlace(trip: Trip, placeId: string): TripPlace {
-    const place = trip.days
-      .flatMap((day) => day.places)
-      .find((place) => place.id === placeId);
-    if (!place) {
-      throw new Error('장소를 찾을 수 없습니다.');
+  private readonly commandDispatcher: TripCommandDispatcher;
+
+  private autosaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private commandCompletion: Promise<void> = Promise.resolve();
+
+  private destroyed = false;
+
+  private flushAfterPending = false;
+
+  private lastSavedRevision = 0;
+
+  private pending: PendingSave | null = null;
+
+  private pendingPromise: Promise<boolean> | null = null;
+
+  private revision = 0;
+
+  private dispatch(command: TripCommand): Promise<boolean> {
+    if (this.destroyed) {
+      return Promise.resolve(false);
     }
-    return place;
+    return this.completeLocalChange(this.commandDispatcher.execute(command));
   }
 
-  private findPolyline(trip: Trip, polylineId: string): TripPolyline {
-    const polyline = trip.days
-      .flatMap((day) => day.polylines)
-      .find((item) => item.id === polylineId);
-    if (!polyline) {
-      throw new Error('연결선을 찾을 수 없습니다.');
+  private executeRegisteredCommand(
+    operation: RegisteredTripCommand,
+  ): Promise<boolean> {
+    if (operation.type === 'command') {
+      return this.dispatch(operation.command);
     }
-    return polyline;
+    return operation.type === 'undo' ? this.undo() : this.redo();
   }
 
-  private async mutate(update: (trip: Trip) => Trip): Promise<boolean> {
-    const before = this.store.getState().trip;
-    if (this.pending) {
-      return false;
+  private getCommandExecutionError(commandName: string): string {
+    if (commandName === 'undo' && !this.commandDispatcher.canUndo) {
+      return '되돌릴 변경 기록이 없습니다.';
     }
-    let next: Trip;
-    try {
-      next = update(structuredClone(before));
-      for (const day of next.days) {
-        reconcileDayRouteSegments(day, () => `pending-${crypto.randomUUID()}`);
+    if (commandName === 'redo' && !this.commandDispatcher.canRedo) {
+      return '다시 실행할 변경 기록이 없습니다.';
+    }
+    return this.store.getState().error ?? '명령 실행에 실패했습니다.';
+  }
+
+  private completeLocalChange(execution: Promise<boolean>): Promise<boolean> {
+    const completion = execution.then((success) => {
+      if (!success || this.destroyed) {
+        return false;
       }
-      next = tripSchema.parse(next);
-    } catch {
-      this.store.setState({
-        ...this.store.getState(),
-        status: 'error',
-        error: '여행 변경 값이 올바르지 않습니다.',
-      });
-      return false;
+      this.revision += 1;
+      this.queueAutosave();
+      return true;
+    });
+    this.commandCompletion = completion.then(() => undefined);
+    return completion;
+  }
+
+  private clearAutosaveTimer(): void {
+    if (this.autosaveTimer === null) {
+      return;
     }
-    const input: TripInput = {
-      title: next.title,
-      startDate: next.startDate,
-      endDate: next.endDate,
-      days: next.days.map((day) => ({
+    clearTimeout(this.autosaveTimer);
+    this.autosaveTimer = null;
+  }
+
+  private createTripInput(trip: Trip): TripInput {
+    return {
+      title: trip.title,
+      startDate: trip.startDate,
+      endDate: trip.endDate,
+      days: trip.days.map((day) => ({
         ...day,
         places: day.places.map((place) => ({ ...place })),
         polylines: day.polylines.map((polyline) => ({ ...polyline })),
         layerItems: day.layerItems.map((layerItem) => ({ ...layerItem })),
       })),
     };
-    return this.run(
-      (signal) => this.repository.saveTrip(this.tripId, input, signal),
-      next,
-    );
   }
 
-  private async run(
-    operation: (signal: AbortSignal) => Promise<Trip>,
-    optimistic: Trip,
-  ): Promise<boolean> {
-    if (this.pending) {
-      return false;
+  private queueAutosave(): void {
+    if (this.debouncedAutosave) {
+      this.scheduleAutosave();
+      return;
     }
-    const pending = {
+
+    this.clearAutosaveTimer();
+    if (this.pending) {
+      this.flushAfterPending = true;
+      return;
+    }
+    void this.startSave();
+  }
+
+  private scheduleAutosave(): void {
+    this.clearAutosaveTimer();
+    // A newer edit restarts the debounce window, even while a save is active.
+    this.flushAfterPending = false;
+    this.autosaveTimer = setTimeout(() => {
+      this.autosaveTimer = null;
+      if (this.destroyed) {
+        return;
+      }
+      if (this.pending) {
+        this.flushAfterPending = true;
+        return;
+      }
+      void this.startSave();
+    }, AUTOSAVE_DELAY_MS);
+  }
+
+  private startSave(): Promise<boolean> {
+    if (this.destroyed) {
+      return Promise.resolve(false);
+    }
+    if (this.pendingPromise) {
+      return this.pendingPromise;
+    }
+
+    this.clearAutosaveTimer();
+    const current = this.store.getState();
+    const pending: PendingSave = {
       controller: new AbortController(),
-      before: this.store.getState(),
+      revision: this.revision,
     };
     this.pending = pending;
-    this.publish(optimistic, 'saving');
+    this.store.setState({ ...current, status: 'saving', error: null });
+    const promise = this.runSave(pending, this.createTripInput(current.trip));
+    this.pendingPromise = promise;
+    return promise;
+  }
+
+  private async runSave(
+    pending: PendingSave,
+    input: TripInput,
+  ): Promise<boolean> {
     try {
-      const saved = await operation(pending.controller.signal);
-      if (this.pending !== pending || pending.controller.signal.aborted) {
+      const saved = await this.repository.saveTrip(
+        this.tripId,
+        input,
+        pending.controller.signal,
+      );
+      if (
+        this.destroyed ||
+        this.pending !== pending ||
+        pending.controller.signal.aborted
+      ) {
         return false;
       }
       if (saved.id !== this.tripId) {
         throw new Error('저장된 여행이 현재 세션과 다릅니다.');
       }
-      this.publish(saved, 'ready');
+      this.lastSavedRevision = Math.max(
+        this.lastSavedRevision,
+        pending.revision,
+      );
+      const current = this.store.getState();
+      if (this.revision === pending.revision) {
+        this.store.setState({ trip: saved, status: 'ready', error: null });
+      } else {
+        this.store.setState({
+          trip: { ...current.trip, updatedAt: saved.updatedAt },
+          status: 'dirty',
+          error: null,
+        });
+      }
       return true;
     } catch (cause) {
-      if (this.pending !== pending || pending.controller.signal.aborted) {
+      if (
+        this.destroyed ||
+        this.pending !== pending ||
+        pending.controller.signal.aborted
+      ) {
         return false;
       }
+      const current = this.store.getState();
       this.store.setState({
-        ...pending.before,
+        ...current,
         status: 'error',
-        error: `${cause instanceof Error ? cause.message : '여행 요청에 실패했습니다.'} 변경 전 상태로 복원했습니다.`,
+        error:
+          cause instanceof Error ? cause.message : '여행 저장에 실패했습니다.',
       });
       return false;
     } finally {
       if (this.pending === pending) {
         this.pending = null;
+        this.pendingPromise = null;
+        const shouldFlush =
+          this.flushAfterPending &&
+          this.revision > this.lastSavedRevision &&
+          !this.destroyed;
+        this.flushAfterPending = false;
+        if (shouldFlush) {
+          void this.startSave();
+        }
       }
     }
-  }
-
-  private publish(trip: Trip, status: TripState['status']): void {
-    this.store.setState({ trip, status, error: null });
   }
 }

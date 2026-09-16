@@ -7,18 +7,16 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent,
 } from 'react';
-import type { TripDay } from '@trasolve/shared';
+import type { RouteOptimizationRequest, TripDay } from '@trasolve/shared';
+import { createRouteOptimizationRequest } from '../../domain/routeOptimization';
 
-export type RouteOptimizationOptions = {
-  dayId: string;
-  includeStayDuration: boolean;
-};
+type DebugCopyStatus = 'idle' | 'copied' | 'failed';
 
 type Props = {
   id: string;
   activeDay: TripDay;
   onClose: () => void;
-  onOptimize?: (options: RouteOptimizationOptions) => Promise<void> | void;
+  onOptimize?: (request: RouteOptimizationRequest) => Promise<void> | void;
 };
 
 const FOCUSABLE_SELECTOR = [
@@ -39,6 +37,8 @@ export function RouteOptimizationModal({
   const [includeStayDuration, setIncludeStayDuration] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debugCopyStatus, setDebugCopyStatus] =
+    useState<DebugCopyStatus>('idle');
   const dialogRef = useRef<HTMLElement>(null);
   const firstControlRef = useRef<HTMLInputElement>(null);
   const titleId = useId();
@@ -50,6 +50,14 @@ export function RouteOptimizationModal({
   useLayoutEffect(() => {
     firstControlRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (debugCopyStatus === 'idle') {
+      return;
+    }
+    const timeout = window.setTimeout(() => setDebugCopyStatus('idle'), 1800);
+    return () => window.clearTimeout(timeout);
+  }, [debugCopyStatus]);
 
   useEffect(() => {
     const interceptGlobalKeyDown = (event: KeyboardEvent) => {
@@ -110,6 +118,18 @@ export function RouteOptimizationModal({
     }
   };
 
+  const copyDebugPayload = async () => {
+    try {
+      const payload = createRouteOptimizationRequest(activeDay, {
+        includeStayDuration,
+      });
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      setDebugCopyStatus('copied');
+    } catch {
+      setDebugCopyStatus('failed');
+    }
+  };
+
   const runOptimization = async () => {
     if (!canOptimize || submitting) {
       return;
@@ -117,10 +137,10 @@ export function RouteOptimizationModal({
     setSubmitting(true);
     setError(null);
     try {
-      await onOptimize({
-        dayId: activeDay.id,
+      const request = createRouteOptimizationRequest(activeDay, {
         includeStayDuration,
       });
+      await onOptimize(request);
       onClose();
     } catch {
       setError('경로 최적화 요청에 실패했습니다. 다시 시도해 주세요.');
@@ -206,6 +226,21 @@ export function RouteOptimizationModal({
           )}
 
           <footer className="route-optimization-modal-actions">
+            {import.meta.env.DEV && (
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => void copyDebugPayload()}
+              >
+                <span aria-live="polite">
+                  {debugCopyStatus === 'copied'
+                    ? '복사됨'
+                    : debugCopyStatus === 'failed'
+                      ? '복사 실패'
+                      : '디버그 복사'}
+                </span>
+              </button>
+            )}
             <button type="button" disabled={submitting} onClick={onClose}>
               취소
             </button>

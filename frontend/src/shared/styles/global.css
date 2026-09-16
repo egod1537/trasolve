@@ -20,6 +20,7 @@
     0 2px 8px rgba(15, 23, 42, 0.15), 0 1px 2px rgba(15, 23, 42, 0.09);
   --shadow-floating-md:
     0 10px 26px rgba(15, 23, 42, 0.25), 0 2px 7px rgba(15, 23, 42, 0.11);
+  --shadow-map-overlay: var(--shadow-floating-md);
   --shadow-floating-md-hover:
     0 12px 30px rgba(15, 23, 42, 0.24), 0 3px 8px rgba(15, 23, 42, 0.12);
   --shadow-floating-lg:

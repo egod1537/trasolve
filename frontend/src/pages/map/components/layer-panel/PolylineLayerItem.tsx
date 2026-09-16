@@ -18,7 +18,6 @@ type Props = {
   fromPlace: TripPlace | undefined;
   toPlace: TripPlace | undefined;
   selected: boolean;
-  visible: boolean;
   detailsOpen: boolean;
   validation?: LayerValidationState;
   onSelect: (id: string, modifiers: LayerSelectionModifiers) => void;
@@ -32,7 +31,6 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
   fromPlace,
   toPlace,
   selected,
-  visible,
   detailsOpen,
   validation,
   onSelect,
@@ -41,11 +39,7 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
   const fromName = fromPlace?.name ?? '알 수 없는 장소';
   const toName = toPlace?.name ?? '알 수 없는 장소';
   const connectionName = `${fromName} → ${toName}`;
-  const openDetails = () => {
-    if (visible) {
-      onOpenDetails(polyline.id);
-    }
-  };
+  const openDetails = () => onOpenDetails(polyline.id);
   return (
     <LayerItemShell
       type="polyline"
@@ -54,7 +48,6 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
       isLast={isLast}
       selected={selected}
       detailsOpen={detailsOpen}
-      disabled={!visible}
       onOpenDetails={openDetails}
       statusIndicator={<LayerValidationIndicator validation={validation} />}
       chevron={
@@ -64,7 +57,6 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
           controls={detailsOpen ? 'layer-polyline-detail-card' : undefined}
           label={`${connectionName} 상세 ${detailsOpen ? '닫기' : '열기'}`}
           detailControl
-          disabled={!visible}
           onClick={(event) => {
             event.stopPropagation();
             openDetails();
@@ -75,7 +67,6 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
       <button
         type="button"
         className="trip-layer-item-content trip-polyline"
-        disabled={!visible}
         aria-pressed={selected}
         onClick={(event) =>
           onSelect(polyline.id, {

@@ -54,7 +54,8 @@ both LayerPanel and TripLayer receive optimistic and canonical changes.
 
 TripEditController binds to the initial Trip ID and exposes save, renameTrip,
 addDay, moveDay, addPlace, removePlace, movePlace, updatePlace, updateMemo,
-updateTimeRange, updatePolylineMode and cancelPending.
+updateVisitTimeRange, updatePreferredDuration, updatePolylineMode and
+cancelPending.
 List/load/create/delete/close belong outside it. Dependencies are TripStore,
 TripRepository and provider-neutral domain helpers, never React or map objects.
 

@@ -164,9 +164,14 @@ export function useMapWorkspaceActions(
       void controller.updatePlaceStyle(placeId, style),
     [controller],
   );
-  const updateTripPlaceTimeRange = useCallback(
-    (placeId: string, time: string, durationMinutes: number) =>
-      controller.updateTimeRange(placeId, time, durationMinutes),
+  const updateTripPlaceVisitTimeRange = useCallback(
+    (placeId: string, time: string, visitDurationMinutes: number) =>
+      controller.updateVisitTimeRange(placeId, time, visitDurationMinutes),
+    [controller],
+  );
+  const updateTripPlacePreferredDuration = useCallback(
+    (placeId: string, preferredDurationMinutes: number) =>
+      controller.updatePreferredDuration(placeId, preferredDurationMinutes),
     [controller],
   );
   const updateTripPlaceMemo = useCallback(
@@ -206,7 +211,8 @@ export function useMapWorkspaceActions(
         onMovePlace: movePlace,
         onRenamePlace: renamePlace,
         onUpdatePlaceStyle: updatePlaceStyle,
-        onUpdatePlaceTimeRange: updateTripPlaceTimeRange,
+        onUpdatePlaceVisitTimeRange: updateTripPlaceVisitTimeRange,
+        onUpdatePlacePreferredDuration: updateTripPlacePreferredDuration,
         onUpdatePlaceMemo: updateTripPlaceMemo,
         onRemovePlace: removeTripPlace,
         onUpdatePolylineMode: updateTripPolylineMode,
@@ -219,7 +225,8 @@ export function useMapWorkspaceActions(
         onCloseGooglePlace: closeGooglePlace,
         onAddGooglePlace: addGooglePlace,
         onCloseTripPlace: clearPlaceSelection,
-        onUpdateTripPlaceTimeRange: updateTripPlaceTimeRange,
+        onUpdateTripPlaceVisitTimeRange: updateTripPlaceVisitTimeRange,
+        onUpdateTripPlacePreferredDuration: updateTripPlacePreferredDuration,
         onUpdateTripPlaceMemo: updateTripPlaceMemo,
         onRenameTripPlace: renamePlace,
         onUpdateTripPlaceStyle: updatePlaceStyle,
@@ -257,7 +264,8 @@ export function useMapWorkspaceActions(
       selectDay,
       toggleDayVisibility,
       updatePlaceStyle,
-      updateTripPlaceTimeRange,
+      updateTripPlacePreferredDuration,
+      updateTripPlaceVisitTimeRange,
       updateTripPlaceMemo,
       updateTripPolylineMode,
       updateSelectedPolylineModes,

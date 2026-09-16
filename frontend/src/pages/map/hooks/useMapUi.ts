@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { Trip } from '@trasolve/shared';
 import type { GeoPoint } from '../../../map/types/mapTypes';
 import { resolveLayerSelection } from '../domain/layerSelection';
@@ -23,10 +23,10 @@ type MapObjectSelection =
 /** Composes independent map UI state and coordinates cross-state policies. */
 export function useMapUi(trip: Trip) {
   const visibility = useDayVisibility(trip.days);
-  const activeDay = useActiveDay(trip.days, visibility.visibleDayIds);
+  const activeDay = useActiveDay(trip.days);
   const selection = useMapSelection(trip);
   const focus = useMapFocus(trip);
-  const { visibleDayIds, toggleDayVisibility: toggleVisibility } = visibility;
+  const { visibleDayIds, toggleDayVisibility } = visibility;
   const { selectedDayId, setActiveDayId } = activeDay;
   const {
     selectedPlaceId,
@@ -40,12 +40,7 @@ export function useMapUi(trip: Trip) {
     clearPlace,
     clear,
   } = selection;
-  const {
-    focusTarget,
-    revision: focusRevision,
-    focusAll,
-    replaceHiddenDayFocus,
-  } = focus;
+  const { focusTarget, revision: focusRevision, focusAll } = focus;
   const layerSelection = useMemo(
     () =>
       resolveLayerSelection(
@@ -56,11 +51,6 @@ export function useMapUi(trip: Trip) {
       ),
     [selectedDayId, selectedPlaceId, selectedPolylineId, trip],
   );
-  const currentUiRef = useRef({ selectedDayId });
-  useLayoutEffect(() => {
-    currentUiRef.current = { selectedDayId };
-  }, [selectedDayId]);
-
   const selectLayerItemWithMode = useCallback(
     (
       target: SelectableLayerItem,
@@ -72,7 +62,7 @@ export function useMapUi(trip: Trip) {
           ? candidate.places.some((place) => place.id === target.id)
           : candidate.polylines.some((polyline) => polyline.id === target.id),
       );
-      if (!day || !visibleDayIds.has(day.id)) {
+      if (!day) {
         return;
       }
       selectItemState(
@@ -84,7 +74,7 @@ export function useMapUi(trip: Trip) {
       );
       setActiveDayId(day.id);
     },
-    [selectItemState, setActiveDayId, trip.days, visibleDayIds],
+    [selectItemState, setActiveDayId, trip.days],
   );
   const selectMapObject = useCallback(
     (target: MapObjectSelection) => {
@@ -93,7 +83,7 @@ export function useMapUi(trip: Trip) {
           ? candidate.places.some((place) => place.id === target.id)
           : candidate.polylines.some((polyline) => polyline.id === target.id),
       );
-      if (!day || !visibleDayIds.has(day.id)) {
+      if (!day) {
         return;
       }
       selectLayerItemWithMode(
@@ -102,7 +92,7 @@ export function useMapUi(trip: Trip) {
         target.type === 'polyline' ? target.anchor : undefined,
       );
     },
-    [selectLayerItemWithMode, trip.days, visibleDayIds],
+    [selectLayerItemWithMode, trip.days],
   );
   const selectPlace = useCallback(
     (placeId: string) => selectMapObject({ type: 'place', id: placeId }),
@@ -147,45 +137,13 @@ export function useMapUi(trip: Trip) {
   );
   const selectDay = useCallback(
     (dayId: string) => {
-      if (!visibleDayIds.has(dayId)) {
+      if (!trip.days.some((day) => day.id === dayId)) {
         return;
       }
       clear();
       setActiveDayId(dayId);
     },
-    [clear, setActiveDayId, visibleDayIds],
-  );
-  const toggleDayVisibility = useCallback(
-    (dayId: string) => {
-      const day = trip.days.find((candidate) => candidate.id === dayId);
-      if (!day) {
-        return;
-      }
-      const hiding = visibleDayIds.has(dayId);
-      const replacementDayId = hiding
-        ? (trip.days.find(
-            (candidate) =>
-              candidate.id !== dayId && visibleDayIds.has(candidate.id),
-          )?.id ?? null)
-        : currentUiRef.current.selectedDayId;
-
-      toggleVisibility(dayId);
-      if (hiding && currentUiRef.current.selectedDayId === dayId) {
-        clear();
-        setActiveDayId(replacementDayId);
-        replaceHiddenDayFocus(dayId, replacementDayId);
-      } else if (!hiding && !currentUiRef.current.selectedDayId) {
-        setActiveDayId(dayId);
-      }
-    },
-    [
-      clear,
-      replaceHiddenDayFocus,
-      setActiveDayId,
-      toggleVisibility,
-      trip.days,
-      visibleDayIds,
-    ],
+    [clear, setActiveDayId, trip.days],
   );
   const showAll = useCallback(() => {
     clear();

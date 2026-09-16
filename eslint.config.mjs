@@ -9,6 +9,7 @@ export default [
       'frontend/**/*.{ts,tsx}',
       'backend/**/*.{ts,tsx}',
       'shared/**/*.{ts,tsx}',
+      'infra/localization/**/*.ts',
     ],
     languageOptions: {
       parser: babelParser,

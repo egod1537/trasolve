@@ -170,7 +170,7 @@ export function AnchoredMapCard({
   children,
   occlusionRef,
 }: Props) {
-  const { overlayHost, canvasRef } = useGoogleMap();
+  const { overlayHost, canvasRef, isZooming } = useGoogleMap();
   const cardRef = useRef<HTMLDivElement>(null);
   const initialPositionFrameRef = useRef(0);
   const positionedAnchorKeyRef = useRef<string | null>(null);
@@ -302,7 +302,7 @@ export function AnchoredMapCard({
   useLayoutEffect(() => {
     const card = cardRef.current;
     const canvas = canvasRef.current;
-    if (!card || !canvas) {
+    if (!card || !canvas || isZooming) {
       return;
     }
 
@@ -320,7 +320,7 @@ export function AnchoredMapCard({
       observer.disconnect();
       unsubscribe();
     };
-  }, [canvasRef, occlusionRef, overlayHost, updateLayout]);
+  }, [canvasRef, isZooming, occlusionRef, overlayHost, updateLayout]);
 
   const layoutMatchesAnchor = layout.anchorKey === anchorKey;
   const layoutReady = layoutMatchesAnchor && layout.ready && layout.visible;

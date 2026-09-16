@@ -4,19 +4,22 @@
 is the persistence boundary. Rendering remains separate through MapObjectController.
 
 The Trip terminology is an internal type/module naming convention. HTTP paths and
-the data directory are unchanged. Trip places accept optional integer
-`durationMinutes`. Existing local files without `layerItems` are migrated in memory
-when parsed and persist the generated shared order on their next save.
+the data directory are unchanged. Trip places keep visit timeline length in
+`visitDurationMinutes` and the independently editable preferred stay in
+`preferredDurationMinutes`. Legacy `durationMinutes` data migrates only to
+`visitDurationMinutes`; no preferred stay is inferred. Existing local files without
+`layerItems` are migrated in memory when parsed and persist the generated shared
+order on their next save.
 
 ## Domain and commands
 
 `shared/schemas/trip.ts` validates the domain; `shared/types/trip.ts` exports
 Trip, TripInput, TripDay, TripPlace, TripPolyline and TripLayerItem. Stored data
 includes owner, title, optional ISO dates, days (including color), places (location,
-order, optional Google placeId/address/memo/time/durationMinutes), polylines, the
-shared `layerItems` display order, and UTC createdAt/updatedAt timestamps.
-Duration is stored in minutes from 0 through 1440; omission means that the user has
-not set it.
+order, optional Google placeId/address/memo/time/visitDurationMinutes/
+preferredDurationMinutes), polylines, the shared `layerItems` display order, and UTC
+createdAt/updatedAt timestamps. Both durations are stored independently in minutes
+from 0 through 1440; omission means that the user has not set that value.
 
 TripController exposes listTrips, getTrip, createTrip, saveTrip and deleteTrip.
 It imports only the repository interface. All modifications, including future AI
@@ -60,7 +63,9 @@ POST/PUT accept TripInput as JSON, for example:
           "name": "Tokyo Tower",
           "location": { "lat": 35.6586, "lng": 139.7454 },
           "memo": "저녁에 방문",
-          "durationMinutes": 90
+          "time": "18:00",
+          "visitDurationMinutes": 60,
+          "preferredDurationMinutes": 90
         }
       ]
     }
@@ -121,8 +126,9 @@ day drag/drop and one shared Place/Polyline drag/drop order. Place items may ret
 their existing cross-day move behavior; polylines remain in their owning day so
 `fromPlaceId` and `toPlaceId` continue to reference that day's places. The
 persistence toolbar and place editor are no longer exposed.
-TripEditController commands for title, places, coordinates/memos, duration and days
-remain available. Trip deletion belongs to MapPage and is exposed in the picker.
+TripEditController commands for title, places, coordinates/memos, visit duration,
+preferred duration and days remain available. Trip deletion belongs to MapPage and
+is exposed in the picker.
 Mutations still use the existing APIs; dates and other fields are preserved.
 
 `src/pages/map/domain/tripMapping.ts` maps persisted data to the existing map view

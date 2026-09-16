@@ -24,7 +24,7 @@ export const demoTrip: Trip = {
           name: '우에노 공원',
           description: '우에노 · 공원 산책',
           time: '11:30',
-          durationMinutes: 180,
+          visitDurationMinutes: 180,
           lat: 35.7146,
           lng: 139.7745,
           order: 2,

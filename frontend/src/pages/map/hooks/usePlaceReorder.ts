@@ -19,6 +19,7 @@ export type PlaceDragState = {
   placeId: string;
   pointerId: number;
   startY: number;
+  currentX: number;
   currentY: number;
   sourceHeight: number;
   sourceIndex: number;
@@ -88,6 +89,11 @@ function getTarget(
   const rows = Array.from(
     targetDay.querySelectorAll<HTMLElement>('[data-place-id]'),
   ).filter((row) => row.dataset.placeId !== placeId);
+  const layerList =
+    targetDay.querySelector<HTMLOListElement>('.trip-layer-list');
+  if (layerList?.hidden) {
+    return { dayId, index: rows.length };
+  }
   const beforeIndex = rows.findIndex((row) => {
     const rect = row.getBoundingClientRect();
     return pointerY < rect.top + rect.height / 2;
@@ -118,6 +124,7 @@ function autoScroll(container: HTMLElement | null, pointerY: number): void {
 export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
   const [dragState, setDragState] = useState<PlaceDragState | null>(null);
   const dragStateRef = useRef<PlaceDragState | null>(null);
+  const pointerXRef = useRef(0);
   const pointerYRef = useRef(0);
   const capturedHandleRef = useRef<HTMLButtonElement | null>(null);
   const frameRef = useRef(0);
@@ -158,6 +165,7 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
       event.stopPropagation();
       event.currentTarget.setPointerCapture(event.pointerId);
       capturedHandleRef.current = event.currentTarget;
+      pointerXRef.current = event.clientX;
       pointerYRef.current = event.clientY;
       updateDragState({
         sourceDayId: dayId,
@@ -165,6 +173,7 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
         placeId,
         pointerId: event.pointerId,
         startY: event.clientY,
+        currentX: event.clientX,
         currentY: event.clientY,
         sourceHeight:
           event.currentTarget
@@ -183,6 +192,7 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
       }
       event.preventDefault();
       event.stopPropagation();
+      pointerXRef.current = event.clientX;
       pointerYRef.current = event.clientY;
     },
     [],
@@ -275,10 +285,12 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
         target &&
         (target.dayId !== current.targetDayId ||
           target.index !== current.targetIndex ||
+          pointerXRef.current !== current.currentX ||
           pointerYRef.current !== current.currentY)
       ) {
         updateDragState({
           ...current,
+          currentX: pointerXRef.current,
           currentY: pointerYRef.current,
           targetDayId: target.dayId,
           targetIndex: target.index,

@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type RefObject,
 } from 'react';
@@ -14,6 +15,7 @@ import type { SelectionProps } from './DayLayerSection';
 import { LayerPanelHeader } from './LayerPanelHeader';
 import { LayerPanelContent } from './LayerPanelContent';
 import { LayerPlaceDetailCard } from './LayerPlaceDetailCard';
+import { ShareTripModal } from '../share/ShareTripModal';
 
 type DetailTarget =
   { type: 'place'; id: string } | { type: 'polyline'; id: string } | null;
@@ -21,13 +23,11 @@ type DetailTarget =
 type Props = SelectionProps & {
   trip: Trip;
   busy: boolean;
-  saveStatus: 'ready' | 'saving' | 'error';
+  saveStatus: 'ready' | 'dirty' | 'saving' | 'error';
   savedAt: string;
   mutationError: string | null;
   sidebarRef: RefObject<HTMLElement | null>;
   onAddLayer: () => void;
-  onShareTrip?: () => void;
-  onPreviewTrip?: () => void;
   onRenameTrip: (title: string) => void;
   onMoveDay: (dayId: string, targetIndex: number) => void;
   onRenameDay: (dayId: string, title: string) => void;
@@ -43,10 +43,14 @@ type Props = SelectionProps & {
     mode: TripPolylineMode,
   ) => Promise<boolean>;
   onQueryRouteDuration: QueryRouteDuration;
-  onUpdatePlaceTimeRange: (
+  onUpdatePlaceVisitTimeRange: (
     placeId: string,
     time: string,
-    durationMinutes: number,
+    visitDurationMinutes: number,
+  ) => Promise<boolean>;
+  onUpdatePlacePreferredDuration: (
+    placeId: string,
+    preferredDurationMinutes: number,
   ) => Promise<boolean>;
   onUpdatePlaceMemo: (placeId: string, memo: string) => Promise<boolean>;
   onRemovePlace: (placeId: string) => Promise<boolean>;
@@ -63,10 +67,9 @@ export const LayerPanel = memo(function LayerPanel({
   mutationError,
   sidebarRef,
   onAddLayer,
-  onShareTrip,
-  onPreviewTrip,
   onRenameTrip,
-  onUpdatePlaceTimeRange,
+  onUpdatePlaceVisitTimeRange,
+  onUpdatePlacePreferredDuration,
   onUpdatePlaceMemo,
   onRenamePlace,
   onUpdatePlaceStyle,
@@ -82,6 +85,8 @@ export const LayerPanel = memo(function LayerPanel({
   ...contentProps
 }: Props) {
   const [detailTarget, setDetailTarget] = useState<DetailTarget>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const shareButtonRef = useRef<HTMLButtonElement>(null);
   const detailPlaceId = detailTarget?.type === 'place' ? detailTarget.id : null;
   const detailPolylineId =
     detailTarget?.type === 'polyline' ? detailTarget.id : null;
@@ -118,6 +123,11 @@ export const LayerPanel = memo(function LayerPanel({
   );
   const detailOpen = !!detailPlaceContext || !!detailPolylineContext;
   const closeDetails = useCallback(() => setDetailTarget(null), []);
+  const openShareModal = useCallback(() => setShareModalOpen(true), []);
+  const closeShareModal = useCallback(() => {
+    setShareModalOpen(false);
+    requestAnimationFrame(() => shareButtonRef.current?.focus());
+  }, []);
   const selectPlaceFromRow = useCallback<SelectionProps['onSelectPlace']>(
     (placeId, modifiers) => {
       setDetailTarget(null);
@@ -184,7 +194,8 @@ export const LayerPanel = memo(function LayerPanel({
       if (
         event.target.closest('[data-layer-detail-card]') ||
         event.target.closest('[data-layer-detail-toggle]') ||
-        event.target.closest('.trip-layer-item')
+        event.target.closest('.trip-layer-item') ||
+        event.target.closest('[data-layer-interactive-popover]')
       ) {
         return;
       }
@@ -208,8 +219,8 @@ export const LayerPanel = memo(function LayerPanel({
           saveStatus={saveStatus}
           savedAt={savedAt}
           onAddLayer={onAddLayer}
-          onShareTrip={onShareTrip}
-          onPreviewTrip={onPreviewTrip}
+          onShareTrip={openShareModal}
+          shareButtonRef={shareButtonRef}
           onRenameTrip={onRenameTrip}
         />
         <LayerPanelContent
@@ -224,6 +235,7 @@ export const LayerPanel = memo(function LayerPanel({
           onOpenPolylineDetails={openPolylineDetails}
           onCollapseDay={closeDetailsForDay}
           onRenamePlace={onRenamePlace}
+          onUpdatePlaceStyle={onUpdatePlaceStyle}
           {...contentProps}
         />
       </aside>
@@ -237,7 +249,8 @@ export const LayerPanel = memo(function LayerPanel({
           anchorKey={`place:${detailPlaceContext.place.id}`}
           sidebarRef={sidebarRef}
           onClose={closeDetails}
-          onUpdateTimeRange={onUpdatePlaceTimeRange}
+          onUpdateVisitTimeRange={onUpdatePlaceVisitTimeRange}
+          onUpdatePreferredDuration={onUpdatePlacePreferredDuration}
           onUpdateMemo={onUpdatePlaceMemo}
           onRename={onRenamePlace}
           onUpdateStyle={onUpdatePlaceStyle}
@@ -258,6 +271,7 @@ export const LayerPanel = memo(function LayerPanel({
           onUpdateMode={onUpdatePolylineMode}
         />
       )}
+      {shareModalOpen && <ShareTripModal onClose={closeShareModal} />}
     </>
   );
 });

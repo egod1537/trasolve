@@ -1,6 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { I18nextProvider } from 'react-i18next';
 import { App } from './App';
+import { localizationInstance } from '../shared/i18n/config';
 import '../shared/styles/global.css';
 import '../pages/landing/styles/landing.css';
 
@@ -12,6 +14,8 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <I18nextProvider i18n={localizationInstance}>
+      <App />
+    </I18nextProvider>
   </StrictMode>,
 );

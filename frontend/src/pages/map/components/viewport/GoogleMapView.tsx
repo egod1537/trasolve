@@ -46,7 +46,7 @@ const TripObjects = memo(function TripObjects({
   onSelectPolyline,
   sidebarRef,
 }: TripObjectsProps) {
-  const { adapter, objects, canvasRef } = useGoogleMap();
+  const { adapter, objects, canvasRef, isZooming } = useGoogleMap();
 
   useEffect(() => {
     if (!canvasRef.current) {
@@ -105,6 +105,7 @@ const TripObjects = memo(function TripObjects({
         selectedPolylineId={selectedPolylineId}
         selectedDayId={selectedDayId}
         visibleDayIds={visibleDayIds}
+        isZooming={isZooming}
         onSelectPlace={onSelectPlace}
         onSelectPolyline={onSelectPolyline}
       />
