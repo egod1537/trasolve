@@ -71,6 +71,107 @@ assistant 응답은 `react-markdown`과 `remark-gfm`으로 렌더링하며 user 
 `frontend/src/shared/utils/chatMarkdown.ts`에서 처리하며 backend 계약은 `content: string` 그대로입니다.
 RandomChatProvider의 응답 두 개는 Markdown 일정 예시입니다.
 
+### troute backend gateway
+
+Trasolve backend는 `POST /api/troute/optimize`를 통해서만 troute 최적화 API를
+호출합니다. 브라우저가 troute를 직접 호출하지 않으며, `backend/src/troute/`의
+`TrouteClient`가 `${TROUTE_BASE_URL}/optimize` 요청, 30초 제한 시간, 응답 검증과
+upstream 오류 분류를 담당합니다. 요청·응답의 v0 wire 계약은
+`shared/schemas/troute.ts`에 있고 시간은 `HH:MM` 문자열입니다.
+
+로컬 수동 확인:
+
+1. troute 저장소에서 최적화 HTTP endpoint를 구현한 뒤 `cargo run`으로 실행합니다.
+2. `backend/.env.local`에 `TROUTE_BASE_URL=http://127.0.0.1:8080`을 설정하고 Trasolve를
+   `npm run dev`로 실행합니다.
+3. 다음 요청을 보내 troute 로그와 Trasolve 응답을 함께 확인합니다.
+
+```sh
+curl --fail-with-body -X POST http://127.0.0.1:43127/api/troute/optimize \
+  -H 'Content-Type: application/json' \
+  -d '{"job_id":"route-example-001","locations":[{"id":"place-1","place_id":"GOOGLE_PLACE_ID","open_time":"09:00","close_time":"18:00","stay_minutes":60}],"start_location_id":"place-1","start_time":"09:00"}'
+```
+
+현재 troute 서버가 아직 `POST /optimize`를 노출하지 않는 버전이면 gateway는 해당
+upstream HTTP 상태를 정규화된 오류로 반환합니다. 배포 환경에서는 host의
+`TROUTE_BASE_URL`이 backend container에만 전달됩니다.
+
+### troute inbound internal API
+
+반대 방향인 `troute → Trasolve Backend` 서버 간 연동은
+`/api/internal/troute/*` namespace를 전용 계약으로 사용합니다. 브라우저용 Trip API를
+troute 연동 계약으로 직접 노출하지 않습니다.
+
+첫 연결 확인 endpoint는 `GET /api/internal/troute/health`입니다.
+
+```json
+{"status":"ok","service":"trasolve"}
+```
+
+GET 이외의 method는 `Allow: GET`과 정규화된 JSON 오류를 포함한 HTTP 405를 반환합니다.
+이 endpoint는 연결 확인만 담당하며 browser cookie에 의존하지 않습니다. 인증 방식과
+Trip/Place 조회는 후속 작업으로 미룹니다.
+
+`POST /api/troute/optimize` 요청의 `job_id`는 공백이 아닌 최대 128자의 opaque 문자열입니다.
+Backend는 troute 호출 전에 해당 ID의 in-memory job을 `pending`, progress `0`으로 만들며,
+이미 사용 중인 ID는 재사용하지 않습니다. troute는 아래 callback으로 같은 ID를 돌려줍니다.
+
+```text
+POST /api/internal/troute/jobs/{job_id}/events
+GET  /api/internal/troute/jobs/{job_id}
+```
+
+공통 event envelope는 `{ "sequence": 1, "type": "progress", "data": {} }`이고 sequence는
+job마다 1부터 빈틈없이 증가합니다. 동일 sequence와 내용의 재전송은 한 번만 저장되는
+idempotent retry로 처리합니다.
+
+Progress payload의 `status`는 `queued | running`, `stage`는 아래 허용값 중 하나입니다.
+
+- `accepted`
+- `building_matrix`
+- `solving`
+- `scheduling`
+
+`progress`는 정수 `0..100`이며 감소할 수 없습니다. 첫 progress event부터 job의 파생 상태는
+`running`입니다. 첫 progress 이후의 event payload status는 `running`이어야 합니다.
+선택적인 `message`는 최대 1024자의 표시·진단용 텍스트이며 프로그램 로직의 근거로 쓰지
+않습니다.
+
+Error payload는 `code`, `message`, 선택적인 `detail`로 구성됩니다. `code`는 최대 128자의
+대문자 snake-case 식별자이고 message는 최대 1024자, 진단 전용 detail은 최대 4096자입니다.
+Error event를 받으면 job은 `failed` terminal 상태가 됩니다. 이후 새 progress/error/result는
+HTTP 409 `TROUTE_JOB_TERMINAL`로 거절하며, 이미 수락한 event의 정확한 재전송만 허용합니다.
+조회 응답은 `status`, `stage`, `progress`, `last_message`, `error`, `result`, `diagnostic`,
+`events`를 포함합니다.
+현재 저장소는 프로세스 메모리 전용이며 재시작 시 초기화됩니다.
+
+Result event의 `data`는 별도 schema를 만들지 않고 동기 `POST /optimize` 응답과 같은
+`trouteOptimizeResponseSchema`를 사용합니다. route는 한 개 이상의 stop을 포함하고 시간은
+기존과 동일한 `HH:MM` 형식입니다. 유효한 result callback을 받으면 job은 `completed`,
+progress `100`, stage `null`이 되며 error를 비우고 결과를 저장합니다. `completed`도 terminal
+상태이므로 정확한 idempotent retry 외의 후속 event는 거절합니다.
+
+전환 기간에는 troute의 동기 optimize 응답과 result callback이 함께 도착할 수 있습니다.
+동기 응답은 기존처럼 브라우저 요청에 직접 반환하고, callback 결과는 job record와 event
+history에 저장합니다. 두 결과는 같은 schema로 정규화한 canonical JSON을 비교합니다.
+일치하지 않으면 callback 결과를 덮어쓰지 않고 job의 `diagnostic.code`에
+`RESULT_MISMATCH`를 기록하며 backend 로그에도 남깁니다. callback이 먼저 도착해도 나중에
+동기 응답을 받을 때 같은 비교를 수행하며 이미 반환된 사용자 응답을 소급해 실패시키지 않습니다.
+
+`/testbed/troute`는 요청의 job ID를 표시하고 pending/running 동안 약 1초마다 조회합니다.
+failed/completed 상태에서는 polling을 중단합니다. production 지도 UI, SSE, WebSocket에는
+아직 연결하지 않습니다. 완료된 callback 결과의 최종 경로, 총 이동 시간과 raw job/event
+상태는 testbed에서 확인할 수 있습니다.
+
+다음 경로는 namespace 확장 방향일 뿐 현재 구현된 API가 아닙니다.
+
+- `GET /api/internal/troute/trips/:tripId`
+- `GET /api/internal/troute/places/:placeId`
+
+```sh
+curl -i http://127.0.0.1:43127/api/internal/troute/health
+```
+
 ### Google Maps
 
 로컬 경로 조회는 `frontend → POST /api/routes → Google Routes API`를 사용합니다.
@@ -81,8 +182,9 @@ Maps JavaScript API 전용으로 HTTP referrer 제한을 적용합니다.
 각각 설정한 뒤 `npm run dev`를 실행합니다. 각각 Routes API와 Places API (New)를
 활성화하고 서버용 제한을 적용합니다. 배포 시에는 `~/.config/jjs/deploy.env`의
 두 서버 키가 백엔드 컨테이너에만 전달되며 프런트엔드 빌드 인자로 사용되지 않습니다.
-요청·응답 계약은 `shared/schemas/routes.ts`, `shared/schemas/places.ts`에 있으며, Google Maps 백엔드 구현은
-`backend/src/google/maps/`에 모여 있습니다.
+요청·응답 계약은 `shared/schemas/routes.ts`, `shared/schemas/places.ts`에 있습니다.
+Google Routes 구현은 `backend/src/routes/providers/`에, Google Places 구현은
+`backend/src/google/maps/`에 있습니다.
 
 프런트엔드의 두 Google 연결 경로는 분리합니다.
 
@@ -106,37 +208,42 @@ Maps JavaScript API 전용으로 HTTP referrer 제한을 적용합니다.
 일정 도메인과 페이지의 지도 데이터 계약은 유지합니다.
 
 ```text
+backend/src/routes/
+├── routeProvider.ts      # provider-neutral 경로 조회 계약
+├── routeService.ts       # provider 결과를 HTTP 응답 계약으로 조립
+├── routeHttpService.ts   # HTTP 검증과 응답 처리
+└── providers/
+    └── googleRoutesProvider.ts  # Google 요청·응답 변환과 호출
+
 backend/src/google/maps/
-├── routes.ts  # Routes: 요청 검증, Google API 호출·변환, HTTP 처리
 ├── places.ts  # Places: 자동완성·상세 조회, 검증·변환, HTTP 처리
-└── errors.ts  # ApiError: 공통 API 오류
+└── errors.ts  # Places API 오류
 ```
 
 `backend/src/instances.ts`에서 환경 변수를 읽은 뒤 클래스 인스턴스를 한 번 생성합니다.
 다른 백엔드 모듈은 이 파일에서 `API`만 import해서 사용합니다.
-`API.Route`는 생성한 `Routes` 인스턴스를 직접 참조합니다.
+`API.Route`는 `RouteHttpService`를 참조합니다.
 공용 인스턴스는 Node.js 프로세스마다 하나이며, 서버 재시작 시 새로 생성됩니다.
 `API.Place`는 같은 방식으로 생성한 `Places` 인스턴스이며 `searchAutocomplete`,
 `getPlace`, `handleAutocomplete`, `handlePlace`를 제공합니다.
-`instances.ts`에서 `new Routes(apiKey)` 한 번으로 경로 객체를 생성합니다.
-`Routes`는 키와 타임아웃을 보관하며, 공개 메서드는 `queryRoutes`와 `handle`입니다.
-JSON 읽기, Google 요청 생성·호출, 응답 변환은 private 메서드로 캡슐화합니다.
-요청별 데이터는 메서드 내부에서만 관리합니다.
+`instances.ts`에서 `GoogleRoutesProvider → RouteService → RouteHttpService`를 조립합니다.
+HTTP 계층은 provider를 알지 못하며, Google 키·타임아웃·요청 생성·호출·응답 변환은
+`GoogleRoutesProvider` 안에만 둡니다.
 
 ```ts
 import { API } from './instances.js';
 
 // HTTP 요청: API.Route.handle(request, response)
-// 다른 백엔드 로직에서 경로 조회: API.Route.queryRoutes(request)
 ```
 
-`queryRoutes(request: DirectionsRequest)`는 타입이 지정된 요청 객체를 받습니다.
-HTTP JSON 입력은 `handle`에서 스키마로 검증한 뒤 전달합니다.
+`RouteProvider.queryRoutes(request: DirectionsRequest)`는 타입이 지정된 요청 객체를 받고
+정규화된 경로와 선택적인 진단 메타데이터를 반환합니다. `RouteService`는 이를 기존
+`DirectionsResult` HTTP 계약으로 조립합니다. HTTP JSON 입력은 `handle`에서 스키마로
+검증한 뒤 전달합니다.
 프런트엔드와 백엔드에서 공용 `DirectionsRequestBuilder`로 요청을 구성할 수도 있습니다.
 
 ```ts
 import { DirectionsRequestBuilder, TravelMode } from '@trasolve/shared';
-import { API } from './instances.js';
 
 const request = new DirectionsRequestBuilder()
   .setOrigin({ type: 'address', address: '도쿄역' })
@@ -144,8 +251,6 @@ const request = new DirectionsRequestBuilder()
   .setTravelMode(TravelMode.TRANSIT)
   .setComputeAlternativeRoutes(false)
   .build();
-
-const result = await API.Route.queryRoutes(request);
 ```
 
 `setIntermediates(locations)`로 경유지를 설정하며, 빈 배열을 전달하면 제거합니다.
@@ -167,9 +272,12 @@ const result = await API.Route.queryRoutes(request);
 이 제한은 결과의 `warnings`에도 포함됩니다. 구간별 요청과 원본 응답은
 `rawResponse.segments`에 순서대로 보관합니다.
 
-`npm run lint`는 호출부의 Google Maps 구현 직접 import/re-export를 금지합니다.
-`Routes` 생성용 import는 `instances.ts`에서 수행합니다.
-구현 내부에서 `instances.ts`를 가져오는 것도 금지합니다.
+Google provider 생성과 연결은 `instances.ts`에서만 수행합니다. provider 및 서비스 구현에서
+`instances.ts`를 가져오지 않습니다.
+
+`RouteProvider`는 외부 routing provider에서 실제 이동 경로 데이터를 조회해 정규화하는
+경계입니다. 경로 최적화와 일정 스케줄링을 담당하는 troute는 별도 상위 서비스이며, 이
+provider 계약이나 현재 backend wiring에는 포함하지 않습니다.
 
 ### Places API
 

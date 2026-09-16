@@ -165,12 +165,22 @@ export class GoogleMapObjectController implements MapObjectController {
         anchorTop: '-50%',
       });
     marker.replaceChildren(content);
+    let visible = options.visible !== false;
     const listeners = new Set<() => void>();
+    const handleEntranceAnimationEnd = (event: AnimationEvent) => {
+      if (event.animationName === 'trip-map-marker-enter') {
+        content.classList.remove('is-entering');
+      }
+    };
+    content.addEventListener('animationend', handleEntranceAnimationEnd);
     const base = this.register(id, options.layer, {
-      setVisible: (visible) => {
-        if (marker) {
-          marker.map = visible ? this.map : null;
+      setVisible: (nextVisible) => {
+        if (!marker || visible === nextVisible) {
+          return;
         }
+        visible = nextVisible;
+        content.classList.toggle('is-entering', visible);
+        marker.map = visible ? this.map : null;
       },
       setZIndex: (zIndex) => {
         if (marker) {
@@ -181,6 +191,7 @@ export class GoogleMapObjectController implements MapObjectController {
         for (const unsubscribe of [...listeners]) {
           unsubscribe();
         }
+        content.removeEventListener('animationend', handleEntranceAnimationEnd);
         if (marker) {
           marker.map = null;
           marker.replaceChildren();

@@ -59,3 +59,13 @@
   filter: grayscale(0.6);
   opacity: 0.45;
 }
+
+.trip-map-marker.is-entering {
+  animation: trip-map-marker-enter 140ms ease-out;
+}
+
+@keyframes trip-map-marker-enter {
+  from {
+    opacity: 0;
+  }
+}

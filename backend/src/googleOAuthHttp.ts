@@ -3,23 +3,31 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
   API_ROUTES,
   type ApiErrorResponse,
+  type AuthMeResponse,
   type GoogleOAuthResult,
+  type GoogleOAuthUser,
 } from '@trasolve/shared';
 import { GoogleOAuthClient, GoogleOAuthError } from './googleOAuth.js';
+import { SessionStore } from './auth/sessionStore.js';
 
 const transactionCookieName = 'trasolve_google_oauth_transaction';
 const resultCookieName = 'trasolve_google_oauth_result';
+const sessionCookieName = 'trasolve_session';
 const transactionCookiePath = API_ROUTES.googleOAuthCallback;
 const resultCookiePath = API_ROUTES.googleOAuthResult;
-const frontendResultPath = '/testbed/google-oauth?oauth=complete';
+const sessionCookiePath = '/';
+const defaultReturnTo = '/';
 const entryLifetimeMs = 10 * 60 * 1_000;
 const cookieMaxAgeSeconds = entryLifetimeMs / 1_000;
+const sessionLifetimeMs = 30 * 24 * 60 * 60 * 1_000;
+const sessionCookieMaxAgeSeconds = sessionLifetimeMs / 1_000;
 const maximumEntries = 500;
 const opaqueIdPattern = /^[A-Za-z0-9_-]{43}$/;
 
 interface OAuthTransaction {
   state: string;
   codeVerifier: string;
+  returnTo: string;
 }
 
 interface StoredEntry<T> {
@@ -79,6 +87,7 @@ class ExpiringStore<T> {
 export class GoogleOAuthHttpFlow {
   private readonly transactions = new ExpiringStore<OAuthTransaction>();
   private readonly results = new ExpiringStore<GoogleOAuthResult>();
+  private readonly sessions = new SessionStore<GoogleOAuthUser>();
 
   public async handle(
     request: IncomingMessage,
@@ -90,9 +99,28 @@ export class GoogleOAuthHttpFlow {
       pathname === API_ROUTES.googleOAuthStart ||
       pathname === API_ROUTES.googleOAuthCallback ||
       pathname === API_ROUTES.googleOAuthResult;
+    const isAuthMeRoute = pathname === API_ROUTES.authMe;
+    const isAuthLogoutRoute = pathname === API_ROUTES.authLogout;
 
-    if (!isOAuthRoute) {
+    if (!isOAuthRoute && !isAuthMeRoute && !isAuthLogoutRoute) {
       return false;
+    }
+
+    if (isAuthLogoutRoute) {
+      if (request.method !== 'POST') {
+        response.setHeader('Allow', 'POST');
+        const body: ApiErrorResponse = {
+          error: {
+            code: 'METHOD_NOT_ALLOWED',
+            message: 'POST 요청을 사용해 주세요.',
+          },
+        };
+        sendJson(response, 405, body);
+        return true;
+      }
+
+      this.handleLogout(request, response);
+      return true;
     }
 
     if (request.method !== 'GET') {
@@ -108,28 +136,40 @@ export class GoogleOAuthHttpFlow {
     }
 
     if (pathname === API_ROUTES.googleOAuthStart) {
-      this.handleStart(response);
+      this.handleStart(response, requestUrl);
     } else if (pathname === API_ROUTES.googleOAuthCallback) {
       await this.handleCallback(request, response, requestUrl);
-    } else {
+    } else if (pathname === API_ROUTES.googleOAuthResult) {
       this.handleResult(request, response);
+    } else {
+      this.handleMe(request, response);
     }
 
     return true;
   }
 
-  private handleStart(response: ServerResponse): void {
+  private handleStart(response: ServerResponse, requestUrl: URL): void {
     const client = createGoogleOAuthClient();
     const secure = usesSecureOAuthCookies();
+    const returnTo = readSafeReturnTo(requestUrl);
 
     if (!client) {
-      this.redirectWithResult(response, { status: 'unavailable' }, secure);
+      this.redirectWithResult(
+        response,
+        { status: 'unavailable' },
+        secure,
+        returnTo,
+      );
       return;
     }
 
     const { authorizationUrl, state, codeVerifier } =
       client.createAuthorizationRequest();
-    const transactionId = this.transactions.create({ state, codeVerifier });
+    const transactionId = this.transactions.create({
+      state,
+      codeVerifier,
+      returnTo,
+    });
 
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Location', authorizationUrl);
@@ -139,6 +179,7 @@ export class GoogleOAuthHttpFlow {
         transactionId,
         transactionCookiePath,
         secure,
+        cookieMaxAgeSeconds,
       ),
       clearCookie(resultCookieName, resultCookiePath, secure),
     ]);
@@ -154,6 +195,7 @@ export class GoogleOAuthHttpFlow {
     const secure = usesSecureOAuthCookies();
     const transactionId = readOpaqueCookie(request, transactionCookieName);
     const transaction = this.transactions.consume(transactionId);
+    const returnTo = transaction?.returnTo ?? defaultReturnTo;
     const callbackState = requestUrl.searchParams.get('state');
 
     if (!transaction || !securelyMatches(callbackState, transaction.state)) {
@@ -161,6 +203,7 @@ export class GoogleOAuthHttpFlow {
         response,
         { status: 'error', error: 'invalid_callback' },
         secure,
+        returnTo,
       );
       return;
     }
@@ -177,6 +220,7 @@ export class GoogleOAuthHttpFlow {
               : 'provider_error',
         },
         secure,
+        returnTo,
       );
       return;
     }
@@ -187,13 +231,19 @@ export class GoogleOAuthHttpFlow {
         response,
         { status: 'error', error: 'invalid_callback' },
         secure,
+        returnTo,
       );
       return;
     }
 
     const client = createGoogleOAuthClient();
     if (!client) {
-      this.redirectWithResult(response, { status: 'unavailable' }, secure);
+      this.redirectWithResult(
+        response,
+        { status: 'unavailable' },
+        secure,
+        returnTo,
+      );
       return;
     }
 
@@ -202,9 +252,29 @@ export class GoogleOAuthHttpFlow {
         authorizationCode,
         transaction.codeVerifier,
       );
-      this.redirectWithResult(response, { status: 'success', user }, secure);
+      const sessionId = this.sessions.create(user, sessionLifetimeMs);
+      this.redirectWithResult(
+        response,
+        { status: 'success', user },
+        secure,
+        returnTo,
+        [
+          createCookie(
+            sessionCookieName,
+            sessionId,
+            sessionCookiePath,
+            secure,
+            sessionCookieMaxAgeSeconds,
+          ),
+        ],
+      );
     } catch (error) {
-      this.redirectWithResult(response, mapOAuthError(error), secure);
+      this.redirectWithResult(
+        response,
+        mapOAuthError(error),
+        secure,
+        returnTo,
+      );
     }
   }
 
@@ -223,18 +293,50 @@ export class GoogleOAuthHttpFlow {
     sendJson(response, 200, result);
   }
 
+  private handleMe(request: IncomingMessage, response: ServerResponse): void {
+    const sessionId = readOpaqueCookie(request, sessionCookieName);
+    const user = this.sessions.get(sessionId);
+    const body: AuthMeResponse = { user: user ?? null };
+    sendJson(response, 200, body);
+  }
+
+  private handleLogout(
+    request: IncomingMessage,
+    response: ServerResponse,
+  ): void {
+    const secure = usesSecureOAuthCookies();
+    const sessionId = readOpaqueCookie(request, sessionCookieName);
+    this.sessions.destroy(sessionId);
+
+    response.setHeader(
+      'Set-Cookie',
+      clearCookie(sessionCookieName, sessionCookiePath, secure),
+    );
+    sendJson(response, 200, { success: true });
+  }
+
   private redirectWithResult(
     response: ServerResponse,
     result: GoogleOAuthResult,
     secure: boolean,
+    returnTo: string,
+    extraCookies: string[] = [],
   ): void {
     const resultTicket = this.results.create(result);
+    const location = `${returnTo}${returnTo.includes('?') ? '&' : '?'}oauth=complete`;
 
     response.setHeader('Cache-Control', 'no-store');
-    response.setHeader('Location', frontendResultPath);
+    response.setHeader('Location', location);
     response.setHeader('Set-Cookie', [
       clearCookie(transactionCookieName, transactionCookiePath, secure),
-      createCookie(resultCookieName, resultTicket, resultCookiePath, secure),
+      createCookie(
+        resultCookieName,
+        resultTicket,
+        resultCookiePath,
+        secure,
+        cookieMaxAgeSeconds,
+      ),
+      ...extraCookies,
     ]);
     response.writeHead(303);
     response.end();
@@ -280,6 +382,25 @@ function securelyMatches(candidate: string | null, expected: string): boolean {
   );
 }
 
+/**
+ * Only same-origin, path-absolute returns are allowed, so an attacker cannot
+ * use `returnTo` to bounce a completed login through an external site.
+ */
+function readSafeReturnTo(requestUrl: URL): string {
+  const value = requestUrl.searchParams.get('returnTo');
+  if (
+    !value ||
+    !value.startsWith('/') ||
+    value.startsWith('//') ||
+    value.includes('\\') ||
+    /[\r\n]/.test(value)
+  ) {
+    return defaultReturnTo;
+  }
+
+  return value;
+}
+
 function readOpaqueCookie(
   request: IncomingMessage,
   cookieName: string,
@@ -311,10 +432,11 @@ function createCookie(
   value: string,
   path: string,
   secure: boolean,
+  maxAgeSeconds: number,
 ): string {
   return [
     `${name}=${value}`,
-    `Max-Age=${cookieMaxAgeSeconds}`,
+    `Max-Age=${maxAgeSeconds}`,
     `Path=${path}`,
     'HttpOnly',
     'SameSite=Lax',

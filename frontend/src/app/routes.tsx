@@ -10,6 +10,7 @@ const AiChatTestPage = lazy(() => import('../pages/testbed/AiChatTestPage'));
 const GoogleOAuthTestPage = lazy(
   () => import('../pages/testbed/GoogleOAuthTestPage'),
 );
+const TrouteTestPage = lazy(() => import('../pages/testbed/TrouteTestPage'));
 
 type RouteDefinition = {
   Component: ComponentType;
@@ -40,6 +41,10 @@ export const routes: Record<string, RouteDefinition> = {
   '/testbed/google-oauth': {
     Component: GoogleOAuthTestPage,
     loadingLabel: 'Google OAuth 테스트 페이지를 불러오고 있습니다.',
+  },
+  '/testbed/troute': {
+    Component: TrouteTestPage,
+    loadingLabel: 'troute 연동 테스트 페이지를 불러오고 있습니다.',
   },
 };
 

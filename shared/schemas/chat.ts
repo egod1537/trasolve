@@ -10,6 +10,7 @@ export const chatMessageSchema = z.strictObject({
 
 export const chatRequestSchema = z.strictObject({
   messages: z.array(chatMessageSchema).min(1).max(CHAT_LIMITS.messages),
+  model: z.string().trim().min(1).optional(),
 });
 
 export const chatResponseSchema = z.strictObject({

@@ -2,13 +2,26 @@
   "name": "trasolve",
   "private": true,
   "version": "0.0.0",
-  "workspaces": ["frontend", "backend", "shared"],
-  "engines": { "node": ">=24.11" },
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
+  "engines": {
+    "node": ">=24.11"
+  },
+  "overrides": {
+    "react-popper": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
+  },
   "scripts": {
     "predev": "npm run build -w @trasolve/shared",
     "dev": "concurrently -k -n shared,backend,frontend \"npm run dev -w @trasolve/shared\" \"npm run dev -w @trasolve/backend\" \"npm run dev -w @trasolve/frontend\"",
     "build": "npm run build -w @trasolve/shared && npm run build -w @trasolve/backend && npm run build -w @trasolve/frontend",
     "typecheck": "npm run build -w @trasolve/shared && npm run typecheck --workspaces && npm run localization:typecheck",
+    "test": "npm run build -w @trasolve/shared && npm test -w @trasolve/backend",
     "lint": "oxlint . && eslint .",
     "lint:fix": "oxlint . --fix && eslint . --fix",
     "format": "prettier --write \"frontend/**/*.{ts,tsx,css,html,json}\" \"backend/**/*.{ts,json}\" \"shared/**/*.{ts,json}\" \"infra/localization/**/*.{ts,json,md}\" \"eslint.config.mjs\" \".github/**/*.yml\"",
@@ -24,6 +37,8 @@
     "googleapis": "^180.0.0",
     "oxlint": "^1.81.0",
     "prettier": "^3.9.6",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "typescript": "^7.0.2"
   }
 }
