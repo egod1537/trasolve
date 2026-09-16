@@ -14,6 +14,12 @@ import { ChatService } from './ai/chatService.js';
 import { createChatProvider } from './ai/chatProviderFactory.js';
 import { OpenWebUIClient, OpenWebUIClientError } from './ai/openWebUIClient.js';
 import { OpenWebUIModelHttpService } from './ai/openWebUIModelHttpService.js';
+import {
+  ConversationContextComposer,
+  InMemoryConversationContextStore,
+} from './ai/conversation/conversationContext.js';
+import { ConversationService } from './ai/conversation/conversationService.js';
+import { InMemoryConversationSessionStore } from './ai/conversation/conversationSessionStore.js';
 import { TrouteClient } from './troute/trouteClient.js';
 import { TrouteClientError } from './troute/errors.js';
 import { TrouteHttpService } from './troute/trouteHttpService.js';
@@ -60,6 +66,12 @@ const chatProvider = createChatProvider(
   openWebUIClient,
 );
 const chat = new ChatService(chatProvider);
+const conversation = new ConversationService(
+  chat,
+  new InMemoryConversationSessionStore(),
+  new InMemoryConversationContextStore(),
+  new ConversationContextComposer(),
+);
 const openWebUIModels = new OpenWebUIModelHttpService(openWebUIClient);
 const backendRoot = fileURLToPath(new URL('../', import.meta.url));
 const tripRepository = new LocalFileTripRepository({
@@ -91,6 +103,7 @@ export const API = {
   Route: routes,
   Place: places,
   Chat: chat,
+  Conversation: conversation,
   OpenWebUIModels: openWebUIModels,
   Trip: trip,
   TripHttp: tripHttp,

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CHAT_LIMITS } from '../constants/chat.js';
 
-export const chatRoleSchema = z.enum(['user', 'assistant']);
+export const chatRoleSchema = z.enum(['system', 'user', 'assistant']);
 
 export const chatMessageSchema = z.strictObject({
   role: chatRoleSchema,
