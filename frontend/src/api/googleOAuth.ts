@@ -6,8 +6,10 @@ import {
 
 let resultRequest: Promise<GoogleOAuthResult> | undefined;
 
-export function startGoogleOAuth(): void {
-  window.location.assign(API_ROUTES.googleOAuthStart);
+export function startGoogleOAuth(returnTo: string): void {
+  const url = new URL(API_ROUTES.googleOAuthStart, window.location.origin);
+  url.searchParams.set('returnTo', returnTo);
+  window.location.assign(url.toString());
 }
 
 export function consumeGoogleOAuthResult(): Promise<GoogleOAuthResult> {

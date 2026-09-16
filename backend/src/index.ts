@@ -78,7 +78,9 @@ const server = createServer((request, response) => {
   if (
     pathname === API_ROUTES.googleOAuthStart ||
     pathname === API_ROUTES.googleOAuthCallback ||
-    pathname === API_ROUTES.googleOAuthResult
+    pathname === API_ROUTES.googleOAuthResult ||
+    pathname === API_ROUTES.authMe ||
+    pathname === API_ROUTES.authLogout
   ) {
     void googleOAuthHttpFlow
       .handle(request, response, requestUrl)

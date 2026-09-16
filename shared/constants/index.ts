@@ -15,4 +15,6 @@ export const API_ROUTES = {
   googleOAuthStart: '/api/auth/google/start',
   googleOAuthCallback: '/api/auth/google/callback',
   googleOAuthResult: '/api/auth/google/result',
+  authMe: '/api/auth/me',
+  authLogout: '/api/auth/logout',
 } as const;

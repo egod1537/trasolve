@@ -67,7 +67,7 @@ function GoogleOAuthTestContent() {
           className="google-oauth-test-login"
           type="button"
           disabled={pageState.status === 'loading'}
-          onClick={startGoogleOAuth}
+          onClick={() => startGoogleOAuth('/testbed/google-oauth')}
         >
           Login with Google
         </button>

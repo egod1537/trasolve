@@ -114,6 +114,10 @@ export type {
   GoogleOAuthUser,
 } from './types/googleOAuth.js';
 
+export { authMeResponseSchema } from './schemas/auth.js';
+
+export type { AuthMeResponse } from './types/auth.js';
+
 export {
   openWebUIModelSchema,
   openWebUIModelListResponseSchema,
