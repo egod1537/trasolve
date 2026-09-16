@@ -24,6 +24,7 @@ import './chat-panel.css';
 
 type Props = {
   open: boolean;
+  model?: string;
   onClose?: () => void;
   onGeneratingChange?: (generating: boolean) => void;
   onUnreadPreviewsChange?: (previews: MapAiUnreadPreview[]) => void;
@@ -163,7 +164,7 @@ function assertThreadMessageRefInvariant(
 
 export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
   function MapAiPanel(
-    { open, onClose, onGeneratingChange, onUnreadPreviewsChange },
+    { open, model, onClose, onGeneratingChange, onUnreadPreviewsChange },
     ref,
   ) {
     const [threads, setThreads] = useState<ChatThread[]>(() => [
@@ -529,6 +530,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
         const result = await sendChat(
           {
             messages: requestMessages,
+            ...(model ? { model } : {}),
           },
           controller.signal,
         );

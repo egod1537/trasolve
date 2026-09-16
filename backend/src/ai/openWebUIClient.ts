@@ -1,9 +1,7 @@
 import { z } from 'zod';
+import { OPENWEBUI_OPTIONS } from '../options.js';
 
 export const DEFAULT_OPENWEBUI_BASE_URL = 'https://chat.mangagaki.net';
-
-const DEFAULT_MODELS_TIMEOUT_MS = 15_000;
-const DEFAULT_CHAT_TIMEOUT_MS = 120_000;
 
 const chatMessageSchema = z.strictObject({
   role: z.enum(['system', 'user', 'assistant']),
@@ -88,11 +86,11 @@ export class OpenWebUIClient {
       options.baseUrl ?? DEFAULT_OPENWEBUI_BASE_URL,
     );
     this.modelsTimeoutMs = this.normalizeTimeout(
-      options.modelsTimeoutMs ?? DEFAULT_MODELS_TIMEOUT_MS,
+      options.modelsTimeoutMs ?? OPENWEBUI_OPTIONS.modelsTimeoutMs,
       'modelsTimeoutMs',
     );
     this.chatTimeoutMs = this.normalizeTimeout(
-      options.chatTimeoutMs ?? DEFAULT_CHAT_TIMEOUT_MS,
+      options.chatTimeoutMs ?? OPENWEBUI_OPTIONS.chatTimeoutMs,
       'chatTimeoutMs',
     );
   }
