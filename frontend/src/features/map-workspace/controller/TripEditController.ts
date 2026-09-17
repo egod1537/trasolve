@@ -120,6 +120,15 @@ export class TripEditController {
     return this.completeLocalChange(this.commandDispatcher.redo());
   }
 
+  public executeBatch(commands: readonly TripCommand[]): Promise<boolean> {
+    if (this.destroyed || commands.length === 0) {
+      return Promise.resolve(false);
+    }
+    return this.completeLocalChange(
+      this.commandDispatcher.executeBatch(commands),
+    );
+  }
+
   public async executeTripCommandString(
     input: string,
   ): Promise<CommandExecutionResult> {
