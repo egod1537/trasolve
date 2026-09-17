@@ -39,8 +39,8 @@ const persistedStateSchema = z.strictObject({
   updated_at: z.number().int().nonnegative(),
   completed_at: z.number().int().nonnegative().nullable(),
   last_synced_at: z.number().int().nonnegative().nullable().optional(),
-  // Accepted only while migrating callback-era state files.
-  last_sequence: z.number().int().nonnegative().optional(),
+  last_event_id: z.string().nullable().optional(),
+  last_sequence: z.number().int().nonnegative().nullable().optional(),
   diagnostic: z.unknown().optional(),
 });
 
@@ -115,17 +115,6 @@ export class FileTrouteJobRepository extends TrouteJobRepository {
     if (job.state.error === null) {
       this.removeFileIfPresent(join(jobDir, 'error.json'));
     }
-  }
-
-  protected override persistGatewayResult(
-    job: StoredTrouteJob,
-    result: TrouteOptimizeResponse,
-  ): void {
-    this.writeJsonAtomic(
-      join(this.jobDirectory(job.state.job_id), 'result.json'),
-      result,
-    );
-    this.writeState(job);
   }
 
   protected override persistGatewayFailure(
@@ -213,6 +202,8 @@ export class FileTrouteJobRepository extends TrouteJobRepository {
           ? (persisted.completed_at ?? persisted.updated_at)
           : persisted.completed_at,
       lastSyncedAt: persisted.last_synced_at ?? null,
+      lastEventId: persisted.last_event_id ?? null,
+      lastEventSequence: persisted.last_sequence ?? null,
     };
   }
 
@@ -243,6 +234,8 @@ export class FileTrouteJobRepository extends TrouteJobRepository {
       updated_at: job.updatedAt,
       completed_at: job.completedAt,
       last_synced_at: job.lastSyncedAt,
+      last_event_id: job.lastEventId,
+      last_sequence: job.lastEventSequence,
     };
     this.writeJsonAtomic(
       join(this.jobDirectory(job.state.job_id), 'state.json'),

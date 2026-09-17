@@ -1,12 +1,12 @@
-import type { MapAdapter } from './MapAdapter';
-import type { MapOverlayHost } from './MapOverlayHost';
-import type { MapObjectController } from './MapObjectController';
+import type { MapAdapter } from '@/map/adapters/MapAdapter';
+import type { MapOverlayHost } from '@/map/adapters/MapOverlayHost';
+import type { MapObjectController } from '@/map/adapters/MapObjectController';
 import type {
   LatLng,
   MapEvents,
   MapOptions,
   MapTheme,
-} from '../types/mapTypes';
+} from '@/shared/types/mapTypes';
 
 export interface MapRuntime {
   adapter: MapAdapter;

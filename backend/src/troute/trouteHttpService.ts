@@ -9,6 +9,7 @@ import {
   TrouteJobRepositoryError,
 } from '../internal/troute/trouteJobRepository.js';
 import type { TrouteClient } from './trouteClient.js';
+import type { JobEventSubscriptionManager } from '../internal/troute/jobEventSubscriptionManager.js';
 
 type TrouteApiErrorResponse = ApiErrorResponse & {
   error: ApiErrorResponse['error'] & { upstreamStatus?: number };
@@ -18,6 +19,7 @@ export class TrouteHttpService {
   public constructor(
     private readonly client: TrouteClient | null,
     private readonly jobs: TrouteJobRepository,
+    private readonly subscriptions: JobEventSubscriptionManager | null = null,
   ) {}
 
   public async handle(
@@ -64,21 +66,18 @@ export class TrouteHttpService {
       this.jobs.create(parsed.data);
       createdJobId = parsed.data.job_id;
       this.jobs.markGatewayRequestStarted(createdJobId);
-      const result = await this.client.optimize(parsed.data);
-      this.jobs.recordGatewayResult(parsed.data.job_id, result);
-      try {
-        this.jobs.syncRemoteJob(await this.client.getJob(parsed.data.job_id));
-      } catch (syncCause) {
-        console.warn(
-          'troute optimize 응답 이후 원격 Job mirror를 동기화하지 못했습니다.',
-          { jobId: parsed.data.job_id, cause: syncCause },
-        );
-      }
+      const acceptedJobId = await this.client.submitJob(parsed.data);
+      void this.subscriptions?.track(acceptedJobId).catch((cause) => {
+        console.warn('제출한 troute Job SSE 추적을 시작하지 못했습니다.', {
+          jobId: acceptedJobId,
+          cause,
+        });
+      });
       if (response.destroyed) {
         return;
       }
-      response.writeHead(200);
-      response.end(JSON.stringify(result));
+      response.writeHead(202);
+      response.end(JSON.stringify({ job_id: acceptedJobId }));
     } catch (cause) {
       if (response.destroyed || response.writableEnded) {
         return;

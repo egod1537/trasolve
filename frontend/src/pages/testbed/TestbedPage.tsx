@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import './styles/testbed.css';
+import '@/pages/testbed/styles/testbed.css';
 
 const testbeds = [
   {

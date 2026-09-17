@@ -13,6 +13,11 @@ const humanMessageSchema = z
   .max(1024)
   .refine((value) => value.trim().length > 0);
 
+export const trouteHealthResponseSchema = z.strictObject({
+  status: z.literal('ok'),
+  service: z.literal('troute'),
+});
+
 export const trouteJobIdSchema = z
   .string()
   .min(1)
@@ -107,6 +112,62 @@ export const trouteJobStateSchema = z.strictObject({
   last_message: humanMessageSchema.nullable(),
   error: trouteErrorPayloadSchema.nullable(),
   result: trouteOptimizeResponseSchema.nullable(),
+});
+
+const trouteJobEventEnvelopeBaseSchema = z.strictObject({
+  sequence: z.number().int().nonnegative().optional(),
+  updated_at: z.number().int().nonnegative().optional(),
+  state: trouteJobStateSchema,
+});
+
+export const trouteJobSnapshotEventSchema = trouteJobEventEnvelopeBaseSchema;
+
+export const trouteJobProgressEventSchema =
+  trouteJobEventEnvelopeBaseSchema.superRefine((event, context) => {
+    if (event.state.status !== 'pending' && event.state.status !== 'running') {
+      context.addIssue({
+        code: 'custom',
+        message: 'Progress events require an active Job state.',
+        path: ['state', 'status'],
+      });
+    }
+  });
+
+export const trouteJobCompletedEventSchema =
+  trouteJobEventEnvelopeBaseSchema.superRefine((event, context) => {
+    if (event.state.status !== 'completed' || event.state.result === null) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Completed events require a completed Job result.',
+        path: ['state'],
+      });
+    }
+  });
+
+export const trouteJobFailedEventSchema =
+  trouteJobEventEnvelopeBaseSchema.superRefine((event, context) => {
+    if (event.state.status !== 'failed' || event.state.error === null) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Failed events require a failed Job error.',
+        path: ['state'],
+      });
+    }
+  });
+
+export const trouteJobCancelledEventSchema =
+  trouteJobEventEnvelopeBaseSchema.superRefine((event, context) => {
+    if (event.state.status !== 'cancelled') {
+      context.addIssue({
+        code: 'custom',
+        message: 'Cancelled events require a cancelled Job state.',
+        path: ['state', 'status'],
+      });
+    }
+  });
+
+export const trouteJobSubmissionResponseSchema = z.strictObject({
+  job_id: trouteJobIdSchema,
 });
 
 export const trouteJobHistoryItemSchema = z.strictObject({

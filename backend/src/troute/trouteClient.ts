@@ -1,23 +1,47 @@
 import {
+  trouteJobCancelledEventSchema,
+  trouteJobCompletedEventSchema,
+  trouteJobFailedEventSchema,
   trouteJobIdSchema,
+  trouteJobProgressEventSchema,
+  trouteJobSnapshotEventSchema,
+  trouteJobSubmissionResponseSchema,
   trouteOptimizeRequestSchema,
-  trouteOptimizeResponseSchema,
   trouteRemoteJobListResponseSchema,
   trouteRemoteJobSchema,
   trouteRemoteTimelineSchema,
+  type TrouteJobState,
   type TrouteOptimizeRequest,
-  type TrouteOptimizeResponse,
   type TrouteRemoteJob,
   type TrouteRemoteJobSummary,
   type TrouteRemoteTimeline,
 } from '@trasolve/shared';
 import { TrouteClientError } from './errors.js';
+import { parseServerSentEvents } from './serverSentEvents.js';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 export type TrouteClientConfig = {
   baseUrl: string;
   timeoutMs?: number;
+};
+
+export type TrouteJobEventType =
+  'snapshot' | 'progress' | 'completed' | 'failed' | 'cancelled';
+
+export type TrouteJobEvent = {
+  type: TrouteJobEventType;
+  state: TrouteJobState;
+  rawData: string;
+  lastEventId: string;
+  id?: string;
+  sequence?: number;
+  updatedAt?: number;
+};
+
+export type OpenTrouteJobEventStreamOptions = {
+  signal: AbortSignal;
+  lastEventId?: string;
 };
 
 export class TrouteClient {
@@ -28,9 +52,7 @@ export class TrouteClient {
     );
   }
 
-  public async optimize(
-    request: TrouteOptimizeRequest,
-  ): Promise<TrouteOptimizeResponse> {
+  public async submitJob(request: TrouteOptimizeRequest): Promise<string> {
     const parsedRequest = trouteOptimizeRequestSchema.safeParse(request);
     if (!parsedRequest.success) {
       throw new TrouteClientError(
@@ -39,16 +61,28 @@ export class TrouteClient {
       );
     }
 
-    const body = await this.requestJson('optimize', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(parsedRequest.data),
-    });
-    const parsedResponse = trouteOptimizeResponseSchema.safeParse(body);
-    if (!parsedResponse.success) {
+    const response = await this.request(
+      'integration/jobs',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(parsedRequest.data),
+      },
+      true,
+    );
+    if (response.status !== 202) {
       throw this.invalidResponseError();
     }
-    return parsedResponse.data;
+    const parsedResponse = trouteJobSubmissionResponseSchema.safeParse(
+      response.body,
+    );
+    if (
+      !parsedResponse.success ||
+      parsedResponse.data.job_id !== parsedRequest.data.job_id
+    ) {
+      throw this.invalidResponseError();
+    }
+    return parsedResponse.data.job_id;
   }
 
   public async getJob(jobId: string): Promise<TrouteRemoteJob> {
@@ -107,6 +141,88 @@ export class TrouteClient {
     );
   }
 
+  public async *openJobEventStream(
+    jobId: string,
+    options: OpenTrouteJobEventStreamOptions,
+  ): AsyncGenerator<TrouteJobEvent> {
+    const normalizedJobId = this.parseJobId(jobId);
+    const endpoint = `integration/jobs/${encodeURIComponent(normalizedJobId)}/events`;
+    const headers: Record<string, string> = { Accept: 'text/event-stream' };
+    if (options.lastEventId) {
+      headers['Last-Event-ID'] = options.lastEventId;
+    }
+
+    let response: Response;
+    try {
+      response = await fetch(new URL(endpoint, this.baseUrl), {
+        headers,
+        signal: options.signal,
+      });
+    } catch {
+      if (options.signal.aborted) {
+        return;
+      }
+      throw new TrouteClientError(
+        'connection_failure',
+        'The troute event stream is unavailable.',
+      );
+    }
+    if (!response.ok) {
+      const upstreamBody = await this.readResponseBody(response);
+      throw new TrouteClientError(
+        'upstream_http',
+        `The troute event stream returned HTTP ${response.status}.`,
+        response.status,
+        upstreamBody,
+      );
+    }
+    if (
+      !response.headers
+        .get('content-type')
+        ?.toLowerCase()
+        .startsWith('text/event-stream') ||
+      response.body === null
+    ) {
+      throw this.invalidResponseError();
+    }
+
+    try {
+      for await (const event of parseServerSentEvents(response.body)) {
+        if (!isTrouteJobEventType(event.event)) {
+          continue;
+        }
+        const parsed = this.parseJobEvent(event.event, event.data);
+        if (parsed.state.job_id !== normalizedJobId) {
+          throw this.invalidResponseError();
+        }
+        yield {
+          type: event.event,
+          state: parsed.state,
+          rawData: event.data,
+          lastEventId: event.lastEventId,
+          ...(event.id === undefined ? {} : { id: event.id }),
+          ...(parsed.sequence === undefined
+            ? {}
+            : { sequence: parsed.sequence }),
+          ...(parsed.updated_at === undefined
+            ? {}
+            : { updatedAt: parsed.updated_at }),
+        };
+      }
+    } catch (cause) {
+      if (options.signal.aborted) {
+        return;
+      }
+      if (cause instanceof TrouteClientError) {
+        throw cause;
+      }
+      throw new TrouteClientError(
+        'connection_failure',
+        'The troute event stream was interrupted.',
+      );
+    }
+  }
+
   public async checkHealth(): Promise<void> {
     const body = await this.requestJson('health');
     if (
@@ -137,7 +253,7 @@ export class TrouteClient {
     path: string,
     init?: RequestInit,
   ): Promise<unknown> {
-    return this.request(path, init, true);
+    return (await this.request(path, init, true)).body;
   }
 
   private async requestWithoutBody(
@@ -151,7 +267,7 @@ export class TrouteClient {
     path: string,
     init: RequestInit | undefined,
     parseJson: boolean,
-  ): Promise<unknown> {
+  ): Promise<{ status: number; body: unknown }> {
     const signal = AbortSignal.timeout(this.timeoutMs);
     try {
       const response = await fetch(new URL(path, this.baseUrl), {
@@ -169,10 +285,13 @@ export class TrouteClient {
       }
       if (!parseJson) {
         await response.arrayBuffer();
-        return null;
+        return { status: response.status, body: null };
       }
       try {
-        return (await response.json()) as unknown;
+        return {
+          status: response.status,
+          body: (await response.json()) as unknown,
+        };
       } catch {
         if (signal.aborted) {
           throw this.timeoutError();
@@ -191,6 +310,34 @@ export class TrouteClient {
         'The troute server is unavailable.',
       );
     }
+  }
+
+  private parseJobEvent(type: TrouteJobEventType, data: string) {
+    let body: unknown;
+    try {
+      body = JSON.parse(data) as unknown;
+    } catch {
+      throw this.invalidResponseError();
+    }
+    const schema = (() => {
+      switch (type) {
+        case 'snapshot':
+          return trouteJobSnapshotEventSchema;
+        case 'progress':
+          return trouteJobProgressEventSchema;
+        case 'completed':
+          return trouteJobCompletedEventSchema;
+        case 'failed':
+          return trouteJobFailedEventSchema;
+        case 'cancelled':
+          return trouteJobCancelledEventSchema;
+      }
+    })();
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) {
+      throw this.invalidResponseError();
+    }
+    return parsed.data;
   }
 
   private normalizeBaseUrl(value: string): URL {
@@ -247,4 +394,14 @@ export class TrouteClient {
   private timeoutError(): TrouteClientError {
     return new TrouteClientError('timeout', 'The troute request timed out.');
   }
+}
+
+function isTrouteJobEventType(value: string): value is TrouteJobEventType {
+  return (
+    value === 'snapshot' ||
+    value === 'progress' ||
+    value === 'completed' ||
+    value === 'failed' ||
+    value === 'cancelled'
+  );
 }

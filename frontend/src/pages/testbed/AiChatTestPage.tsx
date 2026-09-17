@@ -1,9 +1,9 @@
 import { Component, useState } from 'react';
 import { API_ROUTES } from '@trasolve/shared';
-import { listOpenWebUIModels, type OpenWebUIModel } from '../../api/openwebui';
-import { MapAiPanel } from '../../shared/components/chat/MapAiPanel';
-import './styles/testbed.css';
-import './styles/ai-chat-test.css';
+import { listOpenWebUIModels, type OpenWebUIModel } from '@/features/ai-chat';
+import { MapAiPanel } from '@/features/ai-chat';
+import '@/pages/testbed/styles/testbed.css';
+import '@/pages/testbed/styles/ai-chat-test.css';
 
 function AiChatTestContent() {
   const [conversation, setConversation] = useState(0);

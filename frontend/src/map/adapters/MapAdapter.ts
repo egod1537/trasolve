@@ -4,7 +4,7 @@ import type {
   MapCameraState,
   MapPadding,
   ScreenPoint,
-} from '../types/mapTypes';
+} from '@/shared/types/mapTypes';
 
 export interface MapAdapter {
   getCenter(): GeoPoint | null;
@@ -15,6 +15,7 @@ export interface MapAdapter {
   panTo(point: GeoPoint, centerOffset?: ScreenPoint): void;
   setZoom(zoom: number): void;
   fitBounds(bounds: GeoBounds, padding?: MapPadding): void;
+  resize(): void;
 
   subscribeCameraChange(callback: () => void): () => void;
   dispose(): void;

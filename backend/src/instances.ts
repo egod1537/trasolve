@@ -25,6 +25,7 @@ import { TrouteClientError } from './troute/errors.js';
 import { TrouteHttpService } from './troute/trouteHttpService.js';
 import { TrouteJobHttpService } from './internal/troute/trouteJobHttpService.js';
 import { FileTrouteJobRepository } from './internal/troute/fileTrouteJobRepository.js';
+import { JobEventSubscriptionManager } from './internal/troute/jobEventSubscriptionManager.js';
 
 // Load configuration before constructing the shared instances, regardless of
 // which backend module imports them first.
@@ -97,8 +98,19 @@ try {
   }
 }
 const trouteJobs = new FileTrouteJobRepository({ rootDir: dataRoot });
-const trouteHttp = new TrouteHttpService(troute, trouteJobs);
-const trouteJobHttp = new TrouteJobHttpService(trouteJobs, troute);
+const trouteSubscriptions = troute
+  ? new JobEventSubscriptionManager(trouteJobs, troute)
+  : null;
+const trouteHttp = new TrouteHttpService(
+  troute,
+  trouteJobs,
+  trouteSubscriptions,
+);
+const trouteJobHttp = new TrouteJobHttpService(
+  trouteJobs,
+  troute,
+  trouteSubscriptions,
+);
 
 export const API = {
   Route: routes,

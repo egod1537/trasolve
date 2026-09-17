@@ -3,14 +3,14 @@ import type {
   ApiStatus,
   Endpoint,
   IntermediateInput,
-} from '../components/google-maps/types';
+} from '@/pages/testbed/components/google-maps/types';
 import {
   type DirectionsRequest,
   type DirectionsResult,
   type RouteLocation,
   TravelMode,
 } from '@trasolve/shared';
-import { DirectionsApiError, getDirections } from '../../../api/routes';
+import { DirectionsApiError, getDirections } from '@/shared/api/routes';
 
 const MAX_INTERMEDIATES = 25;
 
@@ -42,7 +42,7 @@ export function useDirectionsState(appendLog: (message: string) => void) {
   const pending = apiStatus === 'loading';
   const route = result?.routes[routeIndex];
   const polylines = useMemo(
-    () => (route ? [{ path: route.path }] : []),
+    () => (route ? [{ id: 'directions-active-route', path: route.path }] : []),
     [route],
   );
 

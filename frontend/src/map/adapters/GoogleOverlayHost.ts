@@ -1,7 +1,7 @@
 /// <reference types="google.maps" />
 
-import type { GeoPoint, ScreenPoint } from '../types/mapTypes';
-import type { MapOverlayHost } from './MapOverlayHost';
+import type { GeoPoint, ScreenPoint } from '@/shared/types/mapTypes';
+import type { MapOverlayHost } from '@/map/adapters/MapOverlayHost';
 
 export class GoogleOverlayHost implements MapOverlayHost {
   public constructor() {

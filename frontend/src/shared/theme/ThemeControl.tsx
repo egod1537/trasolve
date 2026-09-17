@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { useTheme } from './useTheme';
-import type { ThemeMode } from './theme';
+import { useTheme } from '@/shared/theme/useTheme';
+import type { ThemeMode } from '@/shared/theme/theme';
 
 const themeOptions: readonly {
   mode: ThemeMode;

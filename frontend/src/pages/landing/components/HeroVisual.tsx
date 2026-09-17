@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import heroRoute from '../../../assets/hero-route.svg';
+import heroRoute from '@/shared/assets/hero-route.svg';
 
 export function HeroVisual() {
   const tiltRef = useRef<HTMLDivElement>(null);

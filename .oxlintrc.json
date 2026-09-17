@@ -15,8 +15,9 @@
       "excludeFiles": [
         "frontend/src/map/runtime/**",
         "frontend/src/map/adapters/**",
-        "frontend/src/api/**",
-        "frontend/src/pages/map/api/**"
+        "frontend/src/shared/api/**",
+        "frontend/src/entities/*/api/**",
+        "frontend/src/features/*/api/**"
       ],
       "rules": {
         "no-restricted-globals": [
@@ -113,8 +114,8 @@
     },
     {
       "files": [
-        "frontend/src/pages/map/controller/**/*.ts",
-        "frontend/src/pages/map/store/**/*.ts"
+        "frontend/src/features/map-workspace/controller/**/*.ts",
+        "frontend/src/features/map-workspace/store/**/*.ts"
       ],
       "rules": {
         "no-restricted-imports": [
@@ -135,7 +136,9 @@
       }
     },
     {
-      "files": ["frontend/src/pages/map/components/viewport/TripLayer.tsx"],
+      "files": [
+        "frontend/src/features/map-workspace/components/viewport/TripLayer.tsx"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -156,9 +159,11 @@
     },
     {
       "files": [
-        "frontend/src/pages/map/components/layer-panel/**/*.tsx",
-        "frontend/src/pages/map/components/viewport/MapViewport.tsx",
-        "frontend/src/pages/map/components/ai/**/*.tsx"
+        "frontend/src/features/map-workspace/components/layer-panel/**/*.tsx",
+        "frontend/src/features/map-workspace/components/viewport/MapViewport.tsx",
+        "frontend/src/features/ai-chat/ui/MapAiButton.tsx",
+        "frontend/src/features/ai-chat/ui/MapAiRegion.tsx",
+        "frontend/src/features/ai-chat/ui/MapAiUnreadPreviews.tsx"
       ],
       "rules": {
         "no-restricted-imports": [
@@ -175,7 +180,7 @@
       }
     },
     {
-      "files": ["frontend/src/pages/map/repository/**/*.ts"],
+      "files": ["frontend/src/entities/trip/api/**/*.ts"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -195,12 +200,11 @@
       }
     },
     {
-      "files": ["frontend/src/pages/map/components/**/*.tsx"],
+      "files": ["frontend/src/features/map-workspace/components/**/*.tsx"],
       "excludeFiles": [
-        "frontend/src/pages/map/components/TripSession.tsx",
-        "frontend/src/pages/map/components/viewport/**",
-        "frontend/src/pages/map/components/layer-panel/**",
-        "frontend/src/pages/map/components/ai/**"
+        "frontend/src/features/map-workspace/components/TripSession.tsx",
+        "frontend/src/features/map-workspace/components/viewport/**",
+        "frontend/src/features/map-workspace/components/layer-panel/**"
       ],
       "rules": {
         "no-restricted-imports": [
@@ -220,7 +224,8 @@
       "files": [
         "frontend/src/map/**/*.{ts,tsx}",
         "frontend/src/shared/**/*.{ts,tsx}",
-        "frontend/src/api/**/*.ts"
+        "frontend/src/entities/*/api/**/*.ts",
+        "frontend/src/features/*/api/**/*.ts"
       ],
       "rules": {
         "no-restricted-imports": [

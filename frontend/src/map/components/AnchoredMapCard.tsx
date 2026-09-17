@@ -8,9 +8,9 @@ import {
   type RefObject,
 } from 'react';
 import { createPortal } from 'react-dom';
-import type { GeoPoint } from '../types/mapTypes';
-import { useGoogleMap } from './GoogleMap';
-import './anchored-map-card.css';
+import type { GeoPoint } from '@/shared/types/mapTypes';
+import { useGoogleMap } from '@/map/components/GoogleMap';
+import '@/map/components/anchored-map-card.css';
 
 type Props = {
   anchor: GeoPoint;

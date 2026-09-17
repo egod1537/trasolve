@@ -1,13 +1,17 @@
 import type { RefObject } from 'react';
-import { GoogleMap } from '../../../../map/components/GoogleMap';
+import { GoogleMap } from '@/map/components/GoogleMap';
 import type {
   GoogleMapHandle,
   MapClickEvent,
   MapPolyline,
   LatLng,
-} from '../../../../map/types/googleMapComponent';
-import { Coordinates } from './Coordinates';
-import { initialCenter, initialZoom, mapOptions } from './config';
+} from '@/map/types/googleMapComponent';
+import { Coordinates } from '@/pages/testbed/components/google-maps/Coordinates';
+import {
+  initialCenter,
+  initialZoom,
+  mapOptions,
+} from '@/pages/testbed/components/google-maps/config';
 
 type Props = {
   mapRef: RefObject<GoogleMapHandle | null>;

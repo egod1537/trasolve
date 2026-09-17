@@ -1,23 +1,23 @@
 import { Component, useCallback, useEffect, useRef, useState } from 'react';
-import { GooglePlaceSearch } from './components/google-maps/GooglePlaceSearch';
+import { GooglePlaceSearch } from '@/pages/testbed/components/google-maps/GooglePlaceSearch';
 import type {
   GoogleMapHandle,
   LatLng,
   MapClickEvent,
   MapPlace,
-} from '../../map/types/googleMapComponent';
-import { DirectionsPanel } from './components/google-maps/DirectionsPanel';
-import { MapPanel } from './components/google-maps/MapPanel';
-import { SelectionPanel } from './components/google-maps/SelectionPanel';
-import { RouteResultPanel } from './components/google-maps/RouteResultPanel';
-import { DebugPanel } from './components/google-maps/DebugPanel';
+} from '@/map/types/googleMapComponent';
+import { DirectionsPanel } from '@/pages/testbed/components/google-maps/DirectionsPanel';
+import { MapPanel } from '@/pages/testbed/components/google-maps/MapPanel';
+import { SelectionPanel } from '@/pages/testbed/components/google-maps/SelectionPanel';
+import { RouteResultPanel } from '@/pages/testbed/components/google-maps/RouteResultPanel';
+import { DebugPanel } from '@/pages/testbed/components/google-maps/DebugPanel';
 import {
   initialCenter,
   initialZoom,
   routePadding,
-} from './components/google-maps/config';
-import { useDirectionsState } from './hooks/useDirectionsState';
-import './styles/google-maps-test.css';
+} from '@/pages/testbed/components/google-maps/config';
+import { useDirectionsState } from '@/pages/testbed/hooks/useDirectionsState';
+import '@/pages/testbed/styles/google-maps-test.css';
 
 function GoogleMapsTestContent() {
   const mapRef = useRef<GoogleMapHandle>(null);

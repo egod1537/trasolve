@@ -1,6 +1,9 @@
 import { useCallback, type FormEvent } from 'react';
 import { TravelMode } from '@trasolve/shared';
-import type { Endpoint, IntermediateInput } from './types';
+import type {
+  Endpoint,
+  IntermediateInput,
+} from '@/pages/testbed/components/google-maps/types';
 
 const modes: { value: TravelMode; label: string }[] = [
   { value: TravelMode.DRIVING, label: '자동차' },

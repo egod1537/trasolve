@@ -1,11 +1,8 @@
 import { Component, useEffect, useState } from 'react';
 import type { GoogleOAuthResult } from '@trasolve/shared';
-import {
-  consumeGoogleOAuthResult,
-  startGoogleOAuth,
-} from '../../api/googleOAuth';
-import './styles/testbed.css';
-import './styles/google-oauth-test.css';
+import { consumeGoogleOAuthResult, startGoogleOAuth } from '@/features/auth';
+import '@/pages/testbed/styles/testbed.css';
+import '@/pages/testbed/styles/google-oauth-test.css';
 
 type OAuthErrorCode = Extract<GoogleOAuthResult, { status: 'error' }>['error'];
 

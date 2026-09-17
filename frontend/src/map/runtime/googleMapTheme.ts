@@ -1,6 +1,6 @@
 /// <reference types="google.maps" />
 
-import type { MapTheme } from '../types/mapTypes';
+import type { MapTheme } from '@/shared/types/mapTypes';
 
 export function getGoogleMapThemeOptions(
   theme: MapTheme,

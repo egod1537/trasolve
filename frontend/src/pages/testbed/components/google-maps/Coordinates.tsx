@@ -1,4 +1,4 @@
-import type { LatLng } from '../../../../map/types/googleMapComponent';
+import type { LatLng } from '@/map/types/googleMapComponent';
 
 export function Coordinates({ point }: { point: LatLng }) {
   return (

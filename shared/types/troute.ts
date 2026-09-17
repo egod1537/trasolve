@@ -3,8 +3,14 @@ import type {
   trouteErrorPayloadSchema,
   trouteJobHistoryItemSchema,
   trouteJobHistoryResponseSchema,
+  trouteJobCancelledEventSchema,
+  trouteJobCompletedEventSchema,
+  trouteJobFailedEventSchema,
+  trouteJobProgressEventSchema,
+  trouteJobSnapshotEventSchema,
   trouteJobStateSchema,
   trouteJobStatusSchema,
+  trouteJobSubmissionResponseSchema,
   trouteLocationSchema,
   trouteOptimizeRequestSchema,
   trouteOptimizeResponseSchema,
@@ -21,6 +27,22 @@ export type TrouteProgressStage = z.infer<typeof trouteProgressStageSchema>;
 export type TrouteErrorPayload = z.infer<typeof trouteErrorPayloadSchema>;
 export type TrouteJobStatus = z.infer<typeof trouteJobStatusSchema>;
 export type TrouteJobState = z.infer<typeof trouteJobStateSchema>;
+export type TrouteJobSnapshotEvent = z.infer<
+  typeof trouteJobSnapshotEventSchema
+>;
+export type TrouteJobProgressEvent = z.infer<
+  typeof trouteJobProgressEventSchema
+>;
+export type TrouteJobCompletedEvent = z.infer<
+  typeof trouteJobCompletedEventSchema
+>;
+export type TrouteJobFailedEvent = z.infer<typeof trouteJobFailedEventSchema>;
+export type TrouteJobCancelledEvent = z.infer<
+  typeof trouteJobCancelledEventSchema
+>;
+export type TrouteJobSubmissionResponse = z.infer<
+  typeof trouteJobSubmissionResponseSchema
+>;
 export type TrouteJobHistoryItem = z.infer<typeof trouteJobHistoryItemSchema>;
 export type TrouteJobHistoryResponse = z.infer<
   typeof trouteJobHistoryResponseSchema

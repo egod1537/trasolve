@@ -14,8 +14,8 @@ import {
   saveThemeMode,
   type ResolvedTheme,
   type ThemeMode,
-} from './theme';
-import { ThemeContext, type ThemeContextValue } from './useTheme';
+} from '@/shared/theme/theme';
+import { ThemeContext, type ThemeContextValue } from '@/shared/theme/useTheme';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [themeMode, setThemeModeState] =
