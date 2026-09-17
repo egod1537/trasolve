@@ -46,6 +46,15 @@ const server = createServer((request, response) => {
   }
 
   if (
+    pathname === API_ROUTES.tcacheInternalHealth ||
+    pathname === API_ROUTES.tcacheInternalJobs ||
+    pathname.startsWith(`${API_ROUTES.tcacheInternalJobs}/`)
+  ) {
+    void API.TcacheJobHttp.handle(request, response, pathname);
+    return;
+  }
+
+  if (
     pathname === API_ROUTES.places ||
     pathname.startsWith(`${API_ROUTES.places}/`)
   ) {

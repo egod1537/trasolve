@@ -5,12 +5,18 @@
   --testbed-row-border: var(--border-default);
   --testbed-code-background: var(--bg-subtle);
 
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
   background: var(--testbed-page-background);
   color: var(--bp-typography-color-default-rest);
+  display: flex;
+  flex-direction: column;
 }
 
 .troute-testbed-navbar {
+  flex: none;
   padding-inline: max(15px, calc((100vw - 1440px) / 2));
 }
 
@@ -20,18 +26,23 @@
 
 .troute-testbed-shell .job-workspace {
   width: min(1440px, 100%);
-  min-height: calc(100vh - 50px);
+  min-height: 0;
+  overflow: hidden;
+  flex: 1;
   margin: 0 auto;
   padding: 20px;
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 16px;
 }
 
 .troute-testbed-shell .job-sidebar,
 .troute-testbed-shell .job-detail {
   min-width: 0;
-  min-height: calc(100vh - 90px);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -51,6 +62,12 @@
 .troute-testbed-shell .sidebar-heading,
 .troute-testbed-shell .detail-heading {
   min-height: 38px;
+  flex: none;
+}
+
+.troute-testbed-shell .job-sidebar > .bp6-divider,
+.troute-testbed-shell .job-detail > .bp6-divider {
+  flex: none;
 }
 
 .troute-testbed-shell .sidebar-heading h1,
@@ -109,9 +126,13 @@
 }
 
 .troute-testbed-shell .job-list {
+  min-width: 0;
   min-height: 0;
+  flex: 1 1 auto;
   margin: 8px -10px -10px;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 
 .troute-testbed-shell .job-list-empty {
@@ -175,6 +196,9 @@
 
 .troute-testbed-shell .job-detail-content {
   min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
   padding-top: 14px;
   display: flex;
   flex: 1;
@@ -183,11 +207,169 @@
 }
 
 .troute-testbed-shell .job-summary,
+.troute-testbed-shell .job-request-summary-content,
 .troute-testbed-shell .route-summary,
 .troute-testbed-shell .job-timeline {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.troute-testbed-shell .job-request-summary {
+  min-width: 0;
+  border: 1px solid var(--testbed-row-border);
+  border-radius: 3px;
+  background: var(--testbed-code-background);
+}
+
+.troute-testbed-shell .job-request-summary > summary {
+  min-height: 42px;
+  padding: 8px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.troute-testbed-shell .job-request-summary > summary:focus-visible,
+.troute-testbed-shell .job-request-raw-json > summary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.troute-testbed-shell .job-request-summary-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.troute-testbed-shell .job-request-summary-title > .bp6-heading {
+  margin: 0;
+  font-size: 14px;
+}
+
+.troute-testbed-shell .job-request-summary-content {
+  min-width: 0;
+  padding: 4px 10px 12px;
+  border-top: 1px solid var(--testbed-row-border);
+}
+
+.troute-testbed-shell .job-request-facts,
+.troute-testbed-shell .job-request-debug-options {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.troute-testbed-shell .job-request-facts > div,
+.troute-testbed-shell .job-request-debug-options > div {
+  min-width: 0;
+}
+
+.troute-testbed-shell .job-request-facts dt,
+.troute-testbed-shell .job-request-debug-options dt {
+  margin-bottom: 3px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.troute-testbed-shell .job-request-facts dd,
+.troute-testbed-shell .job-request-debug-options dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.troute-testbed-shell .job-request-debug-options {
+  padding: 9px 10px;
+  border: 1px solid var(--testbed-row-border);
+  border-radius: 3px;
+  background: var(--color-surface);
+}
+
+.troute-testbed-shell .job-request-shuffle-note {
+  margin: 0;
+  color: var(--color-accent);
+  font-size: 12px;
+}
+
+.troute-testbed-shell .job-request-route h3 {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+.troute-testbed-shell .job-request-route > div {
+  overflow-wrap: anywhere;
+}
+
+.troute-testbed-shell .job-request-location-table {
+  min-width: 760px;
+  table-layout: fixed;
+}
+
+.troute-testbed-shell .job-request-location-table th:nth-child(1) {
+  width: 76px;
+}
+
+.troute-testbed-shell .job-request-location-table th:nth-child(2),
+.troute-testbed-shell .job-request-location-table th:nth-child(3) {
+  width: 190px;
+}
+
+.troute-testbed-shell .job-request-location-table th:nth-child(4) {
+  width: 72px;
+}
+
+.troute-testbed-shell .job-request-location-table th:nth-child(5) {
+  width: 126px;
+}
+
+.troute-testbed-shell .job-request-location-table th:nth-child(6) {
+  width: 70px;
+}
+
+.troute-testbed-shell .job-request-id-cell > span,
+.troute-testbed-shell .job-request-place-id-cell > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.troute-testbed-shell .job-request-raw-json {
+  border: 1px solid var(--testbed-row-border);
+  border-radius: 3px;
+}
+
+.troute-testbed-shell .job-request-raw-json > summary {
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.troute-testbed-shell .job-request-raw-json > div {
+  padding: 0 10px 10px;
+}
+
+.troute-testbed-shell .job-request-raw-json header {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.troute-testbed-shell .job-request-json-code {
+  max-height: 320px;
+  margin: 0;
+  overflow: auto;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
 }
 
 .troute-testbed-shell .job-summary-heading > div {
@@ -362,20 +544,39 @@
 }
 
 @media (max-width: 800px) {
+  .troute-testbed-shell {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
   .troute-testbed-shell .navbar-endpoint,
   .troute-testbed-shell .troute-testbed-navbar .bp6-navbar-divider {
     display: none;
   }
 
   .troute-testbed-shell .job-workspace {
+    overflow: visible;
+    flex: none;
     min-height: auto;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
     padding: 12px;
   }
 
   .troute-testbed-shell .job-sidebar,
   .troute-testbed-shell .job-detail {
+    height: auto;
     min-height: 360px;
+  }
+
+  .troute-testbed-shell .job-detail {
+    overflow: visible;
+  }
+
+  .troute-testbed-shell .job-detail-content {
+    overflow: visible;
   }
 
   .troute-testbed-shell .job-list {
@@ -398,6 +599,8 @@
   }
 
   .troute-testbed-shell .job-facts,
+  .troute-testbed-shell .job-request-facts,
+  .troute-testbed-shell .job-request-debug-options,
   .troute-testbed-shell .timeline-entry-detail {
     grid-template-columns: minmax(0, 1fr);
   }

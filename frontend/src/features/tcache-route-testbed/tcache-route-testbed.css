@@ -1,0 +1,547 @@
+.tcache-testbed-shell {
+  --tcache-row-hover: var(--bg-hover);
+  --tcache-row-selected: var(--color-surface-active);
+  --tcache-code-bg: var(--bg-subtle);
+
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-app);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.tcache-testbed-navbar {
+  flex: none;
+  padding-inline: max(15px, calc((100vw - 1440px) / 2));
+}
+
+.tcache-testbed-navbar code {
+  max-width: 340px;
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tcache-job-workspace {
+  width: min(1440px, 100%);
+  min-height: 0;
+  overflow: hidden;
+  flex: 1;
+  margin: 0 auto;
+  padding: var(--space-4, 20px);
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--space-3, 16px);
+}
+
+.tcache-job-sidebar,
+.tcache-job-detail {
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.tcache-sidebar-heading,
+.tcache-detail-heading,
+.tcache-section-heading,
+.tcache-job-list-primary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2, 8px);
+}
+
+.tcache-sidebar-heading,
+.tcache-detail-heading {
+  min-height: 42px;
+  flex: none;
+}
+
+.tcache-sidebar-heading h1,
+.tcache-detail-heading h1,
+.tcache-section-heading h2,
+.tcache-detail-content h2 {
+  margin: 0;
+}
+
+.tcache-sidebar-heading h1,
+.tcache-detail-heading h1 {
+  font-size: 16px;
+}
+
+.tcache-sidebar-heading > div:first-child,
+.tcache-detail-heading > div:first-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tcache-sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+}
+
+.tcache-sidebar-error,
+.tcache-builder-error {
+  margin: var(--space-2, 8px) 0 0;
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.tcache-job-list,
+.tcache-job-list-empty {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.tcache-job-list {
+  margin: 8px -10px -10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.tcache-job-list-empty {
+  padding: 24px 10px;
+}
+
+.tcache-job-list-item {
+  width: 100%;
+  min-height: 88px;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--border-default);
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  font: inherit;
+  text-align: left;
+}
+
+.tcache-job-list-item:hover {
+  background: var(--tcache-row-hover);
+}
+
+.tcache-job-list-item[aria-selected='true'] {
+  background: var(--tcache-row-selected);
+  box-shadow: inset 3px 0 var(--accent);
+}
+
+.tcache-job-list-item:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.tcache-job-id {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tcache-job-meta {
+  font-size: 12px;
+}
+
+.tcache-job-progress {
+  height: 4px;
+}
+
+.tcache-job-detail-empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.tcache-detail-content {
+  min-height: 0;
+  padding-top: 14px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-3, 16px);
+}
+
+.tcache-detail-content section {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tcache-detail-content h2 {
+  font-size: 15px;
+}
+
+.tcache-detail-content p {
+  margin: 0;
+}
+
+.tcache-metadata-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 20px;
+}
+
+.tcache-metadata-grid > div {
+  min-width: 0;
+}
+
+.tcache-metadata-grid dt {
+  margin-bottom: 3px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.tcache-metadata-grid dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.tcache-progress-metadata {
+  grid-template-columns: minmax(120px, 0.5fr) minmax(200px, 2fr) minmax(
+      150px,
+      1fr
+    );
+}
+
+.tcache-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.tcache-table-scroll table {
+  width: 100%;
+  min-width: 700px;
+}
+
+.tcache-table-scroll code {
+  display: inline-block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+.tcache-leg-list,
+.tcache-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tcache-leg-list li {
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 6px);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tcache-timeline li {
+  padding-left: 14px;
+  border-left: 2px solid var(--border-default);
+  display: grid;
+  grid-template-columns: 170px minmax(140px, auto) minmax(0, 1fr);
+  gap: 4px 12px;
+}
+
+.tcache-timeline pre {
+  max-height: 180px;
+  grid-column: 1 / -1;
+}
+
+.tcache-raw-json,
+.tcache-timeline pre {
+  max-width: 100%;
+  margin: 8px 0 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: var(--radius-md, 6px);
+  background: var(--tcache-code-bg);
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.tcache-builder-dialog {
+  width: min(1240px, calc(100vw - 32px));
+  height: min(880px, calc(100dvh - 32px));
+  box-shadow: var(--shadow-map-overlay);
+}
+
+.tcache-builder-body {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tcache-builder-main-grid {
+  min-height: 460px;
+  display: grid;
+  grid-template-columns: minmax(300px, 0.7fr) minmax(0, 1.3fr);
+  gap: 16px;
+}
+
+.tcache-builder-map {
+  position: relative;
+  min-height: 460px;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 6px);
+}
+
+.tcache-builder-map .google-map {
+  width: 100%;
+  height: 100%;
+}
+
+.tcache-builder-location-panel {
+  min-width: 0;
+  min-height: 0;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 6px);
+  display: flex;
+  flex-direction: column;
+}
+
+.tcache-builder-location-panel header p {
+  max-width: 230px;
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+
+.tcache-builder-locations {
+  min-height: 0;
+  margin: 12px -4px 8px;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tcache-builder-locations li {
+  position: relative;
+  padding: 10px 6px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 6px);
+  background: var(--bg-surface);
+  display: grid;
+  grid-template-columns: 28px 24px minmax(0, 1fr) auto 32px;
+  align-items: center;
+  gap: 6px;
+}
+
+.tcache-builder-locations li.is-selected {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 var(--accent);
+}
+
+.tcache-builder-locations li.is-dragging {
+  opacity: 0.55;
+}
+
+.tcache-location-order,
+.tcache-location-copy span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.tcache-location-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tcache-location-copy strong,
+.tcache-location-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tcache-builder-settings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.tcache-builder-options,
+.tcache-builder-preview {
+  padding: 14px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 6px);
+}
+
+.tcache-builder-options > h2,
+.tcache-builder-preview h2 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+.tcache-builder-options {
+  display: grid;
+  grid-template-columns: minmax(340px, 1fr) minmax(260px, 0.7fr) minmax(
+      240px,
+      0.8fr
+    );
+  align-items: start;
+  gap: 12px;
+}
+
+.tcache-builder-options > h2 {
+  grid-column: 1 / -1;
+}
+
+.tcache-builder-advanced summary,
+.tcache-builder-preview summary,
+.tcache-detail-content details summary {
+  cursor: pointer;
+}
+
+.tcache-builder-advanced-grid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.tcache-builder-preview pre {
+  max-height: 180px;
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  border-radius: var(--radius-md, 6px);
+  background: var(--tcache-code-bg);
+  font-size: 12px;
+}
+
+.tcache-place-candidate {
+  position: absolute;
+  z-index: var(--z-overlay, 20);
+  right: 16px;
+  bottom: 16px;
+  width: min(300px, calc(100% - 32px));
+  padding: 14px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 6px);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-map-overlay);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tcache-place-candidate p {
+  margin: 0;
+}
+
+.tcache-place-candidate-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+}
+
+.tcache-result-map-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tcache-result-route-selector {
+  align-self: flex-start;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.tcache-result-map {
+  width: 100%;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 6px);
+}
+
+@media (max-width: 800px) {
+  .tcache-job-workspace {
+    overflow-y: auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(260px, 40vh) minmax(480px, auto);
+  }
+
+  .tcache-job-sidebar,
+  .tcache-job-detail {
+    height: auto;
+  }
+
+  .tcache-testbed-navbar code,
+  .tcache-testbed-navbar .bp6-navbar-divider,
+  .tcache-testbed-navbar .bp6-text-muted {
+    display: none;
+  }
+
+  .tcache-metadata-grid,
+  .tcache-progress-metadata {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tcache-builder-main-grid,
+  .tcache-builder-options {
+    grid-template-columns: 1fr;
+  }
+
+  .tcache-builder-map {
+    min-height: 320px;
+  }
+
+  .tcache-builder-location-panel {
+    min-height: 360px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tcache-testbed-shell *,
+  .tcache-testbed-shell *::before,
+  .tcache-testbed-shell *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

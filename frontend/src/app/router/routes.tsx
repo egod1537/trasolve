@@ -11,6 +11,9 @@ const GoogleOAuthTestPage = lazy(
   () => import('@/pages/testbed/GoogleOAuthTestPage'),
 );
 const TrouteTestPage = lazy(() => import('@/pages/testbed/TrouteTestPage'));
+const TcacheRouteTestPage = lazy(
+  () => import('@/pages/testbed/TcacheRouteTestPage'),
+);
 
 type RouteDefinition = {
   Component: ComponentType;
@@ -45,6 +48,10 @@ export const routes: Record<string, RouteDefinition> = {
   '/testbed/troute': {
     Component: TrouteTestPage,
     loadingLabel: 'troute 연동 테스트 페이지를 불러오고 있습니다.',
+  },
+  '/testbed/tcache-route': {
+    Component: TcacheRouteTestPage,
+    loadingLabel: 'tcache Route 테스트 페이지를 불러오고 있습니다.',
   },
 };
 

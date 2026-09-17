@@ -1,5 +1,5 @@
 import { NonIdealState } from '@blueprintjs/core';
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 import type { TestbedJob } from '@/entities/route-job';
 import { JobListItem } from '@/features/troute-testbed/components/jobs/JobListItem';
 
@@ -14,10 +14,20 @@ export const JobList = memo(function JobList({
   selectedJobId,
   onSelect,
 }: JobListProps) {
+  const listRef = useRef<HTMLDivElement>(null);
   const orderedJobs = useMemo(
     () => [...jobs].sort((left, right) => right.createdAt - left.createdAt),
     [jobs],
   );
+
+  useEffect(() => {
+    if (selectedJobId === null) {
+      return;
+    }
+    listRef.current
+      ?.querySelector<HTMLElement>('[aria-selected="true"]')
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [selectedJobId]);
 
   if (jobs.length === 0) {
     return (
@@ -31,7 +41,12 @@ export const JobList = memo(function JobList({
   }
 
   return (
-    <div className="job-list" role="listbox" aria-label="테스트베드 Jobs">
+    <div
+      ref={listRef}
+      className="job-list"
+      role="listbox"
+      aria-label="테스트베드 Jobs"
+    >
       {orderedJobs.map((job) => (
         <JobListItem
           key={job.id}

@@ -15,6 +15,7 @@
       "excludeFiles": [
         "frontend/src/map/runtime/**",
         "frontend/src/map/adapters/**",
+        "frontend/src/api/**",
         "frontend/src/shared/api/**",
         "frontend/src/entities/*/api/**",
         "frontend/src/features/*/api/**"

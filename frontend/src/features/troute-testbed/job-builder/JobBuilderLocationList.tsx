@@ -5,7 +5,6 @@ import {
   useState,
   type KeyboardEvent,
   type PointerEvent,
-  type ReactNode,
 } from 'react';
 import { DragHandle } from '@/shared/ui/DragHandle';
 import {
@@ -15,13 +14,21 @@ import {
 import type {
   JobBuilderLocation,
   JobBuilderLocationErrors,
+  JobBuilderLocationRole,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
-import { MAX_STAY_MINUTES } from '@/features/troute-testbed/job-builder/jobBuilderModel';
+import {
+  getJobBuilderLocationRole,
+  MAX_STAY_MINUTES,
+} from '@/features/troute-testbed/job-builder/jobBuilderModel';
+import { JobBuilderValidationIndicator } from '@/features/troute-testbed/job-builder/JobBuilderValidationIndicator';
+import type { JobBuilderValidationStatus } from '@/features/troute-testbed/job-builder/useJobBuilderValidation';
 
 interface JobBuilderLocationListProps {
   locations: JobBuilderLocation[];
   selectedLocationId: string | null;
   errors: Record<string, JobBuilderLocationErrors>;
+  validationStatus: JobBuilderValidationStatus;
+  validationErrorCount: number;
   onSelect: (locationId: string) => void;
   onUpdate: (locationId: string, patch: JobBuilderLocationPatch) => void;
   onRemove: (locationId: string) => void;
@@ -48,10 +55,25 @@ interface LocationItemDragProps {
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
 }
 
+type DropTargetEdge = 'before' | 'after' | null;
+
+interface DropTarget {
+  locationId: string;
+  edge: Exclude<DropTargetEdge, null>;
+}
+
+const ROLE_LABELS: Record<JobBuilderLocationRole, string> = {
+  start: '출발지',
+  waypoint: '경유지',
+  end: '도착지',
+};
+
 export function JobBuilderLocationList({
   locations,
   selectedLocationId,
   errors,
+  validationStatus,
+  validationErrorCount,
   onSelect,
   onUpdate,
   onRemove,
@@ -64,10 +86,7 @@ export function JobBuilderLocationList({
   const dragStateRef = useRef<DragState | null>(null);
   const pointerYRef = useRef(0);
   const frameRef = useRef(0);
-  const start = locations[0];
-  const destination = locations.length >= 2 ? locations.at(-1) : undefined;
-  const intermediates = locations.slice(1, -1);
-
+  const dropTarget = getDropTarget(locations, dragState);
   useEffect(() => {
     if (selectedLocationId) {
       rowRefs.current
@@ -123,8 +142,7 @@ export function JobBuilderLocationList({
       const rect = row.getBoundingClientRect();
       return pointerY < rect.top + rect.height / 2;
     });
-    const targetIndex =
-      (beforeIndex < 0 ? intermediates.length - 1 : beforeIndex) + 1;
+    const targetIndex = beforeIndex < 0 ? locations.length - 1 : beforeIndex;
     const list = scrollRef.current;
     if (list) {
       const rect = list.getBoundingClientRect();
@@ -192,7 +210,7 @@ export function JobBuilderLocationList({
     const direction =
       event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
     const targetIndex = sourceIndex + direction;
-    if (!direction || targetIndex <= 0 || targetIndex >= locations.length - 1) {
+    if (!direction || targetIndex < 0 || targetIndex >= locations.length) {
       return;
     }
     event.preventDefault();
@@ -200,37 +218,34 @@ export function JobBuilderLocationList({
     onReorder(locationId, targetIndex);
   }
 
-  function renderLocation(
-    location: JobBuilderLocation,
-    index: number,
-    endpointRole?: 'start' | 'destination',
-  ) {
-    const drag: LocationItemDragProps | undefined = endpointRole
-      ? undefined
-      : {
-          dragging: dragState?.locationId === location.id,
-          onPointerDown: (event) => startDrag(location.id, index, event),
-          onPointerMove: moveDrag,
-          onPointerUp: (event) => finishDrag(event, true),
-          onPointerCancel: (event) => finishDrag(event, false),
-          onLostPointerCapture: (event) => {
-            if (dragStateRef.current?.pointerId === event.pointerId) {
-              cancelAnimationFrame(frameRef.current);
-              frameRef.current = 0;
-              updateDragState(null);
-            }
-          },
-          onKeyDown: (event) => reorderWithKeyboard(location.id, index, event),
-        };
+  function renderLocation(location: JobBuilderLocation, index: number) {
+    const role = getJobBuilderLocationRole(index, locations.length);
+    const drag: LocationItemDragProps = {
+      dragging: dragState?.locationId === location.id,
+      onPointerDown: (event) => startDrag(location.id, index, event),
+      onPointerMove: moveDrag,
+      onPointerUp: (event) => finishDrag(event, true),
+      onPointerCancel: (event) => finishDrag(event, false),
+      onLostPointerCapture: (event) => {
+        if (dragStateRef.current?.pointerId === event.pointerId) {
+          cancelAnimationFrame(frameRef.current);
+          frameRef.current = 0;
+          updateDragState(null);
+        }
+      },
+      onKeyDown: (event) => reorderWithKeyboard(location.id, index, event),
+    };
+    const dropTargetEdge =
+      dropTarget?.locationId === location.id ? dropTarget.edge : null;
 
     return (
       <JobBuilderLocationItem
         key={location.id}
         location={location}
         index={index}
-        endpointRole={endpointRole}
+        role={role}
         selected={selectedLocationId === location.id}
-        dropTarget={dragState?.targetIndex === index}
+        dropTargetEdge={dropTargetEdge}
         errors={errors[location.id] ?? {}}
         drag={drag}
         setRowRef={(element) => {
@@ -253,12 +268,21 @@ export function JobBuilderLocationList({
         <div>
           <h2 className={Classes.HEADING}>위치 목록</h2>
           <p>
-            첫 위치는 출발지, 마지막 위치는 도착지입니다. 중간 방문지만 순서를
-            변경할 수 있습니다. Google 영업시간이 있으면 자동으로 입력되며 직접
-            편집할 때는 {VISIT_TIME_GRANULARITY_MINUTES}분 단위입니다.
+            모든 위치의 순서를 변경할 수 있습니다. 첫 위치는 출발지, 마지막
+            위치는 도착지이며 나머지는 경유지입니다. Google 영업시간이 있으면
+            자동으로 입력되며 직접 편집할 때는 {VISIT_TIME_GRANULARITY_MINUTES}
+            분 단위입니다.
           </p>
         </div>
-        <span className="job-builder-location-count">{locations.length}개</span>
+        <div className="job-builder-location-meta">
+          <span className="job-builder-location-count">
+            {locations.length}개
+          </span>
+          <JobBuilderValidationIndicator
+            status={validationStatus}
+            errorCount={validationErrorCount}
+          />
+        </div>
       </header>
 
       <div ref={scrollRef} className="job-builder-location-scroll">
@@ -270,68 +294,47 @@ export function JobBuilderLocationList({
             description="출발지와 도착지를 포함해 장소가 2개 이상 필요합니다."
           />
         ) : (
-          <>
-            <LocationGroup title="출발">
-              {start ? renderLocation(start, 0, 'start') : null}
-            </LocationGroup>
-
-            <LocationGroup title="중간 방문지">
-              {intermediates.length ? (
-                <div
-                  ref={sortableListRef}
-                  className="job-builder-intermediate-list"
-                >
-                  {intermediates.map((location, middleIndex) =>
-                    renderLocation(location, middleIndex + 1),
-                  )}
-                </div>
-              ) : (
-                <p className="job-builder-location-group-empty">
-                  추가 장소는 도착지 앞에 삽입됩니다.
-                </p>
-              )}
-            </LocationGroup>
-
-            <LocationGroup title="도착">
-              {destination ? (
-                renderLocation(destination, locations.length - 1, 'destination')
-              ) : (
-                <p className="job-builder-endpoint-placeholder">
-                  도착지를 추가하세요. 출발지와 도착지를 포함해 장소가 2개 이상
-                  필요합니다.
-                </p>
-              )}
-            </LocationGroup>
-          </>
+          <div ref={sortableListRef} className="job-builder-location-list">
+            {locations.map(renderLocation)}
+          </div>
         )}
       </div>
     </aside>
   );
 }
 
-function LocationGroup({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="job-builder-location-group">
-      <h3>{title}</h3>
-      {children}
-    </section>
+function getDropTarget(
+  locations: readonly JobBuilderLocation[],
+  dragState: DragState | null,
+): DropTarget | null {
+  if (!dragState) {
+    return null;
+  }
+  const remainingLocations = locations.filter(
+    (location) => location.id !== dragState.locationId,
   );
+  const targetLocation =
+    dragState.targetIndex >= remainingLocations.length
+      ? remainingLocations.at(-1)
+      : remainingLocations[dragState.targetIndex];
+  if (!targetLocation) {
+    return null;
+  }
+  return {
+    locationId: targetLocation.id,
+    edge:
+      dragState.targetIndex >= remainingLocations.length ? 'after' : 'before',
+  };
 }
 
 interface JobBuilderLocationItemProps {
   location: JobBuilderLocation;
   index: number;
-  endpointRole?: 'start' | 'destination';
+  role: JobBuilderLocationRole;
   selected: boolean;
-  dropTarget: boolean;
+  dropTargetEdge: DropTargetEdge;
   errors: JobBuilderLocationErrors;
-  drag?: LocationItemDragProps;
+  drag: LocationItemDragProps;
   setRowRef: (element: HTMLElement | null) => void;
   onSelect: () => void;
   onUpdate: (patch: JobBuilderLocationPatch) => void;
@@ -341,9 +344,9 @@ interface JobBuilderLocationItemProps {
 function JobBuilderLocationItem({
   location,
   index,
-  endpointRole,
+  role,
   selected,
-  dropTarget,
+  dropTargetEdge,
   errors,
   drag,
   setRowRef,
@@ -354,36 +357,34 @@ function JobBuilderLocationItem({
   return (
     <article
       ref={setRowRef}
-      className={`job-builder-location-item${selected ? ' is-selected' : ''}${drag?.dragging ? ' is-dragging' : ''}${dropTarget ? ' is-drop-target' : ''}`}
+      className={`job-builder-location-item${selected ? ' is-selected' : ''}${drag.dragging ? ' is-dragging' : ''}${dropTargetEdge ? ` is-drop-target-${dropTargetEdge}` : ''}`}
       data-builder-location-id={location.id}
-      data-builder-sortable-location-id={drag ? location.id : undefined}
+      data-builder-sortable-location-id={location.id}
       onClick={onSelect}
     >
       <div className="job-builder-location-heading">
-        {drag ? (
-          <DragHandle
-            className="job-builder-drag-handle"
-            label={location.name}
-            dragging={drag.dragging}
-            onPointerDown={drag.onPointerDown}
-            onPointerMove={drag.onPointerMove}
-            onPointerUp={drag.onPointerUp}
-            onPointerCancel={drag.onPointerCancel}
-            onLostPointerCapture={drag.onLostPointerCapture}
-            onKeyDown={drag.onKeyDown}
-          />
-        ) : (
-          <span
-            className={`job-builder-endpoint-badge is-${endpointRole}`}
-            aria-hidden="true"
-          >
-            {endpointRole === 'start' ? '출' : '도'}
-          </span>
-        )}
+        <DragHandle
+          className="job-builder-drag-handle"
+          label={`${location.name} 위치`}
+          dragging={drag.dragging}
+          onPointerDown={drag.onPointerDown}
+          onPointerMove={drag.onPointerMove}
+          onPointerUp={drag.onPointerUp}
+          onPointerCancel={drag.onPointerCancel}
+          onLostPointerCapture={drag.onLostPointerCapture}
+          onKeyDown={drag.onKeyDown}
+        />
         <span className="job-builder-location-order">{index + 1}</span>
-        <div>
-          <strong>{location.name}</strong>
-          <span>{location.address ?? '주소 정보 없음'}</span>
+        <div className="job-builder-location-copy">
+          <span className="job-builder-location-name">
+            <strong>{location.name}</strong>
+            <span className={`job-builder-location-role is-${role}`}>
+              {ROLE_LABELS[role]}
+            </span>
+          </span>
+          <span className="job-builder-location-address">
+            {location.address ?? '주소 정보 없음'}
+          </span>
         </div>
         <Button
           aria-label={`${location.name} 제거`}
@@ -437,7 +438,7 @@ function JobBuilderLocationItem({
             <input
               className="bp6-input"
               type="number"
-              min={MIN_VISIT_DURATION_MINUTES}
+              min={role === 'waypoint' ? MIN_VISIT_DURATION_MINUTES : 0}
               max={MAX_STAY_MINUTES}
               step={VISIT_TIME_GRANULARITY_MINUTES}
               aria-label={`${location.name} 체류 시간(분)`}

@@ -13,6 +13,7 @@ import {
   hasResultMismatch,
   type TestbedJob,
 } from '@/entities/route-job';
+import { JobRequestSummary } from '@/features/troute-testbed/components/detail/JobRequestSummary';
 import { JobResultSummary } from '@/features/troute-testbed/components/detail/JobResultSummary';
 import { JobSummary } from '@/features/troute-testbed/components/detail/JobSummary';
 import { JobTimeline } from '@/features/troute-testbed/components/detail/JobTimeline';
@@ -81,6 +82,8 @@ export const JobDetail = memo(function JobDetail({
       <Divider />
       <div className="job-detail-content">
         <JobSummary job={job} />
+        <Divider />
+        <JobRequestSummary key={job.id} request={job.request} />
 
         {job.error ? (
           <Callout

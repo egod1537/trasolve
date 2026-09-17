@@ -15,7 +15,6 @@ import {
   type TrouteOptimizeRequest,
 } from '@trasolve/shared';
 import { useMemo, useState } from 'react';
-import { createSampleRequest } from '@/features/troute-testbed/sample';
 import {
   applyOptimizeRequestToBuilder,
   createVisualJobId,
@@ -26,16 +25,16 @@ import { JobBuilderLocationList } from '@/features/troute-testbed/job-builder/Jo
 import { JobBuilderMap } from '@/features/troute-testbed/job-builder/JobBuilderMap';
 import {
   addJobBuilderLocation,
-  createInitialJobBuilderState,
+  createDefaultJobBuilderDraft,
   createJobBuilderLocation,
   removeJobBuilderLocation,
   reorderJobBuilderLocations,
-  validateJobBuilder,
   type JobBuilderLocation,
   type JobBuilderState,
-  type JobBuilderValidation,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
 import { JobBuilderSettings } from '@/features/troute-testbed/job-builder/JobBuilderSettings';
+import { validateJobBuilderDraft } from '@/features/troute-testbed/job-builder/jobBuilderValidation';
+import { useJobBuilderValidation } from '@/features/troute-testbed/job-builder/useJobBuilderValidation';
 import '@/features/troute-testbed/job-builder/job-builder.css';
 
 interface JobBuilderDialogProps {
@@ -62,17 +61,15 @@ export function JobBuilderDialog({
 }: JobBuilderDialogProps) {
   const [mode, setMode] = useState<BuilderMode>('visual');
   const [jobId, setJobId] = useState(createVisualJobId);
-  const [builder, setBuilder] = useState(createInitialJobBuilderState);
+  const [builder, setBuilder] = useState(createDefaultJobBuilderDraft);
+  const [viewportRevision, setViewportRevision] = useState(0);
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(
-    null,
-  );
-  const [validation, setValidation] = useState<JobBuilderValidation | null>(
     null,
   );
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [rawInput, setRawInput] = useState(() =>
     JSON.stringify(
-      jobBuilderToOptimizeRequest(createInitialJobBuilderState(), jobId),
+      jobBuilderToOptimizeRequest(createDefaultJobBuilderDraft(), jobId),
       null,
       2,
     ),
@@ -82,16 +79,13 @@ export function JobBuilderDialog({
     () => jobBuilderToOptimizeRequest(builder, jobId),
     [builder, jobId],
   );
-  const liveBuilderValidation = useMemo(
-    () => validateJobBuilder(builder),
-    [builder],
+  const validation = useJobBuilderValidation(builder, jobId, existingJobIds);
+  const rawRequestValid = useMemo(
+    () => isRawRequestValid(rawInput, existingJobIds),
+    [existingJobIds, rawInput],
   );
-  const previewValid =
-    liveBuilderValidation.valid &&
-    trouteOptimizeRequestSchema.safeParse(visualRequest).success;
 
-  function clearValidation(): void {
-    setValidation(null);
+  function clearFeedback(): void {
     setFeedback(null);
   }
 
@@ -109,7 +103,7 @@ export function JobBuilderDialog({
     const location = createJobBuilderLocation(place);
     setBuilder((current) => addJobBuilderLocation(current, location));
     setSelectedLocationId(location.id);
-    clearValidation();
+    clearFeedback();
     return location.id;
   }
 
@@ -125,7 +119,7 @@ export function JobBuilderDialog({
         location.id === locationId ? { ...location, ...patch } : location,
       ),
     }));
-    clearValidation();
+    clearFeedback();
   }
 
   function removeLocation(locationId: string): void {
@@ -134,7 +128,7 @@ export function JobBuilderDialog({
     if (selectedLocationId === locationId) {
       setSelectedLocationId(next.locations[0]?.id ?? null);
     }
-    clearValidation();
+    clearFeedback();
   }
 
   function reorderLocation(locationId: string, targetIndex: number): void {
@@ -146,17 +140,48 @@ export function JobBuilderDialog({
         targetIndex,
       ),
     }));
-    clearValidation();
+    clearFeedback();
   }
 
-  function updateSettings(patch: Pick<JobBuilderState, 'startTime'>): void {
+  function updateSettings(
+    patch: Partial<Pick<JobBuilderState, 'startTime' | 'debug'>>,
+  ): void {
     setBuilder((current) => ({ ...current, ...patch }));
-    clearValidation();
+    clearFeedback();
+  }
+
+  function resetVisualBuilder(): void {
+    const nextBuilder = createDefaultJobBuilderDraft();
+    setBuilder(nextBuilder);
+    setJobId(createVisualJobId());
+    setSelectedLocationId(null);
+    setViewportRevision((current) => current + 1);
+    setFeedback(null);
+  }
+
+  function resetRawRequest(): void {
+    const nextJobId = createVisualJobId();
+    const nextBuilder = createDefaultJobBuilderDraft();
+    setBuilder(nextBuilder);
+    setJobId(nextJobId);
+    setSelectedLocationId(null);
+    setViewportRevision((current) => current + 1);
+    setRawInput(
+      JSON.stringify(
+        jobBuilderToOptimizeRequest(nextBuilder, nextJobId),
+        null,
+        2,
+      ),
+    );
+    setFeedback(null);
   }
 
   function validateVisual(): TrouteOptimizeRequest | null {
-    const nextValidation = validateJobBuilder(builder);
-    setValidation(nextValidation);
+    const nextValidation = validateJobBuilderDraft(
+      builder,
+      jobId,
+      existingJobIds,
+    );
     if (!nextValidation.valid) {
       setFeedback({
         intent: Intent.DANGER,
@@ -237,17 +262,8 @@ export function JobBuilderDialog({
     setBuilder(nextBuilder);
     setJobId(request.job_id);
     setSelectedLocationId(nextBuilder.locations[0]?.id ?? null);
-    setValidation(null);
     setFeedback(null);
     setMode('visual');
-  }
-
-  function validateCurrent(): void {
-    if (mode === 'visual') {
-      validateVisual();
-    } else {
-      parseRaw();
-    }
   }
 
   function createJob(): void {
@@ -270,30 +286,42 @@ export function JobBuilderDialog({
     >
       <DialogBody className="job-builder-dialog-body">
         <div className="job-builder-mode-switch">
-          <ButtonGroup size="small">
-            <Button
-              active={mode === 'visual'}
-              icon="map"
-              onClick={() => {
-                if (mode === 'raw') {
-                  switchToVisual();
-                }
-              }}
-            >
-              Visual Builder
-            </Button>
-            <Button
-              active={mode === 'raw'}
-              icon="code"
-              onClick={() => {
-                if (mode === 'visual') {
-                  switchToRaw();
-                }
-              }}
-            >
-              Raw JSON
-            </Button>
-          </ButtonGroup>
+          <div className="job-builder-mode-actions">
+            <ButtonGroup size="small">
+              <Button
+                active={mode === 'visual'}
+                icon="map"
+                onClick={() => {
+                  if (mode === 'raw') {
+                    switchToVisual();
+                  }
+                }}
+              >
+                Visual Builder
+              </Button>
+              <Button
+                active={mode === 'raw'}
+                icon="code"
+                onClick={() => {
+                  if (mode === 'visual') {
+                    switchToRaw();
+                  }
+                }}
+              >
+                Raw JSON
+              </Button>
+            </ButtonGroup>
+            {mode === 'visual' ? (
+              <Button
+                icon="reset"
+                size="small"
+                variant="minimal"
+                onClick={resetVisualBuilder}
+              >
+                기본 위치 복원
+              </Button>
+            ) : null}
+          </div>
           <span className={Classes.TEXT_MUTED}>
             {mode === 'visual'
               ? '지도와 위치 목록으로 요청을 구성합니다.'
@@ -306,6 +334,7 @@ export function JobBuilderDialog({
             <div className="job-builder-main-grid">
               <JobBuilderMap
                 locations={builder.locations}
+                viewportRevision={viewportRevision}
                 selectedLocationId={selectedLocationId}
                 onSelectLocation={setSelectedLocationId}
                 onAddPlace={addPlace}
@@ -313,7 +342,9 @@ export function JobBuilderDialog({
               <JobBuilderLocationList
                 locations={builder.locations}
                 selectedLocationId={selectedLocationId}
-                errors={validation?.locationErrors ?? {}}
+                errors={validation.validation?.locationErrors ?? {}}
+                validationStatus={validation.status}
+                validationErrorCount={validation.errorCount}
                 onSelect={setSelectedLocationId}
                 onUpdate={updateLocation}
                 onRemove={removeLocation}
@@ -322,12 +353,15 @@ export function JobBuilderDialog({
             </div>
             <JobBuilderSettings
               state={builder}
-              startTimeError={validation?.startTimeError}
+              startTimeError={validation.validation?.startTimeError}
+              minJobDurationMsError={
+                validation.validation?.minJobDurationMsError
+              }
               onChange={updateSettings}
             />
             <JobBuilderJsonPreview
               request={visualRequest}
-              valid={previewValid}
+              valid={validation.isValid}
             />
           </div>
         ) : (
@@ -343,12 +377,22 @@ export function JobBuilderDialog({
                 setRawInput(JSON.stringify(request, null, 2));
               }
             }}
-            onReset={() => {
-              setRawInput(JSON.stringify(createSampleRequest(), null, 2));
-              setFeedback(null);
-            }}
+            onReset={resetRawRequest}
           />
         )}
+
+        {mode === 'visual' &&
+        validation.status === 'invalid' &&
+        validation.errors.length > 0 ? (
+          <Callout
+            className="job-builder-validation-summary"
+            compact
+            intent={Intent.DANGER}
+            role="alert"
+          >
+            {validation.errors.join(' ')}
+          </Callout>
+        ) : null}
 
         {feedback ? (
           <Callout
@@ -365,13 +409,12 @@ export function JobBuilderDialog({
         actions={
           <>
             <Button onClick={onClose}>취소</Button>
-            <Button icon="tick" onClick={validateCurrent}>
-              검증
-            </Button>
             <Button
               icon="play"
               intent={Intent.PRIMARY}
-              disabled={mode === 'visual' && builder.locations.length < 2}
+              disabled={
+                mode === 'visual' ? !validation.isValid : !rawRequestValid
+              }
               onClick={createJob}
             >
               Job 생성
@@ -421,6 +464,20 @@ function RawJsonEditor({
       />
     </section>
   );
+}
+
+function isRawRequestValid(
+  input: string,
+  existingJobIds: ReadonlySet<string>,
+): boolean {
+  try {
+    const parsed = trouteOptimizeRequestSchema.safeParse(
+      JSON.parse(input) as unknown,
+    );
+    return parsed.success && !existingJobIds.has(parsed.data.job_id);
+  } catch {
+    return false;
+  }
 }
 
 function formatSchemaIssues(

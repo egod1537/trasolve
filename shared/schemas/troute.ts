@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const MAX_U32 = 4_294_967_295;
+export const TROUTE_MAX_DEBUG_JOB_DURATION_MS = 60_000;
 const timeOfDaySchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const nonEmptyStringSchema = z
   .string()
@@ -64,11 +65,22 @@ export const trouteLocationSchema = z.strictObject({
   stay_minutes: z.number().int().min(0).max(MAX_U32),
 });
 
+export const trouteDebugOptionsSchema = z.strictObject({
+  min_job_duration_ms: z
+    .number()
+    .int()
+    .min(0)
+    .max(TROUTE_MAX_DEBUG_JOB_DURATION_MS)
+    .optional(),
+  shuffle_result_route: z.boolean().optional(),
+});
+
 export const trouteOptimizeRequestSchema = z
   .strictObject({
     job_id: trouteJobIdSchema,
     locations: z.array(trouteLocationSchema).min(2).max(500),
     start_time: timeOfDaySchema,
+    debug: trouteDebugOptionsSchema.optional(),
   })
   .superRefine((request, context) => {
     const ids = new Set<string>();
@@ -168,6 +180,8 @@ export const trouteJobCancelledEventSchema =
 
 export const trouteJobSubmissionResponseSchema = z.strictObject({
   job_id: trouteJobIdSchema,
+  status: z.literal('pending').optional(),
+  created_at: z.number().int().nonnegative().optional(),
 });
 
 export const trouteJobHistoryItemSchema = z.strictObject({

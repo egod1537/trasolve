@@ -3,6 +3,7 @@ import type {
   JobBuilderLocation,
   JobBuilderState,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
+import { DEFAULT_MIN_JOB_DURATION_MS } from '@/features/troute-testbed/job-builder/jobBuilderModel';
 
 export function createVisualJobId(): string {
   return `route-testbed-${crypto.randomUUID()}`;
@@ -24,6 +25,14 @@ export function jobBuilderToOptimizeRequest(
       stay_minutes: location.stayMinutes,
     })),
     start_time: state.startTime,
+    ...(state.debug.enabled
+      ? {
+          debug: {
+            min_job_duration_ms: state.debug.minJobDurationMs,
+            shuffle_result_route: state.debug.shuffleResultRoute,
+          },
+        }
+      : {}),
   };
 }
 
@@ -50,5 +59,11 @@ export function applyOptimizeRequestToBuilder(
   return {
     locations,
     startTime: request.start_time,
+    debug: {
+      enabled: request.debug !== undefined,
+      minJobDurationMs:
+        request.debug?.min_job_duration_ms ?? DEFAULT_MIN_JOB_DURATION_MS,
+      shuffleResultRoute: request.debug?.shuffle_result_route ?? false,
+    },
   };
 }

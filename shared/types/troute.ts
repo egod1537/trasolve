@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import type {
   trouteErrorPayloadSchema,
+  trouteDebugOptionsSchema,
   trouteJobHistoryItemSchema,
   trouteJobHistoryResponseSchema,
   trouteJobCancelledEventSchema,
@@ -24,6 +25,7 @@ import type {
 } from '../schemas/troute.js';
 
 export type TrouteProgressStage = z.infer<typeof trouteProgressStageSchema>;
+export type TrouteDebugOptions = z.infer<typeof trouteDebugOptionsSchema>;
 export type TrouteErrorPayload = z.infer<typeof trouteErrorPayloadSchema>;
 export type TrouteJobStatus = z.infer<typeof trouteJobStatusSchema>;
 export type TrouteJobState = z.infer<typeof trouteJobStateSchema>;

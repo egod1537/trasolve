@@ -12,9 +12,10 @@ export const JobResultSummary = memo(function JobResultSummary({
       <div className="route-overview">
         <div>
           <h2 id="route-title" className={Classes.HEADING}>
-            경로
+            결과
           </h2>
-          <div aria-label="방문 순서">
+          <span className={Classes.TEXT_MUTED}>최종 경로</span>
+          <div aria-label="결과 방문 순서">
             {optimization.route.map((stop) => stop.location_id).join(' → ')}
           </div>
         </div>

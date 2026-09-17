@@ -12,6 +12,7 @@ import type { JobBuilderLocation } from '@/features/troute-testbed/job-builder/j
 
 interface JobBuilderMapProps {
   locations: JobBuilderLocation[];
+  viewportRevision: number;
   selectedLocationId: string | null;
   onSelectLocation: (locationId: string) => void;
   onAddPlace: (place: PlaceDetails) => string;
@@ -19,6 +20,7 @@ interface JobBuilderMapProps {
 
 export function JobBuilderMap({
   locations,
+  viewportRevision,
   selectedLocationId,
   onSelectLocation,
   onAddPlace,
@@ -101,6 +103,10 @@ export function JobBuilderMap({
         }}
         onMapClick={handleMapClick}
       >
+        <JobBuilderInitialViewport
+          locations={locations}
+          revision={viewportRevision}
+        />
         <JobBuilderMarkers
           locations={locations}
           selectedLocationId={selectedLocationId}
@@ -160,6 +166,37 @@ export function JobBuilderMap({
       ) : null}
     </div>
   );
+}
+
+function JobBuilderInitialViewport({
+  locations,
+  revision,
+}: {
+  locations: JobBuilderLocation[];
+  revision: number;
+}) {
+  const { adapter } = useGoogleMap();
+  const appliedRevision = useRef(-1);
+
+  useEffect(() => {
+    if (appliedRevision.current === revision || locations.length < 2) {
+      return;
+    }
+    const latitudes = locations.map((location) => location.location.lat);
+    const longitudes = locations.map((location) => location.location.lng);
+    adapter.fitBounds(
+      {
+        north: Math.max(...latitudes),
+        south: Math.min(...latitudes),
+        east: Math.max(...longitudes),
+        west: Math.min(...longitudes),
+      },
+      { top: 88, right: 48, bottom: 48, left: 48 },
+    );
+    appliedRevision.current = revision;
+  }, [adapter, locations, revision]);
+
+  return null;
 }
 
 function JobBuilderMarkers({

@@ -26,6 +26,9 @@ import { TrouteHttpService } from './troute/trouteHttpService.js';
 import { TrouteJobHttpService } from './internal/troute/trouteJobHttpService.js';
 import { FileTrouteJobRepository } from './internal/troute/fileTrouteJobRepository.js';
 import { JobEventSubscriptionManager } from './internal/troute/jobEventSubscriptionManager.js';
+import { TcacheClient } from './internal/tcache/tcacheClient.js';
+import { TcacheClientError } from './internal/tcache/types.js';
+import { TcacheJobHttpService } from './internal/tcache/tcacheJobHttpService.js';
 
 // Load configuration before constructing the shared instances, regardless of
 // which backend module imports them first.
@@ -111,6 +114,17 @@ const trouteJobHttp = new TrouteJobHttpService(
   troute,
   trouteSubscriptions,
 );
+let tcache: TcacheClient | null = null;
+try {
+  tcache = new TcacheClient({
+    baseUrl: process.env.TCACHE_BASE_URL ?? '',
+  });
+} catch (cause) {
+  if (!(cause instanceof TcacheClientError) || cause.kind !== 'configuration') {
+    throw cause;
+  }
+}
+const tcacheJobHttp = new TcacheJobHttpService(tcache);
 
 export const API = {
   Route: routes,
@@ -123,4 +137,6 @@ export const API = {
   Troute: troute,
   TrouteHttp: trouteHttp,
   TrouteJobHttp: trouteJobHttp,
+  Tcache: tcache,
+  TcacheJobHttp: tcacheJobHttp,
 };

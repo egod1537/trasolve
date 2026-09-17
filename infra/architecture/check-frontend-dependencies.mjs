@@ -14,7 +14,6 @@ const importPattern =
 const rawFetchPattern = /\bfetch\s*\(/;
 const publicApiLayers = new Set(['features', 'entities']);
 const legacySourceRoots = [
-  'api/',
   'pages/map/api/',
   'pages/map/components/',
   'pages/map/domain/',
@@ -76,12 +75,21 @@ function validateBoundary(sourcePath, targetPath) {
   const source = getSlice(sourcePath);
   const target = getSlice(targetPath);
   const allowedTargets = {
-    app: new Set(['app', 'pages', 'features', 'entities', 'shared', 'map']),
-    pages: new Set(['pages', 'features', 'entities', 'shared', 'map']),
-    features: new Set(['features', 'entities', 'shared', 'map']),
+    app: new Set([
+      'app',
+      'pages',
+      'features',
+      'entities',
+      'shared',
+      'map',
+      'api',
+    ]),
+    pages: new Set(['pages', 'features', 'entities', 'shared', 'map', 'api']),
+    features: new Set(['features', 'entities', 'shared', 'map', 'api']),
     entities: new Set(['entities', 'shared']),
     shared: new Set(['shared']),
     map: new Set(['map', 'shared']),
+    api: new Set(['api', 'shared']),
   };
   const allowed = allowedTargets[source.layer];
   if (allowed && !allowed.has(target.layer)) {
@@ -108,6 +116,7 @@ function validateBoundary(sourcePath, targetPath) {
 
 function isNetworkBoundary(sourcePath) {
   return (
+    sourcePath.startsWith('api/') ||
     sourcePath.startsWith('shared/api/') ||
     /^features\/[^/]+\/api\//.test(sourcePath)
   );
