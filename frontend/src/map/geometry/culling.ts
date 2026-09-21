@@ -1,4 +1,4 @@
-import type { GeoBounds, GeoPoint } from '../types/mapTypes';
+import type { GeoBounds, GeoPoint } from '@/shared/types/mapTypes';
 
 const minimumLongitude = -180;
 const maximumLongitude = 180;

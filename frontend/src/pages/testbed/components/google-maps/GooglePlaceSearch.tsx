@@ -7,9 +7,9 @@ import {
   useState,
 } from 'react';
 import type { PlaceAutocompleteSuggestion } from '@trasolve/shared';
-import { getPlace, searchPlaces } from '../../../../api/places';
-import type { MapPlace } from '../../../../map/types/googleMapComponent';
-import '../../styles/google-place-search.css';
+import { getPlace, searchPlaces } from '@/shared/api/places';
+import type { MapPlace } from '@/map/types/googleMapComponent';
+import '@/pages/testbed/styles/google-place-search.css';
 
 type Props = {
   label?: string;

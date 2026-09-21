@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { ResolvedTheme, ThemeMode } from './theme';
+import type { ResolvedTheme, ThemeMode } from '@/shared/theme/theme';
 
 export type ThemeContextValue = {
   themeMode: ThemeMode;

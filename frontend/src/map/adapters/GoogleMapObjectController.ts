@@ -9,8 +9,8 @@ import type {
   MapPolylineOptions,
   MapPolylinePattern,
   MapPolylineStyle,
-} from './MapObjectController';
-import './map-objects.css';
+} from '@/map/adapters/MapObjectController';
+import '@/map/adapters/map-objects.css';
 
 type ObjectBinding = {
   setVisible(visible: boolean): void;
@@ -125,6 +125,35 @@ function applyPolylineStyle(
   });
 }
 
+function arePolylineStylesEqual(
+  left: ResolvedPolylineStyle,
+  right: ResolvedPolylineStyle,
+): boolean {
+  return (
+    left.color === right.color &&
+    left.width === right.width &&
+    left.opacity === right.opacity &&
+    left.pattern === right.pattern &&
+    left.patternRepeatPx === right.patternRepeatPx &&
+    left.directional === right.directional &&
+    left.directionRepeatPx === right.directionRepeatPx &&
+    left.directionScale === right.directionScale
+  );
+}
+
+function arePathsEqual(
+  left: readonly { lat: number; lng: number }[],
+  right: readonly { lat: number; lng: number }[],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every(
+      (point, index) =>
+        point.lat === right[index]!.lat && point.lng === right[index]!.lng,
+    )
+  );
+}
+
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
 function applyMarkerIcon(
@@ -168,6 +197,14 @@ export class GoogleMapObjectController implements MapObjectController {
       });
     marker.replaceChildren(content);
     let visible = options.visible !== false;
+    let zIndex = options.zIndex ?? 0;
+    let position = options.position;
+    let title: string | null = null;
+    let selected: boolean | null = null;
+    let color: string | null | undefined = null;
+    let icon: MapMarkerIcon | null | undefined = null;
+    let label: string | null | undefined = null;
+    let emphasis: Parameters<MapMarkerHandle['setEmphasis']>[0] | null = null;
     const listeners = new Set<() => void>();
     const handleEntranceAnimationEnd = (event: AnimationEvent) => {
       if (event.animationName === 'trip-map-marker-enter') {
@@ -184,9 +221,10 @@ export class GoogleMapObjectController implements MapObjectController {
         content.classList.toggle('is-entering', visible);
         marker.map = visible ? this.map : null;
       },
-      setZIndex: (zIndex) => {
-        if (marker) {
-          marker.zIndex = zIndex;
+      setZIndex: (nextZIndex) => {
+        if (marker && zIndex !== nextZIndex) {
+          marker.zIndex = nextZIndex;
+          zIndex = nextZIndex;
         }
       },
       remove: () => {
@@ -204,47 +242,62 @@ export class GoogleMapObjectController implements MapObjectController {
     });
     const handle: MapMarkerHandle = {
       ...base,
-      setPosition: (position) => {
-        if (marker) {
-          marker.position = { ...position };
+      setPosition: (nextPosition) => {
+        if (
+          marker &&
+          (position.lat !== nextPosition.lat ||
+            position.lng !== nextPosition.lng)
+        ) {
+          marker.position = { ...nextPosition };
+          position = nextPosition;
         }
       },
-      setTitle: (title) => {
-        if (marker) {
-          marker.title = title ?? '';
+      setTitle: (nextTitle) => {
+        const resolvedTitle = nextTitle ?? '';
+        if (marker && title !== resolvedTitle) {
+          marker.title = resolvedTitle;
+          title = resolvedTitle;
         }
       },
-      setSelected: (selected) => {
-        if (!marker) {
+      setSelected: (nextSelected) => {
+        if (!marker || selected === nextSelected) {
           return;
         }
-        content.classList.toggle('is-selected', selected);
-        marker.setAttribute('aria-pressed', String(selected));
+        content.classList.toggle('is-selected', nextSelected);
+        marker.setAttribute('aria-pressed', String(nextSelected));
+        selected = nextSelected;
       },
-      setColor: (color) => {
-        if (marker) {
-          content.style.setProperty('--place-color', color ?? '#2563eb');
+      setColor: (nextColor) => {
+        if (marker && color !== nextColor) {
+          content.style.setProperty('--place-color', nextColor ?? '#2563eb');
+          color = nextColor;
         }
       },
-      setIcon: (icon) => {
-        if (marker) {
-          applyMarkerIcon(markerIcon, icon);
+      setIcon: (nextIcon) => {
+        if (marker && icon !== nextIcon) {
+          applyMarkerIcon(markerIcon, nextIcon);
+          icon = nextIcon;
         }
       },
-      setLabel: (label) => {
-        if (!marker) {
+      setLabel: (nextLabel) => {
+        if (!marker || label === nextLabel) {
           return;
         }
-        markerLabel.textContent = label ?? '';
-        content.classList.toggle('has-label', Boolean(label));
+        markerLabel.textContent = nextLabel ?? '';
+        content.classList.toggle('has-label', Boolean(nextLabel));
+        label = nextLabel;
       },
-      setEmphasis: (emphasis) => {
-        if (!marker) {
+      setEmphasis: (nextEmphasis) => {
+        if (!marker || emphasis === nextEmphasis) {
           return;
         }
         for (const value of ['selectable', 'source', 'target', 'unavailable']) {
-          content.classList.toggle(`is-drawing-${value}`, emphasis === value);
+          content.classList.toggle(
+            `is-drawing-${value}`,
+            nextEmphasis === value,
+          );
         }
+        emphasis = nextEmphasis;
       },
       onClick: (callback) => {
         if (!marker) {
@@ -294,11 +347,14 @@ export class GoogleMapObjectController implements MapObjectController {
   public addPolyline(options: MapPolylineOptions): MapPolylineHandle {
     const id = this.reserveId(options.id);
     const style = resolvePolylineStyle(options.style);
+    let path = options.path;
+    let visible = options.visible ?? true;
+    let zIndex = options.zIndex ?? 0;
     let line: google.maps.Polyline | null = new google.maps.Polyline({
       map: this.map,
       path: options.path.map((point) => ({ ...point })),
-      visible: options.visible ?? true,
-      zIndex: options.zIndex ?? 0,
+      visible,
+      zIndex,
       strokeColor: style.color,
       strokeWeight: style.width,
       strokeOpacity: style.pattern === 'short-dash' ? 0 : style.opacity,
@@ -307,8 +363,18 @@ export class GoogleMapObjectController implements MapObjectController {
     });
     const listeners = new Set<google.maps.MapsEventListener>();
     const base = this.register(id, options.layer, {
-      setVisible: (visible) => line?.setVisible(visible),
-      setZIndex: (zIndex) => line?.setOptions({ zIndex }),
+      setVisible: (nextVisible) => {
+        if (line && visible !== nextVisible) {
+          line.setVisible(nextVisible);
+          visible = nextVisible;
+        }
+      },
+      setZIndex: (nextZIndex) => {
+        if (line && zIndex !== nextZIndex) {
+          line.setOptions({ zIndex: nextZIndex });
+          zIndex = nextZIndex;
+        }
+      },
       remove: () => {
         for (const listener of listeners) {
           listener.remove();
@@ -320,9 +386,19 @@ export class GoogleMapObjectController implements MapObjectController {
     });
     return {
       ...base,
-      setPath: (path) => line?.setPath(path.map((point) => ({ ...point }))),
+      setPath: (nextPath) => {
+        if (line && !arePathsEqual(path, nextPath)) {
+          line.setPath(nextPath.map((point) => ({ ...point })));
+          path = nextPath;
+        }
+      },
       setStyle: (update: MapPolylineStyle) => {
-        updatePolylineStyle(style, update);
+        const nextStyle = { ...style };
+        updatePolylineStyle(nextStyle, update);
+        if (arePolylineStylesEqual(style, nextStyle)) {
+          return;
+        }
+        Object.assign(style, nextStyle);
         applyPolylineStyle(line, style);
       },
       onClick: (callback) => {

@@ -1,0 +1,615 @@
+.troute-testbed-shell {
+  --testbed-page-background: var(--bg-app);
+  --testbed-row-hover: var(--bg-hover);
+  --testbed-row-selected: var(--color-surface-active);
+  --testbed-row-border: var(--border-default);
+  --testbed-code-background: var(--bg-subtle);
+
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--testbed-page-background);
+  color: var(--bp-typography-color-default-rest);
+  display: flex;
+  flex-direction: column;
+}
+
+.troute-testbed-navbar {
+  flex: none;
+  padding-inline: max(15px, calc((100vw - 1440px) / 2));
+}
+
+.troute-testbed-shell .navbar-endpoint {
+  font-size: 12px;
+}
+
+.troute-testbed-shell .job-workspace {
+  width: min(1440px, 100%);
+  min-height: 0;
+  overflow: hidden;
+  flex: 1;
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.troute-testbed-shell .job-sidebar,
+.troute-testbed-shell .job-detail {
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.troute-testbed-shell .sidebar-heading,
+.troute-testbed-shell .detail-heading,
+.troute-testbed-shell .job-summary-heading,
+.troute-testbed-shell .route-overview,
+.troute-testbed-shell .timeline-heading,
+.troute-testbed-shell .job-list-item-primary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.troute-testbed-shell .sidebar-heading,
+.troute-testbed-shell .detail-heading {
+  min-height: 38px;
+  flex: none;
+}
+
+.troute-testbed-shell .job-sidebar > .bp6-divider,
+.troute-testbed-shell .job-detail > .bp6-divider {
+  flex: none;
+}
+
+.troute-testbed-shell .sidebar-heading h1,
+.troute-testbed-shell .detail-heading h1,
+.troute-testbed-shell .job-summary-heading h2,
+.troute-testbed-shell .route-overview h2,
+.troute-testbed-shell .timeline-heading h2 {
+  margin: 0;
+}
+
+.troute-testbed-shell .sidebar-heading h1,
+.troute-testbed-shell .detail-heading h1 {
+  font-size: 16px;
+}
+
+.troute-testbed-shell .sidebar-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.troute-testbed-shell .detail-heading-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.troute-testbed-shell .job-stream-retrying {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: var(--space-2);
+  color: var(--warning);
+  font-size: 11px;
+}
+
+.troute-testbed-shell .job-stream-retrying::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  content: '';
+}
+
+.cancel-job-dialog {
+  width: min(460px, calc(100vw - 32px));
+}
+
+.cancel-job-dialog p {
+  margin: 0 0 8px;
+}
+
+.cancel-job-dialog p:last-child {
+  margin-bottom: 0;
+}
+
+.troute-testbed-shell .job-list {
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  margin: 8px -10px -10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+.troute-testbed-shell .job-list-empty {
+  flex: 1;
+  padding: 24px 10px;
+}
+
+.troute-testbed-shell .job-list-item {
+  width: 100%;
+  min-height: 68px;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--testbed-row-border);
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  font: inherit;
+  text-align: left;
+}
+
+.troute-testbed-shell .job-list-item:hover {
+  background: var(--testbed-row-hover);
+}
+
+.troute-testbed-shell .job-list-item[aria-selected='true'] {
+  background: var(--testbed-row-selected);
+  box-shadow: inset 3px 0 var(--color-accent);
+}
+
+.troute-testbed-shell .job-list-item:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.troute-testbed-shell .job-list-item-primary {
+  width: 100%;
+}
+
+.troute-testbed-shell .job-list-item-id {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.troute-testbed-shell .job-list-item-secondary {
+  font-size: 12px;
+}
+
+.troute-testbed-shell .job-detail-empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.troute-testbed-shell .job-detail-content {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding-top: 14px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.troute-testbed-shell .job-summary,
+.troute-testbed-shell .job-request-summary-content,
+.troute-testbed-shell .route-summary,
+.troute-testbed-shell .job-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.troute-testbed-shell .job-request-summary {
+  min-width: 0;
+  border: 1px solid var(--testbed-row-border);
+  border-radius: 3px;
+  background: var(--testbed-code-background);
+}
+
+.troute-testbed-shell .job-request-summary > summary {
+  min-height: 42px;
+  padding: 8px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.troute-testbed-shell .job-request-summary > summary:focus-visible,
+.troute-testbed-shell .job-request-raw-json > summary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.troute-testbed-shell .job-request-summary-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.troute-testbed-shell .job-request-summary-title > .bp6-heading {
+  margin: 0;
+  font-size: 14px;
+}
+
+.troute-testbed-shell .job-request-summary-content {
+  min-width: 0;
+  padding: 4px 10px 12px;
+  border-top: 1px solid var(--testbed-row-border);
+}
+
+.troute-testbed-shell .job-request-facts,
+.troute-testbed-shell .job-request-debug-options {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.troute-testbed-shell .job-request-facts > div,
+.troute-testbed-shell .job-request-debug-options > div {
+  min-width: 0;
+}
+
+.troute-testbed-shell .job-request-facts dt,
+.troute-testbed-shell .job-request-debug-options dt {
+  margin-bottom: 3px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.troute-testbed-shell .job-request-facts dd,
+.troute-testbed-shell .job-request-debug-options dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.troute-testbed-shell .job-request-debug-options {
+  padding: 9px 10px;
+  border: 1px solid var(--testbed-row-border);
+  border-radius: 3px;
+  background: var(--color-surface);
+}
+
+.troute-testbed-shell .job-request-shuffle-note {
+  margin: 0;
+  color: var(--color-accent);
+  font-size: 12px;
+}
+
+.troute-testbed-shell .job-request-route h3 {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+.troute-testbed-shell .job-request-route > div {
+  overflow-wrap: anywhere;
+}
+
+.troute-testbed-shell .job-request-location-table {
+  min-width: 760px;
+  table-layout: fixed;
+}
+
+.troute-testbed-shell .job-request-location-table th:nth-child(1) {
+  width: 76px;
+}
+
+.troute-testbed-shell .job-request-location-table th:nth-child(2),
+.troute-testbed-shell .job-request-location-table th:nth-child(3) {
+  width: 190px;
+}
+
+.troute-testbed-shell .job-request-location-table th:nth-child(4) {
+  width: 72px;
+}
+
+.troute-testbed-shell .job-request-location-table th:nth-child(5) {
+  width: 126px;
+}
+
+.troute-testbed-shell .job-request-location-table th:nth-child(6) {
+  width: 70px;
+}
+
+.troute-testbed-shell .job-request-id-cell > span,
+.troute-testbed-shell .job-request-place-id-cell > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.troute-testbed-shell .job-request-raw-json {
+  border: 1px solid var(--testbed-row-border);
+  border-radius: 3px;
+}
+
+.troute-testbed-shell .job-request-raw-json > summary {
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.troute-testbed-shell .job-request-raw-json > div {
+  padding: 0 10px 10px;
+}
+
+.troute-testbed-shell .job-request-raw-json header {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.troute-testbed-shell .job-request-json-code {
+  max-height: 320px;
+  margin: 0;
+  overflow: auto;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.troute-testbed-shell .job-summary-heading > div {
+  min-width: 0;
+}
+
+.troute-testbed-shell .job-summary-heading h2 {
+  overflow-wrap: anywhere;
+  font-size: 18px;
+}
+
+.troute-testbed-shell .job-facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.troute-testbed-shell .job-facts > div {
+  min-width: 0;
+}
+
+.troute-testbed-shell .job-facts dt {
+  margin-bottom: 3px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.troute-testbed-shell .job-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.troute-testbed-shell .route-overview > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.troute-testbed-shell .route-overview > div:first-child {
+  overflow-wrap: anywhere;
+}
+
+.troute-testbed-shell .route-overview > div:last-child {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.troute-testbed-shell .route-overview h2,
+.troute-testbed-shell .timeline-heading h2 {
+  font-size: 14px;
+}
+
+.troute-testbed-shell .table-scroll {
+  overflow-x: auto;
+}
+
+.troute-testbed-shell .table-scroll table {
+  width: 100%;
+}
+
+.troute-testbed-shell .table-scroll th,
+.troute-testbed-shell .table-scroll td {
+  white-space: nowrap;
+}
+
+.troute-testbed-shell .timeline-heading > span {
+  font-size: 12px;
+}
+
+.troute-testbed-shell .timeline-viewport {
+  max-height: 480px;
+  overflow-y: auto;
+  border: 1px solid var(--testbed-row-border);
+  border-radius: 3px;
+  background: var(--testbed-code-background);
+}
+
+.troute-testbed-shell .timeline-empty {
+  min-height: 180px;
+}
+
+.troute-testbed-shell .timeline-entry + .timeline-entry {
+  border-top: 1px solid var(--testbed-row-border);
+}
+
+.troute-testbed-shell .timeline-entry > summary {
+  min-height: 46px;
+  padding: 7px 8px;
+  display: grid;
+  grid-template-columns: 88px 92px 160px minmax(0, 1fr) 76px;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.troute-testbed-shell .timeline-entry > summary::-webkit-details-marker {
+  display: none;
+}
+
+.troute-testbed-shell .timeline-entry > summary:hover,
+.troute-testbed-shell .timeline-entry[open] > summary {
+  background: var(--testbed-row-hover);
+}
+
+.troute-testbed-shell .timeline-entry > summary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.troute-testbed-shell .timeline-entry-time,
+.troute-testbed-shell .timeline-route,
+.troute-testbed-shell .timeline-operation {
+  min-width: 0;
+  font-size: 12px;
+}
+
+.troute-testbed-shell .timeline-route {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.troute-testbed-shell .timeline-operation {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.troute-testbed-shell .timeline-entry-detail {
+  padding: 10px 12px 14px;
+  border-top: 1px solid var(--testbed-row-border);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.troute-testbed-shell .timeline-detail-section {
+  min-width: 0;
+}
+
+.troute-testbed-shell .timeline-detail-section h3 {
+  margin: 0 0 5px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.troute-testbed-shell .timeline-code {
+  max-height: 260px;
+  margin: 0;
+  overflow: auto;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1040px) {
+  .troute-testbed-shell .job-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .troute-testbed-shell .timeline-entry > summary {
+    grid-template-columns: 82px 88px minmax(110px, 0.6fr) minmax(0, 1fr) 76px;
+  }
+}
+
+@media (max-width: 800px) {
+  .troute-testbed-shell {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .troute-testbed-shell .navbar-endpoint,
+  .troute-testbed-shell .troute-testbed-navbar .bp6-navbar-divider {
+    display: none;
+  }
+
+  .troute-testbed-shell .job-workspace {
+    overflow: visible;
+    flex: none;
+    min-height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    padding: 12px;
+  }
+
+  .troute-testbed-shell .job-sidebar,
+  .troute-testbed-shell .job-detail {
+    height: auto;
+    min-height: 360px;
+  }
+
+  .troute-testbed-shell .job-detail {
+    overflow: visible;
+  }
+
+  .troute-testbed-shell .job-detail-content {
+    overflow: visible;
+  }
+
+  .troute-testbed-shell .job-list {
+    max-height: 300px;
+  }
+
+  .troute-testbed-shell .timeline-entry > summary {
+    grid-template-columns: 82px 88px minmax(0, 1fr) 76px;
+  }
+
+  .troute-testbed-shell .timeline-route {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .troute-testbed-shell .navbar-api-label,
+  .troute-testbed-shell .detail-heading-copy > span {
+    display: none;
+  }
+
+  .troute-testbed-shell .job-facts,
+  .troute-testbed-shell .job-request-facts,
+  .troute-testbed-shell .job-request-debug-options,
+  .troute-testbed-shell .timeline-entry-detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .troute-testbed-shell .timeline-entry > summary {
+    grid-template-columns: 88px minmax(0, 1fr) 76px;
+  }
+
+  .troute-testbed-shell .timeline-direction {
+    display: none;
+  }
+}

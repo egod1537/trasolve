@@ -6,7 +6,13 @@
     "jsx": "react-jsx",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client", "node"],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "rootDir": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@trasolve/shared": ["../shared/dist/index.d.ts"]
+    },
     "noEmit": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]

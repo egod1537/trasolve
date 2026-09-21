@@ -9,6 +9,10 @@ import {
 import { TrouteClientError } from '../../troute/errors.js';
 import type { TrouteClient } from '../../troute/trouteClient.js';
 import {
+  JobEventSubscriptionManager,
+  type PublishedTrouteJobEvent,
+} from './jobEventSubscriptionManager.js';
+import {
   TrouteJobRepository,
   TrouteJobRepositoryError,
 } from './trouteJobRepository.js';
@@ -34,6 +38,7 @@ export class TrouteJobHttpService {
   public constructor(
     private readonly jobs: TrouteJobRepository,
     private readonly client: TrouteClient | null = null,
+    private readonly subscriptions: JobEventSubscriptionManager | null = null,
   ) {}
 
   public async handle(
@@ -65,6 +70,10 @@ export class TrouteJobHttpService {
 
       if (jobRoute.action === 'cancel') {
         await this.handleCancellation(request, response, jobRoute.jobId);
+        return;
+      }
+      if (jobRoute.action === 'events') {
+        await this.handleEventStream(request, response, jobRoute.jobId);
         return;
       }
       await this.handleInspection(request, response, jobRoute.jobId);
@@ -174,18 +183,104 @@ export class TrouteJobHttpService {
 
     try {
       await client.cancelJob(jobId);
-      this.jobs.syncRemoteJob(await client.getJob(jobId));
     } catch (cause) {
       throw this.toCancelHttpError(cause);
     }
 
-    response.writeHead(200);
+    try {
+      this.jobs.syncRemoteJob(await client.getJob(jobId));
+    } catch (cause) {
+      console.warn(
+        'troute cancel 이후 GET 동기화에 실패해 기존 mirror를 반환합니다.',
+        { jobId, cause },
+      );
+    }
+    void this.subscriptions?.track(jobId).catch((cause) => {
+      console.warn('취소 요청한 troute Job SSE 추적을 시작하지 못했습니다.', {
+        jobId,
+        cause,
+      });
+    });
+
+    response.writeHead(
+      isTrouteJobTerminalStatus(this.jobs.get(jobId).status) ? 200 : 202,
+    );
     response.end(JSON.stringify(this.jobs.get(jobId)));
+  }
+
+  private async handleEventStream(
+    request: IncomingMessage,
+    response: ServerResponse,
+    jobId: string,
+  ): Promise<void> {
+    this.requireMethod(request, 'GET');
+    const subscriptions = this.requireSubscriptions();
+    const pending: PublishedTrouteJobEvent[] = [];
+    let streaming = false;
+    let closed = false;
+    let heartbeat: ReturnType<typeof setInterval> | null = null;
+    let unsubscribe: (() => void) | null = null;
+
+    const close = (): void => {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      if (heartbeat !== null) {
+        clearInterval(heartbeat);
+        heartbeat = null;
+      }
+      unsubscribe?.();
+      unsubscribe = null;
+    };
+    const send = (event: PublishedTrouteJobEvent): void => {
+      if (!streaming) {
+        pending.push(event);
+        return;
+      }
+      if (closed || response.destroyed || response.writableEnded) {
+        return;
+      }
+      response.write(formatServerSentEvent(event));
+      if (isTrouteJobTerminalStatus(event.state.status)) {
+        response.end();
+        close();
+      }
+    };
+
+    unsubscribe = await subscriptions.subscribe(jobId, send);
+    if (response.destroyed) {
+      close();
+      return;
+    }
+    response.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    response.setHeader('Cache-Control', 'no-cache, no-transform');
+    response.setHeader('Connection', 'keep-alive');
+    response.setHeader('X-Accel-Buffering', 'no');
+    response.writeHead(200);
+    response.flushHeaders();
+    streaming = true;
+    for (const event of pending) {
+      send(event);
+      if (closed) {
+        return;
+      }
+    }
+    pending.length = 0;
+
+    heartbeat = setInterval(() => {
+      if (!closed && !response.destroyed && !response.writableEnded) {
+        response.write(': keep-alive\n\n');
+      }
+    }, 15_000);
+    heartbeat.unref();
+    response.once('close', close);
+    request.once('aborted', close);
   }
 
   private parseJobRoute(
     pathname: string,
-  ): { jobId: string; action: 'inspect' | 'cancel' } | null {
+  ): { jobId: string; action: 'inspect' | 'cancel' | 'events' } | null {
     const prefix = `${API_ROUTES.trouteInternalJobs}/`;
     if (!pathname.startsWith(prefix)) {
       return null;
@@ -195,8 +290,12 @@ export class TrouteJobHttpService {
     const action =
       segments.length === 1
         ? 'inspect'
-        : segments.length === 2 && segments[1] === 'cancel'
-          ? 'cancel'
+        : segments.length === 2
+          ? segments[1] === 'cancel'
+            ? 'cancel'
+            : segments[1] === 'events'
+              ? 'events'
+              : null
           : null;
     if (action === null || !segments[0]) {
       return null;
@@ -252,6 +351,17 @@ export class TrouteJobHttpService {
       );
     }
     return this.client;
+  }
+
+  private requireSubscriptions(): JobEventSubscriptionManager {
+    if (!this.subscriptions) {
+      throw new TrouteJobHttpError(
+        503,
+        'TROUTE_UPSTREAM_ERROR',
+        '서버의 TROUTE_BASE_URL 설정을 확인해 주세요.',
+      );
+    }
+    return this.subscriptions;
   }
 
   private toHttpError(cause: unknown): TrouteJobHttpError {
@@ -368,4 +478,25 @@ export class TrouteJobHttpService {
     response.writeHead(error.status);
     response.end(JSON.stringify(body));
   }
+}
+
+function formatServerSentEvent(event: PublishedTrouteJobEvent): string {
+  const lines: string[] = [];
+  if (event.eventId) {
+    lines.push(`id: ${sanitizeEventField(event.eventId)}`);
+  }
+  lines.push(`event: ${event.type}`);
+  lines.push(
+    `data: ${JSON.stringify({
+      state: event.state,
+      updated_at: event.updatedAt,
+      ...(event.sequence === undefined ? {} : { sequence: event.sequence }),
+    })}`,
+  );
+  lines.push('', '');
+  return lines.join('\n');
+}
+
+function sanitizeEventField(value: string): string {
+  return value.replace(/[\r\n]/g, '');
 }

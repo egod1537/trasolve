@@ -1,8 +1,8 @@
 import { Component } from 'react';
-import { checkApiHealth } from '../../api/health';
-import { FeatureSection } from './components/FeatureSection';
-import { Header } from './components/Header';
-import { Hero } from './components/Hero';
+import { checkApiHealth } from '@/shared/api/health';
+import { FeatureSection } from '@/pages/landing/components/FeatureSection';
+import { Header } from '@/pages/landing/components/Header';
+import { Hero } from '@/pages/landing/components/Hero';
 
 type ApiHealth = 'checking' | 'available' | 'unavailable';
 

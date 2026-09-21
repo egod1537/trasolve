@@ -129,13 +129,22 @@ export type {
 } from './types/openwebui.js';
 
 export {
+  TROUTE_MAX_DEBUG_JOB_DURATION_MS,
   isTrouteJobTerminalStatus,
+  trouteDebugOptionsSchema,
+  trouteHealthResponseSchema,
   trouteErrorPayloadSchema,
   trouteJobHistoryItemSchema,
   trouteJobHistoryResponseSchema,
+  trouteJobCancelledEventSchema,
+  trouteJobCompletedEventSchema,
+  trouteJobFailedEventSchema,
   trouteJobIdSchema,
+  trouteJobProgressEventSchema,
+  trouteJobSnapshotEventSchema,
   trouteJobStateSchema,
   trouteJobStatusSchema,
+  trouteJobSubmissionResponseSchema,
   trouteLocationSchema,
   trouteOptimizeRequestSchema,
   trouteOptimizeResponseSchema,
@@ -149,11 +158,18 @@ export {
 } from './schemas/troute.js';
 
 export type {
+  TrouteDebugOptions,
   TrouteErrorPayload,
   TrouteJobHistoryItem,
   TrouteJobHistoryResponse,
+  TrouteJobCancelledEvent,
+  TrouteJobCompletedEvent,
+  TrouteJobFailedEvent,
+  TrouteJobProgressEvent,
+  TrouteJobSnapshotEvent,
   TrouteJobState,
   TrouteJobStatus,
+  TrouteJobSubmissionResponse,
   TrouteLocation,
   TrouteOptimizeRequest,
   TrouteOptimizeResponse,

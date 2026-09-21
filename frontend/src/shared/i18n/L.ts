@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { type TOptions } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { localizationInstance } from './config';
+import { localizationInstance } from '@/shared/i18n/config';
 
 export type LocalizationOptions = TOptions;
 export type Localize = (

@@ -1,7 +1,4 @@
-import type {
-  GoogleMapOptions,
-  LatLng,
-} from '../../../../map/types/googleMapComponent';
+import type { GoogleMapOptions, LatLng } from '@/map/types/googleMapComponent';
 
 export const initialCenter: LatLng = { lat: 35.6812, lng: 139.7671 };
 export const initialZoom = 12;

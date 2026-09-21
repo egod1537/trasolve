@@ -1,4 +1,4 @@
-import type { GeoPoint, ScreenPoint } from '../types/mapTypes';
+import type { GeoPoint, ScreenPoint } from '@/shared/types/mapTypes';
 
 // Coordinates are local to the host, not to the viewport.
 export interface MapOverlayHost {

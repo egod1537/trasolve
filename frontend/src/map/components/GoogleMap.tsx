@@ -9,21 +9,21 @@ import {
   useState,
   type RefObject,
 } from 'react';
-import type { MapAdapter } from '../adapters/MapAdapter';
-import type { MapOverlayHost } from '../adapters/MapOverlayHost';
-import type { MapRuntime } from '../adapters/MapRuntime';
-import type { MapObjectController } from '../adapters/MapObjectController';
-import { useTheme } from '../../shared/theme/useTheme';
-import type { MapCameraState, MapPolyline } from '../types/mapTypes';
-import { useMapPolyline } from '../hooks/useMapPolyline';
-import { createGoogleMapRuntime } from '../runtime/createGoogleMapRuntime';
-import { mapsAuthErrorEvent, mapsConfig } from '../runtime/googleMaps';
+import type { MapAdapter } from '@/map/adapters/MapAdapter';
+import type { MapOverlayHost } from '@/map/adapters/MapOverlayHost';
+import type { MapRuntime } from '@/map/adapters/MapRuntime';
+import type { MapObjectController } from '@/map/adapters/MapObjectController';
+import { useTheme } from '@/shared/theme/useTheme';
+import type { MapCameraState, MapPolyline } from '@/shared/types/mapTypes';
+import { useMapPolyline } from '@/map/hooks/useMapPolyline';
+import { createGoogleMapRuntime } from '@/map/runtime/createGoogleMapRuntime';
+import { mapsAuthErrorEvent, mapsConfig } from '@/map/runtime/googleMaps';
 import type {
   GoogleMapHandle,
   GoogleMapProps,
   GoogleMapStatus,
-} from '../types/googleMapComponent';
-import './google-map.css';
+} from '@/map/types/googleMapComponent';
+import '@/map/components/google-map.css';
 
 type MapContextValue = {
   adapter: MapAdapter;
@@ -35,16 +35,10 @@ type MapContextValue = {
 
 const MapContext = createContext<MapContextValue | null>(null);
 
-function RuntimePolyline({
-  line,
-  index,
-}: {
-  line: MapPolyline;
-  index: number;
-}) {
+function RuntimePolyline({ line }: { line: MapPolyline }) {
   const { objects } = useGoogleMap();
   useMapPolyline(objects, {
-    id: `google-map-polyline-${index}`,
+    id: `google-map-polyline-${line.id}`,
     layer: 'route',
     path: line.path,
     style: { color: line.color, width: line.weight, opacity: line.opacity },
@@ -121,6 +115,10 @@ export function GoogleMap(props: GoogleMapProps) {
     const preservedCamera = cameraRef.current;
     const authFailed = () => {
       controller.abort();
+      ownedRuntime?.dispose();
+      ownedRuntime = null;
+      runtimeRef.current = null;
+      setRuntime(null);
       setStatus('error');
       latest.current.onError?.(new Error('Google Maps 인증에 실패했습니다.'));
     };
@@ -260,8 +258,8 @@ export function GoogleMap(props: GoogleMapProps) {
         ))}
       {context && (
         <MapContext.Provider value={context}>
-          {polylines?.map((line, index) => (
-            <RuntimePolyline key={index} line={line} index={index} />
+          {polylines?.map((line) => (
+            <RuntimePolyline key={line.id} line={line} />
           ))}
           {children}
         </MapContext.Provider>

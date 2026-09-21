@@ -1,0 +1,167 @@
+.account-settings-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-backdrop);
+}
+
+.account-settings-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 380px;
+  max-width: calc(100% - 32px);
+  max-height: 78vh;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  padding: 20px;
+  box-shadow: var(--shadow-map-overlay);
+}
+
+.account-settings-popup:focus-visible {
+  outline: none;
+}
+
+.account-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.account-settings-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.account-settings-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.account-settings-close svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.account-settings-close:hover,
+.account-settings-close:focus-visible {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.account-settings-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-settings-avatar-image,
+.account-settings-avatar-fallback {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+}
+
+.account-settings-avatar-image {
+  object-fit: cover;
+}
+
+.account-settings-avatar-fallback {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(155deg, var(--accent), var(--accent-hover));
+  color: var(--text-on-accent);
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.account-settings-identity-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.account-settings-name {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-settings-email {
+  overflow: hidden;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-settings-badge {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.account-settings-details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  font-size: 12px;
+}
+
+.account-settings-details dt {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.account-settings-details dd {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.account-settings-id {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-settings-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.account-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+}

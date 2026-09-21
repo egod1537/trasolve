@@ -1,4 +1,4 @@
-import { FeatureCard } from './FeatureCard';
+import { FeatureCard } from '@/pages/landing/components/FeatureCard';
 
 const features = [
   {

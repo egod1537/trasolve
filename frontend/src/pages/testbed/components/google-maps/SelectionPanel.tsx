@@ -1,9 +1,6 @@
-import type {
-  MapClickEvent,
-  MapPlace,
-} from '../../../../map/types/googleMapComponent';
-import type { Endpoint } from './types';
-import { Coordinates } from './Coordinates';
+import type { MapClickEvent, MapPlace } from '@/map/types/googleMapComponent';
+import type { Endpoint } from '@/pages/testbed/components/google-maps/types';
+import { Coordinates } from '@/pages/testbed/components/google-maps/Coordinates';
 
 function endpointFromPoint(point: MapClickEvent): Endpoint {
   return {

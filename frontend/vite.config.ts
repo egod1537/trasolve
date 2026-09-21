@@ -90,6 +90,11 @@ export default defineConfig(({ command, mode, isPreview }) => {
 
   return {
     plugins: [react()],
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
+    },
     // Keep one client-facing metadata interface, including local Git fallbacks.
     define: {
       'import.meta.env.VITE_BUILD_CHANNEL': JSON.stringify(channel),

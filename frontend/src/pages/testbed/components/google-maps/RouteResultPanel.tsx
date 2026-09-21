@@ -3,15 +3,16 @@ import type {
   DirectionsResult,
   MapRoute,
 } from '@trasolve/shared';
-import type { DirectionsApiError } from '../../../../api/routes';
-import type { ApiStatus } from './types';
+import { useState } from 'react';
+import type { DirectionsApiError } from '@/shared/api/routes';
+import type { ApiStatus } from '@/pages/testbed/components/google-maps/types';
 import {
   buildRouteItinerary,
   buildRouteSummary,
   type ItineraryEndpointModel,
   type ItineraryStepModel,
   type RouteSummaryModel,
-} from './routeResultModel';
+} from '@/pages/testbed/components/google-maps/routeResultModel';
 
 type Props = {
   apiStatus: ApiStatus;
@@ -69,7 +70,7 @@ export function RouteResultPanel({
               <button
                 type="button"
                 className="maps-test-route-option"
-                key={index}
+                key={getRouteKey(item)}
                 aria-pressed={routeIndex === index}
                 onClick={() => onSelectRoute(index)}
                 title={item.description || `경로 ${index + 1}`}
@@ -131,6 +132,7 @@ function RouteErrorDetails({
   error: DirectionsApiError;
   request: DirectionsRequest | null;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const details = error.details;
   const requestDetails =
     details?.request ??
@@ -157,52 +159,54 @@ function RouteErrorDetails({
           파트너를 지원하지 않는 제한에 해당할 수 있습니다.
         </p>
       )}
-      <details>
+      <details onToggle={(event) => setExpanded(event.currentTarget.open)}>
         <summary>실패 Debug Details</summary>
-        <div className="maps-test-route-debug-content">
-          <dl className="maps-test-data">
-            <dt>Backend HTTP</dt>
-            <dd>{error.httpStatus || '확인 불가'}</dd>
-            <dt>Google HTTP</dt>
-            <dd>{details?.upstream.httpStatus ?? '확인 불가'}</dd>
-            <dt>Google status</dt>
-            <dd>{details?.upstream.status ?? '응답에 없음'}</dd>
-            <dt>Google message</dt>
-            <dd>{details?.upstream.message ?? '응답에 없음'}</dd>
-            <dt>Travel mode</dt>
-            <dd>{requestDetails?.travelMode ?? '확인 불가'}</dd>
-            <dt>Origin type</dt>
-            <dd>{requestDetails?.originType ?? '확인 불가'}</dd>
-            <dt>Destination type</dt>
-            <dd>{requestDetails?.destinationType ?? '확인 불가'}</dd>
-            <dt>Alternatives</dt>
-            <dd>
-              {requestDetails
-                ? String(requestDetails.computeAlternativeRoutes)
-                : '확인 불가'}
-            </dd>
-            <dt>Intermediates</dt>
-            <dd>{requestDetails?.intermediatesCount ?? '확인 불가'}</dd>
-          </dl>
-          {details && (
-            <>
-              <details>
-                <summary>Google 요청 본문</summary>
-                <pre>
-                  {JSON.stringify(details.upstream.requestBody, null, 2)}
-                </pre>
-              </details>
-              {details.upstream.rawErrorBody !== undefined && (
+        {expanded ? (
+          <div className="maps-test-route-debug-content">
+            <dl className="maps-test-data">
+              <dt>Backend HTTP</dt>
+              <dd>{error.httpStatus || '확인 불가'}</dd>
+              <dt>Google HTTP</dt>
+              <dd>{details?.upstream.httpStatus ?? '확인 불가'}</dd>
+              <dt>Google status</dt>
+              <dd>{details?.upstream.status ?? '응답에 없음'}</dd>
+              <dt>Google message</dt>
+              <dd>{details?.upstream.message ?? '응답에 없음'}</dd>
+              <dt>Travel mode</dt>
+              <dd>{requestDetails?.travelMode ?? '확인 불가'}</dd>
+              <dt>Origin type</dt>
+              <dd>{requestDetails?.originType ?? '확인 불가'}</dd>
+              <dt>Destination type</dt>
+              <dd>{requestDetails?.destinationType ?? '확인 불가'}</dd>
+              <dt>Alternatives</dt>
+              <dd>
+                {requestDetails
+                  ? String(requestDetails.computeAlternativeRoutes)
+                  : '확인 불가'}
+              </dd>
+              <dt>Intermediates</dt>
+              <dd>{requestDetails?.intermediatesCount ?? '확인 불가'}</dd>
+            </dl>
+            {details && (
+              <>
                 <details>
-                  <summary>Google 원본 오류/빈 응답</summary>
+                  <summary>Google 요청 본문</summary>
                   <pre>
-                    {JSON.stringify(details.upstream.rawErrorBody, null, 2)}
+                    {JSON.stringify(details.upstream.requestBody, null, 2)}
                   </pre>
                 </details>
-              )}
-            </>
-          )}
-        </div>
+                {details.upstream.rawErrorBody !== undefined && (
+                  <details>
+                    <summary>Google 원본 오류/빈 응답</summary>
+                    <pre>
+                      {JSON.stringify(details.upstream.rawErrorBody, null, 2)}
+                    </pre>
+                  </details>
+                )}
+              </>
+            )}
+          </div>
+        ) : null}
       </details>
     </section>
   );
@@ -273,72 +277,87 @@ function RouteDebugDetails({
   route: MapRoute | undefined;
   result: DirectionsResult;
 }) {
+  const [expanded, setExpanded] = useState(false);
   return (
-    <details className="maps-test-route-debug">
+    <details
+      className="maps-test-route-debug"
+      onToggle={(event) => setExpanded(event.currentTarget.open)}
+    >
       <summary>
         Debug Details
         {route &&
           route.warnings.length > 0 &&
           ` · warning ${route.warnings.length}개`}
       </summary>
-      <div className="maps-test-route-debug-content">
-        {result.debug && (
-          <section aria-label="Google 요청 진단">
-            <h3>Google 요청 진단</h3>
-            <dl className="maps-test-data">
-              <dt>HTTP</dt>
-              <dd>{result.debug.upstream.httpStatus}</dd>
-              <dt>Travel mode</dt>
-              <dd>{result.debug.request.travelMode}</dd>
-              <dt>Origin type</dt>
-              <dd>{result.debug.request.originType}</dd>
-              <dt>Destination type</dt>
-              <dd>{result.debug.request.destinationType}</dd>
-              <dt>Alternatives</dt>
-              <dd>{String(result.debug.request.computeAlternativeRoutes)}</dd>
-              <dt>Intermediates</dt>
-              <dd>{result.debug.request.intermediatesCount}</dd>
-            </dl>
-            <details>
-              <summary>Google 요청 본문</summary>
-              <pre>
-                {JSON.stringify(result.debug.upstream.requestBody, null, 2)}
-              </pre>
-            </details>
-          </section>
-        )}
-        {route && (
-          <>
-            <section aria-label="선택 경로 원본 필드">
-              <h3>선택 경로 원본 필드</h3>
+      {expanded ? (
+        <div className="maps-test-route-debug-content">
+          {result.debug && (
+            <section aria-label="Google 요청 진단">
+              <h3>Google 요청 진단</h3>
               <dl className="maps-test-data">
-                <dt>설명</dt>
-                <dd>{route.description || '제공되지 않음'}</dd>
-                <dt>좌표</dt>
-                <dd>{route.path.length}개</dd>
-                <dt>bounds</dt>
-                <dd>{route.bounds ? '있음' : '없음'}</dd>
+                <dt>HTTP</dt>
+                <dd>{result.debug.upstream.httpStatus}</dd>
+                <dt>Travel mode</dt>
+                <dd>{result.debug.request.travelMode}</dd>
+                <dt>Origin type</dt>
+                <dd>{result.debug.request.originType}</dd>
+                <dt>Destination type</dt>
+                <dd>{result.debug.request.destinationType}</dd>
+                <dt>Alternatives</dt>
+                <dd>{String(result.debug.request.computeAlternativeRoutes)}</dd>
+                <dt>Intermediates</dt>
+                <dd>{result.debug.request.intermediatesCount}</dd>
               </dl>
+              <details>
+                <summary>Google 요청 본문</summary>
+                <pre>
+                  {JSON.stringify(result.debug.upstream.requestBody, null, 2)}
+                </pre>
+              </details>
             </section>
-            <section aria-label="Warnings">
-              <h3>Warnings</h3>
-              {route.warnings.length ? (
-                <ul>
-                  {route.warnings.map((warning, index) => (
-                    <li key={index}>{warning}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p>없음</p>
-              )}
-            </section>
-          </>
-        )}
-        <details>
-          <summary>Raw API Response</summary>
-          <pre>{JSON.stringify(result.rawResponse, null, 2)}</pre>
-        </details>
-      </div>
+          )}
+          {route && (
+            <>
+              <section aria-label="선택 경로 원본 필드">
+                <h3>선택 경로 원본 필드</h3>
+                <dl className="maps-test-data">
+                  <dt>설명</dt>
+                  <dd>{route.description || '제공되지 않음'}</dd>
+                  <dt>좌표</dt>
+                  <dd>{route.path.length}개</dd>
+                  <dt>bounds</dt>
+                  <dd>{route.bounds ? '있음' : '없음'}</dd>
+                </dl>
+              </section>
+              <section aria-label="Warnings">
+                <h3>Warnings</h3>
+                {route.warnings.length ? (
+                  <ul>
+                    {route.warnings.map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>없음</p>
+                )}
+              </section>
+            </>
+          )}
+          <details>
+            <summary>Raw API Response</summary>
+            <pre>{JSON.stringify(result.rawResponse, null, 2)}</pre>
+          </details>
+        </div>
+      ) : null}
     </details>
   );
+}
+
+function getRouteKey(route: MapRoute): string {
+  return [
+    route.description,
+    route.durationMillis,
+    route.distanceMeters,
+    ...route.path.flatMap((point) => [point.lat, point.lng]),
+  ].join(':');
 }

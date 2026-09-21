@@ -5,7 +5,7 @@ import type {
   MapHandle,
   MapOptions,
   MapPolyline,
-} from './mapTypes';
+} from '@/shared/types/mapTypes';
 
 // Preserve the component's public names over provider-neutral domain contracts.
 export type {
@@ -17,7 +17,7 @@ export type {
   MapOptions as GoogleMapOptions,
   MapHandle as GoogleMapHandle,
   MapEvents as GoogleMapEvents,
-} from './mapTypes';
+} from '@/shared/types/mapTypes';
 
 export type GoogleMapStatus = 'loading' | 'ready' | 'missing-key' | 'error';
 

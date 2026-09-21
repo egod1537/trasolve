@@ -1,0 +1,104 @@
+import { lazy, memo, Suspense, type RefObject } from 'react';
+import type {
+  RouteOptimizationRequest,
+  TripDay,
+  TripPolyline,
+  TripPolylineMode,
+} from '@trasolve/shared';
+import { BottomContextPanel } from '@/features/map-workspace/components/bottom-panel/BottomContextPanel';
+import { MapToolPanel } from '@/features/map-workspace/components/bottom-panel/MapToolPanel';
+import { MultiSelectionActionPanel } from '@/features/map-workspace/components/bottom-panel/MultiSelectionActionPanel';
+
+const RouteOptimizationModal = lazy(() =>
+  import('@/features/route-optimization').then((module) => ({
+    default: module.RouteOptimizationModal,
+  })),
+);
+
+const noop = () => undefined;
+
+type Props = {
+  activeDay: TripDay | null;
+  activeMapTool: 'pan';
+  routeOptimizationOpen: boolean;
+  routeOptimizationModalId: string;
+  routeToolButtonRef: RefObject<HTMLButtonElement | null>;
+  selectedItemCount: number;
+  selectedPlaceIds: readonly string[];
+  selectedPolylines: readonly TripPolyline[];
+  busy: boolean;
+  mutationError: string | null;
+  onSelectMapTool: (tool: 'pan') => void;
+  onToggleRouteOptimization: () => void;
+  onCloseRouteOptimization: () => void;
+  onUpdatePolylineModes: (
+    polylineIds: readonly string[],
+    mode: TripPolylineMode,
+  ) => Promise<boolean>;
+  onDeletePlaces: (placeIds: readonly string[]) => Promise<boolean>;
+  onClearSelection: () => void;
+  onOptimizeRoute?: (request: RouteOptimizationRequest) => Promise<void> | void;
+};
+
+export const MapOverlayHost = memo(function MapOverlayHost({
+  activeDay,
+  activeMapTool,
+  routeOptimizationOpen,
+  routeOptimizationModalId,
+  routeToolButtonRef,
+  selectedItemCount,
+  selectedPlaceIds,
+  selectedPolylines,
+  busy,
+  mutationError,
+  onSelectMapTool,
+  onToggleRouteOptimization,
+  onCloseRouteOptimization,
+  onUpdatePolylineModes,
+  onDeletePlaces,
+  onClearSelection,
+  onOptimizeRoute,
+}: Props) {
+  return (
+    <>
+      <div className="bottom-map-controls-positioner">
+        {selectedItemCount >= 2 && (
+          <MultiSelectionActionPanel
+            selectedPlaceIds={selectedPlaceIds}
+            selectedPolylines={selectedPolylines}
+            busy={busy}
+            mutationError={mutationError}
+            onUpdatePolylineModes={onUpdatePolylineModes}
+            onDeletePlaces={onDeletePlaces}
+            onClearSelection={onClearSelection}
+          />
+        )}
+        <div className="bottom-map-controls">
+          <BottomContextPanel activeDay={activeDay} />
+          <MapToolPanel
+            canUndo={false}
+            canRedo={false}
+            activeTool={activeMapTool}
+            onUndo={noop}
+            onRedo={noop}
+            onSelectTool={onSelectMapTool}
+            onOpenRouteTools={activeDay ? onToggleRouteOptimization : undefined}
+            routeToolsOpen={routeOptimizationOpen && activeDay !== null}
+            routeToolsControlId={routeOptimizationModalId}
+            routeToolButtonRef={routeToolButtonRef}
+          />
+        </div>
+      </div>
+      {routeOptimizationOpen && activeDay && (
+        <Suspense fallback={null}>
+          <RouteOptimizationModal
+            id={routeOptimizationModalId}
+            activeDay={activeDay}
+            onClose={onCloseRouteOptimization}
+            onOptimize={onOptimizeRoute}
+          />
+        </Suspense>
+      )}
+    </>
+  );
+});

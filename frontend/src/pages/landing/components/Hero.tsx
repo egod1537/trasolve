@@ -1,5 +1,5 @@
-import heroMap from '../../../assets/hero-map.png';
-import { HeroVisual } from './HeroVisual';
+import heroMap from '@/shared/assets/hero-map.png';
+import { HeroVisual } from '@/pages/landing/components/HeroVisual';
 
 export function Hero() {
   return (

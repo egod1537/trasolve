@@ -1,5 +1,5 @@
-import { buildInfo, isBuildMetadataVisible } from '../../../app/buildInfo';
-import { ThemeControl } from '../../../shared/theme/ThemeControl';
+import { buildInfo, isBuildMetadataVisible } from '@/shared/config/buildInfo';
+import { ThemeControl } from '@/shared/theme/ThemeControl';
 
 export function Header() {
   const showBuildMetadata =

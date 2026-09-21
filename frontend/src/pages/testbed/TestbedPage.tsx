@@ -1,7 +1,13 @@
 import { Component } from 'react';
-import './styles/testbed.css';
+import '@/pages/testbed/styles/testbed.css';
 
 const testbeds = [
+  {
+    href: '/testbed/tcache-route',
+    title: 'tcache Route',
+    description:
+      'Trasolve backend를 경유하는 tcache Route Job의 요청, 진행 상태, 결과 및 통신 타임라인을 확인합니다.',
+  },
   {
     href: '/testbed/troute',
     title: 'troute Integration',

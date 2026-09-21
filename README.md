@@ -100,22 +100,24 @@ curl --fail-with-body -X POST http://127.0.0.1:43127/api/troute/optimize \
   -d '{"job_id":"route-example-001","locations":[{"id":"start","place_id":"GOOGLE_PLACE_ID_START","open_time":"09:00","close_time":"18:00","stay_minutes":0},{"id":"destination","place_id":"GOOGLE_PLACE_ID_DESTINATION","open_time":"09:00","close_time":"18:00","stay_minutes":0}],"start_time":"09:00"}'
 ```
 
-현재 troute 서버가 아직 `POST /optimize`를 노출하지 않는 버전이면 gateway는 해당
+troute 서버가 `POST integration/jobs` async API를 노출하지 않으면 gateway는 해당
 upstream HTTP 상태를 정규화된 오류로 반환합니다. 배포 환경에서는 host의
 `TROUTE_BASE_URL`이 backend container에만 전달됩니다. 공개 troute는 API가 `/api/`
 아래에 있으므로 `https://troute.mangagaki.net/api/`처럼 API prefix와 마지막 `/`까지
 포함합니다. 로컬에서는 실제 troute API port에 맞춘
 `http://127.0.0.1:18080` 같은 주소를 사용합니다.
 
-### troute Job polling API
+### troute async Job + SSE API
 
 troute 통합은 `Trasolve → troute` 단방향입니다. troute는 Trasolve 주소를 알지 않으며
 callback을 보내지 않습니다. 브라우저는 Trasolve의 `/api/internal/troute/*`만 호출하고,
 Trasolve backend가 `TROUTE_BASE_URL` 기준으로 다음 troute API를 조회합니다.
 
 - `GET health`
+- `POST integration/jobs`
 - `GET integration/jobs?limit=50`
 - `GET integration/jobs/{job_id}`
+- `GET integration/jobs/{job_id}/events`
 - `GET integration/jobs/{job_id}/timeline`
 - `POST integration/jobs/{job_id}/cancel`
 
@@ -161,34 +163,35 @@ Trasolve의 `GET /api/internal/troute/health`도 troute의 `GET health`를 실�
 연결 상태를 반영합니다. 브라우저 cookie나 CORS에는 의존하지 않습니다.
 
 `POST /api/troute/optimize` 요청의 `job_id`는 공백이 아닌 최대 128자의 opaque 문자열입니다.
-Backend는 troute 호출 전에 해당 ID의 로컬 Job과 `request.json`을 만들며 이미 사용 중인
-ID는 재사용하지 않습니다. 이후 frontend는 다음 Trasolve API만 사용합니다.
+Backend는 troute 호출 전에 해당 ID의 로컬 Job과 `request.json`을 만들고
+`POST integration/jobs`의 `202 + job_id`만 기다립니다. solver 완료를 기다리지 않으며 이미
+사용 중인 ID는 재사용하지 않습니다. 이후 frontend는 다음 Trasolve API만 사용합니다.
 
 - `GET /api/internal/troute/jobs?limit=50`
 - `GET /api/internal/troute/jobs/{job_id}`
+- `GET /api/internal/troute/jobs/{job_id}/events`
 - `POST /api/internal/troute/jobs/{job_id}/cancel`
 
-단일 active Job 조회는 매번 troute `GET integration/jobs/{job_id}`를 호출하여 progress,
-stage, message, result, error, cancelled 상태를 동기화합니다. 최근 목록 조회는 troute 목록과
-로컬 목록을 비교해 새 Job이나 변경된 Job만 상세 동기화합니다. 따라서 다른 client가 troute에
-직접 만든 Job도 testbed 목록에 나타납니다. 강제 종료도 Trasolve가 troute cancel API로
-전달한 뒤 최신 원격 상태를 다시 조회합니다. 이미 completed/failed/cancelled인 Job은 HTTP
-409 `TROUTE_JOB_NOT_CANCELLABLE`로 거절합니다.
+Backend는 active Job마다 troute SSE를 하나만 열고 여러 browser subscriber가 이를 공유합니다.
+수신 event는 schema 검증과 sequence/event-id 역전 검사를 거친 뒤 로컬 mirror에 저장되고
+browser SSE로 전달됩니다. 연결이 끊기면 `GET integration/jobs/{job_id}`로 복구한 후
+0.5초, 1초, 2초, 최대 5초 backoff로 재연결합니다. 최근 목록 조회는 troute 목록과 로컬
+목록을 비교해 새 Job이나 변경된 Job만 상세 동기화하므로 다른 client가 만든 Job도 testbed에
+나타납니다. 강제 종료는 cancel 응답만으로 상태를 확정하지 않고 GET 또는 SSE terminal 상태를
+mirror에 반영합니다.
 
 Job은 기본적으로 `.local/trasolve/troute-jobs/<job_id>/`에 저장하는 원격 상태 mirror입니다.
 파일명으로 안전하지 않은 opaque ID만 경로 이탈을 막기 위해 별도 인코딩합니다.
 `request.json`, `state.json`, `result.json` 또는 `error.json`과 최근 Job index를 atomic write로
-보존하며 `state.json`에는 마지막 원격 동기화 시각인 `last_synced_at`도 기록합니다. callback
-event archive와 sequence 처리는 사용하지 않습니다. 기존 callback-era `events.jsonl` 파일은
-복구 시 무시하지만 삭제하지 않습니다. `TRASOLVE_DATA_DIR`로 저장 루트를 바꿀 수 있고 배포
-환경은 `/data`를 사용합니다.
+보존하며 `state.json`에는 마지막 원격 동기화 시각, SSE event id와 sequence도 기록합니다.
+기존 callback-era `events.jsonl` 파일은 복구 시 무시하지만 삭제하지 않습니다.
+`TRASOLVE_DATA_DIR`로 저장 루트를 바꿀 수 있고 배포 환경은 `/data`를 사용합니다.
 
-Trasolve 재시작 후 pending/running mirror는 그대로 복구되고 다음 조회에서 troute 상태와
-다시 동기화됩니다. troute가 일시적으로 응답하지 않으면 마지막 로컬 상태를 지우거나 임의로
-terminal 처리하지 않으며 다음 polling에서 재시도합니다. `/testbed/troute`는 선택한 active
-Job을 약 1초, 최근 목록을 약 2초 간격으로 갱신하고 completed/failed/cancelled 상태에서는
-상세 polling을 중단합니다. frontend Timeline에는 실제 browser → Trasolve 요청/응답만
-기록하며 callback traffic을 만들어내지 않습니다.
+Trasolve 재시작 후 pending/running mirror는 그대로 복구되고 다음 조회나 구독에서 GET 후
+SSE를 다시 연결합니다. troute가 일시적으로 응답하지 않으면 마지막 로컬 상태를 지우거나
+임의로 terminal 처리하지 않습니다. `/testbed/troute`는 선택한 active Job을 SSE로 갱신하고
+최근 목록만 약 2초 간격으로 조회합니다. frontend Timeline에는 실제 submit/SSE/cancel
+traffic만 기록합니다.
 
 Trasolve 프런트엔드는 Light, Dark, System 테마를 지원하며 기본값은 System입니다. 선택은
 브라우저의 `trasolve.theme` 로컬 저장소에 유지되고 System 모드는 운영 체제의 색상 설정

@@ -1,14 +1,13 @@
 import {
   trouteErrorPayloadSchema,
   trouteJobIdSchema,
+  trouteJobStateSchema,
   trouteOptimizeRequestSchema,
-  trouteOptimizeResponseSchema,
   trouteRemoteJobSchema,
   type TrouteErrorPayload,
   type TrouteJobHistoryItem,
   type TrouteJobState,
   type TrouteOptimizeRequest,
-  type TrouteOptimizeResponse,
   type TrouteRemoteJob,
   type TrouteRemoteJobSummary,
 } from '@trasolve/shared';
@@ -20,6 +19,21 @@ export type StoredTrouteJob = {
   updatedAt: number;
   completedAt: number | null;
   lastSyncedAt: number | null;
+  lastEventId: string | null;
+  lastEventSequence: number | null;
+};
+
+export type TrouteJobMirrorSnapshot = {
+  state: TrouteJobState;
+  updatedAt: number;
+  lastEventId: string | null;
+  lastEventSequence: number | null;
+};
+
+export type TrouteJobEventVersion = {
+  eventId?: string;
+  sequence?: number;
+  updatedAt?: number;
 };
 
 export type TrouteJobRepositoryErrorKind =
@@ -83,6 +97,8 @@ export class TrouteJobRepository {
       updatedAt: now,
       completedAt: null,
       lastSyncedAt: null,
+      lastEventId: null,
+      lastEventSequence: null,
     };
     this.persistCreated(storedJob);
     this.jobs.set(parsedJobId.data, storedJob);
@@ -96,6 +112,16 @@ export class TrouteJobRepository {
 
   public has(jobId: string): boolean {
     return this.jobs.has(jobId);
+  }
+
+  public getMirrorSnapshot(jobId: string): TrouteJobMirrorSnapshot {
+    const job = this.requireJob(jobId);
+    return {
+      state: structuredClone(job.state),
+      updatedAt: job.updatedAt,
+      lastEventId: job.lastEventId,
+      lastEventSequence: job.lastEventSequence,
+    };
   }
 
   public markGatewayRequestStarted(jobId: string): void {
@@ -151,6 +177,9 @@ export class TrouteJobRepository {
     }
 
     const existing = this.jobs.get(remote.job_id);
+    if (existing !== undefined && isTerminal(existing.state.status)) {
+      return structuredClone(existing.state);
+    }
     if (
       existing !== undefined &&
       existing.lastSyncedAt !== null &&
@@ -175,6 +204,8 @@ export class TrouteJobRepository {
       updatedAt: remote.updated_at,
       completedAt: remote.completed_at,
       lastSyncedAt: this.clock(),
+      lastEventId: existing?.lastEventId ?? null,
+      lastEventSequence: existing?.lastEventSequence ?? null,
     };
 
     if (existing) {
@@ -188,24 +219,66 @@ export class TrouteJobRepository {
     return structuredClone(state);
   }
 
-  public recordGatewayResult(
-    jobId: string,
-    result: TrouteOptimizeResponse,
-  ): TrouteJobState {
-    const storedJob = this.requireJob(jobId);
-    const normalizedResult = trouteOptimizeResponseSchema.parse(result);
-    const now = this.clock();
-    storedJob.state.status = 'completed';
-    storedJob.state.stage = null;
-    storedJob.state.progress = 100;
-    storedJob.state.last_message = 'troute 최적화 응답을 받았습니다.';
-    storedJob.state.error = null;
-    storedJob.state.result = structuredClone(normalizedResult);
-    storedJob.updatedAt = now;
-    storedJob.completedAt = now;
-    this.persistGatewayResult(storedJob, normalizedResult);
+  public applyRemoteEvent(
+    stateInput: TrouteJobState,
+    version: TrouteJobEventVersion,
+  ): { state: TrouteJobState; applied: boolean } {
+    const state = trouteJobStateSchema.parse(stateInput);
+    const storedJob = this.requireJob(state.job_id);
+    if (isTerminal(storedJob.state.status)) {
+      return { state: structuredClone(storedJob.state), applied: false };
+    }
+    if (
+      (storedJob.state.status === 'running' && state.status === 'pending') ||
+      (!isTerminal(state.status) && state.progress < storedJob.state.progress)
+    ) {
+      return { state: structuredClone(storedJob.state), applied: false };
+    }
+    if (
+      version.eventId !== undefined &&
+      version.eventId === storedJob.lastEventId
+    ) {
+      return { state: structuredClone(storedJob.state), applied: false };
+    }
+    if (
+      version.sequence !== undefined &&
+      storedJob.lastEventSequence !== null &&
+      version.sequence <= storedJob.lastEventSequence
+    ) {
+      return { state: structuredClone(storedJob.state), applied: false };
+    }
+    if (
+      version.updatedAt !== undefined &&
+      storedJob.lastSyncedAt !== null &&
+      version.updatedAt < storedJob.updatedAt
+    ) {
+      return { state: structuredClone(storedJob.state), applied: false };
+    }
+
+    const nextUpdatedAt = version.updatedAt ?? this.clock();
+    const stateChanged = !areValuesEqual(storedJob.state, state);
+    const versionChanged =
+      (version.eventId !== undefined &&
+        version.eventId !== storedJob.lastEventId) ||
+      (version.sequence !== undefined &&
+        version.sequence !== storedJob.lastEventSequence) ||
+      nextUpdatedAt !== storedJob.updatedAt;
+    if (!stateChanged && !versionChanged) {
+      return { state: structuredClone(storedJob.state), applied: false };
+    }
+
+    storedJob.state = structuredClone(state);
+    storedJob.updatedAt = nextUpdatedAt;
+    storedJob.lastSyncedAt = this.clock();
+    storedJob.lastEventId = version.eventId ?? storedJob.lastEventId;
+    storedJob.lastEventSequence =
+      version.sequence ?? storedJob.lastEventSequence;
+    storedJob.completedAt = isTerminal(state.status)
+      ? (storedJob.completedAt ?? nextUpdatedAt)
+      : null;
+    this.persistRemoteMirror(storedJob, false);
     this.persistJobIndex();
-    return structuredClone(storedJob.state);
+    return { state: structuredClone(state), applied: true };
   }
 
   public markGatewayFailed(
@@ -238,11 +311,6 @@ export class TrouteJobRepository {
 
   protected persistRemoteMirror(_job: StoredTrouteJob, _isNew: boolean): void {}
 
-  protected persistGatewayResult(
-    _job: StoredTrouteJob,
-    _result: TrouteOptimizeResponse,
-  ): void {}
-
   protected persistGatewayFailure(
     _job: StoredTrouteJob,
     _error: TrouteErrorPayload,
@@ -263,4 +331,14 @@ export class TrouteJobRepository {
     }
     return job;
   }
+}
+
+function isTerminal(status: TrouteJobState['status']): boolean {
+  return (
+    status === 'completed' || status === 'failed' || status === 'cancelled'
+  );
+}
+
+function areValuesEqual(left: unknown, right: unknown): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
 }

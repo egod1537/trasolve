@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const MAX_U32 = 4_294_967_295;
+export const TROUTE_MAX_DEBUG_JOB_DURATION_MS = 60_000;
 const timeOfDaySchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const nonEmptyStringSchema = z
   .string()
@@ -12,6 +13,11 @@ const humanMessageSchema = z
   .min(1)
   .max(1024)
   .refine((value) => value.trim().length > 0);
+
+export const trouteHealthResponseSchema = z.strictObject({
+  status: z.literal('ok'),
+  service: z.literal('troute'),
+});
 
 export const trouteJobIdSchema = z
   .string()
@@ -59,11 +65,22 @@ export const trouteLocationSchema = z.strictObject({
   stay_minutes: z.number().int().min(0).max(MAX_U32),
 });
 
+export const trouteDebugOptionsSchema = z.strictObject({
+  min_job_duration_ms: z
+    .number()
+    .int()
+    .min(0)
+    .max(TROUTE_MAX_DEBUG_JOB_DURATION_MS)
+    .optional(),
+  shuffle_result_route: z.boolean().optional(),
+});
+
 export const trouteOptimizeRequestSchema = z
   .strictObject({
     job_id: trouteJobIdSchema,
     locations: z.array(trouteLocationSchema).min(2).max(500),
     start_time: timeOfDaySchema,
+    debug: trouteDebugOptionsSchema.optional(),
   })
   .superRefine((request, context) => {
     const ids = new Set<string>();
@@ -107,6 +124,64 @@ export const trouteJobStateSchema = z.strictObject({
   last_message: humanMessageSchema.nullable(),
   error: trouteErrorPayloadSchema.nullable(),
   result: trouteOptimizeResponseSchema.nullable(),
+});
+
+const trouteJobEventEnvelopeBaseSchema = z.strictObject({
+  sequence: z.number().int().nonnegative().optional(),
+  updated_at: z.number().int().nonnegative().optional(),
+  state: trouteJobStateSchema,
+});
+
+export const trouteJobSnapshotEventSchema = trouteJobEventEnvelopeBaseSchema;
+
+export const trouteJobProgressEventSchema =
+  trouteJobEventEnvelopeBaseSchema.superRefine((event, context) => {
+    if (event.state.status !== 'pending' && event.state.status !== 'running') {
+      context.addIssue({
+        code: 'custom',
+        message: 'Progress events require an active Job state.',
+        path: ['state', 'status'],
+      });
+    }
+  });
+
+export const trouteJobCompletedEventSchema =
+  trouteJobEventEnvelopeBaseSchema.superRefine((event, context) => {
+    if (event.state.status !== 'completed' || event.state.result === null) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Completed events require a completed Job result.',
+        path: ['state'],
+      });
+    }
+  });
+
+export const trouteJobFailedEventSchema =
+  trouteJobEventEnvelopeBaseSchema.superRefine((event, context) => {
+    if (event.state.status !== 'failed' || event.state.error === null) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Failed events require a failed Job error.',
+        path: ['state'],
+      });
+    }
+  });
+
+export const trouteJobCancelledEventSchema =
+  trouteJobEventEnvelopeBaseSchema.superRefine((event, context) => {
+    if (event.state.status !== 'cancelled') {
+      context.addIssue({
+        code: 'custom',
+        message: 'Cancelled events require a cancelled Job state.',
+        path: ['state', 'status'],
+      });
+    }
+  });
+
+export const trouteJobSubmissionResponseSchema = z.strictObject({
+  job_id: trouteJobIdSchema,
+  status: z.literal('pending').optional(),
+  created_at: z.number().int().nonnegative().optional(),
 });
 
 export const trouteJobHistoryItemSchema = z.strictObject({

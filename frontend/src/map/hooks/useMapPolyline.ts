@@ -3,7 +3,7 @@ import type {
   MapObjectController,
   MapPolylineHandle,
   MapPolylineOptions,
-} from '../adapters/MapObjectController';
+} from '@/map/adapters/MapObjectController';
 
 export function useMapPolyline(
   objects: MapObjectController,
