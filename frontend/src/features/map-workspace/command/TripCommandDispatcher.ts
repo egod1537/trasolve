@@ -9,7 +9,7 @@ import { TripHistory } from '@/features/map-workspace/command/TripHistory';
 
 type CommandOperation = {
   type: 'command';
-  command: TripCommand;
+  commands: readonly TripCommand[];
 };
 
 type HistoryOperation = {
@@ -35,7 +35,14 @@ export class TripCommandDispatcher {
   }
 
   public execute(command: TripCommand): Promise<boolean> {
-    return this.enqueue({ type: 'command', command });
+    return this.enqueue({ type: 'command', commands: [command] });
+  }
+
+  public executeBatch(commands: readonly TripCommand[]): Promise<boolean> {
+    if (commands.length === 0) {
+      return Promise.resolve(false);
+    }
+    return this.enqueue({ type: 'command', commands: [...commands] });
   }
 
   public undo(): Promise<boolean> {
@@ -61,12 +68,13 @@ export class TripCommandDispatcher {
     });
   }
 
-  private applyCommand(command: TripCommand): boolean {
+  private applyCommands(commands: readonly TripCommand[]): boolean {
     const current = this.store.getState();
     try {
-      const next = this.normalizeTrip(
-        command.apply(structuredClone(current.trip)),
-      );
+      let next = structuredClone(current.trip);
+      for (const command of commands) {
+        next = this.normalizeTrip(command.apply(next));
+      }
       this.history.record(current.trip);
       this.store.setState({ trip: next, status: 'dirty', error: null });
       return true;
@@ -113,7 +121,7 @@ export class TripCommandDispatcher {
     operation: CommandOperation | HistoryOperation,
   ): boolean {
     return operation.type === 'command'
-      ? this.applyCommand(operation.command)
+      ? this.applyCommands(operation.commands)
       : this.applyHistoryOperation(operation.type);
   }
 

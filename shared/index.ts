@@ -1,8 +1,22 @@
-export { API_ROUTES, CHAT_LIMITS, TravelMode } from './constants/index.js';
+export {
+  API_ROUTES,
+  CHAT_LIMITS,
+  TRIP_COMMAND_PLAN_FINGERPRINT_MAX_LENGTH,
+  TRIP_COMMAND_PLAN_MAX_OPERATIONS,
+  TRIP_COMMAND_PLAN_STEP_ID_MAX_LENGTH,
+  TRIP_COMMAND_PLAN_VALIDATION_MESSAGE_MAX_LENGTH,
+  TRIP_COMMAND_PLAN_VERSION,
+  TravelMode,
+} from './constants/index.js';
 
 export {
   tripIdSchema,
+  TRIP_DAY_MAX_PLACES,
+  TRIP_MAX_DAYS,
   TRIP_PLACE_MAX_DURATION_MINUTES,
+  tripClockTimeSchema,
+  tripMemoSchema,
+  tripTitleSchema,
   tripSchema,
   tripInputSchema,
   tripDaySchema,
@@ -27,6 +41,34 @@ export type {
   TripPolyline,
   TripPolylineMode,
 } from './types/trip.js';
+
+export {
+  tripCommandPlanAddPlaceSourceSchema,
+  tripCommandPlanDayPositionSchema,
+  tripCommandPlanDayReferenceSchema,
+  tripCommandPlanOperationSchema,
+  tripCommandPlanPlaceReferenceSchema,
+  tripCommandPlanPolylineReferenceSchema,
+  tripCommandPlanPlacePositionSchema,
+  tripCommandPlanSchema,
+  tripCommandPlanStepIdSchema,
+  tripCommandPlanValidationErrorCodeSchema,
+  tripCommandPlanValidationErrorSchema,
+} from './schemas/tripCommandPlan.js';
+
+export type {
+  TripCommandPlan,
+  TripCommandPlanAddPlaceSource,
+  TripCommandPlanDayPosition,
+  TripCommandPlanDayReference,
+  TripCommandPlanOperation,
+  TripCommandPlanPlaceReference,
+  TripCommandPlanPolylineReference,
+  TripCommandPlanPlacePosition,
+  TripCommandPlanStepId,
+  TripCommandPlanValidationError,
+  TripCommandPlanValidationErrorCode,
+} from './types/tripCommandPlan.js';
 
 export {
   routeOptimizationPlaceSchema,
