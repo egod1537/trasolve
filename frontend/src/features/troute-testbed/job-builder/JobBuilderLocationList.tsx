@@ -25,6 +25,7 @@ import type { JobBuilderValidationStatus } from '@/features/troute-testbed/job-b
 
 interface JobBuilderLocationListProps {
   locations: JobBuilderLocation[];
+  placeIdRequired: boolean;
   selectedLocationId: string | null;
   errors: Record<string, JobBuilderLocationErrors>;
   validationStatus: JobBuilderValidationStatus;
@@ -36,7 +37,7 @@ interface JobBuilderLocationListProps {
 }
 
 type JobBuilderLocationPatch = Partial<
-  Pick<JobBuilderLocation, 'openTime' | 'closeTime' | 'stayMinutes'>
+  Pick<JobBuilderLocation, 'placeId' | 'openTime' | 'closeTime' | 'stayMinutes'>
 >;
 
 interface DragState {
@@ -70,6 +71,7 @@ const ROLE_LABELS: Record<JobBuilderLocationRole, string> = {
 
 export function JobBuilderLocationList({
   locations,
+  placeIdRequired,
   selectedLocationId,
   errors,
   validationStatus,
@@ -244,6 +246,7 @@ export function JobBuilderLocationList({
         location={location}
         index={index}
         role={role}
+        placeIdRequired={placeIdRequired}
         selected={selectedLocationId === location.id}
         dropTargetEdge={dropTargetEdge}
         errors={errors[location.id] ?? {}}
@@ -331,6 +334,7 @@ interface JobBuilderLocationItemProps {
   location: JobBuilderLocation;
   index: number;
   role: JobBuilderLocationRole;
+  placeIdRequired: boolean;
   selected: boolean;
   dropTargetEdge: DropTargetEdge;
   errors: JobBuilderLocationErrors;
@@ -345,6 +349,7 @@ function JobBuilderLocationItem({
   location,
   index,
   role,
+  placeIdRequired,
   selected,
   dropTargetEdge,
   errors,
@@ -403,6 +408,23 @@ function JobBuilderLocationItem({
         className="job-builder-location-fields"
         onClick={(event) => event.stopPropagation()}
       >
+        <label>
+          <span>{placeIdRequired ? 'Place ID' : 'Place ID (선택)'}</span>
+          <input
+            className="bp6-input"
+            type="text"
+            required={placeIdRequired}
+            aria-label={`${location.name} Place ID`}
+            aria-invalid={Boolean(errors.placeId)}
+            value={location.placeId}
+            onChange={(event) => onUpdate({ placeId: event.target.value })}
+          />
+        </label>
+        {errors.placeId ? (
+          <p className="job-builder-field-error" role="alert">
+            {errors.placeId}
+          </p>
+        ) : null}
         <label>
           <span>영업 시간</span>
           <span className="job-builder-time-range">

@@ -5,6 +5,13 @@ import type {
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
 import { DEFAULT_MIN_JOB_DURATION_MS } from '@/features/troute-testbed/job-builder/jobBuilderModel';
 
+export type JobBuilderOptimizeRequestDraft = Omit<
+  TrouteOptimizeRequest,
+  'travel_time_matrix'
+> & {
+  travel_time_matrix?: Array<Array<number | null>>;
+};
+
 export function createVisualJobId(): string {
   return `route-testbed-${crypto.randomUUID()}`;
 }
@@ -12,7 +19,7 @@ export function createVisualJobId(): string {
 export function jobBuilderToOptimizeRequest(
   state: JobBuilderState,
   jobId: string,
-): TrouteOptimizeRequest {
+): JobBuilderOptimizeRequestDraft {
   return {
     job_id: jobId,
     // The troute contract derives endpoints from order: first is the fixed
@@ -25,6 +32,11 @@ export function jobBuilderToOptimizeRequest(
       stay_minutes: location.stayMinutes,
     })),
     start_time: state.startTime,
+    ...(state.travelTimeSource === 'direct'
+      ? {
+          travel_time_matrix: state.travelTimeMatrix.map((row) => [...row]),
+        }
+      : {}),
     ...(state.debug.enabled
       ? {
           debug: {
@@ -43,14 +55,14 @@ export function applyOptimizeRequestToBuilder(
   const locations: JobBuilderLocation[] = [];
   for (const requested of request.locations) {
     const existing = current.locations.find(
-      (location) =>
-        location.id === requested.id && location.placeId === requested.place_id,
+      (location) => location.id === requested.id,
     );
     if (!existing) {
       return null;
     }
     locations.push({
       ...existing,
+      placeId: requested.place_id,
       openTime: requested.open_time,
       closeTime: requested.close_time,
       stayMinutes: requested.stay_minutes,
@@ -59,6 +71,11 @@ export function applyOptimizeRequestToBuilder(
   return {
     locations,
     startTime: request.start_time,
+    travelTimeSource:
+      request.travel_time_matrix === undefined ? 'tcache' : 'direct',
+    travelTimeMatrix:
+      request.travel_time_matrix?.map((row) => [...row]) ??
+      remapTravelTimeMatrix(current, locations),
     debug: {
       enabled: request.debug !== undefined,
       minJobDurationMs:
@@ -66,4 +83,28 @@ export function applyOptimizeRequestToBuilder(
       shuffleResultRoute: request.debug?.shuffle_result_route ?? false,
     },
   };
+}
+
+function remapTravelTimeMatrix(
+  current: JobBuilderState,
+  locations: readonly JobBuilderLocation[],
+): Array<Array<number | null>> {
+  const currentIndexById = new Map(
+    current.locations.map((location, index) => [location.id, index]),
+  );
+  return locations.map((rowLocation, rowIndex) =>
+    locations.map((columnLocation, columnIndex) => {
+      if (rowIndex === columnIndex) {
+        return 0;
+      }
+      const currentRowIndex = currentIndexById.get(rowLocation.id);
+      const currentColumnIndex = currentIndexById.get(columnLocation.id);
+      if (currentRowIndex === undefined || currentColumnIndex === undefined) {
+        return null;
+      }
+      return (
+        current.travelTimeMatrix[currentRowIndex]?.[currentColumnIndex] ?? null
+      );
+    }),
+  );
 }

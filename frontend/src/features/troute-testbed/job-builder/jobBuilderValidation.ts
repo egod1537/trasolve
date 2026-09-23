@@ -53,12 +53,19 @@ export function validateJobBuilderDraft(
     }
     ids.add(location.id);
 
-    if (!location.placeId.trim()) {
+    if (state.travelTimeSource === 'tcache' && !location.placeId.trim()) {
+      errors.placeId = 'tcache 조회에는 Place ID가 필요합니다.';
       messages.push(`${location.name}: place_id가 필요합니다.`);
-    } else if (placeIds.has(location.placeId)) {
+    } else if (
+      state.travelTimeSource === 'tcache' &&
+      placeIds.has(location.placeId)
+    ) {
+      errors.placeId = '다른 위치와 중복되지 않는 Place ID를 입력하세요.';
       messages.push('각 위치의 place_id는 서로 달라야 합니다.');
     }
-    placeIds.add(location.placeId);
+    if (state.travelTimeSource === 'tcache' && location.placeId.trim()) {
+      placeIds.add(location.placeId);
+    }
 
     if (
       !isVisitTime(location.openTime, location.googleOpeningWindow?.openTime)
@@ -110,6 +117,15 @@ export function validateJobBuilderDraft(
     messages.push('위치별 입력값을 확인하세요.');
   }
 
+  if (
+    state.travelTimeSource === 'direct' &&
+    !isCompleteTravelTimeMatrix(state)
+  ) {
+    messages.push(
+      '직접 Matrix의 모든 비대각선 셀에 0 이상의 정수를 입력하세요.',
+    );
+  }
+
   const request = jobBuilderToOptimizeRequest(state, jobId);
   const parsedRequest = trouteOptimizeRequestSchema.safeParse(request);
   if (!parsedRequest.success) {
@@ -131,4 +147,20 @@ export function validateJobBuilderDraft(
     ...(startTimeError ? { startTimeError } : {}),
     ...(minJobDurationMsError ? { minJobDurationMsError } : {}),
   };
+}
+
+function isCompleteTravelTimeMatrix(state: JobBuilderState): boolean {
+  const locationCount = state.locations.length;
+  if (state.travelTimeMatrix.length !== locationCount) {
+    return false;
+  }
+  return state.travelTimeMatrix.every(
+    (row, rowIndex) =>
+      row.length === locationCount &&
+      row.every((value, columnIndex) =>
+        rowIndex === columnIndex
+          ? value === 0
+          : value !== null && Number.isInteger(value) && value >= 0,
+      ),
+  );
 }

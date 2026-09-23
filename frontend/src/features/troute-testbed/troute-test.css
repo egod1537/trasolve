@@ -426,6 +426,136 @@
   font-size: 14px;
 }
 
+.troute-testbed-shell .job-result-map-comparison {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.troute-testbed-shell .job-result-ordering-line-note {
+  margin: -2px 0 0;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.troute-testbed-shell .job-result-map-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--testbed-row-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+}
+
+.troute-testbed-shell .job-result-map-panel > header {
+  min-height: 40px;
+  padding: 9px 11px;
+  border-bottom: 1px solid var(--testbed-row-border);
+  display: flex;
+  align-items: center;
+}
+
+.troute-testbed-shell .job-result-map-panel > header h3 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.troute-testbed-shell .job-result-google-map,
+.troute-testbed-shell .job-result-map-placeholder {
+  min-height: 300px;
+  height: 300px;
+}
+
+.troute-testbed-shell .job-result-map-placeholder {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-subtle);
+}
+
+.troute-testbed-shell .job-result-map-placeholder > .bp6-callout {
+  width: 100%;
+}
+
+.troute-testbed-shell .job-result-location-sequence {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.troute-testbed-shell .job-result-location-sequence > li {
+  min-width: 0;
+  min-height: 58px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--testbed-row-border);
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.troute-testbed-shell .job-result-location-order {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.troute-testbed-shell .job-result-location-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.troute-testbed-shell .job-result-location-copy strong,
+.troute-testbed-shell .job-result-location-copy code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.troute-testbed-shell .job-result-location-copy strong {
+  font-size: 12px;
+}
+
+.troute-testbed-shell .job-result-location-copy code {
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+
+.troute-testbed-shell .job-result-location-sequence dl {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.troute-testbed-shell .job-result-location-sequence dl > div {
+  min-width: 42px;
+  text-align: right;
+}
+
+.troute-testbed-shell .job-result-location-sequence dt {
+  color: var(--color-text-muted);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.troute-testbed-shell .job-result-location-sequence dd {
+  margin: 1px 0 0;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 .troute-testbed-shell .table-scroll {
   overflow-x: auto;
 }
@@ -581,6 +711,10 @@
 
   .troute-testbed-shell .job-list {
     max-height: 300px;
+  }
+
+  .troute-testbed-shell .job-result-map-comparison {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .troute-testbed-shell .timeline-entry > summary {

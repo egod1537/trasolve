@@ -59,11 +59,15 @@ export function isTrouteJobTerminalStatus(
 
 export const trouteLocationSchema = z.strictObject({
   id: nonEmptyStringSchema,
-  place_id: nonEmptyStringSchema,
+  place_id: z.string().max(512),
   open_time: timeOfDaySchema,
   close_time: timeOfDaySchema,
   stay_minutes: z.number().int().min(0).max(MAX_U32),
 });
+
+const trouteTravelTimeMatrixSchema = z.array(
+  z.array(z.number().int().nonnegative()),
+);
 
 export const trouteDebugOptionsSchema = z.strictObject({
   min_job_duration_ms: z
@@ -80,6 +84,7 @@ export const trouteOptimizeRequestSchema = z
     job_id: trouteJobIdSchema,
     locations: z.array(trouteLocationSchema).min(2).max(500),
     start_time: timeOfDaySchema,
+    travel_time_matrix: trouteTravelTimeMatrixSchema.optional(),
     debug: trouteDebugOptionsSchema.optional(),
   })
   .superRefine((request, context) => {
@@ -99,6 +104,48 @@ export const trouteOptimizeRequestSchema = z
           code: 'custom',
           message: 'Opening time must not be later than closing time.',
           path: ['locations', index, 'close_time'],
+        });
+      }
+    });
+
+    const matrix = request.travel_time_matrix;
+    if (matrix === undefined) {
+      request.locations.forEach((location, index) => {
+        if (!nonEmptyStringSchema.safeParse(location.place_id).success) {
+          context.addIssue({
+            code: 'custom',
+            message:
+              'Place IDs must not be empty when no travel time matrix is provided.',
+            path: ['locations', index, 'place_id'],
+          });
+        }
+      });
+      return;
+    }
+
+    const locationCount = request.locations.length;
+    if (matrix.length !== locationCount) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Travel time matrix row count must match locations length.',
+        path: ['travel_time_matrix'],
+      });
+    }
+
+    matrix.forEach((row, rowIndex) => {
+      if (row.length !== locationCount) {
+        context.addIssue({
+          code: 'custom',
+          message:
+            'Travel time matrix column count must match locations length.',
+          path: ['travel_time_matrix', rowIndex],
+        });
+      }
+      if (row[rowIndex] !== undefined && row[rowIndex] !== 0) {
+        context.addIssue({
+          code: 'custom',
+          message: 'Travel time matrix diagonal values must be zero.',
+          path: ['travel_time_matrix', rowIndex, rowIndex],
         });
       }
     });

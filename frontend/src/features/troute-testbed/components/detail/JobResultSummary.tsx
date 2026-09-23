@@ -1,53 +1,44 @@
 import { Classes } from '@blueprintjs/core';
 import { memo } from 'react';
 import type { TrouteOptimizeResponse } from '@trasolve/shared';
+import type { TestbedJob } from '@/entities/route-job';
+import { JobResultMapComparison } from '@/features/troute-testbed/components/detail/JobResultMapComparison';
 
 export const JobResultSummary = memo(function JobResultSummary({
+  job,
   optimization,
 }: {
-  optimization: TrouteOptimizeResponse;
+  job: TestbedJob;
+  optimization: TrouteOptimizeResponse | null;
 }) {
   return (
     <section className="route-summary" aria-labelledby="route-title">
       <div className="route-overview">
         <div>
           <h2 id="route-title" className={Classes.HEADING}>
-            결과
+            Input vs Optimized
           </h2>
-          <span className={Classes.TEXT_MUTED}>최종 경로</span>
-          <div aria-label="결과 방문 순서">
-            {optimization.route.map((stop) => stop.location_id).join(' → ')}
+          {optimization ? (
+            <>
+              <span className={Classes.TEXT_MUTED}>최종 경로</span>
+              <div aria-label="결과 방문 순서">
+                {optimization.route.map((stop) => stop.location_id).join(' → ')}
+              </div>
+            </>
+          ) : (
+            <span className={Classes.TEXT_MUTED}>
+              입력 순서와 최적화 결과를 비교합니다.
+            </span>
+          )}
+        </div>
+        {optimization ? (
+          <div>
+            <span className={Classes.TEXT_MUTED}>총 이동 시간</span>
+            <strong>{optimization.total_travel_minutes}분</strong>
           </div>
-        </div>
-        <div>
-          <span className={Classes.TEXT_MUTED}>총 이동 시간</span>
-          <strong>{optimization.total_travel_minutes}분</strong>
-        </div>
+        ) : null}
       </div>
-      <div className="table-scroll">
-        <table
-          className={`${Classes.HTML_TABLE} ${Classes.HTML_TABLE_BORDERED} ${Classes.HTML_TABLE_STRIPED}`}
-        >
-          <thead>
-            <tr>
-              <th>순서</th>
-              <th>위치</th>
-              <th>도착</th>
-              <th>출발</th>
-            </tr>
-          </thead>
-          <tbody>
-            {optimization.route.map((stop) => (
-              <tr key={`${stop.order}:${stop.location_id}`}>
-                <td>{stop.order}</td>
-                <td>{stop.location_id}</td>
-                <td>{stop.arrival_time}</td>
-                <td>{stop.departure_time ?? '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <JobResultMapComparison job={job} optimization={optimization} />
     </section>
   );
 });

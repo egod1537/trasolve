@@ -22,7 +22,7 @@
     "build": "npm run build -w @trasolve/shared && npm run build -w @trasolve/backend && npm run build -w @trasolve/frontend",
     "architecture:check": "node infra/architecture/check-frontend-dependencies.mjs",
     "typecheck": "npm run build -w @trasolve/shared && npm run typecheck --workspaces && npm run localization:typecheck",
-    "test": "npm run build -w @trasolve/shared && npm test -w @trasolve/backend",
+    "test": "npm run build -w @trasolve/shared && npm test -w @trasolve/shared && npm test -w @trasolve/frontend && npm test -w @trasolve/backend",
     "lint": "oxlint . && eslint .",
     "lint:fix": "oxlint . --fix && eslint . --fix",
     "format": "prettier --write \"frontend/**/*.{ts,tsx,css,html,json}\" \"backend/**/*.{ts,json}\" \"shared/**/*.{ts,json}\" \"infra/localization/**/*.{ts,json,md}\" \"eslint.config.mjs\" \".github/**/*.yml\"",

@@ -1,9 +1,9 @@
 import { Button, Classes, Intent, Tag } from '@blueprintjs/core';
 import { useEffect, useMemo, useState } from 'react';
-import type { TrouteOptimizeRequest } from '@trasolve/shared';
+import type { JobBuilderOptimizeRequestDraft } from '@/features/troute-testbed/job-builder/jobBuilderConversion';
 
 interface JobBuilderJsonPreviewProps {
-  request: TrouteOptimizeRequest;
+  request: JobBuilderOptimizeRequestDraft;
   valid: boolean;
 }
 

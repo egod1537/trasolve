@@ -28,11 +28,15 @@ import {
   createDefaultJobBuilderDraft,
   createJobBuilderLocation,
   removeJobBuilderLocation,
-  reorderJobBuilderLocations,
+  reorderJobBuilderLocation,
+  updateJobBuilderTravelTimeMatrixCell,
   type JobBuilderLocation,
   type JobBuilderState,
+  type JobBuilderTravelTimeMatrixCell,
+  type JobBuilderTravelTimeSource as TravelTimeSource,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
 import { JobBuilderSettings } from '@/features/troute-testbed/job-builder/JobBuilderSettings';
+import { JobBuilderTravelTimeSource } from '@/features/troute-testbed/job-builder/JobBuilderTravelTimeSource';
 import { validateJobBuilderDraft } from '@/features/troute-testbed/job-builder/jobBuilderValidation';
 import { useJobBuilderValidation } from '@/features/troute-testbed/job-builder/useJobBuilderValidation';
 import '@/features/troute-testbed/job-builder/job-builder.css';
@@ -110,7 +114,10 @@ export function JobBuilderDialog({
   function updateLocation(
     locationId: string,
     patch: Partial<
-      Pick<JobBuilderLocation, 'openTime' | 'closeTime' | 'stayMinutes'>
+      Pick<
+        JobBuilderLocation,
+        'placeId' | 'openTime' | 'closeTime' | 'stayMinutes'
+      >
     >,
   ): void {
     setBuilder((current) => ({
@@ -132,14 +139,30 @@ export function JobBuilderDialog({
   }
 
   function reorderLocation(locationId: string, targetIndex: number): void {
-    setBuilder((current) => ({
-      ...current,
-      locations: reorderJobBuilderLocations(
-        current.locations,
-        locationId,
-        targetIndex,
+    setBuilder((current) =>
+      reorderJobBuilderLocation(current, locationId, targetIndex),
+    );
+    clearFeedback();
+  }
+
+  function updateTravelTimeSource(source: TravelTimeSource): void {
+    setBuilder((current) => ({ ...current, travelTimeSource: source }));
+    clearFeedback();
+  }
+
+  function updateTravelTimeMatrixCell(
+    rowIndex: number,
+    columnIndex: number,
+    value: JobBuilderTravelTimeMatrixCell,
+  ): void {
+    setBuilder((current) =>
+      updateJobBuilderTravelTimeMatrixCell(
+        current,
+        rowIndex,
+        columnIndex,
+        value,
       ),
-    }));
+    );
     clearFeedback();
   }
 
@@ -341,6 +364,7 @@ export function JobBuilderDialog({
               />
               <JobBuilderLocationList
                 locations={builder.locations}
+                placeIdRequired={builder.travelTimeSource === 'tcache'}
                 selectedLocationId={selectedLocationId}
                 errors={validation.validation?.locationErrors ?? {}}
                 validationStatus={validation.status}
@@ -351,6 +375,13 @@ export function JobBuilderDialog({
                 onReorder={reorderLocation}
               />
             </div>
+            <JobBuilderTravelTimeSource
+              source={builder.travelTimeSource}
+              locations={builder.locations}
+              matrix={builder.travelTimeMatrix}
+              onSourceChange={updateTravelTimeSource}
+              onMatrixCellChange={updateTravelTimeMatrixCell}
+            />
             <JobBuilderSettings
               state={builder}
               startTimeError={validation.validation?.startTimeError}

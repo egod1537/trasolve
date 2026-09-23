@@ -410,6 +410,11 @@
   font-size: 11px;
 }
 
+.job-builder-location-fields > label > input {
+  min-width: 0;
+  width: 100%;
+}
+
 .job-builder-time-range,
 .job-builder-stay-input {
   display: flex;
@@ -493,6 +498,118 @@
   color: var(--color-text-muted);
   font-size: 11px;
   line-height: 1.45;
+}
+
+.job-builder-travel-time {
+  display: grid;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-surface-subtle);
+}
+
+.job-builder-travel-time-heading h2,
+.job-builder-travel-time-heading p,
+.job-builder-travel-time-note {
+  margin: 0;
+}
+
+.job-builder-travel-time-heading h2 {
+  font-size: 14px;
+}
+
+.job-builder-travel-time-heading p,
+.job-builder-travel-time-note {
+  margin-top: 3px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.job-builder-travel-time-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.job-builder-travel-time-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.job-builder-travel-time-option.is-selected {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.job-builder-travel-time-option input {
+  margin-top: 3px;
+}
+
+.job-builder-travel-time-option > span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.job-builder-travel-time-option strong {
+  color: var(--color-text-primary);
+  font-size: 12px;
+}
+
+.job-builder-travel-time-option small {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.job-builder-matrix-editor {
+  min-width: 0;
+}
+
+.job-builder-matrix-scroll {
+  max-width: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.job-builder-matrix-editor table {
+  border-spacing: 5px;
+  border-collapse: separate;
+}
+
+.job-builder-matrix-editor th {
+  min-width: 42px;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  text-align: center;
+}
+
+.job-builder-matrix-editor td input {
+  width: 76px;
+  text-align: right;
+}
+
+.job-builder-matrix-editor td input:disabled {
+  opacity: 1;
+  background: var(--color-surface-active);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.job-builder-matrix-editor td input[aria-invalid='true'] {
+  border-color: var(--color-danger);
 }
 
 .job-builder-json-preview {
@@ -624,6 +741,10 @@
   }
 
   .job-builder-settings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .job-builder-travel-time-options {
     grid-template-columns: minmax(0, 1fr);
   }
 

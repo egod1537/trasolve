@@ -8,6 +8,9 @@ export const DEFAULT_STAY_MINUTES = 60;
 export const DEFAULT_MIN_JOB_DURATION_MS = 4_000;
 export const MAX_STAY_MINUTES = 4_294_967_295;
 
+export type JobBuilderTravelTimeSource = 'tcache' | 'direct';
+export type JobBuilderTravelTimeMatrixCell = number | null;
+
 export interface JobBuilderLocation {
   id: string;
   placeId: string;
@@ -29,6 +32,8 @@ export interface JobBuilderLocation {
 export interface JobBuilderState {
   locations: JobBuilderLocation[];
   startTime: string;
+  travelTimeSource: JobBuilderTravelTimeSource;
+  travelTimeMatrix: JobBuilderTravelTimeMatrixCell[][];
   debug: {
     enabled: boolean;
     minJobDurationMs: number;
@@ -39,7 +44,7 @@ export interface JobBuilderState {
 export type JobBuilderLocationRole = 'start' | 'waypoint' | 'end';
 
 export type JobBuilderLocationErrors = Partial<
-  Record<'openTime' | 'closeTime' | 'stayMinutes', string>
+  Record<'placeId' | 'openTime' | 'closeTime' | 'stayMinutes', string>
 >;
 
 export interface JobBuilderValidation {
@@ -73,9 +78,12 @@ function getGoogleOpeningWindow(
 }
 
 export function createDefaultJobBuilderDraft(): JobBuilderState {
+  const locations = createDefaultJobBuilderLocations();
   return {
-    locations: createDefaultJobBuilderLocations(),
+    locations,
     startTime: '09:00',
+    travelTimeSource: 'tcache',
+    travelTimeMatrix: createEmptyTravelTimeMatrix(locations.length),
     debug: {
       enabled: false,
       minJobDurationMs: DEFAULT_MIN_JOB_DURATION_MS,
@@ -132,6 +140,11 @@ export function addJobBuilderLocation(
   return {
     ...state,
     locations,
+    travelTimeMatrix: synchronizeTravelTimeMatrix(
+      state.locations,
+      state.travelTimeMatrix,
+      locations,
+    ),
   };
 }
 
@@ -139,9 +152,65 @@ export function removeJobBuilderLocation(
   state: JobBuilderState,
   locationId: string,
 ): JobBuilderState {
+  const locations = state.locations.filter(
+    (location) => location.id !== locationId,
+  );
   return {
     ...state,
-    locations: state.locations.filter((location) => location.id !== locationId),
+    locations,
+    travelTimeMatrix: synchronizeTravelTimeMatrix(
+      state.locations,
+      state.travelTimeMatrix,
+      locations,
+    ),
+  };
+}
+
+export function reorderJobBuilderLocation(
+  state: JobBuilderState,
+  locationId: string,
+  targetIndex: number,
+): JobBuilderState {
+  const locations = reorderJobBuilderLocations(
+    state.locations,
+    locationId,
+    targetIndex,
+  );
+  return {
+    ...state,
+    locations,
+    travelTimeMatrix: synchronizeTravelTimeMatrix(
+      state.locations,
+      state.travelTimeMatrix,
+      locations,
+    ),
+  };
+}
+
+export function updateJobBuilderTravelTimeMatrixCell(
+  state: JobBuilderState,
+  rowIndex: number,
+  columnIndex: number,
+  value: JobBuilderTravelTimeMatrixCell,
+): JobBuilderState {
+  if (
+    rowIndex === columnIndex ||
+    rowIndex < 0 ||
+    columnIndex < 0 ||
+    rowIndex >= state.locations.length ||
+    columnIndex >= state.locations.length
+  ) {
+    return state;
+  }
+  return {
+    ...state,
+    travelTimeMatrix: state.travelTimeMatrix.map((row, currentRowIndex) =>
+      currentRowIndex === rowIndex
+        ? row.map((cell, currentColumnIndex) =>
+            currentColumnIndex === columnIndex ? value : cell,
+          )
+        : [...row],
+    ),
   };
 }
 
@@ -168,4 +237,37 @@ export function reorderJobBuilderLocations(
   }
   next.splice(targetIndex, 0, moved);
   return next;
+}
+
+function createEmptyTravelTimeMatrix(
+  size: number,
+): JobBuilderTravelTimeMatrixCell[][] {
+  return Array.from({ length: size }, (_, rowIndex) =>
+    Array.from({ length: size }, (_, columnIndex) =>
+      rowIndex === columnIndex ? 0 : null,
+    ),
+  );
+}
+
+function synchronizeTravelTimeMatrix(
+  previousLocations: readonly JobBuilderLocation[],
+  previousMatrix: readonly (readonly JobBuilderTravelTimeMatrixCell[])[],
+  locations: readonly JobBuilderLocation[],
+): JobBuilderTravelTimeMatrixCell[][] {
+  const previousIndexById = new Map(
+    previousLocations.map((location, index) => [location.id, index]),
+  );
+  return locations.map((rowLocation, rowIndex) =>
+    locations.map((columnLocation, columnIndex) => {
+      if (rowIndex === columnIndex) {
+        return 0;
+      }
+      const previousRowIndex = previousIndexById.get(rowLocation.id);
+      const previousColumnIndex = previousIndexById.get(columnLocation.id);
+      if (previousRowIndex === undefined || previousColumnIndex === undefined) {
+        return null;
+      }
+      return previousMatrix[previousRowIndex]?.[previousColumnIndex] ?? null;
+    }),
+  );
 }
