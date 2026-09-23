@@ -693,8 +693,13 @@
   white-space: pre;
 }
 
+.job-builder-validation-summary,
 .job-builder-feedback {
+  min-width: 0;
+  max-width: 100%;
   flex: none;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 @media (max-width: 900px) {

@@ -82,7 +82,7 @@ export function createDefaultJobBuilderDraft(): JobBuilderState {
   return {
     locations,
     startTime: '09:00',
-    travelTimeSource: 'tcache',
+    travelTimeSource: 'direct',
     travelTimeMatrix: createEmptyTravelTimeMatrix(locations.length),
     debug: {
       enabled: false,

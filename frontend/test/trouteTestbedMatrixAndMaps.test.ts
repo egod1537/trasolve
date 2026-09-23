@@ -17,6 +17,7 @@ import {
 } from '../src/features/troute-testbed/job-builder/jobBuilderConversion';
 import {
   addJobBuilderLocation,
+  createDefaultJobBuilderDraft,
   removeJobBuilderLocation,
   reorderJobBuilderLocation,
   updateJobBuilderTravelTimeMatrixCell,
@@ -35,6 +36,17 @@ const asymmetricMatrix = [
   [21, 0, 23],
   [31, 32, 0],
 ];
+
+test('New Job defaults to direct matrix input', () => {
+  const draft = createDefaultJobBuilderDraft();
+
+  assert.equal(draft.travelTimeSource, 'direct');
+  assert.equal(
+    'travel_time_matrix' in
+      jobBuilderToOptimizeRequest(draft, 'default-direct-job'),
+    true,
+  );
+});
 
 test('tcache New Job body omits travel_time_matrix', () => {
   const state = createBuilderState('tcache', asymmetricMatrix);
@@ -134,10 +146,14 @@ test('matrix diagonal stays zero and incomplete direct matrix blocks submit', ()
       [31, 32, 0],
     ],
   };
-  assert.equal(
-    validateJobBuilderDraft(incomplete, 'incomplete-direct-job').valid,
-    false,
+  const incompleteValidation = validateJobBuilderDraft(
+    incomplete,
+    'incomplete-direct-job',
   );
+  assert.equal(incompleteValidation.valid, false);
+  assert.deepEqual(incompleteValidation.messages, [
+    '직접 Matrix의 모든 비대각선 셀에 0 이상의 정수를 입력하세요.',
+  ]);
   assert.equal(
     validateJobBuilderDraft(initial, 'complete-direct-job').valid,
     true,

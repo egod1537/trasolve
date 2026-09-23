@@ -117,10 +117,9 @@ export function validateJobBuilderDraft(
     messages.push('위치별 입력값을 확인하세요.');
   }
 
-  if (
-    state.travelTimeSource === 'direct' &&
-    !isCompleteTravelTimeMatrix(state)
-  ) {
+  const directMatrixComplete =
+    state.travelTimeSource !== 'direct' || isCompleteTravelTimeMatrix(state);
+  if (!directMatrixComplete) {
     messages.push(
       '직접 Matrix의 모든 비대각선 셀에 0 이상의 정수를 입력하세요.',
     );
@@ -130,9 +129,15 @@ export function validateJobBuilderDraft(
   const parsedRequest = trouteOptimizeRequestSchema.safeParse(request);
   if (!parsedRequest.success) {
     messages.push(
-      ...parsedRequest.error.issues.map(
-        (issue) => `요청 ${issue.path.map(String).join('.')}: ${issue.message}`,
-      ),
+      ...parsedRequest.error.issues
+        .filter(
+          (issue) =>
+            directMatrixComplete || issue.path[0] !== 'travel_time_matrix',
+        )
+        .map(
+          (issue) =>
+            `요청 ${issue.path.map(String).join('.')}: ${issue.message}`,
+        ),
     );
   }
   if (existingJobIds.has(jobId)) {
