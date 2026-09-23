@@ -1,7 +1,6 @@
 import {
   Button,
   ButtonGroup,
-  Callout,
   Classes,
   Dialog,
   DialogBody,
@@ -21,14 +20,17 @@ import {
   jobBuilderToOptimizeRequest,
 } from '@/features/troute-testbed/job-builder/jobBuilderConversion';
 import { JobBuilderJsonPreview } from '@/features/troute-testbed/job-builder/JobBuilderJsonPreview';
+import { JobBuilderContentFlow } from '@/features/troute-testbed/job-builder/JobBuilderContentFlow';
 import { JobBuilderLocationList } from '@/features/troute-testbed/job-builder/JobBuilderLocationList';
 import { JobBuilderMap } from '@/features/troute-testbed/job-builder/JobBuilderMap';
+import { JobBuilderPresetPicker } from '@/features/troute-testbed/job-builder/JobBuilderPresetPicker';
 import {
   addJobBuilderLocation,
   createDefaultJobBuilderDraft,
   createJobBuilderLocation,
   removeJobBuilderLocation,
   reorderJobBuilderLocation,
+  shuffleJobBuilderLocations,
   updateJobBuilderTravelTimeMatrixCell,
   type JobBuilderLocation,
   type JobBuilderState,
@@ -38,6 +40,10 @@ import {
 import { JobBuilderSettings } from '@/features/troute-testbed/job-builder/JobBuilderSettings';
 import { JobBuilderTravelTimeSource } from '@/features/troute-testbed/job-builder/JobBuilderTravelTimeSource';
 import { validateJobBuilderDraft } from '@/features/troute-testbed/job-builder/jobBuilderValidation';
+import {
+  applyJobBuilderPreset,
+  DEFAULT_JOB_BUILDER_PRESET_ID,
+} from '@/features/troute-testbed/job-builder/presets';
 import { useJobBuilderValidation } from '@/features/troute-testbed/job-builder/useJobBuilderValidation';
 import '@/features/troute-testbed/job-builder/job-builder.css';
 
@@ -66,6 +72,7 @@ export function JobBuilderDialog({
   const [mode, setMode] = useState<BuilderMode>('visual');
   const [jobId, setJobId] = useState(createVisualJobId);
   const [builder, setBuilder] = useState(createDefaultJobBuilderDraft);
+  const [presetId, setPresetId] = useState(DEFAULT_JOB_BUILDER_PRESET_ID);
   const [viewportRevision, setViewportRevision] = useState(0);
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(
     null,
@@ -145,6 +152,11 @@ export function JobBuilderDialog({
     clearFeedback();
   }
 
+  function shuffleLocations(): void {
+    setBuilder((current) => shuffleJobBuilderLocations(current));
+    clearFeedback();
+  }
+
   function updateTravelTimeSource(source: TravelTimeSource): void {
     setBuilder((current) => ({ ...current, travelTimeSource: source }));
     clearFeedback();
@@ -179,6 +191,17 @@ export function JobBuilderDialog({
     setJobId(createVisualJobId());
     setSelectedLocationId(null);
     setViewportRevision((current) => current + 1);
+    setFeedback(null);
+  }
+
+  function loadPreset(): void {
+    const applied = applyJobBuilderPreset(presetId, viewportRevision);
+    if (!applied) {
+      return;
+    }
+    setBuilder(applied.builder);
+    setSelectedLocationId(applied.selectedLocationId);
+    setViewportRevision(applied.viewportRevision);
     setFeedback(null);
   }
 
@@ -352,89 +375,78 @@ export function JobBuilderDialog({
           </span>
         </div>
 
-        {mode === 'visual' ? (
-          <div className="job-builder-visual">
-            <div className="job-builder-main-grid">
-              <JobBuilderMap
-                locations={builder.locations}
-                viewportRevision={viewportRevision}
-                selectedLocationId={selectedLocationId}
-                onSelectLocation={setSelectedLocationId}
-                onAddPlace={addPlace}
+        <JobBuilderContentFlow
+          mode={mode}
+          validationStatus={validation.status}
+          validationErrors={validation.errors}
+          feedback={feedback}
+        >
+          {mode === 'visual' ? (
+            <div className="job-builder-visual">
+              <JobBuilderPresetPicker
+                presetId={presetId}
+                onPresetChange={setPresetId}
+                onApply={loadPreset}
               />
-              <JobBuilderLocationList
+              <div className="job-builder-main-grid">
+                <JobBuilderMap
+                  locations={builder.locations}
+                  viewportRevision={viewportRevision}
+                  selectedLocationId={selectedLocationId}
+                  onSelectLocation={setSelectedLocationId}
+                  onAddPlace={addPlace}
+                />
+                <JobBuilderLocationList
+                  locations={builder.locations}
+                  placeIdRequired={builder.travelTimeSource === 'tcache'}
+                  selectedLocationId={selectedLocationId}
+                  errors={validation.validation?.locationErrors ?? {}}
+                  validationStatus={validation.status}
+                  validationErrorCount={validation.errorCount}
+                  onSelect={setSelectedLocationId}
+                  onUpdate={updateLocation}
+                  onRemove={removeLocation}
+                  onReorder={reorderLocation}
+                  onShuffle={shuffleLocations}
+                />
+              </div>
+              <JobBuilderTravelTimeSource
+                source={builder.travelTimeSource}
                 locations={builder.locations}
-                placeIdRequired={builder.travelTimeSource === 'tcache'}
-                selectedLocationId={selectedLocationId}
-                errors={validation.validation?.locationErrors ?? {}}
-                validationStatus={validation.status}
-                validationErrorCount={validation.errorCount}
-                onSelect={setSelectedLocationId}
-                onUpdate={updateLocation}
-                onRemove={removeLocation}
-                onReorder={reorderLocation}
+                matrix={builder.travelTimeMatrix}
+                onSourceChange={updateTravelTimeSource}
+                onMatrixCellChange={updateTravelTimeMatrixCell}
+              />
+              <JobBuilderSettings
+                state={builder}
+                startTimeError={validation.validation?.startTimeError}
+                minJobDurationMsError={
+                  validation.validation?.minJobDurationMsError
+                }
+                onChange={updateSettings}
+              />
+              <JobBuilderJsonPreview
+                request={visualRequest}
+                valid={validation.isValid}
               />
             </div>
-            <JobBuilderTravelTimeSource
-              source={builder.travelTimeSource}
-              locations={builder.locations}
-              matrix={builder.travelTimeMatrix}
-              onSourceChange={updateTravelTimeSource}
-              onMatrixCellChange={updateTravelTimeMatrixCell}
+          ) : (
+            <RawJsonEditor
+              input={rawInput}
+              onChange={(input) => {
+                setRawInput(input);
+                setFeedback(null);
+              }}
+              onFormat={() => {
+                const request = parseRaw();
+                if (request) {
+                  setRawInput(JSON.stringify(request, null, 2));
+                }
+              }}
+              onReset={resetRawRequest}
             />
-            <JobBuilderSettings
-              state={builder}
-              startTimeError={validation.validation?.startTimeError}
-              minJobDurationMsError={
-                validation.validation?.minJobDurationMsError
-              }
-              onChange={updateSettings}
-            />
-            <JobBuilderJsonPreview
-              request={visualRequest}
-              valid={validation.isValid}
-            />
-          </div>
-        ) : (
-          <RawJsonEditor
-            input={rawInput}
-            onChange={(input) => {
-              setRawInput(input);
-              setFeedback(null);
-            }}
-            onFormat={() => {
-              const request = parseRaw();
-              if (request) {
-                setRawInput(JSON.stringify(request, null, 2));
-              }
-            }}
-            onReset={resetRawRequest}
-          />
-        )}
-
-        {mode === 'visual' &&
-        validation.status === 'invalid' &&
-        validation.errors.length > 0 ? (
-          <Callout
-            className="job-builder-validation-summary"
-            compact
-            intent={Intent.DANGER}
-            role="alert"
-          >
-            {validation.errors.join(' ')}
-          </Callout>
-        ) : null}
-
-        {feedback ? (
-          <Callout
-            className="job-builder-feedback"
-            compact
-            intent={feedback.intent}
-            role={feedback.intent === Intent.DANGER ? 'alert' : 'status'}
-          >
-            {feedback.message}
-          </Callout>
-        ) : null}
+          )}
+        </JobBuilderContentFlow>
       </DialogBody>
       <DialogFooter
         actions={

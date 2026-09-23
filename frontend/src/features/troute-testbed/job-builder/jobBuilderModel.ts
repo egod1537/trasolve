@@ -56,6 +56,7 @@ export interface JobBuilderValidation {
 }
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+const SHUFFLE_ATTEMPTS = 3;
 
 function getGoogleOpeningWindow(
   place: PlaceDetails,
@@ -137,15 +138,7 @@ export function addJobBuilderLocation(
           location,
           state.locations[state.locations.length - 1]!,
         ];
-  return {
-    ...state,
-    locations,
-    travelTimeMatrix: synchronizeTravelTimeMatrix(
-      state.locations,
-      state.travelTimeMatrix,
-      locations,
-    ),
-  };
+  return replaceJobBuilderLocations(state, locations);
 }
 
 export function removeJobBuilderLocation(
@@ -155,15 +148,7 @@ export function removeJobBuilderLocation(
   const locations = state.locations.filter(
     (location) => location.id !== locationId,
   );
-  return {
-    ...state,
-    locations,
-    travelTimeMatrix: synchronizeTravelTimeMatrix(
-      state.locations,
-      state.travelTimeMatrix,
-      locations,
-    ),
-  };
+  return replaceJobBuilderLocations(state, locations);
 }
 
 export function reorderJobBuilderLocation(
@@ -176,15 +161,32 @@ export function reorderJobBuilderLocation(
     locationId,
     targetIndex,
   );
-  return {
-    ...state,
-    locations,
-    travelTimeMatrix: synchronizeTravelTimeMatrix(
-      state.locations,
-      state.travelTimeMatrix,
-      locations,
-    ),
-  };
+  return replaceJobBuilderLocations(state, locations);
+}
+
+export function canShuffleJobBuilderLocations(
+  locations: readonly JobBuilderLocation[],
+): boolean {
+  return locations.length >= 2;
+}
+
+export function shuffleJobBuilderLocations(
+  state: JobBuilderState,
+  random: () => number = Math.random,
+): JobBuilderState {
+  if (!canShuffleJobBuilderLocations(state.locations)) {
+    return state;
+  }
+
+  for (let attempt = 0; attempt < SHUFFLE_ATTEMPTS; attempt += 1) {
+    const locations = fisherYatesShuffle(state.locations, random);
+    if (!hasSameLocationOrder(state.locations, locations)) {
+      return replaceJobBuilderLocations(state, locations);
+    }
+  }
+
+  const [first, ...remaining] = state.locations;
+  return replaceJobBuilderLocations(state, [...remaining, first!]);
 }
 
 export function updateJobBuilderTravelTimeMatrixCell(
@@ -239,7 +241,7 @@ export function reorderJobBuilderLocations(
   return next;
 }
 
-function createEmptyTravelTimeMatrix(
+export function createEmptyTravelTimeMatrix(
   size: number,
 ): JobBuilderTravelTimeMatrixCell[][] {
   return Array.from({ length: size }, (_, rowIndex) =>
@@ -247,6 +249,47 @@ function createEmptyTravelTimeMatrix(
       rowIndex === columnIndex ? 0 : null,
     ),
   );
+}
+
+function replaceJobBuilderLocations(
+  state: JobBuilderState,
+  locations: readonly JobBuilderLocation[],
+): JobBuilderState {
+  return {
+    ...state,
+    locations: [...locations],
+    travelTimeMatrix: synchronizeTravelTimeMatrix(
+      state.locations,
+      state.travelTimeMatrix,
+      locations,
+    ),
+  };
+}
+
+function fisherYatesShuffle(
+  locations: readonly JobBuilderLocation[],
+  random: () => number,
+): JobBuilderLocation[] {
+  const shuffled = [...locations];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const sample = random();
+    const normalizedSample = Number.isFinite(sample)
+      ? Math.min(Math.max(sample, 0), 1 - Number.EPSILON)
+      : 0;
+    const targetIndex = Math.floor(normalizedSample * (index + 1));
+    [shuffled[index], shuffled[targetIndex]] = [
+      shuffled[targetIndex]!,
+      shuffled[index]!,
+    ];
+  }
+  return shuffled;
+}
+
+function hasSameLocationOrder(
+  left: readonly JobBuilderLocation[],
+  right: readonly JobBuilderLocation[],
+): boolean {
+  return left.every((location, index) => location.id === right[index]?.id);
 }
 
 function synchronizeTravelTimeMatrix(

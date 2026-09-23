@@ -17,6 +17,7 @@ import type {
   JobBuilderLocationRole,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
 import {
+  canShuffleJobBuilderLocations,
   getJobBuilderLocationRole,
   MAX_STAY_MINUTES,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
@@ -34,6 +35,7 @@ interface JobBuilderLocationListProps {
   onUpdate: (locationId: string, patch: JobBuilderLocationPatch) => void;
   onRemove: (locationId: string) => void;
   onReorder: (locationId: string, targetIndex: number) => void;
+  onShuffle: () => void;
 }
 
 type JobBuilderLocationPatch = Partial<
@@ -80,6 +82,7 @@ export function JobBuilderLocationList({
   onUpdate,
   onRemove,
   onReorder,
+  onShuffle,
 }: JobBuilderLocationListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sortableListRef = useRef<HTMLDivElement>(null);
@@ -281,6 +284,17 @@ export function JobBuilderLocationList({
           <span className="job-builder-location-count">
             {locations.length}개
           </span>
+          <Button
+            icon="random"
+            size="small"
+            variant="minimal"
+            disabled={!canShuffleJobBuilderLocations(locations)}
+            aria-label="위치 순서 섞기"
+            title="위치 순서 섞기"
+            onClick={onShuffle}
+          >
+            섞기
+          </Button>
           <JobBuilderValidationIndicator
             status={validationStatus}
             errorCount={validationErrorCount}

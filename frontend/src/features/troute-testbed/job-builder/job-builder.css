@@ -42,6 +42,46 @@
   gap: 12px;
 }
 
+.job-builder-preset {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-surface-subtle);
+}
+
+.job-builder-preset-controls {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.job-builder-preset-controls > label {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.job-builder-preset-controls .bp6-html-select select {
+  min-width: 160px;
+}
+
+.job-builder-preset > p {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .job-builder-main-grid {
   min-height: 480px;
   display: grid;
@@ -197,6 +237,10 @@
   flex: none;
   align-items: center;
   gap: 8px;
+}
+
+.job-builder-location-meta .bp6-button {
+  flex: none;
 }
 
 .job-builder-validation-indicator {
@@ -699,7 +743,9 @@
   max-width: 100%;
   flex: none;
   overflow-wrap: anywhere;
+  position: static;
   word-break: break-word;
+  z-index: auto;
 }
 
 @media (max-width: 900px) {
@@ -743,6 +789,21 @@
   .job-builder-mode-actions {
     align-items: flex-start;
     flex-wrap: wrap;
+  }
+
+  .job-builder-preset {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .job-builder-preset-controls {
+    flex-wrap: wrap;
+  }
+
+  .job-builder-preset > p {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
   }
 
   .job-builder-settings {

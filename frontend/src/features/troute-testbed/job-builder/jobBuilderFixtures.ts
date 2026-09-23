@@ -1,5 +1,5 @@
-export const DEFAULT_JOB_BUILDER_LOCATIONS = [
-  {
+export const JOB_BUILDER_PLACE_FIXTURES = {
+  seoulStation: {
     id: 'test-seoul-station',
     placeId: 'ChIJlU6-zWiifDURBCDQ_VkAI7s',
     name: '서울역',
@@ -9,7 +9,7 @@ export const DEFAULT_JOB_BUILDER_LOCATIONS = [
     closeTime: '23:50',
     stayMinutes: 0,
   },
-  {
+  gyeongbokgung: {
     id: 'test-gyeongbokgung',
     placeId: 'ChIJod7tSseifDUR9hXHLFNGMIs',
     name: '경복궁',
@@ -19,7 +19,7 @@ export const DEFAULT_JOB_BUILDER_LOCATIONS = [
     closeTime: '18:00',
     stayMinutes: 60,
   },
-  {
+  gangnamStation: {
     id: 'test-gangnam-station',
     placeId: 'ChIJKxs2jFmhfDURPP--kvKavw0',
     name: '강남역',
@@ -29,10 +29,101 @@ export const DEFAULT_JOB_BUILDER_LOCATIONS = [
     closeTime: '23:50',
     stayMinutes: 0,
   },
+  nSeoulTower: {
+    id: 'test-n-seoul-tower',
+    placeId: 'ChIJqWqOqFeifDURpYJ5LnxX-Fw',
+    name: 'N서울타워',
+    address: '서울특별시 용산구 남산공원길 105',
+    location: { lat: 37.5511694, lng: 126.9882266 },
+    openTime: '09:00',
+    closeTime: '20:00',
+    stayMinutes: 60,
+  },
+  lotteWorldTower: {
+    id: 'test-lotte-world-tower',
+    placeId: 'ChIJW2ZfkQqlfDUR4vz9Xs0Q66s',
+    name: '롯데월드타워',
+    address: '서울특별시 송파구 올림픽로 300',
+    location: { lat: 37.5124641, lng: 127.102543 },
+    openTime: '09:00',
+    closeTime: '20:00',
+    stayMinutes: 60,
+  },
+  tokyoStation: {
+    id: 'test-tokyo-station',
+    placeId: 'ChIJC3Cf2PuLGGAROO00ukl8JwA',
+    name: 'Tokyo Station',
+    address: '1 Chome-9 Marunouchi, Chiyoda City, Tokyo',
+    location: { lat: 35.6812996, lng: 139.7670658 },
+    openTime: '00:00',
+    closeTime: '23:50',
+    stayMinutes: 0,
+  },
+  shibuyaStation: {
+    id: 'test-shibuya-station',
+    placeId: 'ChIJz8MVLFiLGGARXP0DqqhoDow',
+    name: 'Shibuya Station',
+    address: 'Shibuya, Tokyo',
+    location: { lat: 35.6580339, lng: 139.7016358 },
+    openTime: '09:00',
+    closeTime: '18:00',
+    stayMinutes: 60,
+  },
+  shinjukuStation: {
+    id: 'test-shinjuku-station',
+    placeId: 'ChIJu9ljKNeMGGARcFUr-NmJhAk',
+    name: 'Shinjuku Station',
+    address: 'Shinjuku City, Tokyo',
+    location: { lat: 35.6905539, lng: 139.6995499 },
+    openTime: '09:00',
+    closeTime: '18:00',
+    stayMinutes: 60,
+  },
+  sensoJi: {
+    id: 'test-senso-ji',
+    placeId: 'ChIJ8T1GpMGOGGARDYGSgpooDWw',
+    name: 'Sensō-ji',
+    address: '2 Chome-3-1 Asakusa, Taito City, Tokyo',
+    location: { lat: 35.7147651, lng: 139.7966553 },
+    openTime: '09:00',
+    closeTime: '18:00',
+    stayMinutes: 60,
+  },
+  tokyoTower: {
+    id: 'test-tokyo-tower',
+    placeId: 'ChIJCewJkL2LGGAR3Qmk0vCTGkg',
+    name: 'Tokyo Tower',
+    address: '4 Chome-2-8 Shibakoen, Minato City, Tokyo',
+    location: { lat: 35.6585805, lng: 139.7454329 },
+    openTime: '09:00',
+    closeTime: '20:00',
+    stayMinutes: 0,
+  },
+} as const;
+
+export const DEFAULT_JOB_BUILDER_LOCATIONS = [
+  JOB_BUILDER_PLACE_FIXTURES.seoulStation,
+  JOB_BUILDER_PLACE_FIXTURES.gyeongbokgung,
+  JOB_BUILDER_PLACE_FIXTURES.gangnamStation,
 ] as const;
 
 export function createDefaultJobBuilderLocations() {
-  return DEFAULT_JOB_BUILDER_LOCATIONS.map((location) => ({
+  return cloneJobBuilderFixtureLocations(DEFAULT_JOB_BUILDER_LOCATIONS);
+}
+
+export function cloneJobBuilderFixtureLocations(
+  locations: readonly {
+    id: string;
+    placeId: string;
+    name: string;
+    address?: string;
+    location: { lat: number; lng: number };
+    openTime: string;
+    closeTime: string;
+    stayMinutes: number;
+  }[],
+) {
+  return locations.map((location) => ({
     ...location,
     location: { ...location.location },
   }));

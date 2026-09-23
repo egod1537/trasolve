@@ -1,12 +1,16 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { Intent } from '@blueprintjs/core';
 import {
   trouteOptimizeRequestSchema,
   type PlaceDetails,
   type TrouteOptimizeRequest,
   type TrouteOptimizeResponse,
 } from '@trasolve/shared';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { createTrouteOptimizeRequestBody } from '../src/features/troute-testbed/api/troute';
+import { JobBuilderContentFlow } from '../src/features/troute-testbed/job-builder/JobBuilderContentFlow';
 import {
   createInputComparisonLocations,
   createOptimizedMapContent,
@@ -17,14 +21,21 @@ import {
 } from '../src/features/troute-testbed/job-builder/jobBuilderConversion';
 import {
   addJobBuilderLocation,
+  canShuffleJobBuilderLocations,
   createDefaultJobBuilderDraft,
   removeJobBuilderLocation,
   reorderJobBuilderLocation,
+  shuffleJobBuilderLocations,
   updateJobBuilderTravelTimeMatrixCell,
   type JobBuilderLocation,
   type JobBuilderState,
 } from '../src/features/troute-testbed/job-builder/jobBuilderModel';
 import { validateJobBuilderDraft } from '../src/features/troute-testbed/job-builder/jobBuilderValidation';
+import {
+  applyJobBuilderPreset,
+  JOB_BUILDER_PRESETS,
+  getJobBuilderPreset,
+} from '../src/features/troute-testbed/job-builder/presets';
 
 const locations = [
   createBuilderLocation('A', 'place-a', 37.1, 127.1, 0),
@@ -46,6 +57,145 @@ test('New Job defaults to direct matrix input', () => {
       jobBuilderToOptimizeRequest(draft, 'default-direct-job'),
     true,
   );
+});
+
+test('invalid direct matrix renders validation and feedback before the editor', () => {
+  const html = renderToStaticMarkup(
+    createElement(
+      JobBuilderContentFlow,
+      {
+        mode: 'visual',
+        validationStatus: 'invalid',
+        validationErrors: ['Matrix 입력을 확인하세요.'],
+        feedback: { intent: Intent.DANGER, message: '요청을 확인하세요.' },
+      },
+      createElement('div', {
+        className: 'job-builder-matrix-editor',
+      }),
+    ),
+  );
+  const validationIndex = html.indexOf('job-builder-validation-summary');
+  const feedbackIndex = html.indexOf('job-builder-feedback');
+  const matrixIndex = html.indexOf('job-builder-matrix-editor');
+
+  assert.ok(validationIndex >= 0);
+  assert.ok(feedbackIndex >= 0);
+  assert.ok(matrixIndex >= 0);
+  assert.ok(validationIndex < matrixIndex);
+  assert.ok(feedbackIndex < matrixIndex);
+});
+
+test('tcache and Raw JSON content render without the visual validation summary', () => {
+  const tcacheHtml = renderToStaticMarkup(
+    createElement(
+      JobBuilderContentFlow,
+      {
+        mode: 'visual',
+        validationStatus: 'valid',
+        validationErrors: [],
+        feedback: null,
+      },
+      createElement('div', { className: 'tcache-content' }),
+    ),
+  );
+  const rawHtml = renderToStaticMarkup(
+    createElement(
+      JobBuilderContentFlow,
+      {
+        mode: 'raw',
+        validationStatus: 'invalid',
+        validationErrors: ['visual-only error'],
+        feedback: null,
+      },
+      createElement('div', { className: 'job-builder-raw-editor' }),
+    ),
+  );
+
+  assert.match(tcacheHtml, /tcache-content/);
+  assert.doesNotMatch(tcacheHtml, /job-builder-validation-summary/);
+  assert.match(rawHtml, /job-builder-raw-editor/);
+  assert.doesNotMatch(rawHtml, /job-builder-validation-summary/);
+});
+
+test('five New Job presets load the expected location counts', () => {
+  assert.deepEqual(
+    JOB_BUILDER_PRESETS.map((preset) => [preset.name, preset.locationCount]),
+    [
+      ['Tokyo 3', 3],
+      ['Tokyo 5', 5],
+      ['Seoul 5', 5],
+      ['Time Window', 4],
+      ['Direct Matrix', 4],
+    ],
+  );
+});
+
+test('Tokyo and Seoul presets use actual Place IDs', () => {
+  for (const presetId of ['tokyo-3', 'tokyo-5', 'seoul-5']) {
+    const preset = getJobBuilderPreset(presetId);
+    assert.ok(preset);
+    const state = preset.build();
+    assert.equal(state.travelTimeSource, 'tcache');
+    assert.equal(
+      state.locations.every((location) => location.placeId.trim().length > 0),
+      true,
+    );
+  }
+});
+
+test('Time Window preset carries constrained hours and stay durations', () => {
+  const preset = getJobBuilderPreset('time-window');
+  assert.ok(preset);
+  const state = preset.build();
+
+  assert.deepEqual(
+    state.locations.map((location) => [
+      location.openTime,
+      location.closeTime,
+      location.stayMinutes,
+    ]),
+    [
+      ['09:00', '18:00', 30],
+      ['10:00', '12:00', 60],
+      ['13:00', '16:00', 40],
+      ['09:00', '20:00', 20],
+    ],
+  );
+});
+
+test('Direct Matrix preset has a valid asymmetric square matrix', () => {
+  const preset = getJobBuilderPreset('direct-matrix');
+  assert.ok(preset);
+  const state = preset.build();
+
+  assert.equal(state.travelTimeSource, 'direct');
+  assert.equal(state.travelTimeMatrix.length, state.locations.length);
+  state.travelTimeMatrix.forEach((row, rowIndex) => {
+    assert.equal(row.length, state.locations.length);
+    assert.equal(row[rowIndex], 0);
+  });
+  assert.notEqual(
+    state.travelTimeMatrix[0]?.[1],
+    state.travelTimeMatrix[1]?.[0],
+  );
+});
+
+test('preset application selects the first location and advances the viewport', () => {
+  const applied = applyJobBuilderPreset('seoul-5', 7);
+  assert.ok(applied);
+
+  assert.equal(applied.selectedLocationId, applied.builder.locations[0]?.id);
+  assert.equal(applied.viewportRevision, 8);
+});
+
+test('every preset produces a valid New Job draft', () => {
+  JOB_BUILDER_PRESETS.forEach((preset) => {
+    const validation = validateJobBuilderDraft(
+      preset.build(),
+      `preset-${preset.id}`,
+    );
+    assert.equal(validation.valid, true, validation.messages.join(' '));
+  });
 });
 
 test('tcache New Job body omits travel_time_matrix', () => {
@@ -130,6 +280,92 @@ test('matrix editor preserves shape and values across add, remove, and reorder',
     [12, 0, 11],
     [23, 21, 0],
   ]);
+});
+
+test('shuffle changes location order without changing the location set or selection', () => {
+  const initial = createBuilderState('direct', asymmetricMatrix);
+  const selectedLocationId = 'B';
+  const shuffled = shuffleJobBuilderLocations(
+    initial,
+    createSequenceRandom([0.5, 0]),
+  );
+
+  assert.deepEqual(
+    shuffled.locations.map((location) => location.id),
+    ['C', 'A', 'B'],
+  );
+  assert.deepEqual(
+    [...shuffled.locations.map((location) => location.id)].sort(),
+    ['A', 'B', 'C'],
+  );
+  assert.equal(
+    new Set(shuffled.locations.map((location) => location.id)).size,
+    3,
+  );
+  assert.equal(
+    shuffled.locations.find((location) => location.id === selectedLocationId),
+    initial.locations.find((location) => location.id === selectedLocationId),
+  );
+  assert.equal(selectedLocationId, 'B');
+});
+
+test('direct matrix shuffle applies the same row and column permutation', () => {
+  const shuffled = shuffleJobBuilderLocations(
+    createBuilderState('direct', asymmetricMatrix),
+    createSequenceRandom([0.5, 0]),
+  );
+
+  assert.deepEqual(shuffled.travelTimeMatrix, [
+    [0, 31, 32],
+    [12, 0, 11],
+    [23, 21, 0],
+  ]);
+});
+
+test('shuffle falls back to rotation when random attempts keep the same order', () => {
+  const shuffled = shuffleJobBuilderLocations(
+    createBuilderState('direct', asymmetricMatrix),
+    () => 0.999,
+  );
+
+  assert.deepEqual(
+    shuffled.locations.map((location) => location.id),
+    ['B', 'C', 'A'],
+  );
+  assert.deepEqual(shuffled.travelTimeMatrix, [
+    [0, 23, 21],
+    [32, 0, 31],
+    [11, 12, 0],
+  ]);
+});
+
+test('shuffle is disabled and leaves state unchanged with zero or one location', () => {
+  const base = createBuilderState('direct', asymmetricMatrix);
+  const empty = { ...base, locations: [], travelTimeMatrix: [] };
+  const single = {
+    ...base,
+    locations: [base.locations[0]!],
+    travelTimeMatrix: [[0]],
+  };
+
+  assert.equal(canShuffleJobBuilderLocations(empty.locations), false);
+  assert.equal(canShuffleJobBuilderLocations(single.locations), false);
+  assert.equal(shuffleJobBuilderLocations(empty), empty);
+  assert.equal(shuffleJobBuilderLocations(single), single);
+});
+
+test('shuffle works in both tcache and direct modes', () => {
+  for (const source of ['tcache', 'direct'] as const) {
+    const shuffled = shuffleJobBuilderLocations(
+      createBuilderState(source, asymmetricMatrix),
+      createSequenceRandom([0.5, 0]),
+    );
+    assert.equal(shuffled.travelTimeSource, source);
+    assert.deepEqual(
+      shuffled.locations.map((location) => location.id),
+      ['C', 'A', 'B'],
+    );
+  }
 });
 
 test('matrix diagonal stays zero and incomplete direct matrix blocks submit', () => {
@@ -347,4 +583,9 @@ function createOptimization(order: string[]): TrouteOptimizeResponse {
     })),
     total_travel_minutes: 60,
   };
+}
+
+function createSequenceRandom(values: readonly number[]): () => number {
+  let index = 0;
+  return () => values[index++] ?? values.at(-1) ?? 0;
 }
