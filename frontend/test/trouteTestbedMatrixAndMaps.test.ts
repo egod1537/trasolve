@@ -10,7 +10,10 @@ import {
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createTrouteOptimizeRequestBody } from '../src/features/troute-testbed/api/troute';
+import { JobRequestSummary } from '../src/features/troute-testbed/components/detail/JobRequestSummary';
 import { JobBuilderContentFlow } from '../src/features/troute-testbed/job-builder/JobBuilderContentFlow';
+import { JobBuilderSettings } from '../src/features/troute-testbed/job-builder/JobBuilderSettings';
+import { JobBuilderTravelTimeSource } from '../src/features/troute-testbed/job-builder/JobBuilderTravelTimeSource';
 import {
   createInputComparisonLocations,
   createOptimizedMapContent,
@@ -23,6 +26,8 @@ import {
   addJobBuilderLocation,
   canShuffleJobBuilderLocations,
   createDefaultJobBuilderDraft,
+  createEmptyTravelTimeMatrix,
+  DEFAULT_TROUTE_TRAVEL_MODE,
   removeJobBuilderLocation,
   reorderJobBuilderLocation,
   shuffleJobBuilderLocations,
@@ -30,6 +35,15 @@ import {
   type JobBuilderLocation,
   type JobBuilderState,
 } from '../src/features/troute-testbed/job-builder/jobBuilderModel';
+import {
+  clearTravelTimeMatrix,
+  fillMissingTravelTimeMatrix,
+  generateTravelTimeMatrix,
+  getTravelTimeMatrixGeneratorError,
+  NEAR_SYMMETRIC_MAX_DEVIATION_RATIO,
+  type JobBuilderMatrixGenerationPattern,
+  type TravelTimeMatrixGeneratorOptions,
+} from '../src/features/troute-testbed/job-builder/jobBuilderMatrixGenerator';
 import { validateJobBuilderDraft } from '../src/features/troute-testbed/job-builder/jobBuilderValidation';
 import {
   applyJobBuilderPreset,
@@ -52,10 +66,92 @@ test('New Job defaults to direct matrix input', () => {
   const draft = createDefaultJobBuilderDraft();
 
   assert.equal(draft.travelTimeSource, 'direct');
+  assert.equal(draft.travelMode, 'TRANSIT');
   assert.equal(
     'travel_time_matrix' in
       jobBuilderToOptimizeRequest(draft, 'default-direct-job'),
     true,
+  );
+});
+
+test('New Job renders all travel modes and direct matrix guidance', () => {
+  const html = renderToStaticMarkup(
+    createElement(JobBuilderSettings, {
+      state: createDefaultJobBuilderDraft(),
+      onChange: () => undefined,
+    }),
+  );
+
+  assert.match(html, /aria-label="이동수단"/);
+  assert.match(html, /value="TRANSIT" selected="">대중교통/);
+  assert.match(html, /value="DRIVING">자동차/);
+  assert.match(html, /value="WALKING">도보/);
+  assert.match(html, /value="BICYCLING">자전거/);
+  assert.match(html, /직접 Matrix 입력 시 실제 경로 조회는 생략됩니다/);
+});
+
+test('builder sends selected travel mode and request detail displays it', () => {
+  const driving = {
+    ...createBuilderState('direct', asymmetricMatrix),
+    travelMode: 'DRIVING' as const,
+  };
+  const request = parseBuilderRequest(driving, 'driving-direct-job');
+  const body = JSON.parse(createTrouteOptimizeRequestBody(request)) as {
+    travel_mode: string;
+  };
+
+  assert.equal(request.travel_mode, 'DRIVING');
+  assert.equal(body.travel_mode, 'DRIVING');
+  assert.equal(trouteOptimizeRequestSchema.safeParse(request).success, true);
+  assert.match(
+    renderToStaticMarkup(createElement(JobRequestSummary, { request })),
+    /자동차 \(DRIVING\)/,
+  );
+});
+
+test('Raw JSON restores travel mode and defaults a missing mode to TRANSIT', () => {
+  const current = createBuilderState('direct', asymmetricMatrix);
+  const drivingRequest = parseBuilderRequest(
+    { ...current, travelMode: 'DRIVING' },
+    'raw-driving-job',
+  );
+  const legacyInput: TrouteOptimizeRequest = { ...drivingRequest };
+  delete legacyInput.travel_mode;
+  const legacyRequest = trouteOptimizeRequestSchema.parse(legacyInput);
+
+  assert.equal(
+    applyOptimizeRequestToBuilder(current, drivingRequest)?.travelMode,
+    'DRIVING',
+  );
+  assert.equal(
+    applyOptimizeRequestToBuilder(current, legacyRequest)?.travelMode,
+    DEFAULT_TROUTE_TRAVEL_MODE,
+  );
+});
+
+test('travel mode survives tcache and direct source changes', () => {
+  const driving = {
+    ...createBuilderState('direct', asymmetricMatrix),
+    travelMode: 'DRIVING' as const,
+  };
+  const tcacheRequest = parseBuilderRequest(
+    { ...driving, travelTimeSource: 'tcache' },
+    'driving-tcache-job',
+  );
+  const directRequest = parseBuilderRequest(
+    driving,
+    'driving-direct-roundtrip-job',
+  );
+
+  assert.equal(tcacheRequest.travel_mode, 'DRIVING');
+  assert.equal(directRequest.travel_mode, 'DRIVING');
+  assert.equal(
+    applyOptimizeRequestToBuilder(driving, tcacheRequest)?.travelMode,
+    'DRIVING',
+  );
+  assert.equal(
+    applyOptimizeRequestToBuilder(driving, directRequest)?.travelMode,
+    'DRIVING',
   );
 });
 
@@ -117,13 +213,15 @@ test('tcache and Raw JSON content render without the visual validation summary',
   assert.doesNotMatch(rawHtml, /job-builder-validation-summary/);
 });
 
-test('five New Job presets load the expected location counts', () => {
+test('seven New Job presets load the expected location counts', () => {
   assert.deepEqual(
     JOB_BUILDER_PRESETS.map((preset) => [preset.name, preset.locationCount]),
     [
       ['Tokyo 3', 3],
       ['Tokyo 5', 5],
+      ['Seoul 3', 3],
       ['Seoul 5', 5],
+      ['Seoul 8', 8],
       ['Time Window', 4],
       ['Direct Matrix', 4],
     ],
@@ -131,16 +229,61 @@ test('five New Job presets load the expected location counts', () => {
 });
 
 test('Tokyo and Seoul presets use actual Place IDs', () => {
-  for (const presetId of ['tokyo-3', 'tokyo-5', 'seoul-5']) {
+  for (const presetId of [
+    'tokyo-3',
+    'tokyo-5',
+    'seoul-3',
+    'seoul-5',
+    'seoul-8',
+  ]) {
     const preset = getJobBuilderPreset(presetId);
     assert.ok(preset);
     const state = preset.build();
     assert.equal(state.travelTimeSource, 'tcache');
+    assert.equal(state.travelMode, 'TRANSIT');
     assert.equal(
       state.locations.every((location) => location.placeId.trim().length > 0),
       true,
     );
   }
+});
+
+test('Seoul presets are unique nested tcache location sets', () => {
+  const seoul3 = getJobBuilderPreset('seoul-3')?.build();
+  const seoul5 = getJobBuilderPreset('seoul-5')?.build();
+  const seoul8 = getJobBuilderPreset('seoul-8')?.build();
+  assert.ok(seoul3);
+  assert.ok(seoul5);
+  assert.ok(seoul8);
+
+  assert.equal(seoul3.locations.length, 3);
+  assert.equal(seoul5.locations.length, 5);
+  assert.equal(seoul8.locations.length, 8);
+
+  for (const state of [seoul3, seoul5, seoul8]) {
+    assert.equal(state.travelTimeSource, 'tcache');
+    assert.equal(
+      new Set(state.locations.map(({ id }) => id)).size,
+      state.locations.length,
+    );
+    assert.equal(
+      new Set(state.locations.map(({ placeId }) => placeId)).size,
+      state.locations.length,
+    );
+    assert.equal(
+      state.locations.every(({ placeId }) => placeId.trim().length > 0),
+      true,
+    );
+  }
+
+  assert.deepEqual(
+    seoul5.locations.slice(0, seoul3.locations.length).map(({ id }) => id),
+    seoul3.locations.map(({ id }) => id),
+  );
+  assert.deepEqual(
+    seoul8.locations.slice(0, seoul5.locations.length).map(({ id }) => id),
+    seoul5.locations.map(({ id }) => id),
+  );
 });
 
 test('Time Window preset carries constrained hours and stay durations', () => {
@@ -181,15 +324,18 @@ test('Direct Matrix preset has a valid asymmetric square matrix', () => {
 });
 
 test('preset application selects the first location and advances the viewport', () => {
-  const applied = applyJobBuilderPreset('seoul-5', 7);
-  assert.ok(applied);
+  for (const presetId of ['seoul-3', 'seoul-5', 'seoul-8']) {
+    const applied = applyJobBuilderPreset(presetId, 7);
+    assert.ok(applied);
 
-  assert.equal(applied.selectedLocationId, applied.builder.locations[0]?.id);
-  assert.equal(applied.viewportRevision, 8);
+    assert.equal(applied.selectedLocationId, applied.builder.locations[0]?.id);
+    assert.equal(applied.viewportRevision, 8);
+  }
 });
 
 test('every preset produces a valid New Job draft', () => {
   JOB_BUILDER_PRESETS.forEach((preset) => {
+    assert.equal(preset.build().travelMode, 'TRANSIT');
     const validation = validateJobBuilderDraft(
       preset.build(),
       `preset-${preset.id}`,
@@ -280,6 +426,175 @@ test('matrix editor preserves shape and values across add, remove, and reorder',
     [12, 0, 11],
     [23, 21, 0],
   ]);
+});
+
+test('matrix generator toolbar exposes range, five patterns, seed, and actions', () => {
+  const html = renderToStaticMarkup(
+    createElement(JobBuilderTravelTimeSource, {
+      source: 'direct',
+      locations,
+      matrix: createEmptyTravelTimeMatrix(locations.length),
+      onSourceChange: () => undefined,
+      onMatrixCellChange: () => undefined,
+      onMatrixChange: () => undefined,
+    }),
+  );
+
+  assert.match(html, /job-builder-matrix-generator/);
+  assert.match(html, /빈 셀 랜덤 채우기/);
+  assert.match(html, /전체 재생성/);
+  assert.match(html, /비우기/);
+  assert.match(html, /방향별 균등 \(Directed Uniform\)/);
+  assert.match(html, /대칭 \(Symmetric\)/);
+  assert.match(html, /근사 대칭 \(Near Symmetric\)/);
+  assert.match(html, /군집형 \(Clustered\)/);
+  assert.match(html, /짧은 이동 \+ 긴 이상치/);
+  assert.match(html, /value="12345"/);
+});
+
+test('all matrix patterns keep the diagonal zero and values in range', () => {
+  const patterns: JobBuilderMatrixGenerationPattern[] = [
+    'directed-uniform',
+    'symmetric',
+    'near-symmetric',
+    'clustered',
+    'short-with-outliers',
+  ];
+
+  for (const size of [2, 5, 10]) {
+    for (const pattern of patterns) {
+      const matrix = generateTravelTimeMatrix(
+        createGeneratorOptions({ size, pattern }),
+      );
+      assert.equal(matrix.length, size);
+      matrix.forEach((row, rowIndex) => {
+        assert.equal(row.length, size);
+        row.forEach((value, columnIndex) => {
+          if (rowIndex === columnIndex) {
+            assert.equal(value, 0);
+          } else {
+            assert.ok(value >= 5 && value <= 60);
+            assert.equal(Number.isInteger(value), true);
+          }
+        });
+      });
+    }
+  }
+});
+
+test('matrix patterns honor directed, symmetric, and near-symmetric behavior', () => {
+  const directed = generateTravelTimeMatrix(
+    createGeneratorOptions({ size: 5, pattern: 'directed-uniform' }),
+  );
+  assert.equal(hasAsymmetricPair(directed), true);
+
+  const symmetric = generateTravelTimeMatrix(
+    createGeneratorOptions({ size: 5, pattern: 'symmetric' }),
+  );
+  symmetric.forEach((row, rowIndex) => {
+    row.forEach((value, columnIndex) => {
+      assert.equal(value, symmetric[columnIndex]?.[rowIndex]);
+    });
+  });
+
+  const nearSymmetric = generateTravelTimeMatrix(
+    createGeneratorOptions({
+      size: 10,
+      pattern: 'near-symmetric',
+      minMinutes: 10,
+    }),
+  );
+  for (let rowIndex = 0; rowIndex < nearSymmetric.length; rowIndex += 1) {
+    for (
+      let columnIndex = rowIndex + 1;
+      columnIndex < nearSymmetric.length;
+      columnIndex += 1
+    ) {
+      const forward = nearSymmetric[rowIndex]![columnIndex]!;
+      const reverse = nearSymmetric[columnIndex]![rowIndex]!;
+      assert.ok(
+        Math.abs(forward - reverse) <=
+          Math.ceil(forward * NEAR_SYMMETRIC_MAX_DEVIATION_RATIO),
+      );
+    }
+  }
+});
+
+test('matrix generation is reproducible by seed', () => {
+  const options = createGeneratorOptions({ size: 5, seed: 12_345 });
+  const first = generateTravelTimeMatrix(options);
+  const repeated = generateTravelTimeMatrix(options);
+  const differentSeed = generateTravelTimeMatrix({
+    ...options,
+    seed: 54_321,
+  });
+
+  assert.deepEqual(repeated, first);
+  assert.notDeepEqual(differentSeed, first);
+});
+
+test('matrix fill preserves values while regenerate replaces and clear empties', () => {
+  const options = createGeneratorOptions({ size: 3 });
+  const partial = [
+    [0, 12, null],
+    [null, 0, 20],
+    [30, null, 0],
+  ];
+  const filled = fillMissingTravelTimeMatrix(partial, options);
+
+  assert.equal(filled[0]?.[1], 12);
+  assert.equal(filled[1]?.[2], 20);
+  assert.equal(filled[2]?.[0], 30);
+  assert.equal(
+    filled.every((row) => row.every((value) => value !== null)),
+    true,
+  );
+
+  const previous = [
+    [0, 999, 999],
+    [999, 0, 999],
+    [999, 999, 0],
+  ];
+  const regenerated = generateTravelTimeMatrix(options);
+  regenerated.forEach((row, rowIndex) => {
+    row.forEach((value, columnIndex) => {
+      if (rowIndex !== columnIndex) {
+        assert.notEqual(value, previous[rowIndex]?.[columnIndex]);
+      }
+    });
+  });
+
+  assert.deepEqual(clearTravelTimeMatrix(3), [
+    [0, null, null],
+    [null, 0, null],
+    [null, null, 0],
+  ]);
+});
+
+test('matrix generator rejects invalid ranges and seeds', () => {
+  assert.match(
+    getTravelTimeMatrixGeneratorError(
+      createGeneratorOptions({ minMinutes: -1 }),
+    ) ?? '',
+    /0 이상의 정수/,
+  );
+  assert.match(
+    getTravelTimeMatrixGeneratorError(
+      createGeneratorOptions({ minMinutes: 10.5 }),
+    ) ?? '',
+    /0 이상의 정수/,
+  );
+  assert.match(
+    getTravelTimeMatrixGeneratorError(
+      createGeneratorOptions({ minMinutes: 61, maxMinutes: 60 }),
+    ) ?? '',
+    /최소 이동시간/,
+  );
+  assert.match(
+    getTravelTimeMatrixGeneratorError(createGeneratorOptions({ seed: -1 })) ??
+      '',
+    /Seed/,
+  );
 });
 
 test('shuffle changes location order without changing the location set or selection', () => {
@@ -541,6 +856,7 @@ function createBuilderState(
       location: { ...location.location },
     })),
     startTime: '09:00',
+    travelMode: DEFAULT_TROUTE_TRAVEL_MODE,
     travelTimeSource,
     travelTimeMatrix: travelTimeMatrix.map((row) => [...row]),
     debug: {
@@ -583,6 +899,28 @@ function createOptimization(order: string[]): TrouteOptimizeResponse {
     })),
     total_travel_minutes: 60,
   };
+}
+
+function createGeneratorOptions(
+  overrides: Partial<TravelTimeMatrixGeneratorOptions> = {},
+): TravelTimeMatrixGeneratorOptions {
+  return {
+    size: 3,
+    minMinutes: 5,
+    maxMinutes: 60,
+    pattern: 'directed-uniform',
+    seed: 12_345,
+    ...overrides,
+  };
+}
+
+function hasAsymmetricPair(matrix: readonly (readonly number[])[]): boolean {
+  return matrix.some((row, rowIndex) =>
+    row.some(
+      (value, columnIndex) =>
+        rowIndex !== columnIndex && value !== matrix[columnIndex]?.[rowIndex],
+    ),
+  );
 }
 
 function createSequenceRandom(values: readonly number[]): () => number {

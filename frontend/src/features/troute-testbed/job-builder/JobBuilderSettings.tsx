@@ -1,5 +1,8 @@
-import { Classes, Switch } from '@blueprintjs/core';
-import { TROUTE_MAX_DEBUG_JOB_DURATION_MS } from '@trasolve/shared';
+import { Classes, HTMLSelect, Switch } from '@blueprintjs/core';
+import {
+  TROUTE_MAX_DEBUG_JOB_DURATION_MS,
+  type TrouteTravelMode,
+} from '@trasolve/shared';
 import { VISIT_TIME_GRANULARITY_MINUTES } from '@/entities/place';
 import type { JobBuilderState } from '@/features/troute-testbed/job-builder/jobBuilderModel';
 
@@ -8,9 +11,19 @@ interface JobBuilderSettingsProps {
   startTimeError?: string;
   minJobDurationMsError?: string;
   onChange: (
-    patch: Partial<Pick<JobBuilderState, 'startTime' | 'debug'>>,
+    patch: Partial<Pick<JobBuilderState, 'startTime' | 'travelMode' | 'debug'>>,
   ) => void;
 }
+
+const TRAVEL_MODE_OPTIONS: readonly {
+  value: TrouteTravelMode;
+  label: string;
+}[] = [
+  { value: 'TRANSIT', label: '대중교통' },
+  { value: 'DRIVING', label: '자동차' },
+  { value: 'WALKING', label: '도보' },
+  { value: 'BICYCLING', label: '자전거' },
+];
 
 export function JobBuilderSettings({
   state,
@@ -27,6 +40,31 @@ export function JobBuilderSettings({
         요청 설정
       </h2>
       <div className="job-builder-settings-fields">
+        <label className="job-builder-settings-row">
+          <span>이동수단</span>
+          <HTMLSelect
+            aria-label="이동수단"
+            value={state.travelMode}
+            onChange={(event) =>
+              onChange({
+                travelMode: event.currentTarget.value as TrouteTravelMode,
+              })
+            }
+          >
+            {TRAVEL_MODE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </HTMLSelect>
+          <small>
+            실제 경로 조회에 사용할 이동수단입니다.
+            {state.travelTimeSource === 'direct'
+              ? ' 직접 Matrix 입력 시 실제 경로 조회는 생략됩니다.'
+              : ''}
+          </small>
+        </label>
+
         <label className="job-builder-settings-row">
           <span>시작 시각</span>
           <input

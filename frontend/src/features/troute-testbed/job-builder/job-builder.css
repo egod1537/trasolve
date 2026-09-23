@@ -620,6 +620,8 @@
 
 .job-builder-matrix-editor {
   min-width: 0;
+  display: grid;
+  gap: 8px;
 }
 
 .job-builder-matrix-scroll {
@@ -654,6 +656,65 @@
 
 .job-builder-matrix-editor td input[aria-invalid='true'] {
   border-color: var(--color-danger);
+}
+
+.job-builder-matrix-generator {
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-surface);
+}
+
+.job-builder-matrix-generator > .bp6-button-group {
+  flex: none;
+}
+
+.job-builder-matrix-generator-settings {
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.job-builder-matrix-generator-settings > label {
+  display: grid;
+  gap: 3px;
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.job-builder-matrix-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.job-builder-matrix-range-inputs input {
+  width: 68px;
+}
+
+.job-builder-matrix-generator-settings .bp6-html-select select {
+  min-width: 210px;
+}
+
+.job-builder-matrix-seed-input {
+  width: 108px;
+}
+
+.job-builder-matrix-generator-error {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .job-builder-json-preview {
@@ -836,6 +897,15 @@
 
   .job-builder-location-fields > .job-builder-field-error {
     margin-left: 0;
+  }
+
+  .job-builder-matrix-generator > .bp6-button-group {
+    flex-wrap: wrap;
+  }
+
+  .job-builder-matrix-generator-settings .bp6-html-select,
+  .job-builder-matrix-generator-settings .bp6-html-select select {
+    width: 100%;
   }
 }
 

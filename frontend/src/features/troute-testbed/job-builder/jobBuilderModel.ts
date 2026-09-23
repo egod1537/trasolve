@@ -1,4 +1,4 @@
-import type { PlaceDetails } from '@trasolve/shared';
+import type { PlaceDetails, TrouteTravelMode } from '@trasolve/shared';
 import { getPlaceOpeningStatus } from '@/entities/place';
 import { createDefaultJobBuilderLocations } from '@/features/troute-testbed/job-builder/jobBuilderFixtures';
 
@@ -6,6 +6,7 @@ export const DEFAULT_OPEN_TIME = '09:00';
 export const DEFAULT_CLOSE_TIME = '18:00';
 export const DEFAULT_STAY_MINUTES = 60;
 export const DEFAULT_MIN_JOB_DURATION_MS = 4_000;
+export const DEFAULT_TROUTE_TRAVEL_MODE: TrouteTravelMode = 'TRANSIT';
 export const MAX_STAY_MINUTES = 4_294_967_295;
 
 export type JobBuilderTravelTimeSource = 'tcache' | 'direct';
@@ -32,6 +33,7 @@ export interface JobBuilderLocation {
 export interface JobBuilderState {
   locations: JobBuilderLocation[];
   startTime: string;
+  travelMode: TrouteTravelMode;
   travelTimeSource: JobBuilderTravelTimeSource;
   travelTimeMatrix: JobBuilderTravelTimeMatrixCell[][];
   debug: {
@@ -83,6 +85,7 @@ export function createDefaultJobBuilderDraft(): JobBuilderState {
   return {
     locations,
     startTime: '09:00',
+    travelMode: DEFAULT_TROUTE_TRAVEL_MODE,
     travelTimeSource: 'direct',
     travelTimeMatrix: createEmptyTravelTimeMatrix(locations.length),
     debug: {

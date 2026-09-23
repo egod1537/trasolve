@@ -23,6 +23,31 @@ test('optimize request accepts requests without a travel time matrix', () => {
   );
 });
 
+test('optimize request accepts an optional supported travel mode', () => {
+  assert.equal(
+    trouteOptimizeRequestSchema.safeParse(createRequest()).success,
+    true,
+  );
+  for (const travelMode of ['TRANSIT', 'DRIVING', 'WALKING', 'BICYCLING']) {
+    const parsed = trouteOptimizeRequestSchema.safeParse(
+      createRequest({ travel_mode: travelMode }),
+    );
+    assert.equal(parsed.success, true);
+    assert.equal(parsed.data.travel_mode, travelMode);
+  }
+});
+
+test('optimize request rejects unsupported travel modes', () => {
+  for (const travelMode of ['CAR', 'DRIVE', 'transit', '']) {
+    assert.equal(
+      trouteOptimizeRequestSchema.safeParse(
+        createRequest({ travel_mode: travelMode }),
+      ).success,
+      false,
+    );
+  }
+});
+
 test('optimize request accepts a valid asymmetric matrix', () => {
   const parsed = trouteOptimizeRequestSchema.safeParse(
     createRequest({ travel_time_matrix: asymmetricMatrix }),
@@ -103,8 +128,11 @@ test('place_id may be empty with a matrix but is required without one', () => {
   );
 });
 
-test('remote jobs reuse the optimize request matrix contract', () => {
-  const request = createRequest({ travel_time_matrix: asymmetricMatrix });
+test('remote jobs reuse the optimize request matrix and travel mode contract', () => {
+  const request = createRequest({
+    travel_mode: 'DRIVING',
+    travel_time_matrix: asymmetricMatrix,
+  });
   const parsed = trouteRemoteJobSchema.safeParse({
     request,
     job_id: request.job_id,
@@ -120,6 +148,7 @@ test('remote jobs reuse the optimize request matrix contract', () => {
   });
 
   assert.equal(parsed.success, true);
+  assert.equal(parsed.data.request.travel_mode, 'DRIVING');
   assert.deepEqual(parsed.data.request.travel_time_matrix, asymmetricMatrix);
 });
 

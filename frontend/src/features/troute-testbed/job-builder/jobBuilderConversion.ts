@@ -3,7 +3,10 @@ import type {
   JobBuilderLocation,
   JobBuilderState,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
-import { DEFAULT_MIN_JOB_DURATION_MS } from '@/features/troute-testbed/job-builder/jobBuilderModel';
+import {
+  DEFAULT_MIN_JOB_DURATION_MS,
+  DEFAULT_TROUTE_TRAVEL_MODE,
+} from '@/features/troute-testbed/job-builder/jobBuilderModel';
 
 export type JobBuilderOptimizeRequestDraft = Omit<
   TrouteOptimizeRequest,
@@ -32,6 +35,7 @@ export function jobBuilderToOptimizeRequest(
       stay_minutes: location.stayMinutes,
     })),
     start_time: state.startTime,
+    travel_mode: state.travelMode,
     ...(state.travelTimeSource === 'direct'
       ? {
           travel_time_matrix: state.travelTimeMatrix.map((row) => [...row]),
@@ -71,6 +75,7 @@ export function applyOptimizeRequestToBuilder(
   return {
     locations,
     startTime: request.start_time,
+    travelMode: request.travel_mode ?? DEFAULT_TROUTE_TRAVEL_MODE,
     travelTimeSource:
       request.travel_time_matrix === undefined ? 'tcache' : 'direct',
     travelTimeMatrix:

@@ -4,6 +4,7 @@ import {
 } from '@/features/troute-testbed/job-builder/jobBuilderFixtures';
 import {
   createEmptyTravelTimeMatrix,
+  DEFAULT_TROUTE_TRAVEL_MODE,
   type JobBuilderLocation,
   type JobBuilderState,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
@@ -39,12 +40,30 @@ const tokyo5Locations = [
   places.tokyoTower,
 ] as const;
 
-const seoul5Locations = [
+const seoulGangnamLocation = {
+  ...places.gangnamStation,
+  openTime: '09:00',
+  closeTime: '22:00',
+  stayMinutes: 30,
+} as const;
+
+const seoul3Locations = [
   places.seoulStation,
-  places.lotteWorldTower,
   places.gyeongbokgung,
-  places.nSeoulTower,
-  places.gangnamStation,
+  seoulGangnamLocation,
+] as const;
+
+const seoul5Locations = [
+  ...seoul3Locations,
+  places.hongikUniversityStation,
+  places.starfieldCoexMall,
+] as const;
+
+const seoul8Locations = [
+  ...seoul5Locations,
+  places.myeongdongStation,
+  places.dongdaemunStation,
+  places.yeouidoStation,
 ] as const;
 
 const timeWindowLocations = [
@@ -102,10 +121,22 @@ export const JOB_BUILDER_PRESETS: readonly JobBuilderPreset[] = [
     locations: tokyo5Locations,
   }),
   createPreset({
+    id: 'seoul-3',
+    name: 'Seoul 3',
+    description: '서울 핵심 3개 장소로 빠르게 확인하는 smoke test',
+    locations: seoul3Locations,
+  }),
+  createPreset({
     id: 'seoul-5',
     name: 'Seoul 5',
-    description: '서울 실제 Place ID로 tcache와 Google 경로를 확인하는 TC',
+    description: '강북과 강남을 섞어 일반 최적화를 확인하는 TC',
     locations: seoul5Locations,
+  }),
+  createPreset({
+    id: 'seoul-8',
+    name: 'Seoul 8',
+    description: '서울 여러 권역의 pair query와 최적화 결과를 확인하는 TC',
+    locations: seoul8Locations,
   }),
   createPreset({
     id: 'time-window',
@@ -153,9 +184,11 @@ function createPreset(options: {
   description: string;
   locations: readonly JobBuilderLocation[];
   travelTimeSource?: JobBuilderState['travelTimeSource'];
+  travelMode?: JobBuilderState['travelMode'];
   travelTimeMatrix?: readonly (readonly number[])[];
 }): JobBuilderPreset {
   const source = options.travelTimeSource ?? 'tcache';
+  const travelMode = options.travelMode ?? DEFAULT_TROUTE_TRAVEL_MODE;
   return {
     id: options.id,
     name: options.name,
@@ -167,6 +200,7 @@ function createPreset(options: {
       return {
         locations,
         startTime: '09:00',
+        travelMode,
         travelTimeSource: source,
         travelTimeMatrix: options.travelTimeMatrix
           ? options.travelTimeMatrix.map((row) => [...row])

@@ -1,5 +1,5 @@
 import { Button, Classes, Intent, Tag } from '@blueprintjs/core';
-import type { TrouteOptimizeRequest } from '@trasolve/shared';
+import type { TrouteOptimizeRequest, TrouteTravelMode } from '@trasolve/shared';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { JobRequestLocationTable } from '@/features/troute-testbed/components/detail/JobRequestLocationTable';
 
@@ -7,11 +7,19 @@ interface JobRequestSummaryProps {
   request: TrouteOptimizeRequest;
 }
 
+const TRAVEL_MODE_LABELS: Record<TrouteTravelMode, string> = {
+  TRANSIT: '대중교통',
+  DRIVING: '자동차',
+  WALKING: '도보',
+  BICYCLING: '자전거',
+};
+
 export const JobRequestSummary = memo(function JobRequestSummary({
   request,
 }: JobRequestSummaryProps) {
   const [expanded, setExpanded] = useState(true);
   const [copied, setCopied] = useState(false);
+  const travelMode = request.travel_mode ?? 'TRANSIT';
   const json = useMemo(() => JSON.stringify(request, null, 2), [request]);
   const debugEnabled = request.debug !== undefined;
   const shuffleEnabled = request.debug?.shuffle_result_route === true;
@@ -63,6 +71,12 @@ export const JobRequestSummary = memo(function JobRequestSummary({
           <div>
             <dt>시작 시간</dt>
             <dd>{request.start_time}</dd>
+          </div>
+          <div>
+            <dt>이동수단</dt>
+            <dd>
+              {TRAVEL_MODE_LABELS[travelMode]} ({travelMode})
+            </dd>
           </div>
           <div>
             <dt>Debug</dt>

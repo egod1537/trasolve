@@ -38,6 +38,12 @@ export const trouteJobStatusSchema = z.enum([
   'completed',
   'cancelled',
 ]);
+export const trouteTravelModeSchema = z.enum([
+  'TRANSIT',
+  'DRIVING',
+  'WALKING',
+  'BICYCLING',
+]);
 
 export const trouteErrorPayloadSchema = z.strictObject({
   code: z
@@ -84,6 +90,7 @@ export const trouteOptimizeRequestSchema = z
     job_id: trouteJobIdSchema,
     locations: z.array(trouteLocationSchema).min(2).max(500),
     start_time: timeOfDaySchema,
+    travel_mode: trouteTravelModeSchema.optional(),
     travel_time_matrix: trouteTravelTimeMatrixSchema.optional(),
     debug: trouteDebugOptionsSchema.optional(),
   })

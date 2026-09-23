@@ -178,8 +178,19 @@ export function JobBuilderDialog({
     clearFeedback();
   }
 
+  function updateTravelTimeMatrix(
+    matrix: JobBuilderTravelTimeMatrixCell[][],
+  ): void {
+    setBuilder((current) => ({
+      ...current,
+      travelTimeSource: 'direct',
+      travelTimeMatrix: matrix.map((row) => [...row]),
+    }));
+    clearFeedback();
+  }
+
   function updateSettings(
-    patch: Partial<Pick<JobBuilderState, 'startTime' | 'debug'>>,
+    patch: Partial<Pick<JobBuilderState, 'startTime' | 'travelMode' | 'debug'>>,
   ): void {
     setBuilder((current) => ({ ...current, ...patch }));
     clearFeedback();
@@ -416,6 +427,7 @@ export function JobBuilderDialog({
                 matrix={builder.travelTimeMatrix}
                 onSourceChange={updateTravelTimeSource}
                 onMatrixCellChange={updateTravelTimeMatrixCell}
+                onMatrixChange={updateTravelTimeMatrix}
               />
               <JobBuilderSettings
                 state={builder}

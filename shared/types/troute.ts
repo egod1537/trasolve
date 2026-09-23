@@ -22,6 +22,7 @@ import type {
   trouteRemoteTimelineEntrySchema,
   trouteRemoteTimelineSchema,
   trouteRouteStopSchema,
+  trouteTravelModeSchema,
 } from '../schemas/troute.js';
 
 export type TrouteProgressStage = z.infer<typeof trouteProgressStageSchema>;
@@ -51,6 +52,7 @@ export type TrouteJobHistoryResponse = z.infer<
 >;
 export type TrouteLocation = z.infer<typeof trouteLocationSchema>;
 export type TrouteOptimizeRequest = z.infer<typeof trouteOptimizeRequestSchema>;
+export type TrouteTravelMode = z.infer<typeof trouteTravelModeSchema>;
 export type TrouteRouteStop = z.infer<typeof trouteRouteStopSchema>;
 export type TrouteOptimizeResponse = z.infer<
   typeof trouteOptimizeResponseSchema

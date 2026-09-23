@@ -197,6 +197,7 @@ export {
   trouteRemoteTimelineEntrySchema,
   trouteRemoteTimelineSchema,
   trouteRouteStopSchema,
+  trouteTravelModeSchema,
 } from './schemas/troute.js';
 
 export type {
@@ -222,4 +223,5 @@ export type {
   TrouteRemoteTimeline,
   TrouteRemoteTimelineEntry,
   TrouteRouteStop,
+  TrouteTravelMode,
 } from './types/troute.js';
