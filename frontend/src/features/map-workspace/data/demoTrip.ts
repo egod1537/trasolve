@@ -12,6 +12,7 @@ export const demoTrip: Trip = {
       places: [
         {
           id: 'asakusa',
+          placeId: 'ChIJ8T1GpMGOGGARDYGSgpooDWw',
           name: '센소지',
           description: '아사쿠사 · 사찰과 주변 거리',
           time: '09:00',
@@ -21,6 +22,7 @@ export const demoTrip: Trip = {
         },
         {
           id: 'ueno',
+          placeId: 'ChIJw2qQRZuOGGARWmROEiM2y7E',
           name: '우에노 공원',
           description: '우에노 · 공원 산책',
           time: '11:30',
@@ -31,6 +33,7 @@ export const demoTrip: Trip = {
         },
         {
           id: 'akihabara',
+          placeId: 'ChIJ__SmPqeOGGAR42HgD-XxuV4',
           name: '아키하바라',
           description: '아키하바라 · 거리 둘러보기',
           time: '15:00',
@@ -71,6 +74,7 @@ export const demoTrip: Trip = {
       places: [
         {
           id: 'meiji',
+          placeId: 'ChIJ5SZMmreMGGARcz8QSTiJyo8',
           name: '메이지 신궁',
           description: '시부야 · 숲길 산책',
           time: '09:30',
@@ -80,6 +84,7 @@ export const demoTrip: Trip = {
         },
         {
           id: 'harajuku',
+          placeId: 'ChIJ_yy1ybqMGGAR0tPR4qiHDVY',
           name: '하라주쿠',
           description: '하라주쿠 · 점심과 쇼핑',
           time: '12:00',
@@ -89,6 +94,7 @@ export const demoTrip: Trip = {
         },
         {
           id: 'shibuya',
+          placeId: 'ChIJK9EM68qLGGARacmu4KJj5SA',
           name: '시부야 스크램블 교차로',
           description: '시부야 · 도심 둘러보기',
           time: '16:00',
@@ -129,6 +135,7 @@ export const demoTrip: Trip = {
       places: [
         {
           id: 'tsukiji',
+          placeId: 'ChIJW2cLzSGLGGARXAKXv6EkbqI',
           name: '쓰키지 장외시장',
           description: '쓰키지 · 아침 식사',
           time: '09:00',
@@ -138,6 +145,7 @@ export const demoTrip: Trip = {
         },
         {
           id: 'ginza',
+          placeId: 'ChIJu2-DAeeLGGARUZipC7OFRmA',
           name: '긴자',
           description: '긴자 · 상점과 카페',
           time: '12:00',
@@ -147,6 +155,7 @@ export const demoTrip: Trip = {
         },
         {
           id: 'tokyo-tower',
+          placeId: 'ChIJCewJkL2LGGAR3Qmk0vCTGkg',
           name: '도쿄 타워',
           description: '미나토 · 전망대',
           time: '17:00',

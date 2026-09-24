@@ -1,6 +1,11 @@
 import {
   API_ROUTES,
   apiErrorSchema,
+  trouteJobCancelledEventSchema,
+  trouteJobCompletedEventSchema,
+  trouteJobFailedEventSchema,
+  trouteJobProgressEventSchema,
+  trouteJobSnapshotEventSchema,
   trouteJobStateSchema,
   trouteJobSubmissionResponseSchema,
   trouteOptimizeRequestSchema,
@@ -11,10 +16,12 @@ import {
 } from '@trasolve/shared';
 
 const ROUTE_OPTIMIZATION_API_CONFIG = {
-  pollIntervalMs: 400,
   requestTimeoutMs: 120_000,
   cancelTimeoutMs: 5_000,
 } as const;
+
+type TrouteJobEventType =
+  'snapshot' | 'progress' | 'completed' | 'failed' | 'cancelled';
 
 type ParsedResponseBody = {
   body: unknown;
@@ -99,13 +106,11 @@ export async function optimizeDayRoute(
     }
 
     submittedJobId = submission.data.job_id;
-    onProgress({
-      status: 'pending',
-      stage: null,
-      progress: 0,
-      last_message: null,
-    });
-    return await pollOptimizationJob(submittedJobId, onProgress, requestSignal);
+    return await streamOptimizationJob(
+      submittedJobId,
+      onProgress,
+      requestSignal,
+    );
   } catch (cause) {
     if (requestSignal.aborted) {
       if (requestDispatched) {
@@ -124,59 +129,230 @@ export async function optimizeDayRoute(
   }
 }
 
-async function pollOptimizationJob(
+async function streamOptimizationJob(
   jobId: string,
   onProgress: (progress: RouteOptimizationProgress) => void,
   signal: AbortSignal,
 ): Promise<TrouteOptimizeResponse> {
-  while (true) {
-    signal.throwIfAborted();
-    const response = await fetch(
-      `${API_ROUTES.trouteInternalJobs}/${encodeURIComponent(jobId)}`,
-      { signal },
-    );
+  signal.throwIfAborted();
+  const response = await fetch(
+    `${API_ROUTES.trouteInternalJobs}/${encodeURIComponent(jobId)}/events`,
+    {
+      headers: { Accept: 'text/event-stream' },
+      signal,
+    },
+  );
+  if (!response.ok) {
     const responseBody = await readResponseBody(response);
-    if (!response.ok) {
-      throw new RouteOptimizationApiError(
-        readApiError(
-          responseBody.body,
-          `최적화 상태 조회가 HTTP ${response.status}로 실패했습니다.`,
-        ),
-      );
-    }
-    if (!responseBody.isJson) {
-      throw new RouteOptimizationApiError(
-        '최적화 상태 응답 형식이 올바르지 않습니다.',
-      );
-    }
-
-    const parsed = trouteJobStateSchema.safeParse(responseBody.body);
-    if (!parsed.success || parsed.data.job_id !== jobId) {
-      throw new RouteOptimizationApiError(
-        '최적화 상태 응답 형식이 올바르지 않습니다.',
-      );
-    }
-
-    const state = parsed.data;
-    onProgress(state);
-    if (state.status === 'completed') {
-      if (state.result) {
-        return state.result;
-      }
-      throw new RouteOptimizationApiError(
-        '완료된 최적화 Job에 결과가 없습니다.',
-      );
-    }
-    if (state.status === 'failed') {
-      throw new RouteOptimizationApiError(
-        formatOptimizationJobError(state.error),
-      );
-    }
-    if (state.status === 'cancelled') {
-      throw new RouteOptimizationApiError('경로 최적화가 취소되었습니다.');
-    }
-    await waitForPoll(signal);
+    throw new RouteOptimizationApiError(
+      readApiError(
+        responseBody.body,
+        `최적화 진행 상태 연결이 HTTP ${response.status}로 실패했습니다.`,
+      ),
+    );
   }
+  if (
+    response.body === null ||
+    !response.headers
+      .get('content-type')
+      ?.toLowerCase()
+      .startsWith('text/event-stream')
+  ) {
+    throw new RouteOptimizationApiError(
+      '최적화 진행 상태 응답 형식이 올바르지 않습니다.',
+    );
+  }
+
+  let terminalState: TrouteJobState | null = null;
+  await parseOptimizationEventStream(response.body, (type, data) => {
+    const state = parseOptimizationJobEvent(type, data, jobId);
+    onProgress(state);
+    if (
+      state.status === 'completed' ||
+      state.status === 'failed' ||
+      state.status === 'cancelled'
+    ) {
+      terminalState = state;
+    }
+  });
+  signal.throwIfAborted();
+
+  if (terminalState === null) {
+    terminalState = await getOptimizationJobState(jobId, signal);
+    onProgress(terminalState);
+  }
+  return getOptimizationResult(terminalState);
+}
+
+async function getOptimizationJobState(
+  jobId: string,
+  signal: AbortSignal,
+): Promise<TrouteJobState> {
+  const response = await fetch(
+    `${API_ROUTES.trouteInternalJobs}/${encodeURIComponent(jobId)}`,
+    { signal },
+  );
+  const responseBody = await readResponseBody(response);
+  if (!response.ok) {
+    throw new RouteOptimizationApiError(
+      readApiError(
+        responseBody.body,
+        `최적화 상태 조회가 HTTP ${response.status}로 실패했습니다.`,
+      ),
+    );
+  }
+  const parsed = trouteJobStateSchema.safeParse(responseBody.body);
+  if (!responseBody.isJson || !parsed.success || parsed.data.job_id !== jobId) {
+    throw new RouteOptimizationApiError(
+      '최적화 상태 응답 형식이 올바르지 않습니다.',
+    );
+  }
+  return parsed.data;
+}
+
+function getOptimizationResult(state: TrouteJobState): TrouteOptimizeResponse {
+  if (state.status === 'completed') {
+    if (state.result) {
+      return state.result;
+    }
+    throw new RouteOptimizationApiError('완료된 최적화 Job에 결과가 없습니다.');
+  }
+  if (state.status === 'failed') {
+    throw new RouteOptimizationApiError(
+      formatOptimizationJobError(state.error),
+    );
+  }
+  if (state.status === 'cancelled') {
+    throw new RouteOptimizationApiError('경로 최적화가 취소되었습니다.');
+  }
+  throw new RouteOptimizationApiError(
+    '최적화 진행 상태 연결이 결과 없이 종료되었습니다.',
+  );
+}
+
+function parseOptimizationJobEvent(
+  type: TrouteJobEventType,
+  data: string,
+  jobId: string,
+): TrouteJobState {
+  let body: unknown;
+  try {
+    body = JSON.parse(data) as unknown;
+  } catch {
+    throw new RouteOptimizationApiError(
+      '최적화 진행 상태 데이터가 JSON 형식이 아닙니다.',
+    );
+  }
+  const envelope = getOptimizationEventSchema(type).safeParse(body);
+  const parsedRawState = trouteJobStateSchema.safeParse(body);
+  const rawState = envelope.success
+    ? envelope.data.state
+    : parsedRawState.success
+      ? parsedRawState.data
+      : null;
+  if (
+    !rawState ||
+    rawState.job_id !== jobId ||
+    (!envelope.success && !eventMatchesState(type, rawState))
+  ) {
+    throw new RouteOptimizationApiError(
+      '최적화 진행 상태 데이터 형식이 올바르지 않습니다.',
+    );
+  }
+  return rawState;
+}
+
+function eventMatchesState(
+  type: TrouteJobEventType,
+  state: TrouteJobState,
+): boolean {
+  switch (type) {
+    case 'snapshot':
+      return true;
+    case 'progress':
+      return state.status === 'pending' || state.status === 'running';
+    case 'completed':
+      return state.status === 'completed' && state.result !== null;
+    case 'failed':
+      return state.status === 'failed' && state.error !== null;
+    case 'cancelled':
+      return state.status === 'cancelled';
+  }
+}
+
+function getOptimizationEventSchema(type: TrouteJobEventType) {
+  switch (type) {
+    case 'snapshot':
+      return trouteJobSnapshotEventSchema;
+    case 'progress':
+      return trouteJobProgressEventSchema;
+    case 'completed':
+      return trouteJobCompletedEventSchema;
+    case 'failed':
+      return trouteJobFailedEventSchema;
+    case 'cancelled':
+      return trouteJobCancelledEventSchema;
+  }
+}
+
+async function parseOptimizationEventStream(
+  stream: ReadableStream<Uint8Array>,
+  onEvent: (type: TrouteJobEventType, data: string) => void,
+): Promise<void> {
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let eventType = '';
+  let dataLines: string[] = [];
+
+  const dispatch = (): void => {
+    if (dataLines.length > 0 && isTrouteJobEventType(eventType)) {
+      onEvent(eventType, dataLines.join('\n'));
+    }
+    eventType = '';
+    dataLines = [];
+  };
+  const consumeLine = (line: string): void => {
+    if (line === '') {
+      dispatch();
+      return;
+    }
+    if (line.startsWith(':')) {
+      return;
+    }
+    const separator = line.indexOf(':');
+    const field = separator < 0 ? line : line.slice(0, separator);
+    let value = separator < 0 ? '' : line.slice(separator + 1);
+    if (value.startsWith(' ')) {
+      value = value.slice(1);
+    }
+    if (field === 'event') {
+      eventType = value;
+    } else if (field === 'data') {
+      dataLines.push(value);
+    }
+  };
+
+  for await (const chunk of stream) {
+    buffer += decoder.decode(chunk, { stream: true });
+    const lines = buffer.split(/\r\n|\r|\n/);
+    buffer = lines.pop() ?? '';
+    lines.forEach(consumeLine);
+  }
+  buffer += decoder.decode();
+  if (buffer) {
+    consumeLine(buffer);
+  }
+  dispatch();
+}
+
+function isTrouteJobEventType(value: string): value is TrouteJobEventType {
+  return (
+    value === 'snapshot' ||
+    value === 'progress' ||
+    value === 'completed' ||
+    value === 'failed' ||
+    value === 'cancelled'
+  );
 }
 
 function formatOptimizationJobError(error: TrouteJobState['error']): string {
@@ -258,28 +434,6 @@ async function cancelOptimizationJob(jobId: string): Promise<void> {
   } catch {
     // 원래 abort/timeout 오류를 유지하기 위한 best-effort 취소 요청이다.
   }
-}
-
-function waitForPoll(signal: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const complete = (): void => {
-      signal.removeEventListener('abort', abort);
-      resolve();
-    };
-    const abort = (): void => {
-      clearTimeout(timeout);
-      signal.removeEventListener('abort', abort);
-      reject(signal.reason);
-    };
-    const timeout = setTimeout(
-      complete,
-      ROUTE_OPTIMIZATION_API_CONFIG.pollIntervalMs,
-    );
-    signal.addEventListener('abort', abort, { once: true });
-    if (signal.aborted) {
-      abort();
-    }
-  });
 }
 
 async function readResponseBody(

@@ -12,6 +12,7 @@ import {
   DEFAULT_PLACE_START_TIME,
   DEFAULT_PLACE_VISIT_DURATION_MINUTES,
 } from '@/entities/place';
+import { pickRandomDayColor } from '@/entities/trip';
 import {
   defineTripCommand,
   type TripCommand,
@@ -38,6 +39,7 @@ export function createAddDayCommandWithPendingId(
 }
 
 function addDay(trip: Trip, title: string, id: string): Trip {
+  const color = pickRandomDayColor(trip.days.map((day) => day.color));
   return {
     ...trip,
     days: [
@@ -45,7 +47,7 @@ function addDay(trip: Trip, title: string, id: string): Trip {
       {
         id,
         title,
-        color: '#2563eb',
+        color,
         places: [],
         polylines: [],
         layerItems: [],

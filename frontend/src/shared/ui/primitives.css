@@ -212,6 +212,11 @@
   animation: ui-progress-stripes 0.8s linear infinite;
 }
 
+.ui-progress.is-indeterminate > span {
+  width: 36%;
+  animation: ui-progress-indeterminate 1.2s ease-in-out infinite;
+}
+
 .ui-tooltip {
   position: relative;
   display: inline-flex;
@@ -250,6 +255,16 @@
   }
 }
 
+@keyframes ui-progress-indeterminate {
+  from {
+    transform: translateX(-110%);
+  }
+
+  to {
+    transform: translateX(300%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ui-progress > span,
   .ui-button,
@@ -258,6 +273,12 @@
   }
 
   .ui-progress.is-animated > span {
+    animation: none;
+  }
+
+  .ui-progress.is-indeterminate > span {
+    width: 100%;
+    opacity: 0.7;
     animation: none;
   }
 }

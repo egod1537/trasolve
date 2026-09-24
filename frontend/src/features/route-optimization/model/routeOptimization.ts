@@ -203,14 +203,6 @@ export function getBestOptimizationCandidate(
     best: true,
     route: route.map((stop) => stop.location_id),
     feasible: true,
-    objective_score: {
-      latest_start:
-        route[0]?.departure_time ?? route[0]?.arrival_time ?? '00:00',
-      finish_time:
-        route.at(-1)?.departure_time ?? route.at(-1)?.arrival_time ?? '00:00',
-      travel_minutes: response.total_travel_minutes,
-      wait_minutes: 0,
-    },
   };
 }
 
@@ -311,41 +303,6 @@ export function createTripScheduleUpdate(
     expectedStartPlaceId: selectedStartPlaceId,
     expectedEndPlaceId: selectedEndPlaceId,
   };
-}
-
-export function getCurrentDayRoutePath(
-  activeDay: TripDay,
-  travelMode: TrouteTravelMode,
-): readonly { lat: number; lng: number }[] | undefined {
-  const places = [...activeDay.places].sort(
-    (left, right) => left.order - right.order,
-  );
-  if (places.length < 2) {
-    return undefined;
-  }
-  const paths = places
-    .slice(0, -1)
-    .map(
-      (place, index) =>
-        activeDay.polylines.find(
-          (polyline) =>
-            polyline.fromPlaceId === place.id &&
-            polyline.toPlaceId === places[index + 1]!.id &&
-            getPolylineTravelMode(polyline.mode) === travelMode &&
-            polyline.path &&
-            polyline.path.length >= 2,
-        )?.path,
-    );
-  if (paths.some((path) => !path)) {
-    return undefined;
-  }
-  return paths.flatMap((path, index) => (index === 0 ? path! : path!.slice(1)));
-}
-
-function getPolylineTravelMode(
-  mode: TripDay['polylines'][number]['mode'],
-): TrouteTravelMode | null {
-  return mode === 'straight' ? null : TRAVEL_MODE_BY_POLYLINE_MODE[mode];
 }
 
 export function isApplicableCandidate(

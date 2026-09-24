@@ -9,24 +9,29 @@ import {
   type PointerEvent,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { DAY_COLOR_PALETTE } from '@/entities/trip';
 
 const LONG_PRESS_DURATION_MS = 450;
 const LONG_PRESS_MOVE_TOLERANCE = 8;
 const POPOVER_GAP = 8;
 const VIEWPORT_GAP = 8;
 
-const DAY_COLOR_OPTIONS = [
-  { value: '#2563eb', label: '파랑' },
-  { value: '#0e7490', label: '청록' },
-  { value: '#16a34a', label: '초록' },
-  { value: '#ca8a04', label: '노랑' },
-  { value: '#ea580c', label: '주황' },
-  { value: '#dc2626', label: '빨강' },
-  { value: '#db2777', label: '분홍' },
-  { value: '#7c3aed', label: '보라' },
-  { value: '#475569', label: '회청' },
-  { value: '#0f172a', label: '남회' },
+const DAY_COLOR_LABELS = [
+  '파랑',
+  '청록',
+  '초록',
+  '노랑',
+  '주황',
+  '빨강',
+  '분홍',
+  '보라',
+  '회청',
+  '남회',
 ] as const;
+const DAY_COLOR_OPTIONS = DAY_COLOR_PALETTE.map((value, index) => ({
+  value,
+  label: DAY_COLOR_LABELS[index]!,
+}));
 
 type Props = {
   dayId: string;

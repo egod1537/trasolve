@@ -1,6 +1,5 @@
 import type {
   TrouteOptimizeResponse,
-  TrouteSolverCandidate,
   TrouteTravelMode,
   TripDay,
   TripPlace,
@@ -23,21 +22,25 @@ import {
   createRouteOptimizationSchedule,
   createTripScheduleUpdate,
   getBestOptimizationCandidate,
-  getCurrentDayRoutePath,
   getRouteOptimizationDiagnostics,
   getRouteOptimizationIssue,
   getRouteOptimizationTravelMode,
   isApplicableCandidate,
   orderRouteOptimizationPlaces,
-  type RouteOptimizationSchedule,
   type RouteOptimizationRequestOptions,
   type RouteOptimizationStartPolicy,
 } from '@/features/route-optimization/model/routeOptimization';
-import { useRouteGeometry } from '@/features/route-optimization/model/useRouteGeometry';
+import { useRouteTravelMinutes } from '@/features/route-optimization/model/useRouteTravelMinutes';
 import {
   RouteComparisonMap,
   RouteComparisonPlaceholder,
 } from '@/features/route-optimization/ui/RouteComparisonMap';
+import { RouteMapComparisonDialog } from '@/features/route-optimization/ui/RouteMapComparisonDialog';
+import { RouteOptimizationMetrics } from '@/features/route-optimization/ui/RouteOptimizationMetrics';
+import {
+  RouteOptimizationProgressDialog,
+  type RouteOptimizationProgressPhase,
+} from '@/features/route-optimization/ui/RouteOptimizationProgressDialog';
 import { RouteSchedulePreview } from '@/features/route-optimization/ui/RouteSchedulePreview';
 import { Button } from '@/shared/ui/Button';
 import { Dialog } from '@/shared/ui/Dialog';
@@ -62,6 +65,11 @@ type DayOptimizationState = {
 };
 
 type DayOptimizationSettings = RouteOptimizationRequestOptions;
+
+type ProgressDialogState = {
+  dayId: string;
+  phase: RouteOptimizationProgressPhase;
+};
 
 const TRAVEL_MODE_OPTIONS: readonly {
   value: TrouteTravelMode;
@@ -95,6 +103,8 @@ export function RouteOptimizationModal({
   const descriptionId = useId();
   const validationId = useId();
   const requestAbortControllers = useRef(new Map<string, AbortController>());
+  const userCancelledDayIds = useRef(new Set<string>());
+  const completionCloseTimer = useRef<number | null>(null);
   const initialSelectedDay =
     days.find((day) => day.id === initialDayId) ?? days[0]!;
   const [selectedDayId, setSelectedDayId] = useState(initialSelectedDay.id);
@@ -105,24 +115,24 @@ export function RouteOptimizationModal({
     Record<string, DayOptimizationState>
   >(() => createInitialDayStates(days));
   const [applying, setApplying] = useState(false);
+  const [mapComparisonOpen, setMapComparisonOpen] = useState(false);
+  const [progressDialog, setProgressDialog] =
+    useState<ProgressDialogState | null>(null);
   const selectedDay =
     days.find((day) => day.id === selectedDayId) ?? initialSelectedDay;
   const selectedSettings =
     daySettings[selectedDay.id] ?? createDayOptimizationSettings(selectedDay);
   const selectedState = dayStates[selectedDay.id] ?? createIdleDayState();
+  const progressDayState = progressDialog
+    ? (dayStates[progressDialog.dayId] ?? createIdleDayState())
+    : null;
   const candidate = selectedState.result
     ? getBestOptimizationCandidate(selectedState.result)
     : null;
-  const displayCandidate =
-    selectedState.status === 'running' ? null : candidate;
+  const displayCandidate = candidate;
   const inputIssue = getRouteOptimizationIssue(selectedDay, selectedSettings);
   const diagnostics = getRouteOptimizationDiagnostics(selectedDay);
   const travelMode = selectedSettings.travelMode;
-  const originalBeforePlaces = useMemo(
-    () =>
-      [...selectedDay.places].sort((left, right) => left.order - right.order),
-    [selectedDay.places],
-  );
   const beforePlaces = useMemo(
     () => orderRouteOptimizationPlaces(selectedDay, selectedSettings),
     [selectedDay, selectedSettings],
@@ -143,19 +153,7 @@ export function RouteOptimizationModal({
         : null,
     [displayCandidate, selectedDay, selectedState.result],
   );
-  const storedBeforePath = useMemo(
-    () =>
-      hasCurrentDayOrder(selectedDay, beforePlaces)
-        ? getCurrentDayRoutePath(selectedDay, travelMode)
-        : undefined,
-    [beforePlaces, selectedDay, travelMode],
-  );
-  const beforeGeometry = useRouteGeometry(
-    beforePlaces,
-    travelMode,
-    storedBeforePath,
-  );
-  const afterGeometry = useRouteGeometry(afterPlaces, travelMode);
+  const beforeTravelMinutes = useRouteTravelMinutes(beforePlaces, travelMode);
   const canApply =
     optimizedSchedule !== null &&
     isApplicableCandidate(candidate, selectedDay, selectedSettings);
@@ -197,18 +195,17 @@ export function RouteOptimizationModal({
         return;
       }
       const controller = new AbortController();
+      const runState: { latestProgress: RouteOptimizationProgress | null } = {
+        latestProgress: null,
+      };
       requestAbortControllers.current.set(day.id, controller);
+      setProgressDialog({ dayId: day.id, phase: 'submitting' });
       setDayStates((states) => ({
         ...states,
         [day.id]: {
           ...states[day.id],
           status: 'running',
-          progress: {
-            status: 'pending',
-            stage: 'accepted',
-            progress: 0,
-            last_message: '최적화 요청을 전송하고 있습니다.',
-          },
+          progress: null,
           error: null,
           result: states[day.id]?.result ?? null,
         },
@@ -217,6 +214,12 @@ export function RouteOptimizationModal({
         const result = await optimizeDayRoute(
           createRouteOptimizationRequest(day, settings),
           (progress) => {
+            runState.latestProgress = progress;
+            setProgressDialog((dialog) =>
+              dialog?.dayId === day.id
+                ? { ...dialog, phase: 'running' }
+                : dialog,
+            );
             setDayStates((states) => ({
               ...states,
               [day.id]: {
@@ -237,28 +240,69 @@ export function RouteOptimizationModal({
           ...states,
           [day.id]: {
             status: 'completed',
-            progress: null,
+            progress: states[day.id]?.progress ?? null,
             result,
             error: null,
           },
         }));
+        setProgressDialog((dialog) =>
+          dialog?.dayId === day.id ? { ...dialog, phase: 'completed' } : dialog,
+        );
+        if (completionCloseTimer.current !== null) {
+          window.clearTimeout(completionCloseTimer.current);
+        }
+        completionCloseTimer.current = window.setTimeout(() => {
+          setProgressDialog((dialog) =>
+            dialog?.dayId === day.id ? null : dialog,
+          );
+          completionCloseTimer.current = null;
+        }, 400);
       } catch (cause: unknown) {
-        if (controller.signal.aborted) {
+        if (
+          controller.signal.aborted ||
+          runState.latestProgress?.status === 'cancelled'
+        ) {
+          if (
+            userCancelledDayIds.current.has(day.id) ||
+            runState.latestProgress?.status === 'cancelled'
+          ) {
+            setDayStates((states) => {
+              const previous = states[day.id] ?? createIdleDayState();
+              return {
+                ...states,
+                [day.id]: {
+                  status: previous.result ? 'completed' : 'idle',
+                  progress: previous.progress,
+                  result: previous.result,
+                  error: null,
+                },
+              };
+            });
+            setProgressDialog((dialog) =>
+              dialog?.dayId === day.id
+                ? { ...dialog, phase: 'cancelled' }
+                : dialog,
+            );
+          }
           return;
         }
+        const message =
+          cause instanceof Error
+            ? cause.message
+            : '경로 최적화 요청에 실패했습니다.';
         setDayStates((states) => ({
           ...states,
           [day.id]: {
             ...(states[day.id] ?? createIdleDayState()),
             status: 'failed',
-            progress: null,
-            error:
-              cause instanceof Error
-                ? cause.message
-                : '경로 최적화 요청에 실패했습니다.',
+            error: message,
           },
         }));
+        setProgressDialog((dialog) =>
+          dialog?.dayId === day.id ? { ...dialog, phase: 'failed' } : dialog,
+        );
       } finally {
+        userCancelledDayIds.current.delete(day.id);
         if (requestAbortControllers.current.get(day.id) === controller) {
           requestAbortControllers.current.delete(day.id);
         }
@@ -269,6 +313,9 @@ export function RouteOptimizationModal({
 
   useEffect(
     () => () => {
+      if (completionCloseTimer.current !== null) {
+        window.clearTimeout(completionCloseTimer.current);
+      }
       for (const controller of requestAbortControllers.current.values()) {
         controller.abort();
       }
@@ -276,6 +323,34 @@ export function RouteOptimizationModal({
     },
     [],
   );
+
+  const cancelOptimization = () => {
+    if (
+      !progressDialog ||
+      (progressDialog.phase !== 'submitting' &&
+        progressDialog.phase !== 'running')
+    ) {
+      return;
+    }
+    const controller = requestAbortControllers.current.get(
+      progressDialog.dayId,
+    );
+    userCancelledDayIds.current.add(progressDialog.dayId);
+    setProgressDialog({ ...progressDialog, phase: 'cancelling' });
+    controller?.abort();
+  };
+
+  const retryOptimization = () => {
+    if (!progressDialog || progressDialog.phase !== 'failed') {
+      return;
+    }
+    const day = days.find((entry) => entry.id === progressDialog.dayId);
+    if (!day) {
+      return;
+    }
+    const settings = daySettings[day.id] ?? createDayOptimizationSettings(day);
+    void runOptimization(day, settings);
+  };
 
   useEffect(() => {
     const interceptGlobalKeyDown = (event: KeyboardEvent) => {
@@ -339,8 +414,8 @@ export function RouteOptimizationModal({
       labelledBy={titleId}
       describedBy={descriptionId}
       busy={selectedState.status === 'running' || applying}
-      closeOnBackdrop={!applying}
-      closeOnEscape={!applying}
+      closeOnBackdrop={!applying && !mapComparisonOpen && !progressDialog}
+      closeOnEscape={!applying && !mapComparisonOpen && !progressDialog}
       onClose={onClose}
     >
       <header className="route-optimization-modal-header">
@@ -354,7 +429,7 @@ export function RouteOptimizationModal({
           icon={<CloseIcon />}
           variant="ghost"
           size="sm"
-          disabled={applying}
+          disabled={applying || progressDialog !== null}
           onClick={onClose}
         />
       </header>
@@ -402,72 +477,78 @@ export function RouteOptimizationModal({
                 }
               </span>
             </div>
-            <div className="route-optimization-map-grid">
-              <RouteComparisonMap
-                title="Before"
-                ariaLabel={`${selectedDay.title} 현재 방문 순서 지도`}
-                layer={`route-optimization-before-${selectedDay.id}-${travelMode}`}
-                color="#64748b"
-                places={beforePlaces}
-                geometry={beforeGeometry}
-              />
-              {displayCandidate ? (
-                <RouteComparisonMap
-                  title="After"
-                  ariaLabel={`${selectedDay.title} 최적화 방문 순서 지도`}
-                  layer={`route-optimization-after-${selectedDay.id}-${travelMode}`}
-                  color="#2563eb"
-                  places={afterPlaces}
-                  geometry={afterGeometry}
-                />
-              ) : (
-                <RouteComparisonPlaceholder
-                  title="After"
-                  message={
-                    selectedState.status === 'running'
-                      ? '최적화 결과를 기다리고 있습니다.'
-                      : '아직 최적화를 실행하지 않았습니다.'
-                  }
-                />
-              )}
+            <div className="route-optimization-comparison-cards">
+              <article className="route-optimization-comparison-card">
+                <header className="route-optimization-comparison-card-header">
+                  <div>
+                    <strong>Before</strong>
+                    <span>현재 방문 순서 · 현재 일정</span>
+                  </div>
+                </header>
+                <div className="route-optimization-comparison-card-body">
+                  <RouteComparisonMap
+                    title="Before"
+                    ariaLabel={`${selectedDay.title} 현재 방문 순서 지도`}
+                    layer={`route-optimization-before-${selectedDay.id}`}
+                    places={beforePlaces}
+                    onExpand={() => setMapComparisonOpen(true)}
+                  />
+                  <RouteSchedulePreview
+                    variant="before"
+                    places={beforePlaces}
+                  />
+                </div>
+              </article>
+
+              <article className="route-optimization-comparison-card">
+                <header className="route-optimization-comparison-card-header">
+                  <div>
+                    <strong>After</strong>
+                    <span>최적화 방문 순서 · 최적화 일정</span>
+                  </div>
+                </header>
+                <div className="route-optimization-comparison-card-body">
+                  {displayCandidate ? (
+                    <RouteComparisonMap
+                      title="After"
+                      ariaLabel={`${selectedDay.title} 최적화 방문 순서 지도`}
+                      layer={`route-optimization-after-${selectedDay.id}`}
+                      places={afterPlaces}
+                      onExpand={() => setMapComparisonOpen(true)}
+                    />
+                  ) : (
+                    <RouteComparisonPlaceholder
+                      message={
+                        selectedState.status === 'running'
+                          ? '최적화 결과를 기다리고 있습니다.'
+                          : '아직 최적화를 실행하지 않았습니다.'
+                      }
+                    />
+                  )}
+                  <RouteSchedulePreview
+                    variant="after"
+                    places={afterPlaces}
+                    schedule={optimizedSchedule}
+                    running={selectedState.status === 'running'}
+                    hasResult={displayCandidate !== null}
+                  />
+                </div>
+              </article>
             </div>
           </section>
 
-          <RouteSchedulePreview
-            beforePlaces={beforePlaces}
-            afterPlaces={afterPlaces}
+          <RouteOptimizationMetrics
+            before={beforePlaces}
+            beforeTravelMinutes={beforeTravelMinutes}
+            responseTravelMinutes={
+              selectedState.result?.total_travel_minutes ?? null
+            }
+            candidate={displayCandidate}
             schedule={optimizedSchedule}
+            startPolicy={selectedSettings.startPolicy}
+            requestedStartTime={selectedSettings.startTime}
             running={selectedState.status === 'running'}
-            hasResult={displayCandidate !== null}
           />
-
-          <div className="route-optimization-result-grid">
-            <MetricsDiff
-              before={beforePlaces}
-              beforeTravelMinutes={beforeGeometry.travelMinutes}
-              candidate={displayCandidate}
-              schedule={optimizedSchedule}
-              startPolicy={selectedSettings.startPolicy}
-              requestedStartTime={selectedSettings.startTime}
-              running={selectedState.status === 'running'}
-            />
-            <div className="route-optimization-result-details">
-              <RouteDiff
-                before={beforePlaces}
-                after={afterPlaces}
-                running={selectedState.status === 'running'}
-              />
-              <ChangeSummary
-                originalBefore={originalBeforePlaces}
-                before={beforePlaces}
-                after={afterPlaces}
-                beforeTravelMinutes={beforeGeometry.travelMinutes}
-                candidate={displayCandidate}
-                schedule={optimizedSchedule}
-                running={selectedState.status === 'running'}
-              />
-            </div>
-          </div>
 
           {diagnostics.openingHoursFallback ? (
             <p className="route-optimization-modal-notice" role="status">
@@ -493,15 +574,12 @@ export function RouteOptimizationModal({
           title={inputIssue ?? undefined}
           aria-live="polite"
         >
-          {selectedState.status === 'running'
-            ? `${selectedState.progress?.progress ?? 0}% · ${formatProgressMessage(
-                selectedState.progress,
-              )}`
-            : inputIssue
-              ? `실행 불가 · ${inputIssue}`
-              : ''}
+          {inputIssue ? `실행 불가 · ${inputIssue}` : ''}
         </span>
-        <Button disabled={applying} onClick={onClose}>
+        <Button
+          disabled={applying || progressDialog !== null}
+          onClick={onClose}
+        >
           취소
         </Button>
         <Button
@@ -509,7 +587,8 @@ export function RouteOptimizationModal({
           disabled={
             Boolean(inputIssue) ||
             selectedState.status === 'running' ||
-            applying
+            applying ||
+            progressDialog !== null
           }
           aria-describedby={inputIssue ? validationId : undefined}
           title={inputIssue ?? undefined}
@@ -520,7 +599,12 @@ export function RouteOptimizationModal({
         <Button
           variant="primary"
           loading={applying}
-          disabled={!canApply || selectedState.status === 'running' || applying}
+          disabled={
+            !canApply ||
+            selectedState.status === 'running' ||
+            applying ||
+            progressDialog !== null
+          }
           title={
             candidate && !optimizedSchedule
               ? '최적화 결과의 일정 정보를 확인할 수 없어 적용할 수 없습니다.'
@@ -531,6 +615,28 @@ export function RouteOptimizationModal({
           이 결과 적용
         </Button>
       </footer>
+
+      {mapComparisonOpen ? (
+        <RouteMapComparisonDialog
+          dayId={selectedDay.id}
+          dayTitle={selectedDay.title}
+          beforePlaces={beforePlaces}
+          afterPlaces={afterPlaces}
+          hasAfter={displayCandidate !== null}
+          onClose={() => setMapComparisonOpen(false)}
+        />
+      ) : null}
+
+      {progressDialog && progressDayState ? (
+        <RouteOptimizationProgressDialog
+          phase={progressDialog.phase}
+          progress={progressDayState.progress}
+          error={progressDayState.error}
+          onCancel={cancelOptimization}
+          onClose={() => setProgressDialog(null)}
+          onRetry={retryOptimization}
+        />
+      ) : null}
     </Dialog>
   );
 }
@@ -631,6 +737,12 @@ function OptimizationSettings({
           : null,
     });
   };
+  const startPolicyHelper =
+    settings.startPolicy === 'fixed'
+      ? '입력한 시각에 출발합니다.'
+      : settings.startPolicy === 'earliest'
+        ? '가능한 가장 빠른 출발 시각을 탐색합니다.'
+        : '가능한 가장 늦은 출발 시각을 탐색합니다.';
 
   return (
     <section className="route-optimization-settings">
@@ -640,93 +752,112 @@ function OptimizationSettings({
           <p>선택 Day의 시작·종점과 출발 조건을 설정합니다.</p>
         </div>
       </div>
-      <div className="route-optimization-settings-grid">
-        <label className="route-optimization-setting-card">
-          <span>시작점</span>
-          <select
-            value={settings.selectedStartPlaceId}
-            disabled={disabled || orderedPlaces.length < 2}
-            aria-label="경로 최적화 시작점"
-            onChange={(event) => changeStartPlace(event.target.value)}
-          >
-            {orderedPlaces.map((place) => (
-              <option key={place.id} value={place.id}>
-                {place.name}
-              </option>
-            ))}
-          </select>
-          <small>선택한 장소를 경로의 첫 장소로 사용</small>
-        </label>
-        <label className="route-optimization-setting-card">
-          <span>도착점</span>
-          <select
-            value={settings.selectedEndPlaceId}
-            disabled={disabled || orderedPlaces.length < 2}
-            aria-label="경로 최적화 종점"
-            onChange={(event) => changeEndPlace(event.target.value)}
-          >
-            {orderedPlaces.map((place) => (
-              <option key={place.id} value={place.id}>
-                {place.name}
-              </option>
-            ))}
-          </select>
-          <small>선택한 장소를 경로의 마지막 장소로 사용</small>
-        </label>
-        <fieldset className="route-optimization-setting-card route-optimization-start-policy">
-          <legend>시작 방식</legend>
-          <div className="route-optimization-policy-options">
-            {START_POLICY_OPTIONS.map((option) => (
-              <label key={option.value}>
-                <input
-                  type="radio"
-                  name={`route-optimization-start-policy-${day.id}`}
-                  value={option.value}
-                  checked={settings.startPolicy === option.value}
-                  disabled={disabled}
-                  onChange={() => changeStartPolicy(option.value)}
-                />
-                <span>{option.label}</span>
-              </label>
-            ))}
+      <div className="route-optimization-settings-groups">
+        <section className="route-optimization-settings-group">
+          <div className="route-optimization-settings-group-heading">
+            <h4>경로 조건</h4>
+            <p>경로의 시작 장소와 마지막 장소를 선택합니다.</p>
           </div>
-          <span className="route-optimization-time-field">
-            <span>시작 시각</span>
-            <input
-              type="time"
-              step={600}
-              value={settings.startTime ?? ''}
-              disabled={disabled || settings.startPolicy !== 'fixed'}
-              aria-label="고정 시작 시각"
-              onChange={(event) =>
-                onChange({ startTime: event.target.value || null })
-              }
-            />
-          </span>
-        </fieldset>
-        <label className="route-optimization-setting-card">
-          <span>이동수단</span>
-          <select
-            value={settings.travelMode}
-            disabled={disabled}
-            aria-label="경로 최적화 이동수단"
-            onChange={(event) =>
-              onChange({ travelMode: event.target.value as TrouteTravelMode })
-            }
-          >
-            {TRAVEL_MODE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <small>최적화 요청과 지도 경로에 동일 적용</small>
-        </label>
+          <div className="route-optimization-route-fields">
+            <label className="route-optimization-setting-field">
+              <span>시작점</span>
+              <select
+                value={settings.selectedStartPlaceId}
+                disabled={disabled || orderedPlaces.length < 2}
+                aria-label="경로 최적화 시작점"
+                onChange={(event) => changeStartPlace(event.target.value)}
+              >
+                {orderedPlaces.map((place) => (
+                  <option key={place.id} value={place.id}>
+                    {place.name}
+                  </option>
+                ))}
+              </select>
+              <small>선택한 장소를 경로의 첫 장소로 사용</small>
+            </label>
+            <label className="route-optimization-setting-field">
+              <span>도착점</span>
+              <select
+                value={settings.selectedEndPlaceId}
+                disabled={disabled || orderedPlaces.length < 2}
+                aria-label="경로 최적화 종점"
+                onChange={(event) => changeEndPlace(event.target.value)}
+              >
+                {orderedPlaces.map((place) => (
+                  <option key={place.id} value={place.id}>
+                    {place.name}
+                  </option>
+                ))}
+              </select>
+              <small>선택한 장소를 경로의 마지막 장소로 사용</small>
+            </label>
+          </div>
+        </section>
+
+        <section className="route-optimization-settings-group">
+          <div className="route-optimization-settings-group-heading">
+            <h4>출발 조건</h4>
+            <p>출발 시각을 찾는 방식과 이동수단을 설정합니다.</p>
+          </div>
+          <div className="route-optimization-departure-fields">
+            <fieldset className="route-optimization-setting-field route-optimization-start-policy">
+              <legend>시작 방식</legend>
+              <div className="route-optimization-policy-options">
+                {START_POLICY_OPTIONS.map((option) => (
+                  <label key={option.value}>
+                    <input
+                      type="radio"
+                      name={`route-optimization-start-policy-${day.id}`}
+                      value={option.value}
+                      checked={settings.startPolicy === option.value}
+                      disabled={disabled}
+                      onChange={() => changeStartPolicy(option.value)}
+                    />
+                    <span>{option.label}</span>
+                  </label>
+                ))}
+              </div>
+              <small>{startPolicyHelper}</small>
+            </fieldset>
+            <label className="route-optimization-setting-field">
+              <span>이동수단</span>
+              <select
+                value={settings.travelMode}
+                disabled={disabled}
+                aria-label="경로 최적화 이동수단"
+                onChange={(event) =>
+                  onChange({
+                    travelMode: event.target.value as TrouteTravelMode,
+                  })
+                }
+              >
+                {TRAVEL_MODE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <small>최적화 요청과 비교 지도에 동일하게 적용</small>
+            </label>
+          </div>
+          {settings.startPolicy === 'fixed' ? (
+            <label className="route-optimization-setting-field route-optimization-time-setting">
+              <span>시작 시각</span>
+              <input
+                type="time"
+                step={600}
+                value={settings.startTime ?? ''}
+                disabled={disabled}
+                aria-label="고정 시작 시각"
+                onChange={(event) =>
+                  onChange({ startTime: event.target.value || null })
+                }
+              />
+              <small>10분 단위로 입력</small>
+            </label>
+          ) : null}
+        </section>
       </div>
-      <p className="route-optimization-settings-note">
-        시작 방식에 따라 지정 시각에 출발하거나, 가능한 가장 이른·늦은
-        출발시각을 탐색합니다.
-      </p>
     </section>
   );
 }
@@ -787,360 +918,6 @@ function getValidationResolution(issue: string): string {
   return '장소의 영업시간과 체류시간 입력을 확인한 뒤 다시 시도해 주세요.';
 }
 
-function RouteDiff({
-  before,
-  after,
-  running,
-}: {
-  before: readonly TripPlace[];
-  after: readonly TripPlace[];
-  running: boolean;
-}) {
-  const beforeIndex = new Map(
-    before.map((place, index) => [place.id, index + 1]),
-  );
-  const afterIndex = new Map(
-    after.map((place, index) => [place.id, index + 1]),
-  );
-  const changes = after.filter(
-    (place, index) => beforeIndex.get(place.id) !== index + 1,
-  );
-  return (
-    <section className="route-optimization-diff">
-      <h3>방문 순서</h3>
-      <div className="route-optimization-order-diff">
-        <span>Before</span>
-        <p>{formatOrder(before)}</p>
-        {after.length ? (
-          <>
-            <span>After</span>
-            <p className="route-optimization-after-order">
-              {after.map((place, index) => (
-                <span
-                  key={place.id}
-                  className={changes.includes(place) ? 'is-changed' : ''}
-                >
-                  {index > 0 ? ' → ' : ''}
-                  {place.name}
-                </span>
-              ))}
-            </p>
-          </>
-        ) : null}
-      </div>
-      {after.length ? (
-        changes.length ? (
-          <div className="route-optimization-position-changes">
-            <span>변경 위치</span>
-            <ul>
-              {changes.map((place) => (
-                <li key={place.id}>
-                  <strong>{place.name}</strong>
-                  <span>
-                    {beforeIndex.get(place.id)} → {afterIndex.get(place.id)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p className="route-optimization-diff-message">
-            방문 순서 변경이 없습니다.
-          </p>
-        )
-      ) : (
-        <DiffPendingMessage
-          running={running}
-          idleMessage="최적화 후 변경된 방문 위치를 확인할 수 있습니다."
-          runningMessage="방문 순서 차이를 계산하고 있습니다."
-        />
-      )}
-    </section>
-  );
-}
-
-function ChangeSummary({
-  originalBefore,
-  before,
-  after,
-  beforeTravelMinutes,
-  candidate,
-  schedule,
-  running,
-}: {
-  originalBefore: readonly TripPlace[];
-  before: readonly TripPlace[];
-  after: readonly TripPlace[];
-  beforeTravelMinutes: number | null;
-  candidate: TrouteSolverCandidate | null;
-  schedule: RouteOptimizationSchedule | null;
-  running: boolean;
-}) {
-  const sentences = createChangeSummarySentences(
-    originalBefore,
-    before,
-    after,
-    beforeTravelMinutes,
-    candidate,
-    schedule,
-  );
-
-  return (
-    <section className="route-optimization-diff route-optimization-summary">
-      <h3>변경 요약</h3>
-      {after.length === 0 ? (
-        <DiffPendingMessage
-          running={running}
-          idleMessage="최적화 후 주요 변경 사항을 문장으로 확인할 수 있습니다."
-          runningMessage="변경 요약을 작성하고 있습니다."
-        />
-      ) : sentences.length === 0 ? (
-        <p className="route-optimization-diff-message">
-          경로 및 주요 지표 변경이 없습니다.
-        </p>
-      ) : (
-        <ul className="route-optimization-summary-list">
-          {sentences.map((sentence) => (
-            <li key={sentence}>{sentence}</li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-function DiffPendingMessage({
-  running,
-  idleMessage,
-  runningMessage,
-}: {
-  running: boolean;
-  idleMessage: string;
-  runningMessage: string;
-}) {
-  return (
-    <p
-      className={`route-optimization-diff-message${running ? ' is-running' : ''}`}
-      role="status"
-    >
-      {running ? runningMessage : idleMessage}
-    </p>
-  );
-}
-
-function createChangeSummarySentences(
-  originalBefore: readonly TripPlace[],
-  before: readonly TripPlace[],
-  after: readonly TripPlace[],
-  beforeTravelMinutes: number | null,
-  candidate: TrouteSolverCandidate | null,
-  schedule: RouteOptimizationSchedule | null,
-): string[] {
-  if (!candidate || after.length === 0) {
-    return [];
-  }
-  const sentences: string[] = [];
-  const beforeIndex = new Map(
-    before.map((place, index) => [place.id, index + 1]),
-  );
-  const moved = after.flatMap((place, index) => {
-    const previous = beforeIndex.get(place.id);
-    const next = index + 1;
-    return previous !== undefined && previous !== next
-      ? [{ place, previous, next }]
-      : [];
-  });
-  for (const { place, previous, next } of moved.slice(0, 4)) {
-    sentences.push(
-      `${withSubjectParticle(place.name)} ${previous}번째 → ${next}번째로 이동했습니다.`,
-    );
-  }
-  if (moved.length > 4) {
-    sentences.push(`그 외 ${moved.length - 4}개 장소의 순서가 변경되었습니다.`);
-  }
-
-  const configuredStart = before[0];
-  const configuredEnd = before.at(-1);
-  if (configuredStart && configuredStart.id !== originalBefore[0]?.id) {
-    sentences.push(
-      `${withSubjectParticle(configuredStart.name)} 시작점으로 설정되었습니다.`,
-    );
-  }
-  if (configuredEnd && configuredEnd.id !== originalBefore.at(-1)?.id) {
-    sentences.push(
-      `${withSubjectParticle(configuredEnd.name)} 종점으로 설정되었습니다.`,
-    );
-  }
-
-  appendDurationSummary(
-    sentences,
-    '전체 이동시간',
-    beforeTravelMinutes,
-    getScheduleTravelMinutes(schedule) ??
-      candidate.objective_score?.travel_minutes ??
-      null,
-  );
-  const beforeStart = before[0]?.time ?? null;
-  const lastPlace = before.at(-1);
-  const beforeFinish = lastPlace?.time
-    ? addMinutes(lastPlace.time, getStayMinutes(lastPlace))
-    : null;
-  appendDurationSummary(
-    sentences,
-    '대기시간',
-    calculateBeforeWait(before, beforeStart, beforeFinish, beforeTravelMinutes),
-    schedule
-      ? schedule.stops.reduce((total, stop) => total + stop.waitMinutes, 0)
-      : (candidate.objective_score?.wait_minutes ?? null),
-  );
-  return sentences;
-}
-
-function appendDurationSummary(
-  sentences: string[],
-  label: string,
-  before: number | null,
-  after: number | null,
-): void {
-  if (before === null || after === null || before === after) {
-    return;
-  }
-  const difference = after - before;
-  sentences.push(
-    `${label}${hasFinalConsonant(label) ? '이' : '가'} ${Math.abs(difference)}분 ${difference < 0 ? '감소' : '증가'}했습니다.`,
-  );
-}
-
-function withSubjectParticle(value: string): string {
-  return `${value}${hasFinalConsonant(value) ? '이' : '가'}`;
-}
-
-function hasFinalConsonant(value: string): boolean {
-  const codePoint = value.codePointAt(value.length - 1);
-  return (
-    codePoint !== undefined &&
-    codePoint >= 0xac00 &&
-    codePoint <= 0xd7a3 &&
-    (codePoint - 0xac00) % 28 !== 0
-  );
-}
-
-function MetricsDiff({
-  before,
-  beforeTravelMinutes,
-  candidate,
-  schedule,
-  startPolicy,
-  requestedStartTime,
-  running,
-}: {
-  before: readonly TripPlace[];
-  beforeTravelMinutes: number | null;
-  candidate: TrouteSolverCandidate | null;
-  schedule: RouteOptimizationSchedule | null;
-  startPolicy: RouteOptimizationStartPolicy;
-  requestedStartTime: string | null;
-  running: boolean;
-}) {
-  const score = candidate?.objective_score;
-  const scheduledStart = schedule?.stops[0]?.departureTime ?? null;
-  const scheduledFinish = schedule?.stops.at(-1)?.departureTime ?? null;
-  const beforeStart = before[0]?.time ?? null;
-  const lastPlace = before.at(-1);
-  const beforeFinish = lastPlace?.time
-    ? addMinutes(lastPlace.time, getStayMinutes(lastPlace))
-    : null;
-  const beforeWait = calculateBeforeWait(
-    before,
-    beforeStart,
-    beforeFinish,
-    beforeTravelMinutes,
-  );
-  const rows = [
-    {
-      label: '이동시간',
-      before: beforeTravelMinutes,
-      after:
-        getScheduleTravelMinutes(schedule) ?? score?.travel_minutes ?? null,
-      metric: 'travel' as const,
-      kind: 'duration' as const,
-    },
-    {
-      label: '대기시간',
-      before: beforeWait,
-      after: schedule
-        ? schedule.stops.reduce((total, stop) => total + stop.waitMinutes, 0)
-        : (score?.wait_minutes ?? null),
-      metric: 'wait' as const,
-      kind: 'duration' as const,
-    },
-    {
-      label: '출발시각',
-      before: beforeStart,
-      after: scheduledStart ?? score?.latest_start ?? null,
-      metric: 'start' as const,
-      kind: 'time' as const,
-    },
-    {
-      label: '종료시각',
-      before: beforeFinish,
-      after: scheduledFinish ?? score?.finish_time ?? null,
-      metric: 'finish' as const,
-      kind: 'time' as const,
-    },
-  ];
-  return (
-    <section className="route-optimization-diff route-optimization-metrics">
-      <h3>지표 변화</h3>
-      {candidate ? (
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">항목</th>
-              <th scope="col">Before</th>
-              <th scope="col">After</th>
-              <th scope="col">변화</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const assessment = assessMetricChange(
-                row.metric,
-                row.before,
-                row.after,
-                row.kind,
-                startPolicy,
-                requestedStartTime,
-              );
-              return (
-                <tr key={row.label}>
-                  <th scope="row">{row.label}</th>
-                  <td>{formatMetric(row.before, row.kind)}</td>
-                  <td>{formatMetric(row.after, row.kind)}</td>
-                  <td
-                    className={`route-optimization-metric-change is-${assessment.tone}`}
-                  >
-                    <span>{formatDelta(row.before, row.after, row.kind)}</span>
-                    {assessment.label ? (
-                      <small>{assessment.label}</small>
-                    ) : null}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      ) : (
-        <DiffPendingMessage
-          running={running}
-          idleMessage="최적화를 실행하면 현재 경로와 결과의 차이를 확인할 수 있습니다."
-          runningMessage="경로 지표의 차이를 계산하고 있습니다."
-        />
-      )}
-    </section>
-  );
-}
-
 function orderPlaces(
   places: readonly TripPlace[],
   route: readonly string[],
@@ -1155,7 +932,9 @@ function orderPlaces(
 
 function formatDayStatus(state: DayOptimizationState): string {
   if (state.status === 'running') {
-    return `${state.progress?.progress ?? 0}% 실행 중`;
+    return state.progress
+      ? `${state.progress.progress}% 실행 중`
+      : '실행 준비 중';
   }
   if (state.status === 'failed') {
     return state.result ? '결과 유지 · 재실행 실패' : '실패';
@@ -1164,148 +943,6 @@ function formatDayStatus(state: DayOptimizationState): string {
     return '최적화 완료';
   }
   return '실행 전';
-}
-
-function formatProgressMessage(
-  progress: RouteOptimizationProgress | null,
-): string {
-  switch (progress?.stage) {
-    case 'accepted':
-      return '최적화 요청 대기 중';
-    case 'building_matrix':
-      return '이동시간 계산 중';
-    case 'solving':
-      return '경로 최적화 중';
-    case 'scheduling':
-      return '일정 생성 중';
-    default:
-      return progress?.last_message ?? '최적화 실행 중';
-  }
-}
-
-function formatOrder(places: readonly TripPlace[]): string {
-  return places.length ? places.map((place) => place.name).join(' → ') : '—';
-}
-
-function getStayMinutes(place: TripPlace): number {
-  return place.visitDurationMinutes ?? place.preferredDurationMinutes ?? 0;
-}
-
-function calculateBeforeWait(
-  places: readonly TripPlace[],
-  start: string | null,
-  finish: string | null,
-  travelMinutes: number | null,
-): number | null {
-  if (!start || !finish || travelMinutes === null) {
-    return null;
-  }
-  const elapsed = clockToMinutes(finish) - clockToMinutes(start);
-  const stayMinutes = places.reduce(
-    (total, place) => total + getStayMinutes(place),
-    0,
-  );
-  return Math.max(0, elapsed - travelMinutes - stayMinutes);
-}
-
-function getScheduleTravelMinutes(
-  schedule: RouteOptimizationSchedule | null,
-): number | null {
-  if (!schedule) {
-    return null;
-  }
-  return schedule.stops.reduce(
-    (total, stop) => total + (stop.travelMinutesFromPrevious ?? 0),
-    0,
-  );
-}
-
-function formatMetric(
-  value: number | string | null,
-  kind: 'duration' | 'time',
-): string {
-  if (value === null) {
-    return '—';
-  }
-  return kind === 'duration' ? `${value}분` : String(value);
-}
-
-function assessMetricChange(
-  metric: 'travel' | 'wait' | 'start' | 'finish',
-  before: number | string | null,
-  after: number | string | null,
-  kind: 'duration' | 'time',
-  startPolicy: RouteOptimizationStartPolicy,
-  requestedStartTime: string | null,
-): { tone: 'improvement' | 'warning' | 'neutral'; label: string | null } {
-  const difference = calculateMetricDelta(before, after, kind);
-  if (difference === null) {
-    return { tone: 'neutral', label: null };
-  }
-  if (metric === 'start' && startPolicy === 'fixed') {
-    const matchesRequestedTime =
-      typeof after === 'string' && after === requestedStartTime;
-    return matchesRequestedTime
-      ? { tone: 'neutral', label: '지정 시각 일치' }
-      : { tone: 'warning', label: '지정 시각과 다름' };
-  }
-  if (difference === 0) {
-    return { tone: 'neutral', label: '변화 없음' };
-  }
-  if (metric === 'start') {
-    const improved = startPolicy === 'latest' ? difference > 0 : difference < 0;
-    return {
-      tone: improved ? 'improvement' : 'warning',
-      label: difference > 0 ? '더 늦게 출발' : '더 일찍 출발',
-    };
-  }
-  if (difference < 0) {
-    return {
-      tone: 'improvement',
-      label: metric === 'finish' ? '더 일찍 종료' : '감소 · 개선',
-    };
-  }
-  return {
-    tone: 'warning',
-    label: metric === 'finish' ? '더 늦게 종료' : '증가',
-  };
-}
-
-function formatDelta(
-  before: number | string | null,
-  after: number | string | null,
-  kind: 'duration' | 'time',
-): string {
-  const difference = calculateMetricDelta(before, after, kind);
-  if (difference === null) {
-    return '—';
-  }
-  return `${difference > 0 ? '+' : ''}${difference}분`;
-}
-
-function calculateMetricDelta(
-  before: number | string | null,
-  after: number | string | null,
-  kind: 'duration' | 'time',
-): number | null {
-  if (before === null || after === null) {
-    return null;
-  }
-  return kind === 'duration'
-    ? Number(after) - Number(before)
-    : clockToMinutes(String(after)) - clockToMinutes(String(before));
-}
-
-function addMinutes(time: string, minutes: number): string {
-  const total = (clockToMinutes(time) + minutes) % (24 * 60);
-  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(
-    total % 60,
-  ).padStart(2, '0')}`;
-}
-
-function clockToMinutes(value: string): number {
-  const [hours = 0, minutes = 0] = value.split(':').map(Number);
-  return hours * 60 + minutes;
 }
 
 function createIdleDayState(): DayOptimizationState {
@@ -1331,19 +968,6 @@ function createDayOptimizationSettings(day: TripDay): DayOptimizationSettings {
     startTime: null,
     travelMode: getRouteOptimizationTravelMode(day),
   };
-}
-
-function hasCurrentDayOrder(
-  day: TripDay,
-  places: readonly TripPlace[],
-): boolean {
-  const orderedPlaces = [...day.places].sort(
-    (left, right) => left.order - right.order,
-  );
-  return (
-    orderedPlaces.length === places.length &&
-    orderedPlaces.every((place, index) => place.id === places[index]?.id)
-  );
 }
 
 function createInitialDayStates(

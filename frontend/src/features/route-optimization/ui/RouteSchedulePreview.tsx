@@ -3,45 +3,35 @@ import type { ReactNode } from 'react';
 import { PlaceTimeTimeline } from '@/features/place-editor';
 import type { RouteOptimizationSchedule } from '@/features/route-optimization/model/routeOptimization';
 
-type Props = {
-  beforePlaces: readonly TripPlace[];
-  afterPlaces: readonly TripPlace[];
-  schedule: RouteOptimizationSchedule | null;
-  running: boolean;
-  hasResult: boolean;
-};
+type Props =
+  | {
+      variant: 'before';
+      places: readonly TripPlace[];
+    }
+  | {
+      variant: 'after';
+      places: readonly TripPlace[];
+      schedule: RouteOptimizationSchedule | null;
+      running: boolean;
+      hasResult: boolean;
+    };
 
-export function RouteSchedulePreview({
-  beforePlaces,
-  afterPlaces,
-  schedule,
-  running,
-  hasResult,
-}: Props) {
-  return (
-    <section className="route-optimization-schedule-section">
-      <div className="route-optimization-section-heading">
-        <div>
-          <h3>일정 타임라인</h3>
-          <p>장소별 방문 시각과 이동·대기·체류 시간을 비교합니다.</p>
-        </div>
-      </div>
-      <div className="route-optimization-schedule-grid">
-        <BeforeSchedule places={beforePlaces} />
-        <AfterSchedule
-          places={afterPlaces}
-          schedule={schedule}
-          running={running}
-          hasResult={hasResult}
-        />
-      </div>
-    </section>
+export function RouteSchedulePreview(props: Props) {
+  return props.variant === 'before' ? (
+    <BeforeSchedule places={props.places} />
+  ) : (
+    <AfterSchedule
+      places={props.places}
+      schedule={props.schedule}
+      running={props.running}
+      hasResult={props.hasResult}
+    />
   );
 }
 
 function BeforeSchedule({ places }: { places: readonly TripPlace[] }) {
   return (
-    <SchedulePanel title="Before" description="현재 Day 일정">
+    <SchedulePanel title="일정" description="현재 일정">
       <ol className="route-optimization-schedule-list">
         {places.map((place, index) => {
           const stayMinutes = getStayMinutes(place);
@@ -86,7 +76,7 @@ function AfterSchedule({
 }) {
   if (!schedule) {
     return (
-      <SchedulePanel title="After" description="최적화 일정">
+      <SchedulePanel title="일정" description="최적화 일정">
         <p
           className={`route-optimization-schedule-placeholder${running ? ' is-running' : ''}`}
           role="status"
@@ -103,7 +93,7 @@ function AfterSchedule({
 
   const placesById = new Map(places.map((place) => [place.id, place]));
   return (
-    <SchedulePanel title="After" description="최적화 일정">
+    <SchedulePanel title="일정" description="최적화 일정">
       <ol className="route-optimization-schedule-list">
         {schedule.stops.map((stop, index) => {
           const place = placesById.get(stop.placeId);

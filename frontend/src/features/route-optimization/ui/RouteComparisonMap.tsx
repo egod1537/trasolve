@@ -3,58 +3,80 @@ import { useEffect, useRef } from 'react';
 import type { MapMarkerHandle } from '@/map/adapters/MapObjectController';
 import { GoogleMap, useGoogleMap } from '@/map/components/GoogleMap';
 import { useMapPolyline } from '@/map/hooks/useMapPolyline';
-import type { RouteGeometryState } from '@/features/route-optimization/model/useRouteGeometry';
+import { IconButton } from '@/shared/ui/IconButton';
+import { ExpandIcon } from '@/shared/ui/icons';
+import {
+  getTripPolylineStyle,
+  TRIP_POLYLINE_MODE_STYLES,
+} from '@/entities/trip';
+
+const COMPARISON_LINE_STYLE = getTripPolylineStyle('straight', false, true);
+const COMPARISON_COLOR = TRIP_POLYLINE_MODE_STYLES.straight.color;
 
 type Props = {
   title: 'Before' | 'After';
   ariaLabel: string;
   layer: string;
-  color: string;
   places: readonly TripPlace[];
-  geometry: RouteGeometryState;
+  viewportPlaces?: readonly TripPlace[];
+  heading?: string;
+  onExpand?: () => void;
 };
 
 export function RouteComparisonMap({
   title,
   ariaLabel,
   layer,
-  color,
   places,
-  geometry,
+  viewportPlaces = places,
+  heading = '지도',
+  onExpand,
 }: Props) {
   return (
     <section className="route-optimization-map-panel">
       <header>
         <div>
-          <strong>{title}</strong>
+          <strong>{heading}</strong>
           <span>
             {title === 'Before' ? '현재 방문 순서' : '최적화 방문 순서'}
           </span>
         </div>
-        <div className="route-optimization-map-status">
-          <span className="route-optimization-marker-legend">
-            <i className="is-start" /> 출발
-            <i className="is-destination" /> 도착
-          </span>
-          <GeometryBadge status={geometry.status} />
-        </div>
+        <span className="route-optimization-marker-legend">
+          <i className="is-start" /> 출발
+          <i className="is-destination" /> 도착
+        </span>
       </header>
-      <GoogleMap
-        className="route-optimization-google-map"
-        center={places[0]?.location ?? { lat: 37.5665, lng: 126.978 }}
-        zoom={12}
-        ariaLabel={ariaLabel}
-        options={{
-          clickableIcons: false,
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
-        }}
-      >
-        <ComparisonViewport places={places} />
-        <ComparisonLine layer={layer} color={color} path={geometry.path} />
-        <ComparisonMarkers layer={layer} color={color} places={places} />
-      </GoogleMap>
+      <div className="route-optimization-map-canvas">
+        <GoogleMap
+          className="route-optimization-google-map"
+          center={places[0]?.location ?? { lat: 37.5665, lng: 126.978 }}
+          zoom={12}
+          ariaLabel={ariaLabel}
+          options={{
+            clickableIcons: false,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+          }}
+        >
+          <ComparisonViewport places={viewportPlaces} />
+          <ComparisonLine
+            layer={layer}
+            path={places.map((place) => place.location)}
+          />
+          <ComparisonMarkers layer={layer} places={places} />
+        </GoogleMap>
+        {onExpand ? (
+          <IconButton
+            className="route-optimization-map-expand"
+            aria-label={`${title} 경로 지도 확대`}
+            icon={<ExpandIcon />}
+            variant="secondary"
+            size="sm"
+            onClick={onExpand}
+          />
+        ) : null}
+      </div>
       <p className="route-optimization-map-order">
         {places.map((place) => place.name).join(' → ')}
       </p>
@@ -63,17 +85,17 @@ export function RouteComparisonMap({
 }
 
 export function RouteComparisonPlaceholder({
-  title,
   message,
+  heading = '지도',
 }: {
-  title: 'After';
   message: string;
+  heading?: string;
 }) {
   return (
     <section className="route-optimization-map-panel">
       <header>
         <div>
-          <strong>{title}</strong>
+          <strong>{heading}</strong>
           <span>최적화 방문 순서</span>
         </div>
       </header>
@@ -82,18 +104,6 @@ export function RouteComparisonPlaceholder({
       </div>
       <p className="route-optimization-map-order">—</p>
     </section>
-  );
-}
-
-function GeometryBadge({ status }: { status: RouteGeometryState['status'] }) {
-  return (
-    <span className={`route-optimization-geometry is-${status}`}>
-      {status === 'ready'
-        ? '실제 경로'
-        : status === 'loading'
-          ? '경로 조회 중'
-          : '실제 경로 geometry 없음 · 직선 연결'}
-    </span>
   );
 }
 
@@ -130,37 +140,26 @@ function ComparisonViewport({ places }: { places: readonly TripPlace[] }) {
 
 function ComparisonLine({
   layer,
-  color,
   path,
 }: {
   layer: string;
-  color: string;
-  path: RouteGeometryState['path'];
+  path: readonly { lat: number; lng: number }[];
 }) {
   const { objects } = useGoogleMap();
   useMapPolyline(objects, {
     id: `${layer}:route`,
     layer: `${layer}-line`,
     path,
-    style: {
-      color,
-      width: 4,
-      opacity: 0.86,
-      directional: true,
-      directionRepeatPx: 90,
-      directionScale: 2.4,
-    },
+    style: COMPARISON_LINE_STYLE,
   });
   return null;
 }
 
 function ComparisonMarkers({
   layer,
-  color,
   places,
 }: {
   layer: string;
-  color: string;
   places: readonly TripPlace[];
 }) {
   const { objects } = useGoogleMap();
@@ -201,7 +200,7 @@ function ComparisonMarkers({
           ? '#16a34a'
           : index === places.length - 1
             ? '#dc2626'
-            : color,
+            : COMPARISON_COLOR,
       );
       marker.setZIndex(index + 1);
     });
@@ -211,6 +210,6 @@ function ComparisonMarkers({
         markers.current.delete(placeId);
       }
     }
-  }, [color, layer, objects, places]);
+  }, [layer, objects, places]);
   return null;
 }

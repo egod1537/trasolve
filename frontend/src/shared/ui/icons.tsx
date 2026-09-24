@@ -18,6 +18,14 @@ export function CloseIcon(props: Props) {
   );
 }
 
+export function ExpandIcon(props: Props) {
+  return (
+    <Icon {...props}>
+      <path d="M9 5H5v4M15 5h4v4M9 19H5v-4M15 19h4v-4" />
+    </Icon>
+  );
+}
+
 export function RefreshIcon(props: Props) {
   return (
     <Icon {...props}>
