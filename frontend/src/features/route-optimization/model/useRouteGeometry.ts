@@ -14,19 +14,23 @@ export type RouteGeometryState = {
 
 export function useRouteGeometry(
   places: readonly TripPlace[],
+  preferredPath?: readonly GeoPoint[],
 ): RouteGeometryState {
-  const key = places
+  const key = `${places
     .map((place) => `${place.id}:${place.location.lat}:${place.location.lng}`)
-    .join('|');
+    .join('|')}::${preferredPath
+    ?.map((point) => `${point.lat}:${point.lng}`)
+    .join('|')}`;
   const fallbackPath = useMemo(
     () => places.map((place) => place.location),
     [places],
   );
   const cache = useRef(new Map<string, RouteGeometryState>());
+  const displayPath = preferredPath?.length ? preferredPath : fallbackPath;
   const [state, setState] = useState<RouteGeometryState>({
     key,
     status: 'idle',
-    path: fallbackPath,
+    path: displayPath,
     travelMinutes: null,
   });
 
@@ -39,8 +43,8 @@ export function useRouteGeometry(
     if (places.length < 2 || places.length - 1 > MAX_ROUTED_SEGMENTS) {
       const fallback: RouteGeometryState = {
         key,
-        status: 'fallback',
-        path: fallbackPath,
+        status: preferredPath?.length ? 'ready' : 'fallback',
+        path: displayPath,
         travelMinutes: null,
       };
       cache.current.set(key, fallback);
@@ -52,7 +56,7 @@ export function useRouteGeometry(
     setState({
       key,
       status: 'loading',
-      path: fallbackPath,
+      path: displayPath,
       travelMinutes: null,
     });
     const requests = places.slice(0, -1).map((place, index) =>
@@ -85,9 +89,11 @@ export function useRouteGeometry(
         const next: RouteGeometryState = {
           key,
           status: 'ready',
-          path: routes.flatMap((route, index) =>
-            index === 0 ? route!.path : route!.path.slice(1),
-          ),
+          path: preferredPath?.length
+            ? preferredPath
+            : routes.flatMap((route, index) =>
+                index === 0 ? route!.path : route!.path.slice(1),
+              ),
           travelMinutes: Math.round(
             routes.reduce(
               (total, route) => total + (route!.durationMillis ?? 0),
@@ -104,8 +110,8 @@ export function useRouteGeometry(
         }
         const fallback: RouteGeometryState = {
           key,
-          status: 'fallback',
-          path: fallbackPath,
+          status: preferredPath?.length ? 'ready' : 'fallback',
+          path: displayPath,
           travelMinutes: null,
         };
         cache.current.set(key, fallback);
@@ -113,14 +119,14 @@ export function useRouteGeometry(
       },
     );
     return () => controller.abort();
-  }, [fallbackPath, key, places]);
+  }, [displayPath, key, places, preferredPath]);
 
   return state.key === key
     ? state
     : {
         key,
         status: 'loading',
-        path: fallbackPath,
+        path: displayPath,
         travelMinutes: null,
       };
 }

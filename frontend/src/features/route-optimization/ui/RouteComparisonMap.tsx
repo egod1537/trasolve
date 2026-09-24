@@ -62,6 +62,29 @@ export function RouteComparisonMap({
   );
 }
 
+export function RouteComparisonPlaceholder({
+  title,
+  message,
+}: {
+  title: 'After';
+  message: string;
+}) {
+  return (
+    <section className="route-optimization-map-panel">
+      <header>
+        <div>
+          <strong>{title}</strong>
+          <span>최적화 방문 순서</span>
+        </div>
+      </header>
+      <div className="route-optimization-map-placeholder" role="status">
+        <p>{message}</p>
+      </div>
+      <p className="route-optimization-map-order">—</p>
+    </section>
+  );
+}
+
 function GeometryBadge({ status }: { status: RouteGeometryState['status'] }) {
   return (
     <span className={`route-optimization-geometry is-${status}`}>

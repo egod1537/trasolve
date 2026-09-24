@@ -294,6 +294,7 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
       />
       <MapOverlayHost
         activeDay={activeDay}
+        days={mapProps.trip.days}
         activeMapTool={transient.activeMapTool}
         routeOptimizationOpen={transient.routeOptimizationOpen}
         routeOptimizationModalId={routeOptimizationModalId}

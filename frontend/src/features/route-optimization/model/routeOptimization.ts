@@ -8,66 +8,6 @@ import {
 } from '@trasolve/shared';
 import { getPlaceOpeningStatus } from '@/entities/place';
 
-export type RouteOptimizationAlgorithm = {
-  key:
-    | 'best'
-    | 'exact_bit_dp'
-    | 'clustered'
-    | 'mst_double_tree'
-    | 'christofides'
-    | 'sa_greedy'
-    | 'sa_mst'
-    | 'sa_christofides'
-    | 'sa_clustered';
-  label: string;
-  matches: (strategy: string) => boolean;
-};
-
-export const ROUTE_OPTIMIZATION_ALGORITHMS: readonly RouteOptimizationAlgorithm[] =
-  [
-    { key: 'best', label: 'Best', matches: () => false },
-    {
-      key: 'exact_bit_dp',
-      label: 'Exact Bit DP',
-      matches: (strategy) => strategy === 'exact_bit_dp',
-    },
-    {
-      key: 'clustered',
-      label: 'Clustered',
-      matches: (strategy) => strategy === 'clustered',
-    },
-    {
-      key: 'mst_double_tree',
-      label: 'MST Double-Tree',
-      matches: (strategy) => strategy === 'mst_double_tree',
-    },
-    {
-      key: 'christofides',
-      label: 'Christofides',
-      matches: (strategy) => strategy === 'christofides',
-    },
-    {
-      key: 'sa_greedy',
-      label: 'SA (Greedy)',
-      matches: (strategy) => strategy.startsWith('sa_greedy'),
-    },
-    {
-      key: 'sa_mst',
-      label: 'SA (MST)',
-      matches: (strategy) => strategy.startsWith('sa_mst'),
-    },
-    {
-      key: 'sa_christofides',
-      label: 'SA (Christofides)',
-      matches: (strategy) => strategy.startsWith('sa_christofides'),
-    },
-    {
-      key: 'sa_clustered',
-      label: 'SA (Clustered)',
-      matches: (strategy) => strategy.startsWith('sa_clustered'),
-    },
-  ];
-
 export function getRouteOptimizationIssue(activeDay: TripDay): string | null {
   if (activeDay.places.length < 2) {
     return '경로 최적화에는 2개 이상의 장소가 필요합니다.';
@@ -111,54 +51,59 @@ export function createRouteOptimizationRequest(
   });
 }
 
-export function getOptimizationCandidates(
+export function getBestOptimizationCandidate(
   response: TrouteOptimizeResponse,
-): readonly TrouteSolverCandidate[] {
-  if (response.solver_candidates?.length) {
-    return response.solver_candidates;
+): TrouteSolverCandidate {
+  const selectedBest = response.solver_candidates?.find(
+    (candidate) => candidate.best,
+  );
+  if (selectedBest) {
+    return selectedBest;
   }
   const route = [...response.route].sort(
     (left, right) => left.order - right.order,
   );
-  return [
-    {
-      strategy: 'best',
-      best: true,
-      route: route.map((stop) => stop.location_id),
-      feasible: true,
-      objective_score: {
-        latest_start:
-          route[0]?.departure_time ?? route[0]?.arrival_time ?? '00:00',
-        finish_time:
-          route.at(-1)?.departure_time ?? route.at(-1)?.arrival_time ?? '00:00',
-        travel_minutes: response.total_travel_minutes,
-        wait_minutes: 0,
-      },
+  return {
+    strategy: 'best',
+    best: true,
+    route: route.map((stop) => stop.location_id),
+    feasible: true,
+    objective_score: {
+      latest_start:
+        route[0]?.departure_time ?? route[0]?.arrival_time ?? '00:00',
+      finish_time:
+        route.at(-1)?.departure_time ?? route.at(-1)?.arrival_time ?? '00:00',
+      travel_minutes: response.total_travel_minutes,
+      wait_minutes: 0,
     },
-  ];
+  };
 }
 
-export function getCandidateForAlgorithm(
-  algorithm: RouteOptimizationAlgorithm,
-  candidates: readonly TrouteSolverCandidate[],
-): TrouteSolverCandidate | null {
-  if (algorithm.key === 'best') {
-    return (
-      candidates.find((candidate) => candidate.best) ?? candidates[0] ?? null
-    );
+export function getCurrentDayRoutePath(
+  activeDay: TripDay,
+): readonly { lat: number; lng: number }[] | undefined {
+  const places = [...activeDay.places].sort(
+    (left, right) => left.order - right.order,
+  );
+  if (places.length < 2) {
+    return undefined;
   }
-  return (
-    candidates.find((candidate) => algorithm.matches(candidate.strategy)) ??
-    null
-  );
-}
-
-export function getAlgorithmLabel(strategy: string): string {
-  return (
-    ROUTE_OPTIMIZATION_ALGORITHMS.find(
-      (algorithm) => algorithm.key !== 'best' && algorithm.matches(strategy),
-    )?.label ?? strategy
-  );
+  const paths = places
+    .slice(0, -1)
+    .map(
+      (place, index) =>
+        activeDay.polylines.find(
+          (polyline) =>
+            polyline.fromPlaceId === place.id &&
+            polyline.toPlaceId === places[index + 1]!.id &&
+            polyline.path &&
+            polyline.path.length >= 2,
+        )?.path,
+    );
+  if (paths.some((path) => !path)) {
+    return undefined;
+  }
+  return paths.flatMap((path, index) => (index === 0 ? path! : path!.slice(1)));
 }
 
 export function isApplicableCandidate(

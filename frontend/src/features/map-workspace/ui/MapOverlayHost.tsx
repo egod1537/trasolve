@@ -14,6 +14,7 @@ const noop = () => undefined;
 
 type Props = {
   activeDay: TripDay | null;
+  days: readonly TripDay[];
   activeMapTool: 'pan';
   routeOptimizationOpen: boolean;
   routeOptimizationModalId: string;
@@ -40,6 +41,7 @@ type Props = {
 
 export const MapOverlayHost = memo(function MapOverlayHost({
   activeDay,
+  days,
   activeMapTool,
   routeOptimizationOpen,
   routeOptimizationModalId,
@@ -80,18 +82,21 @@ export const MapOverlayHost = memo(function MapOverlayHost({
             onUndo={noop}
             onRedo={noop}
             onSelectTool={onSelectMapTool}
-            onOpenRouteTools={activeDay ? onToggleRouteOptimization : undefined}
-            routeToolsOpen={routeOptimizationOpen && activeDay !== null}
+            onOpenRouteTools={
+              days.length > 0 ? onToggleRouteOptimization : undefined
+            }
+            routeToolsOpen={routeOptimizationOpen && days.length > 0}
             routeToolsControlId={routeOptimizationModalId}
             routeToolButtonRef={routeToolButtonRef}
           />
         </div>
       </div>
-      {routeOptimizationOpen && activeDay && (
+      {routeOptimizationOpen && days.length > 0 && (
         <Suspense fallback={null}>
           <RouteOptimizationModal
             id={routeOptimizationModalId}
-            activeDay={activeDay}
+            days={days}
+            initialDayId={activeDay?.id}
             onClose={onCloseRouteOptimization}
             onApply={onApplyOptimizedRoute}
           />
