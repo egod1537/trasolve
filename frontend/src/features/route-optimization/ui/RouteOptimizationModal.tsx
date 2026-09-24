@@ -1,6 +1,7 @@
 import type {
   TrouteOptimizeResponse,
   TrouteSolverCandidate,
+  TrouteTravelMode,
   TripDay,
   TripPlace,
 } from '@trasolve/shared';
@@ -20,7 +21,9 @@ import {
   createRouteOptimizationRequest,
   getBestOptimizationCandidate,
   getCurrentDayRoutePath,
+  getRouteOptimizationDiagnostics,
   getRouteOptimizationIssue,
+  getRouteOptimizationTravelMode,
   isApplicableCandidate,
 } from '@/features/route-optimization/model/routeOptimization';
 import { useRouteGeometry } from '@/features/route-optimization/model/useRouteGeometry';
@@ -61,6 +64,7 @@ export function RouteOptimizationModal({
 }: Props) {
   const titleId = useId();
   const descriptionId = useId();
+  const validationId = useId();
   const requestAbortControllers = useRef(new Map<string, AbortController>());
   const initialSelectedDay =
     days.find((day) => day.id === initialDayId) ?? days[0]!;
@@ -76,6 +80,8 @@ export function RouteOptimizationModal({
     ? getBestOptimizationCandidate(selectedState.result)
     : null;
   const inputIssue = getRouteOptimizationIssue(selectedDay);
+  const diagnostics = getRouteOptimizationDiagnostics(selectedDay);
+  const travelMode = getRouteOptimizationTravelMode(selectedDay);
   const beforePlaces = useMemo(
     () =>
       [...selectedDay.places].sort((left, right) => left.order - right.order),
@@ -86,15 +92,19 @@ export function RouteOptimizationModal({
     [beforePlaces, candidate],
   );
   const storedBeforePath = useMemo(
-    () => getCurrentDayRoutePath(selectedDay),
-    [selectedDay],
+    () => getCurrentDayRoutePath(selectedDay, travelMode),
+    [selectedDay, travelMode],
   );
-  const beforeGeometry = useRouteGeometry(beforePlaces, storedBeforePath);
-  const afterGeometry = useRouteGeometry(afterPlaces);
+  const beforeGeometry = useRouteGeometry(
+    beforePlaces,
+    travelMode,
+    storedBeforePath,
+  );
+  const afterGeometry = useRouteGeometry(afterPlaces, travelMode);
   const canApply = isApplicableCandidate(candidate, selectedDay);
 
   const runOptimization = useCallback(
-    async (day: TripDay) => {
+    async (day: TripDay, travelMode: TrouteTravelMode) => {
       const current = dayStates[day.id] ?? createIdleDayState();
       const issue = getRouteOptimizationIssue(day);
       if (
@@ -123,7 +133,7 @@ export function RouteOptimizationModal({
       }));
       try {
         const result = await optimizeDayRoute(
-          createRouteOptimizationRequest(day),
+          createRouteOptimizationRequest(day, travelMode),
           (progress) => {
             setDayStates((states) => ({
               ...states,
@@ -274,8 +284,12 @@ export function RouteOptimizationModal({
               <span>선택 Day</span>
               <h3>{selectedDay.title} 경로 최적화</h3>
             </div>
-            <DayStatus state={selectedState} />
+            <DayStatus state={selectedState} inputIssue={inputIssue} />
           </div>
+
+          {inputIssue ? (
+            <OptimizationValidationPanel id={validationId} issue={inputIssue} />
+          ) : null}
 
           <div className="route-optimization-map-grid">
             <RouteComparisonMap
@@ -314,9 +328,11 @@ export function RouteOptimizationModal({
           />
           <RouteDiff before={beforePlaces} after={afterPlaces} />
 
-          {inputIssue ? (
+          {diagnostics.openingHoursFallback ? (
             <p className="route-optimization-modal-notice" role="status">
-              {inputIssue}
+              영업시간 정보 없음:{' '}
+              {diagnostics.openingHoursFallbackPlaceNames.join(', ')}. 최적화
+              요청에는 00:00~23:50 임시 범위를 사용합니다.
             </p>
           ) : null}
           {selectedState.error ? (
@@ -331,12 +347,18 @@ export function RouteOptimizationModal({
       </div>
 
       <footer className="route-optimization-modal-actions">
-        <span className="route-optimization-progress" aria-live="polite">
+        <span
+          className={`route-optimization-progress${inputIssue ? ' is-blocked' : ''}`}
+          title={inputIssue ?? undefined}
+          aria-live="polite"
+        >
           {selectedState.status === 'running'
             ? `${selectedState.progress?.progress ?? 0}% · ${formatProgressMessage(
                 selectedState.progress,
               )}`
-            : ''}
+            : inputIssue
+              ? `실행 불가 · ${inputIssue}`
+              : ''}
         </span>
         <Button disabled={applying} onClick={onClose}>
           취소
@@ -348,7 +370,9 @@ export function RouteOptimizationModal({
             selectedState.status === 'running' ||
             applying
           }
-          onClick={() => void runOptimization(selectedDay)}
+          aria-describedby={inputIssue ? validationId : undefined}
+          title={inputIssue ?? undefined}
+          onClick={() => void runOptimization(selectedDay, travelMode)}
         >
           {selectedState.result ? '다시 실행' : '최적화 실행'}
         </Button>
@@ -382,13 +406,14 @@ function DayList({
       <div className="route-optimization-day-list">
         {days.map((day) => {
           const state = dayStates[day.id] ?? createIdleDayState();
-          const unavailable = day.places.length < 2;
+          const inputIssue = getRouteOptimizationIssue(day);
           return (
             <button
               key={day.id}
               type="button"
-              className={`${selectedDayId === day.id ? 'is-selected' : ''} is-${state.status}`}
+              className={`${selectedDayId === day.id ? 'is-selected' : ''} is-${state.status}${inputIssue ? ' has-input-issue' : ''}`}
               aria-pressed={selectedDayId === day.id}
+              title={inputIssue ?? undefined}
               onClick={() => onSelect(day.id)}
             >
               <span className="route-optimization-day-name">
@@ -396,7 +421,7 @@ function DayList({
                 <span>{day.places.length}곳</span>
               </span>
               <span className="route-optimization-day-status">
-                {unavailable ? '최적화 불가' : formatDayStatus(state)}
+                {inputIssue ? '입력 확인 필요' : formatDayStatus(state)}
               </span>
             </button>
           );
@@ -406,12 +431,57 @@ function DayList({
   );
 }
 
-function DayStatus({ state }: { state: DayOptimizationState }) {
+function DayStatus({
+  state,
+  inputIssue,
+}: {
+  state: DayOptimizationState;
+  inputIssue: string | null;
+}) {
   return (
-    <span className={`route-optimization-status is-${state.status}`}>
-      {formatDayStatus(state)}
+    <span
+      className={`route-optimization-status ${inputIssue ? 'is-blocked' : `is-${state.status}`}`}
+    >
+      {inputIssue ? '입력 확인 필요' : formatDayStatus(state)}
     </span>
   );
+}
+
+function OptimizationValidationPanel({
+  id,
+  issue,
+}: {
+  id: string;
+  issue: string;
+}) {
+  return (
+    <section id={id} className="route-optimization-validation" role="alert">
+      <span className="route-optimization-validation-icon" aria-hidden="true">
+        !
+      </span>
+      <div>
+        <strong>최적화를 실행할 수 없습니다</strong>
+        <p>{issue}</p>
+        <span>{getValidationResolution(issue)}</span>
+      </div>
+    </section>
+  );
+}
+
+function getValidationResolution(issue: string): string {
+  if (issue.includes('Place ID')) {
+    return '장소 검색에서 표시된 장소를 다시 선택해 Google Place ID를 저장해 주세요.';
+  }
+  if (issue.includes('2개 이상의 장소')) {
+    return '이 Day에 출발 장소와 도착 장소를 포함해 장소를 2개 이상 추가해 주세요.';
+  }
+  if (issue.includes('HH:mm')) {
+    return '최소 출발 가능 시각을 09:00과 같은 형식으로 입력해 주세요.';
+  }
+  if (issue.includes('이동수단')) {
+    return 'Day의 이동수단을 대중교통, 자동차, 도보 또는 자전거로 설정해 주세요.';
+  }
+  return '장소의 영업시간과 체류시간 입력을 확인한 뒤 다시 시도해 주세요.';
 }
 
 function RouteDiff({
@@ -653,6 +723,7 @@ function createInitialDayStates(
 function createDayKey(day: TripDay): string {
   return JSON.stringify({
     id: day.id,
+    travelMode: getRouteOptimizationTravelMode(day),
     places: day.places.map((place) => ({
       id: place.id,
       placeId: place.placeId,

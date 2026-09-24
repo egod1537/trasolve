@@ -1,9 +1,19 @@
-import { TravelMode, type TripPlace } from '@trasolve/shared';
+import {
+  TravelMode,
+  type TripPlace,
+  type TrouteTravelMode,
+} from '@trasolve/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getDirections } from '@/shared/api/routes';
 import type { GeoPoint } from '@/shared/types/mapTypes';
 
 const MAX_ROUTED_SEGMENTS = 20;
+const DIRECTIONS_MODE_BY_TROUTE_MODE = {
+  TRANSIT: TravelMode.TRANSIT,
+  DRIVING: TravelMode.DRIVING,
+  WALKING: TravelMode.WALKING,
+  BICYCLING: TravelMode.BICYCLING,
+} as const satisfies Record<TrouteTravelMode, TravelMode>;
 
 export type RouteGeometryState = {
   key: string;
@@ -14,9 +24,10 @@ export type RouteGeometryState = {
 
 export function useRouteGeometry(
   places: readonly TripPlace[],
+  travelMode: TrouteTravelMode,
   preferredPath?: readonly GeoPoint[],
 ): RouteGeometryState {
-  const key = `${places
+  const key = `${travelMode}::${places
     .map((place) => `${place.id}:${place.location.lat}:${place.location.lng}`)
     .join('|')}::${preferredPath
     ?.map((point) => `${point.lat}:${point.lng}`)
@@ -72,7 +83,7 @@ export function useRouteGeometry(
             lat: places[index + 1]!.location.lat,
             lng: places[index + 1]!.location.lng,
           },
-          travelMode: TravelMode.TRANSIT,
+          travelMode: DIRECTIONS_MODE_BY_TROUTE_MODE[travelMode],
         },
         controller.signal,
       ),
@@ -119,7 +130,7 @@ export function useRouteGeometry(
       },
     );
     return () => controller.abort();
-  }, [displayPath, key, places, preferredPath]);
+  }, [displayPath, key, places, preferredPath, travelMode]);
 
   return state.key === key
     ? state

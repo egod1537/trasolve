@@ -514,6 +514,13 @@
   color: var(--danger);
 }
 
+.route-optimization-day-list
+  button.has-input-issue
+  .route-optimization-day-status {
+  color: var(--danger);
+  font-weight: 700;
+}
+
 .route-optimization-result {
   display: grid;
   min-width: 0;
@@ -568,6 +575,63 @@
 
 .route-optimization-status.is-failed {
   color: var(--danger);
+}
+
+.route-optimization-status.is-blocked {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.route-optimization-validation {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--danger) 8%, var(--bg-surface));
+}
+
+.route-optimization-validation-icon {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--danger);
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.route-optimization-validation > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.route-optimization-validation strong {
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.route-optimization-validation p,
+.route-optimization-validation > div > span {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.route-optimization-validation p {
+  color: var(--text-primary);
+  font-weight: 650;
+}
+
+.route-optimization-validation > div > span {
+  color: var(--text-muted);
 }
 
 .route-optimization-map-grid {
@@ -785,6 +849,11 @@
   font-size: 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.route-optimization-progress.is-blocked {
+  color: var(--danger);
+  font-weight: 650;
 }
 
 @keyframes route-optimization-backdrop-in {
