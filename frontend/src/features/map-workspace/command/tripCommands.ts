@@ -197,6 +197,37 @@ export function createMovePlaceCommand(
   });
 }
 
+export function createReorderDayPlacesCommand(
+  dayId: string,
+  placeIds: readonly string[],
+): TripCommand {
+  const orderedIds = [...placeIds];
+  return defineTripCommand((trip) => {
+    const day = trip.days.find((candidate) => candidate.id === dayId);
+    if (!day) {
+      throw new Error('순서를 변경할 날짜를 찾을 수 없습니다.');
+    }
+    const uniqueIds = new Set(orderedIds);
+    const currentIds = new Set(day.places.map((place) => place.id));
+    const currentStartId = day.places[0]?.id;
+    const currentDestinationId = day.places.at(-1)?.id;
+    if (
+      orderedIds.length !== day.places.length ||
+      uniqueIds.size !== orderedIds.length ||
+      orderedIds.some((placeId) => !currentIds.has(placeId)) ||
+      orderedIds[0] !== currentStartId ||
+      orderedIds.at(-1) !== currentDestinationId
+    ) {
+      throw new Error(
+        '최적화 결과의 장소 순서가 현재 Day와 일치하지 않습니다.',
+      );
+    }
+    const placesById = new Map(day.places.map((place) => [place.id, place]));
+    day.places = orderedIds.map((placeId) => placesById.get(placeId)!);
+    return trip;
+  });
+}
+
 export function createUpdatePlaceCommand(
   placeId: string,
   patch: Partial<PlaceInput>,

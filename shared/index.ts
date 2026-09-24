@@ -197,6 +197,8 @@ export {
   trouteRemoteTimelineEntrySchema,
   trouteRemoteTimelineSchema,
   trouteRouteStopSchema,
+  trouteSolverCandidateSchema,
+  trouteSolverObjectiveScoreSchema,
   trouteTravelModeSchema,
 } from './schemas/troute.js';
 
@@ -223,5 +225,7 @@ export type {
   TrouteRemoteTimeline,
   TrouteRemoteTimelineEntry,
   TrouteRouteStop,
+  TrouteSolverCandidate,
+  TrouteSolverObjectiveScore,
   TrouteTravelMode,
 } from './types/troute.js';

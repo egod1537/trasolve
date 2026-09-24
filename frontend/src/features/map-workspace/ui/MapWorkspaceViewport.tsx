@@ -11,7 +11,6 @@ import {
 import type {
   PlaceDetails,
   PlaceStyle,
-  RouteOptimizationRequest,
   TripDay,
   TripPlace,
   TripPolyline,
@@ -80,7 +79,10 @@ type Props = Omit<ComponentProps<typeof MapCanvas>, 'mapRef' | 'overlay'> & {
   ) => Promise<boolean>;
   onRemoveSelectedPlaces: (placeIds: readonly string[]) => Promise<boolean>;
   onClearSelection: () => void;
-  onOptimizeRoute?: (request: RouteOptimizationRequest) => Promise<void> | void;
+  onApplyOptimizedRoute: (
+    dayId: string,
+    placeIds: readonly string[],
+  ) => Promise<boolean>;
 };
 
 export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
@@ -108,7 +110,7 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
   onUpdateSelectedPolylineModes,
   onRemoveSelectedPlaces,
   onClearSelection,
-  onOptimizeRoute,
+  onApplyOptimizedRoute,
   onSelectPlace,
   onSelectPolyline,
   onMapClick,
@@ -307,7 +309,7 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
         onUpdatePolylineModes={onUpdateSelectedPolylineModes}
         onDeletePlaces={onRemoveSelectedPlaces}
         onClearSelection={onClearSelection}
-        onOptimizeRoute={onOptimizeRoute}
+        onApplyOptimizedRoute={onApplyOptimizedRoute}
       />
       <MapToolbar
         dismissRevision={transient.searchDismissRevision}

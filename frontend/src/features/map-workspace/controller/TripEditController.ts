@@ -16,6 +16,7 @@ import {
   createMovePlaceCommand,
   createRemovePlaceCommand,
   createRemovePlacesCommand,
+  createReorderDayPlacesCommand,
   createRenameDayCommand,
   createRenameTripCommand,
   createUpdateDayColorCommand,
@@ -210,6 +211,13 @@ export class TripEditController {
     return this.dispatch(
       createMovePlaceCommand(placeId, targetDayId, targetIndex),
     );
+  }
+
+  public reorderDayPlaces(
+    dayId: string,
+    placeIds: readonly string[],
+  ): Promise<boolean> {
+    return this.dispatch(createReorderDayPlacesCommand(dayId, placeIds));
   }
 
   public updatePlace(

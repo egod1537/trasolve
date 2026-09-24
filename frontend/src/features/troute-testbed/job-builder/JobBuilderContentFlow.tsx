@@ -3,13 +3,11 @@ import type { ReactNode } from 'react';
 import type { JobBuilderValidationStatus } from '@/features/troute-testbed/job-builder/useJobBuilderValidation';
 
 export function JobBuilderContentFlow({
-  mode,
   validationStatus,
   validationErrors,
   feedback,
   children,
 }: {
-  mode: 'visual' | 'raw';
   validationStatus: JobBuilderValidationStatus;
   validationErrors: readonly string[];
   feedback: { intent: Intent; message: string } | null;
@@ -17,9 +15,7 @@ export function JobBuilderContentFlow({
 }) {
   return (
     <>
-      {mode === 'visual' &&
-      validationStatus === 'invalid' &&
-      validationErrors.length > 0 ? (
+      {validationStatus === 'invalid' && validationErrors.length > 0 ? (
         <Callout
           className="job-builder-validation-summary"
           compact

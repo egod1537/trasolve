@@ -7,9 +7,11 @@ import { VISIT_TIME_GRANULARITY_MINUTES } from '@/entities/place';
 import type { JobBuilderState } from '@/features/troute-testbed/job-builder/jobBuilderModel';
 
 interface JobBuilderSettingsProps {
+  jobId: string;
   state: JobBuilderState;
   startTimeError?: string;
   minJobDurationMsError?: string;
+  onJobIdChange: (jobId: string) => void;
   onChange: (
     patch: Partial<Pick<JobBuilderState, 'startTime' | 'travelMode' | 'debug'>>,
   ) => void;
@@ -26,9 +28,11 @@ const TRAVEL_MODE_OPTIONS: readonly {
 ];
 
 export function JobBuilderSettings({
+  jobId,
   state,
   startTimeError,
   minJobDurationMsError,
+  onJobIdChange,
   onChange,
 }: JobBuilderSettingsProps) {
   return (
@@ -37,9 +41,20 @@ export function JobBuilderSettings({
       aria-labelledby="job-settings-title"
     >
       <h2 id="job-settings-title" className={Classes.HEADING}>
-        요청 설정
+        기본 정보
       </h2>
       <div className="job-builder-settings-fields">
+        <label className="job-builder-settings-row">
+          <span>Job ID</span>
+          <input
+            className="bp6-input job-builder-job-id-input"
+            type="text"
+            value={jobId}
+            onChange={(event) => onJobIdChange(event.currentTarget.value)}
+          />
+          <small>troute Job을 식별하는 고유 ID입니다.</small>
+        </label>
+
         <label className="job-builder-settings-row">
           <span>이동수단</span>
           <HTMLSelect
@@ -58,15 +73,15 @@ export function JobBuilderSettings({
             ))}
           </HTMLSelect>
           <small>
-            실제 경로 조회에 사용할 이동수단입니다.
+            tcache가 실제 이동시간을 조회할 때 사용하는 이동수단입니다.
             {state.travelTimeSource === 'direct'
-              ? ' 직접 Matrix 입력 시 실제 경로 조회는 생략됩니다.'
+              ? ' Direct Matrix에서는 값은 유지되지만 실제 routing 조회에는 사용되지 않습니다.'
               : ''}
           </small>
         </label>
 
         <label className="job-builder-settings-row">
-          <span>시작 시각</span>
+          <span>최소 출발 시각</span>
           <input
             className="bp6-input"
             type="time"
@@ -79,9 +94,14 @@ export function JobBuilderSettings({
             <small className="job-builder-field-error" role="alert">
               {startTimeError}
             </small>
-          ) : null}
+          ) : (
+            <small>
+              solver는 이 시각 이후에서 가능한 가장 늦은 출발시각을 탐색합니다.
+            </small>
+          )}
         </label>
 
+        <h3 className="job-builder-settings-subheading">고급 디버그</h3>
         <div className="job-builder-settings-row">
           <span>디버그 모드</span>
           <Switch

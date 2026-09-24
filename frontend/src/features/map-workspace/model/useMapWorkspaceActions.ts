@@ -195,6 +195,11 @@ export function useMapWorkspaceActions(
     (placeIds: readonly string[]) => controller.removePlaces(placeIds),
     [controller],
   );
+  const applyOptimizedRoute = useCallback(
+    (dayId: string, placeIds: readonly string[]) =>
+      controller.reorderDayPlaces(dayId, placeIds),
+    [controller],
+  );
 
   return useMemo(
     () => ({
@@ -239,11 +244,13 @@ export function useMapWorkspaceActions(
         onUpdateSelectedPolylineModes: updateSelectedPolylineModes,
         onRemoveSelectedPlaces: removeSelectedPlaces,
         onClearSelection: clearMapSelection,
+        onApplyOptimizedRoute: applyOptimizedRoute,
       },
     }),
     [
       addLayer,
       addGooglePlace,
+      applyOptimizedRoute,
       clearMapSelection,
       clearPlaceSelection,
       closeGooglePlace,

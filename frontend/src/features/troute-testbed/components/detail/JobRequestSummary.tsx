@@ -69,7 +69,7 @@ export const JobRequestSummary = memo(function JobRequestSummary({
             <dd className={Classes.MONOSPACE_TEXT}>{request.job_id}</dd>
           </div>
           <div>
-            <dt>시작 시간</dt>
+            <dt>최소 출발 시각</dt>
             <dd>{request.start_time}</dd>
           </div>
           <div>

@@ -59,7 +59,7 @@ export function JobBuilderTravelTimeSource({
     >
       <div className="job-builder-travel-time-heading">
         <h2 id="job-builder-travel-time-title" className={Classes.HEADING}>
-          Travel Time Source
+          이동시간 Source
         </h2>
         <p>
           이동시간을 실제 Place ID로 조회하거나 solver에 전달할 directed
@@ -80,8 +80,10 @@ export function JobBuilderTravelTimeSource({
             onChange={() => onSourceChange('tcache')}
           />
           <span>
-            <strong>tcache에서 조회</strong>
-            <small>실제 Place ID 기반 이동시간을 사용합니다.</small>
+            <strong>tcache</strong>
+            <small>
+              Place ID와 이동수단을 사용해 실제 이동시간을 조회합니다.
+            </small>
           </span>
         </label>
         <label
@@ -95,9 +97,9 @@ export function JobBuilderTravelTimeSource({
             onChange={() => onSourceChange('direct')}
           />
           <span>
-            <strong>직접 Matrix 입력</strong>
+            <strong>Direct Matrix</strong>
             <small>
-              입력한 이동시간을 그대로 solver에 전달하고 tcache를 생략합니다.
+              입력한 Matrix를 그대로 사용하며 tcache 조회를 생략합니다.
             </small>
           </span>
         </label>
@@ -113,7 +115,8 @@ export function JobBuilderTravelTimeSource({
       ) : (
         <p className="job-builder-travel-time-note">
           모든 위치에 Place ID가 필요하며 요청에는 travel_time_matrix를 포함하지
-          않습니다.
+          않습니다. troute가 Place ID와 이동수단으로 directed Matrix를
+          생성합니다.
         </p>
       )}
     </section>
@@ -323,7 +326,9 @@ function TravelTimeMatrixEditor({
         ) : null}
       </div>
       <p className="job-builder-travel-time-note">
-        대각선은 0으로 고정되며, 방향별 이동시간을 각각 입력할 수 있습니다.
+        N × N directed Matrix입니다. 대각선은 0으로 고정되며 A→B와 B→A는 서로
+        독립입니다. travel_mode 값은 유지되지만 실제 routing 조회에는 사용되지
+        않습니다.
       </p>
     </div>
   );

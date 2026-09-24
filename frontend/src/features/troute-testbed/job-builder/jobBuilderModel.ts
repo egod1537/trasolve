@@ -46,7 +46,7 @@ export interface JobBuilderState {
 export type JobBuilderLocationRole = 'start' | 'waypoint' | 'end';
 
 export type JobBuilderLocationErrors = Partial<
-  Record<'placeId' | 'openTime' | 'closeTime' | 'stayMinutes', string>
+  Record<'id' | 'placeId' | 'openTime' | 'closeTime' | 'stayMinutes', string>
 >;
 
 export interface JobBuilderValidation {
@@ -86,7 +86,7 @@ export function createDefaultJobBuilderDraft(): JobBuilderState {
     locations,
     startTime: '09:00',
     travelMode: DEFAULT_TROUTE_TRAVEL_MODE,
-    travelTimeSource: 'direct',
+    travelTimeSource: 'tcache',
     travelTimeMatrix: createEmptyTravelTimeMatrix(locations.length),
     debug: {
       enabled: false,
@@ -170,7 +170,7 @@ export function reorderJobBuilderLocation(
 export function canShuffleJobBuilderLocations(
   locations: readonly JobBuilderLocation[],
 ): boolean {
-  return locations.length >= 2;
+  return locations.length >= 4;
 }
 
 export function shuffleJobBuilderLocations(
@@ -181,15 +181,27 @@ export function shuffleJobBuilderLocations(
     return state;
   }
 
+  const first = state.locations[0]!;
+  const last = state.locations[state.locations.length - 1]!;
+  const waypoints = state.locations.slice(1, -1);
   for (let attempt = 0; attempt < SHUFFLE_ATTEMPTS; attempt += 1) {
-    const locations = fisherYatesShuffle(state.locations, random);
-    if (!hasSameLocationOrder(state.locations, locations)) {
-      return replaceJobBuilderLocations(state, locations);
+    const shuffledWaypoints = fisherYatesShuffle(waypoints, random);
+    if (!hasSameLocationOrder(waypoints, shuffledWaypoints)) {
+      return replaceJobBuilderLocations(state, [
+        first,
+        ...shuffledWaypoints,
+        last,
+      ]);
     }
   }
 
-  const [first, ...remaining] = state.locations;
-  return replaceJobBuilderLocations(state, [...remaining, first!]);
+  const [firstWaypoint, ...remainingWaypoints] = waypoints;
+  return replaceJobBuilderLocations(state, [
+    first,
+    ...remainingWaypoints,
+    firstWaypoint!,
+    last,
+  ]);
 }
 
 export function updateJobBuilderTravelTimeMatrixCell(
@@ -228,9 +240,10 @@ export function reorderJobBuilderLocations(
     (location) => location.id === locationId,
   );
   if (
-    sourceIndex < 0 ||
-    targetIndex < 0 ||
-    targetIndex >= locations.length ||
+    sourceIndex <= 0 ||
+    sourceIndex >= locations.length - 1 ||
+    targetIndex <= 0 ||
+    targetIndex >= locations.length - 1 ||
     sourceIndex === targetIndex
   ) {
     return [...locations];

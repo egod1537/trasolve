@@ -48,7 +48,11 @@ export function validateJobBuilderDraft(
       getJobBuilderLocationRole(index, state.locations.length) !== 'waypoint';
     const minimumStayMinutes = endpoint ? 0 : MIN_VISIT_DURATION_MINUTES;
 
-    if (!location.id.trim() || ids.has(location.id)) {
+    if (!location.id.trim()) {
+      errors.id = '위치 ID를 입력하세요.';
+      messages.push('위치 ID는 비어 있지 않고 서로 달라야 합니다.');
+    } else if (ids.has(location.id)) {
+      errors.id = '다른 위치와 중복되지 않는 ID를 입력하세요.';
       messages.push('위치 ID는 비어 있지 않고 서로 달라야 합니다.');
     }
     ids.add(location.id);
@@ -99,7 +103,7 @@ export function validateJobBuilderDraft(
 
   const startTimeError = isVisitTime(state.startTime)
     ? undefined
-    : `시작 시각을 ${VISIT_TIME_GRANULARITY_MINUTES}분 단위로 입력하세요.`;
+    : `최소 출발 시각을 ${VISIT_TIME_GRANULARITY_MINUTES}분 단위로 입력하세요.`;
   if (startTimeError) {
     messages.push(startTimeError);
   }

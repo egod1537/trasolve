@@ -165,9 +165,28 @@ export const trouteRouteStopSchema = z.object({
   departure_time: timeOfDaySchema.optional(),
 });
 
+export const trouteSolverObjectiveScoreSchema = z.object({
+  latest_start: timeOfDaySchema,
+  finish_time: timeOfDaySchema,
+  travel_minutes: z.number().int().min(0).max(MAX_U32),
+  wait_minutes: z.number().int().min(0).max(MAX_U32),
+});
+
+export const trouteSolverCandidateSchema = z.object({
+  strategy: nonEmptyStringSchema,
+  best: z.boolean().default(false),
+  route: z.array(nonEmptyStringSchema),
+  feasible: z.boolean(),
+  objective_score: trouteSolverObjectiveScoreSchema.nullable().optional(),
+  elapsed_ms: z.number().nonnegative().nullable().optional(),
+  error: z.string().max(4096).nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
+
 export const trouteOptimizeResponseSchema = z.object({
   route: z.array(trouteRouteStopSchema).min(1),
   total_travel_minutes: z.number().int().min(0).max(MAX_U32),
+  solver_candidates: z.array(trouteSolverCandidateSchema).optional(),
 });
 
 export const trouteJobStateSchema = z.strictObject({
