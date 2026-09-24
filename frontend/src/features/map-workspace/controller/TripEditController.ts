@@ -4,6 +4,7 @@ import {
   type Trip,
   type TripInput,
   type TripPolylineMode,
+  type TripScheduleUpdate,
 } from '@trasolve/shared';
 import type { TripCommand } from '@/features/map-workspace/command/TripCommand';
 import { TripCommandDispatcher } from '@/features/map-workspace/command/TripCommandDispatcher';
@@ -12,10 +13,12 @@ import type { RegisteredTripCommand } from '@/features/map-workspace/command/Tri
 import {
   createAddDayCommand,
   createAddPlaceCommand,
+  createApplyOptimizedScheduleCommand,
   createMoveDayCommand,
   createMovePlaceCommand,
   createRemovePlaceCommand,
   createRemovePlacesCommand,
+  createReorderDayPlacesCommand,
   createRenameDayCommand,
   createRenameTripCommand,
   createUpdateDayColorCommand,
@@ -210,6 +213,20 @@ export class TripEditController {
     return this.dispatch(
       createMovePlaceCommand(placeId, targetDayId, targetIndex),
     );
+  }
+
+  public reorderDayPlaces(
+    dayId: string,
+    placeIds: readonly string[],
+  ): Promise<boolean> {
+    return this.dispatch(createReorderDayPlacesCommand(dayId, placeIds));
+  }
+
+  public applyOptimizedSchedule(
+    dayId: string,
+    schedule: TripScheduleUpdate,
+  ): Promise<boolean> {
+    return this.dispatch(createApplyOptimizedScheduleCommand(dayId, schedule));
   }
 
   public updatePlace(

@@ -1,21 +1,38 @@
-import { Classes, Switch } from '@blueprintjs/core';
-import { TROUTE_MAX_DEBUG_JOB_DURATION_MS } from '@trasolve/shared';
+import { Classes, HTMLSelect, Switch } from '@blueprintjs/core';
+import {
+  TROUTE_MAX_DEBUG_JOB_DURATION_MS,
+  type TrouteTravelMode,
+} from '@trasolve/shared';
 import { VISIT_TIME_GRANULARITY_MINUTES } from '@/entities/place';
 import type { JobBuilderState } from '@/features/troute-testbed/job-builder/jobBuilderModel';
 
 interface JobBuilderSettingsProps {
+  jobId: string;
   state: JobBuilderState;
   startTimeError?: string;
   minJobDurationMsError?: string;
+  onJobIdChange: (jobId: string) => void;
   onChange: (
-    patch: Partial<Pick<JobBuilderState, 'startTime' | 'debug'>>,
+    patch: Partial<Pick<JobBuilderState, 'startTime' | 'travelMode' | 'debug'>>,
   ) => void;
 }
 
+const TRAVEL_MODE_OPTIONS: readonly {
+  value: TrouteTravelMode;
+  label: string;
+}[] = [
+  { value: 'TRANSIT', label: '대중교통' },
+  { value: 'DRIVING', label: '자동차' },
+  { value: 'WALKING', label: '도보' },
+  { value: 'BICYCLING', label: '자전거' },
+];
+
 export function JobBuilderSettings({
+  jobId,
   state,
   startTimeError,
   minJobDurationMsError,
+  onJobIdChange,
   onChange,
 }: JobBuilderSettingsProps) {
   return (
@@ -24,11 +41,47 @@ export function JobBuilderSettings({
       aria-labelledby="job-settings-title"
     >
       <h2 id="job-settings-title" className={Classes.HEADING}>
-        요청 설정
+        기본 정보
       </h2>
       <div className="job-builder-settings-fields">
         <label className="job-builder-settings-row">
-          <span>시작 시각</span>
+          <span>Job ID</span>
+          <input
+            className="bp6-input job-builder-job-id-input"
+            type="text"
+            value={jobId}
+            onChange={(event) => onJobIdChange(event.currentTarget.value)}
+          />
+          <small>troute Job을 식별하는 고유 ID입니다.</small>
+        </label>
+
+        <label className="job-builder-settings-row">
+          <span>이동수단</span>
+          <HTMLSelect
+            aria-label="이동수단"
+            value={state.travelMode}
+            onChange={(event) =>
+              onChange({
+                travelMode: event.currentTarget.value as TrouteTravelMode,
+              })
+            }
+          >
+            {TRAVEL_MODE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </HTMLSelect>
+          <small>
+            tcache가 실제 이동시간을 조회할 때 사용하는 이동수단입니다.
+            {state.travelTimeSource === 'direct'
+              ? ' Direct Matrix에서는 값은 유지되지만 실제 routing 조회에는 사용되지 않습니다.'
+              : ''}
+          </small>
+        </label>
+
+        <label className="job-builder-settings-row">
+          <span>최소 출발 시각</span>
           <input
             className="bp6-input"
             type="time"
@@ -41,9 +94,14 @@ export function JobBuilderSettings({
             <small className="job-builder-field-error" role="alert">
               {startTimeError}
             </small>
-          ) : null}
+          ) : (
+            <small>
+              solver는 이 시각 이후에서 가능한 가장 늦은 출발시각을 탐색합니다.
+            </small>
+          )}
         </label>
 
+        <h3 className="job-builder-settings-subheading">고급 디버그</h3>
         <div className="job-builder-settings-row">
           <span>디버그 모드</span>
           <Switch

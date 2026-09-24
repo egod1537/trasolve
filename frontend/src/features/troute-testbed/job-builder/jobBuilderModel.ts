@@ -1,4 +1,4 @@
-import type { PlaceDetails } from '@trasolve/shared';
+import type { PlaceDetails, TrouteTravelMode } from '@trasolve/shared';
 import { getPlaceOpeningStatus } from '@/entities/place';
 import { createDefaultJobBuilderLocations } from '@/features/troute-testbed/job-builder/jobBuilderFixtures';
 
@@ -6,7 +6,11 @@ export const DEFAULT_OPEN_TIME = '09:00';
 export const DEFAULT_CLOSE_TIME = '18:00';
 export const DEFAULT_STAY_MINUTES = 60;
 export const DEFAULT_MIN_JOB_DURATION_MS = 4_000;
+export const DEFAULT_TROUTE_TRAVEL_MODE: TrouteTravelMode = 'TRANSIT';
 export const MAX_STAY_MINUTES = 4_294_967_295;
+
+export type JobBuilderTravelTimeSource = 'tcache' | 'direct';
+export type JobBuilderTravelTimeMatrixCell = number | null;
 
 export interface JobBuilderLocation {
   id: string;
@@ -29,6 +33,9 @@ export interface JobBuilderLocation {
 export interface JobBuilderState {
   locations: JobBuilderLocation[];
   startTime: string;
+  travelMode: TrouteTravelMode;
+  travelTimeSource: JobBuilderTravelTimeSource;
+  travelTimeMatrix: JobBuilderTravelTimeMatrixCell[][];
   debug: {
     enabled: boolean;
     minJobDurationMs: number;
@@ -39,7 +46,7 @@ export interface JobBuilderState {
 export type JobBuilderLocationRole = 'start' | 'waypoint' | 'end';
 
 export type JobBuilderLocationErrors = Partial<
-  Record<'openTime' | 'closeTime' | 'stayMinutes', string>
+  Record<'id' | 'placeId' | 'openTime' | 'closeTime' | 'stayMinutes', string>
 >;
 
 export interface JobBuilderValidation {
@@ -51,6 +58,7 @@ export interface JobBuilderValidation {
 }
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+const SHUFFLE_ATTEMPTS = 3;
 
 function getGoogleOpeningWindow(
   place: PlaceDetails,
@@ -73,9 +81,13 @@ function getGoogleOpeningWindow(
 }
 
 export function createDefaultJobBuilderDraft(): JobBuilderState {
+  const locations = createDefaultJobBuilderLocations();
   return {
-    locations: createDefaultJobBuilderLocations(),
+    locations,
     startTime: '09:00',
+    travelMode: DEFAULT_TROUTE_TRAVEL_MODE,
+    travelTimeSource: 'tcache',
+    travelTimeMatrix: createEmptyTravelTimeMatrix(locations.length),
     debug: {
       enabled: false,
       minJobDurationMs: DEFAULT_MIN_JOB_DURATION_MS,
@@ -129,19 +141,93 @@ export function addJobBuilderLocation(
           location,
           state.locations[state.locations.length - 1]!,
         ];
-  return {
-    ...state,
-    locations,
-  };
+  return replaceJobBuilderLocations(state, locations);
 }
 
 export function removeJobBuilderLocation(
   state: JobBuilderState,
   locationId: string,
 ): JobBuilderState {
+  const locations = state.locations.filter(
+    (location) => location.id !== locationId,
+  );
+  return replaceJobBuilderLocations(state, locations);
+}
+
+export function reorderJobBuilderLocation(
+  state: JobBuilderState,
+  locationId: string,
+  targetIndex: number,
+): JobBuilderState {
+  const locations = reorderJobBuilderLocations(
+    state.locations,
+    locationId,
+    targetIndex,
+  );
+  return replaceJobBuilderLocations(state, locations);
+}
+
+export function canShuffleJobBuilderLocations(
+  locations: readonly JobBuilderLocation[],
+): boolean {
+  return locations.length >= 4;
+}
+
+export function shuffleJobBuilderLocations(
+  state: JobBuilderState,
+  random: () => number = Math.random,
+): JobBuilderState {
+  if (!canShuffleJobBuilderLocations(state.locations)) {
+    return state;
+  }
+
+  const first = state.locations[0]!;
+  const last = state.locations[state.locations.length - 1]!;
+  const waypoints = state.locations.slice(1, -1);
+  for (let attempt = 0; attempt < SHUFFLE_ATTEMPTS; attempt += 1) {
+    const shuffledWaypoints = fisherYatesShuffle(waypoints, random);
+    if (!hasSameLocationOrder(waypoints, shuffledWaypoints)) {
+      return replaceJobBuilderLocations(state, [
+        first,
+        ...shuffledWaypoints,
+        last,
+      ]);
+    }
+  }
+
+  const [firstWaypoint, ...remainingWaypoints] = waypoints;
+  return replaceJobBuilderLocations(state, [
+    first,
+    ...remainingWaypoints,
+    firstWaypoint!,
+    last,
+  ]);
+}
+
+export function updateJobBuilderTravelTimeMatrixCell(
+  state: JobBuilderState,
+  rowIndex: number,
+  columnIndex: number,
+  value: JobBuilderTravelTimeMatrixCell,
+): JobBuilderState {
+  if (
+    rowIndex === columnIndex ||
+    rowIndex < 0 ||
+    columnIndex < 0 ||
+    rowIndex >= state.locations.length ||
+    columnIndex >= state.locations.length
+  ) {
+    return state;
+  }
   return {
     ...state,
-    locations: state.locations.filter((location) => location.id !== locationId),
+    travelTimeMatrix: state.travelTimeMatrix.map((row, currentRowIndex) =>
+      currentRowIndex === rowIndex
+        ? row.map((cell, currentColumnIndex) =>
+            currentColumnIndex === columnIndex ? value : cell,
+          )
+        : [...row],
+    ),
   };
 }
 
@@ -154,9 +240,10 @@ export function reorderJobBuilderLocations(
     (location) => location.id === locationId,
   );
   if (
-    sourceIndex < 0 ||
-    targetIndex < 0 ||
-    targetIndex >= locations.length ||
+    sourceIndex <= 0 ||
+    sourceIndex >= locations.length - 1 ||
+    targetIndex <= 0 ||
+    targetIndex >= locations.length - 1 ||
     sourceIndex === targetIndex
   ) {
     return [...locations];
@@ -168,4 +255,78 @@ export function reorderJobBuilderLocations(
   }
   next.splice(targetIndex, 0, moved);
   return next;
+}
+
+export function createEmptyTravelTimeMatrix(
+  size: number,
+): JobBuilderTravelTimeMatrixCell[][] {
+  return Array.from({ length: size }, (_, rowIndex) =>
+    Array.from({ length: size }, (_, columnIndex) =>
+      rowIndex === columnIndex ? 0 : null,
+    ),
+  );
+}
+
+function replaceJobBuilderLocations(
+  state: JobBuilderState,
+  locations: readonly JobBuilderLocation[],
+): JobBuilderState {
+  return {
+    ...state,
+    locations: [...locations],
+    travelTimeMatrix: synchronizeTravelTimeMatrix(
+      state.locations,
+      state.travelTimeMatrix,
+      locations,
+    ),
+  };
+}
+
+function fisherYatesShuffle(
+  locations: readonly JobBuilderLocation[],
+  random: () => number,
+): JobBuilderLocation[] {
+  const shuffled = [...locations];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const sample = random();
+    const normalizedSample = Number.isFinite(sample)
+      ? Math.min(Math.max(sample, 0), 1 - Number.EPSILON)
+      : 0;
+    const targetIndex = Math.floor(normalizedSample * (index + 1));
+    [shuffled[index], shuffled[targetIndex]] = [
+      shuffled[targetIndex]!,
+      shuffled[index]!,
+    ];
+  }
+  return shuffled;
+}
+
+function hasSameLocationOrder(
+  left: readonly JobBuilderLocation[],
+  right: readonly JobBuilderLocation[],
+): boolean {
+  return left.every((location, index) => location.id === right[index]?.id);
+}
+
+function synchronizeTravelTimeMatrix(
+  previousLocations: readonly JobBuilderLocation[],
+  previousMatrix: readonly (readonly JobBuilderTravelTimeMatrixCell[])[],
+  locations: readonly JobBuilderLocation[],
+): JobBuilderTravelTimeMatrixCell[][] {
+  const previousIndexById = new Map(
+    previousLocations.map((location, index) => [location.id, index]),
+  );
+  return locations.map((rowLocation, rowIndex) =>
+    locations.map((columnLocation, columnIndex) => {
+      if (rowIndex === columnIndex) {
+        return 0;
+      }
+      const previousRowIndex = previousIndexById.get(rowLocation.id);
+      const previousColumnIndex = previousIndexById.get(columnLocation.id);
+      if (previousRowIndex === undefined || previousColumnIndex === undefined) {
+        return null;
+      }
+      return previousMatrix[previousRowIndex]?.[previousColumnIndex] ?? null;
+    }),
+  );
 }

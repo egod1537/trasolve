@@ -130,12 +130,8 @@ export const JobDetail = memo(function JobDetail({
           </Callout>
         ) : null}
 
-        {optimization ? (
-          <>
-            <Divider />
-            <JobResultSummary optimization={optimization} />
-          </>
-        ) : null}
+        <Divider />
+        <JobResultSummary job={job} optimization={optimization} />
 
         <Divider />
         <JobTimeline jobId={job.id} timeline={job.timeline} />

@@ -48,17 +48,28 @@ export function validateJobBuilderDraft(
       getJobBuilderLocationRole(index, state.locations.length) !== 'waypoint';
     const minimumStayMinutes = endpoint ? 0 : MIN_VISIT_DURATION_MINUTES;
 
-    if (!location.id.trim() || ids.has(location.id)) {
+    if (!location.id.trim()) {
+      errors.id = '위치 ID를 입력하세요.';
+      messages.push('위치 ID는 비어 있지 않고 서로 달라야 합니다.');
+    } else if (ids.has(location.id)) {
+      errors.id = '다른 위치와 중복되지 않는 ID를 입력하세요.';
       messages.push('위치 ID는 비어 있지 않고 서로 달라야 합니다.');
     }
     ids.add(location.id);
 
-    if (!location.placeId.trim()) {
+    if (state.travelTimeSource === 'tcache' && !location.placeId.trim()) {
+      errors.placeId = 'tcache 조회에는 Place ID가 필요합니다.';
       messages.push(`${location.name}: place_id가 필요합니다.`);
-    } else if (placeIds.has(location.placeId)) {
+    } else if (
+      state.travelTimeSource === 'tcache' &&
+      placeIds.has(location.placeId)
+    ) {
+      errors.placeId = '다른 위치와 중복되지 않는 Place ID를 입력하세요.';
       messages.push('각 위치의 place_id는 서로 달라야 합니다.');
     }
-    placeIds.add(location.placeId);
+    if (state.travelTimeSource === 'tcache' && location.placeId.trim()) {
+      placeIds.add(location.placeId);
+    }
 
     if (
       !isVisitTime(location.openTime, location.googleOpeningWindow?.openTime)
@@ -92,7 +103,7 @@ export function validateJobBuilderDraft(
 
   const startTimeError = isVisitTime(state.startTime)
     ? undefined
-    : `시작 시각을 ${VISIT_TIME_GRANULARITY_MINUTES}분 단위로 입력하세요.`;
+    : `최소 출발 시각을 ${VISIT_TIME_GRANULARITY_MINUTES}분 단위로 입력하세요.`;
   if (startTimeError) {
     messages.push(startTimeError);
   }
@@ -110,13 +121,27 @@ export function validateJobBuilderDraft(
     messages.push('위치별 입력값을 확인하세요.');
   }
 
+  const directMatrixComplete =
+    state.travelTimeSource !== 'direct' || isCompleteTravelTimeMatrix(state);
+  if (!directMatrixComplete) {
+    messages.push(
+      '직접 Matrix의 모든 비대각선 셀에 0 이상의 정수를 입력하세요.',
+    );
+  }
+
   const request = jobBuilderToOptimizeRequest(state, jobId);
   const parsedRequest = trouteOptimizeRequestSchema.safeParse(request);
   if (!parsedRequest.success) {
     messages.push(
-      ...parsedRequest.error.issues.map(
-        (issue) => `요청 ${issue.path.map(String).join('.')}: ${issue.message}`,
-      ),
+      ...parsedRequest.error.issues
+        .filter(
+          (issue) =>
+            directMatrixComplete || issue.path[0] !== 'travel_time_matrix',
+        )
+        .map(
+          (issue) =>
+            `요청 ${issue.path.map(String).join('.')}: ${issue.message}`,
+        ),
     );
   }
   if (existingJobIds.has(jobId)) {
@@ -131,4 +156,20 @@ export function validateJobBuilderDraft(
     ...(startTimeError ? { startTimeError } : {}),
     ...(minJobDurationMsError ? { minJobDurationMsError } : {}),
   };
+}
+
+function isCompleteTravelTimeMatrix(state: JobBuilderState): boolean {
+  const locationCount = state.locations.length;
+  if (state.travelTimeMatrix.length !== locationCount) {
+    return false;
+  }
+  return state.travelTimeMatrix.every(
+    (row, rowIndex) =>
+      row.length === locationCount &&
+      row.every((value, columnIndex) =>
+        rowIndex === columnIndex
+          ? value === 0
+          : value !== null && Number.isInteger(value) && value >= 0,
+      ),
+  );
 }

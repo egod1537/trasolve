@@ -40,6 +40,8 @@ export type {
   TripPlace,
   TripPolyline,
   TripPolylineMode,
+  TripScheduleStopUpdate,
+  TripScheduleUpdate,
 } from './types/trip.js';
 
 export {
@@ -197,6 +199,10 @@ export {
   trouteRemoteTimelineEntrySchema,
   trouteRemoteTimelineSchema,
   trouteRouteStopSchema,
+  trouteSolverCandidateSchema,
+  trouteSolverObjectiveScoreSchema,
+  trouteStartPolicySchema,
+  trouteTravelModeSchema,
 } from './schemas/troute.js';
 
 export type {
@@ -222,4 +228,8 @@ export type {
   TrouteRemoteTimeline,
   TrouteRemoteTimelineEntry,
   TrouteRouteStop,
+  TrouteSolverCandidate,
+  TrouteSolverObjectiveScore,
+  TrouteStartPolicy,
+  TrouteTravelMode,
 } from './types/troute.js';

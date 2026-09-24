@@ -1,9 +1,9 @@
 import { lazy, memo, Suspense, type RefObject } from 'react';
 import type {
-  RouteOptimizationRequest,
   TripDay,
   TripPolyline,
   TripPolylineMode,
+  TripScheduleUpdate,
 } from '@trasolve/shared';
 import { BottomContextPanel } from '@/features/map-workspace/components/bottom-panel/BottomContextPanel';
 import { MapToolPanel } from '@/features/map-workspace/components/bottom-panel/MapToolPanel';
@@ -19,6 +19,7 @@ const noop = () => undefined;
 
 type Props = {
   activeDay: TripDay | null;
+  days: readonly TripDay[];
   activeMapTool: 'pan';
   routeOptimizationOpen: boolean;
   routeOptimizationModalId: string;
@@ -37,11 +38,15 @@ type Props = {
   ) => Promise<boolean>;
   onDeletePlaces: (placeIds: readonly string[]) => Promise<boolean>;
   onClearSelection: () => void;
-  onOptimizeRoute?: (request: RouteOptimizationRequest) => Promise<void> | void;
+  onApplyOptimizedSchedule: (
+    dayId: string,
+    schedule: TripScheduleUpdate,
+  ) => Promise<boolean>;
 };
 
 export const MapOverlayHost = memo(function MapOverlayHost({
   activeDay,
+  days,
   activeMapTool,
   routeOptimizationOpen,
   routeOptimizationModalId,
@@ -57,7 +62,7 @@ export const MapOverlayHost = memo(function MapOverlayHost({
   onUpdatePolylineModes,
   onDeletePlaces,
   onClearSelection,
-  onOptimizeRoute,
+  onApplyOptimizedSchedule,
 }: Props) {
   return (
     <>
@@ -82,20 +87,23 @@ export const MapOverlayHost = memo(function MapOverlayHost({
             onUndo={noop}
             onRedo={noop}
             onSelectTool={onSelectMapTool}
-            onOpenRouteTools={activeDay ? onToggleRouteOptimization : undefined}
-            routeToolsOpen={routeOptimizationOpen && activeDay !== null}
+            onOpenRouteTools={
+              days.length > 0 ? onToggleRouteOptimization : undefined
+            }
+            routeToolsOpen={routeOptimizationOpen && days.length > 0}
             routeToolsControlId={routeOptimizationModalId}
             routeToolButtonRef={routeToolButtonRef}
           />
         </div>
       </div>
-      {routeOptimizationOpen && activeDay && (
+      {routeOptimizationOpen && days.length > 0 && (
         <Suspense fallback={null}>
           <RouteOptimizationModal
             id={routeOptimizationModalId}
-            activeDay={activeDay}
+            days={days}
+            initialDayId={activeDay?.id}
             onClose={onCloseRouteOptimization}
-            onOptimize={onOptimizeRoute}
+            onApply={onApplyOptimizedSchedule}
           />
         </Suspense>
       )}

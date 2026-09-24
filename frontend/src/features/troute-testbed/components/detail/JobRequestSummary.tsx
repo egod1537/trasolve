@@ -1,5 +1,9 @@
 import { Button, Classes, Intent, Tag } from '@blueprintjs/core';
-import type { TrouteOptimizeRequest } from '@trasolve/shared';
+import type {
+  TrouteOptimizeRequest,
+  TrouteStartPolicy,
+  TrouteTravelMode,
+} from '@trasolve/shared';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { JobRequestLocationTable } from '@/features/troute-testbed/components/detail/JobRequestLocationTable';
 
@@ -7,11 +11,26 @@ interface JobRequestSummaryProps {
   request: TrouteOptimizeRequest;
 }
 
+const TRAVEL_MODE_LABELS: Record<TrouteTravelMode, string> = {
+  TRANSIT: '대중교통',
+  DRIVING: '자동차',
+  WALKING: '도보',
+  BICYCLING: '자전거',
+};
+
+const START_POLICY_LABELS: Record<TrouteStartPolicy, string> = {
+  FIXED: '지정 시각',
+  EARLIEST: '최대한 이르게',
+  LATEST: '최대한 늦게',
+};
+
 export const JobRequestSummary = memo(function JobRequestSummary({
   request,
 }: JobRequestSummaryProps) {
   const [expanded, setExpanded] = useState(true);
   const [copied, setCopied] = useState(false);
+  const travelMode = request.travel_mode ?? 'TRANSIT';
+  const startPolicy = request.start_policy ?? 'LATEST';
   const json = useMemo(() => JSON.stringify(request, null, 2), [request]);
   const debugEnabled = request.debug !== undefined;
   const shuffleEnabled = request.debug?.shuffle_result_route === true;
@@ -61,8 +80,20 @@ export const JobRequestSummary = memo(function JobRequestSummary({
             <dd className={Classes.MONOSPACE_TEXT}>{request.job_id}</dd>
           </div>
           <div>
-            <dt>시작 시간</dt>
-            <dd>{request.start_time}</dd>
+            <dt>시작 방식</dt>
+            <dd>
+              {START_POLICY_LABELS[startPolicy]} ({startPolicy})
+            </dd>
+          </div>
+          <div>
+            <dt>시작 시각</dt>
+            <dd>{request.start_time ?? '—'}</dd>
+          </div>
+          <div>
+            <dt>이동수단</dt>
+            <dd>
+              {TRAVEL_MODE_LABELS[travelMode]} ({travelMode})
+            </dd>
           </div>
           <div>
             <dt>Debug</dt>

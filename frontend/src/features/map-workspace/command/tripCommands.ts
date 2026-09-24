@@ -5,6 +5,7 @@ import {
   type TripPlace,
   type TripPolyline,
   type TripPolylineMode,
+  type TripScheduleUpdate,
 } from '@trasolve/shared';
 import {
   DEFAULT_PLACE_PREFERRED_DURATION_MINUTES,
@@ -193,6 +194,83 @@ export function createMovePlaceCommand(
       Math.min(targetIndex, target.places.length),
     );
     target.places.splice(insertionIndex, 0, place);
+    return trip;
+  });
+}
+
+export function createReorderDayPlacesCommand(
+  dayId: string,
+  placeIds: readonly string[],
+): TripCommand {
+  const orderedIds = [...placeIds];
+  return defineTripCommand((trip) => {
+    const day = trip.days.find((candidate) => candidate.id === dayId);
+    if (!day) {
+      throw new Error('순서를 변경할 날짜를 찾을 수 없습니다.');
+    }
+    const uniqueIds = new Set(orderedIds);
+    const currentIds = new Set(day.places.map((place) => place.id));
+    const currentStartId = day.places[0]?.id;
+    const currentDestinationId = day.places.at(-1)?.id;
+    if (
+      orderedIds.length !== day.places.length ||
+      uniqueIds.size !== orderedIds.length ||
+      orderedIds.some((placeId) => !currentIds.has(placeId)) ||
+      orderedIds[0] !== currentStartId ||
+      orderedIds.at(-1) !== currentDestinationId
+    ) {
+      throw new Error(
+        '최적화 결과의 장소 순서가 현재 Day와 일치하지 않습니다.',
+      );
+    }
+    const placesById = new Map(day.places.map((place) => [place.id, place]));
+    day.places = orderedIds.map((placeId) => placesById.get(placeId)!);
+    return trip;
+  });
+}
+
+export function createApplyOptimizedScheduleCommand(
+  dayId: string,
+  schedule: TripScheduleUpdate,
+): TripCommand {
+  const update = structuredClone(schedule);
+  return defineTripCommand((trip) => {
+    const day = trip.days.find((candidate) => candidate.id === dayId);
+    if (!day) {
+      throw new Error('일정을 적용할 날짜를 찾을 수 없습니다.');
+    }
+    const currentIds = new Set(day.places.map((place) => place.id));
+    const orderedIds = update.placeIds;
+    const uniqueOrderedIds = new Set(orderedIds);
+    const stopsById = new Map(update.stops.map((stop) => [stop.placeId, stop]));
+    if (
+      orderedIds.length !== day.places.length ||
+      uniqueOrderedIds.size !== orderedIds.length ||
+      orderedIds.some((placeId) => !currentIds.has(placeId)) ||
+      update.stops.length !== orderedIds.length ||
+      stopsById.size !== update.stops.length ||
+      orderedIds.some((placeId) => !stopsById.has(placeId)) ||
+      orderedIds[0] !== update.expectedStartPlaceId ||
+      orderedIds.at(-1) !== update.expectedEndPlaceId ||
+      !currentIds.has(update.expectedStartPlaceId) ||
+      !currentIds.has(update.expectedEndPlaceId)
+    ) {
+      throw new Error(
+        '최적화 일정의 장소 또는 시작·종점이 현재 Day와 일치하지 않습니다.',
+      );
+    }
+
+    const placesById = new Map(day.places.map((place) => [place.id, place]));
+    day.places = orderedIds.map((placeId) => {
+      const place = placesById.get(placeId)!;
+      const stop = stopsById.get(placeId)!;
+      return {
+        ...place,
+        time: stop.time,
+        visitDurationMinutes:
+          stop.visitDurationMinutes ?? place.visitDurationMinutes,
+      };
+    });
     return trip;
   });
 }

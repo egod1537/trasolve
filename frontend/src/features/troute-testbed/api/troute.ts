@@ -203,9 +203,7 @@ export async function optimizeRouteWithTroute(
   request: TrouteOptimizeRequest,
   signal?: AbortSignal,
 ): Promise<TrouteGatewayResult> {
-  const requestBody = JSON.stringify(
-    trouteOptimizeRequestSchema.parse(request),
-  );
+  const requestBody = createTrouteOptimizeRequestBody(request);
   const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
   const requestSignal = signal ? AbortSignal.any([signal, timeout]) : timeout;
   const startedAt = performance.now();
@@ -266,6 +264,12 @@ export async function optimizeRouteWithTroute(
               .join('; ')
           : null,
   };
+}
+
+export function createTrouteOptimizeRequestBody(
+  request: TrouteOptimizeRequest,
+): string {
+  return JSON.stringify(trouteOptimizeRequestSchema.parse(request));
 }
 
 function getEventSchema(type: TrouteJobEventType) {

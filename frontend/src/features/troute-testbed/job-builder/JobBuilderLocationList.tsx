@@ -17,6 +17,7 @@ import type {
   JobBuilderLocationRole,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
 import {
+  canShuffleJobBuilderLocations,
   getJobBuilderLocationRole,
   MAX_STAY_MINUTES,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
@@ -25,6 +26,7 @@ import type { JobBuilderValidationStatus } from '@/features/troute-testbed/job-b
 
 interface JobBuilderLocationListProps {
   locations: JobBuilderLocation[];
+  placeIdRequired: boolean;
   selectedLocationId: string | null;
   errors: Record<string, JobBuilderLocationErrors>;
   validationStatus: JobBuilderValidationStatus;
@@ -33,10 +35,14 @@ interface JobBuilderLocationListProps {
   onUpdate: (locationId: string, patch: JobBuilderLocationPatch) => void;
   onRemove: (locationId: string) => void;
   onReorder: (locationId: string, targetIndex: number) => void;
+  onShuffle: () => void;
 }
 
 type JobBuilderLocationPatch = Partial<
-  Pick<JobBuilderLocation, 'openTime' | 'closeTime' | 'stayMinutes'>
+  Pick<
+    JobBuilderLocation,
+    'id' | 'name' | 'placeId' | 'openTime' | 'closeTime' | 'stayMinutes'
+  >
 >;
 
 interface DragState {
@@ -62,14 +68,9 @@ interface DropTarget {
   edge: Exclude<DropTargetEdge, null>;
 }
 
-const ROLE_LABELS: Record<JobBuilderLocationRole, string> = {
-  start: '출발지',
-  waypoint: '경유지',
-  end: '도착지',
-};
-
 export function JobBuilderLocationList({
   locations,
+  placeIdRequired,
   selectedLocationId,
   errors,
   validationStatus,
@@ -78,6 +79,7 @@ export function JobBuilderLocationList({
   onUpdate,
   onRemove,
   onReorder,
+  onShuffle,
 }: JobBuilderLocationListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sortableListRef = useRef<HTMLDivElement>(null);
@@ -112,7 +114,12 @@ export function JobBuilderLocationList({
     sourceIndex: number,
     event: PointerEvent<HTMLButtonElement>,
   ): void {
-    if (!event.isPrimary || event.button !== 0) {
+    if (
+      sourceIndex <= 0 ||
+      sourceIndex >= locations.length - 1 ||
+      !event.isPrimary ||
+      event.button !== 0
+    ) {
       return;
     }
     event.preventDefault();
@@ -142,7 +149,8 @@ export function JobBuilderLocationList({
       const rect = row.getBoundingClientRect();
       return pointerY < rect.top + rect.height / 2;
     });
-    const targetIndex = beforeIndex < 0 ? locations.length - 1 : beforeIndex;
+    const targetIndex =
+      beforeIndex < 0 ? locations.length - 2 : beforeIndex + 1;
     const list = scrollRef.current;
     if (list) {
       const rect = list.getBoundingClientRect();
@@ -210,7 +218,13 @@ export function JobBuilderLocationList({
     const direction =
       event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
     const targetIndex = sourceIndex + direction;
-    if (!direction || targetIndex < 0 || targetIndex >= locations.length) {
+    if (
+      !direction ||
+      sourceIndex <= 0 ||
+      sourceIndex >= locations.length - 1 ||
+      targetIndex <= 0 ||
+      targetIndex >= locations.length - 1
+    ) {
       return;
     }
     event.preventDefault();
@@ -240,10 +254,11 @@ export function JobBuilderLocationList({
 
     return (
       <JobBuilderLocationItem
-        key={location.id}
+        key={`${index}:${location.id}`}
         location={location}
         index={index}
         role={role}
+        placeIdRequired={placeIdRequired}
         selected={selectedLocationId === location.id}
         dropTargetEdge={dropTargetEdge}
         errors={errors[location.id] ?? {}}
@@ -268,16 +283,26 @@ export function JobBuilderLocationList({
         <div>
           <h2 className={Classes.HEADING}>위치 목록</h2>
           <p>
-            모든 위치의 순서를 변경할 수 있습니다. 첫 위치는 출발지, 마지막
-            위치는 도착지이며 나머지는 경유지입니다. Google 영업시간이 있으면
-            자동으로 입력되며 직접 편집할 때는 {VISIT_TIME_GRANULARITY_MINUTES}
-            분 단위입니다.
+            첫 위치는 fixed start, 마지막 위치는 fixed destination입니다. 중간
+            위치만 순서를 변경할 수 있으며 시간은{' '}
+            {VISIT_TIME_GRANULARITY_MINUTES}분 단위로 입력합니다.
           </p>
         </div>
         <div className="job-builder-location-meta">
           <span className="job-builder-location-count">
             {locations.length}개
           </span>
+          <Button
+            icon="random"
+            size="small"
+            variant="minimal"
+            disabled={!canShuffleJobBuilderLocations(locations)}
+            aria-label="중간 위치 순서 섞기"
+            title="중간 위치 순서 섞기"
+            onClick={onShuffle}
+          >
+            중간 순서 섞기
+          </Button>
           <JobBuilderValidationIndicator
             status={validationStatus}
             errorCount={validationErrorCount}
@@ -331,6 +356,7 @@ interface JobBuilderLocationItemProps {
   location: JobBuilderLocation;
   index: number;
   role: JobBuilderLocationRole;
+  placeIdRequired: boolean;
   selected: boolean;
   dropTargetEdge: DropTargetEdge;
   errors: JobBuilderLocationErrors;
@@ -345,6 +371,7 @@ function JobBuilderLocationItem({
   location,
   index,
   role,
+  placeIdRequired,
   selected,
   dropTargetEdge,
   errors,
@@ -359,7 +386,9 @@ function JobBuilderLocationItem({
       ref={setRowRef}
       className={`job-builder-location-item${selected ? ' is-selected' : ''}${drag.dragging ? ' is-dragging' : ''}${dropTargetEdge ? ` is-drop-target-${dropTargetEdge}` : ''}`}
       data-builder-location-id={location.id}
-      data-builder-sortable-location-id={location.id}
+      {...(role === 'waypoint'
+        ? { 'data-builder-sortable-location-id': location.id }
+        : {})}
       onClick={onSelect}
     >
       <div className="job-builder-location-heading">
@@ -367,6 +396,7 @@ function JobBuilderLocationItem({
           className="job-builder-drag-handle"
           label={`${location.name} 위치`}
           dragging={drag.dragging}
+          disabled={role !== 'waypoint'}
           onPointerDown={drag.onPointerDown}
           onPointerMove={drag.onPointerMove}
           onPointerUp={drag.onPointerUp}
@@ -374,13 +404,12 @@ function JobBuilderLocationItem({
           onLostPointerCapture={drag.onLostPointerCapture}
           onKeyDown={drag.onKeyDown}
         />
-        <span className="job-builder-location-order">{index + 1}</span>
+        <span className={`job-builder-location-order is-${role}`}>
+          {getLocationRoleLabel(role, index)}
+        </span>
         <div className="job-builder-location-copy">
           <span className="job-builder-location-name">
             <strong>{location.name}</strong>
-            <span className={`job-builder-location-role is-${role}`}>
-              {ROLE_LABELS[role]}
-            </span>
           </span>
           <span className="job-builder-location-address">
             {location.address ?? '주소 정보 없음'}
@@ -403,6 +432,49 @@ function JobBuilderLocationItem({
         className="job-builder-location-fields"
         onClick={(event) => event.stopPropagation()}
       >
+        <label>
+          <span>ID</span>
+          <input
+            className="bp6-input"
+            type="text"
+            aria-label={`${location.name} ID`}
+            aria-invalid={Boolean(errors.id)}
+            value={location.id}
+            onChange={(event) => onUpdate({ id: event.currentTarget.value })}
+          />
+        </label>
+        {errors.id ? (
+          <p className="job-builder-field-error" role="alert">
+            {errors.id}
+          </p>
+        ) : null}
+        <label>
+          <span>이름</span>
+          <input
+            className="bp6-input"
+            type="text"
+            aria-label={`${location.name} 이름`}
+            value={location.name}
+            onChange={(event) => onUpdate({ name: event.currentTarget.value })}
+          />
+        </label>
+        <label>
+          <span>{placeIdRequired ? 'Place ID' : 'Place ID (선택)'}</span>
+          <input
+            className="bp6-input"
+            type="text"
+            required={placeIdRequired}
+            aria-label={`${location.name} Place ID`}
+            aria-invalid={Boolean(errors.placeId)}
+            value={location.placeId}
+            onChange={(event) => onUpdate({ placeId: event.target.value })}
+          />
+        </label>
+        {errors.placeId ? (
+          <p className="job-builder-field-error" role="alert">
+            {errors.placeId}
+          </p>
+        ) : null}
         <label>
           <span>영업 시간</span>
           <span className="job-builder-time-range">
@@ -459,4 +531,17 @@ function JobBuilderLocationItem({
       </div>
     </article>
   );
+}
+
+function getLocationRoleLabel(
+  role: JobBuilderLocationRole,
+  index: number,
+): string {
+  if (role === 'start') {
+    return 'start';
+  }
+  if (role === 'end') {
+    return 'destination';
+  }
+  return String(index + 1);
 }

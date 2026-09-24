@@ -1,7 +1,6 @@
 import {
   Button,
   ButtonGroup,
-  Callout,
   Classes,
   Dialog,
   DialogBody,
@@ -20,20 +19,30 @@ import {
   createVisualJobId,
   jobBuilderToOptimizeRequest,
 } from '@/features/troute-testbed/job-builder/jobBuilderConversion';
-import { JobBuilderJsonPreview } from '@/features/troute-testbed/job-builder/JobBuilderJsonPreview';
+import { JobBuilderContentFlow } from '@/features/troute-testbed/job-builder/JobBuilderContentFlow';
 import { JobBuilderLocationList } from '@/features/troute-testbed/job-builder/JobBuilderLocationList';
 import { JobBuilderMap } from '@/features/troute-testbed/job-builder/JobBuilderMap';
+import { JobBuilderPresetPicker } from '@/features/troute-testbed/job-builder/JobBuilderPresetPicker';
 import {
   addJobBuilderLocation,
   createDefaultJobBuilderDraft,
   createJobBuilderLocation,
   removeJobBuilderLocation,
-  reorderJobBuilderLocations,
+  reorderJobBuilderLocation,
+  shuffleJobBuilderLocations,
+  updateJobBuilderTravelTimeMatrixCell,
   type JobBuilderLocation,
   type JobBuilderState,
+  type JobBuilderTravelTimeMatrixCell,
+  type JobBuilderTravelTimeSource as TravelTimeSource,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
 import { JobBuilderSettings } from '@/features/troute-testbed/job-builder/JobBuilderSettings';
+import { JobBuilderTravelTimeSource } from '@/features/troute-testbed/job-builder/JobBuilderTravelTimeSource';
 import { validateJobBuilderDraft } from '@/features/troute-testbed/job-builder/jobBuilderValidation';
+import {
+  applyJobBuilderPreset,
+  DEFAULT_JOB_BUILDER_PRESET_ID,
+} from '@/features/troute-testbed/job-builder/presets';
 import { useJobBuilderValidation } from '@/features/troute-testbed/job-builder/useJobBuilderValidation';
 import '@/features/troute-testbed/job-builder/job-builder.css';
 
@@ -44,8 +53,6 @@ interface JobBuilderDialogProps {
   onClose: () => void;
   onCreate: (request: TrouteOptimizeRequest) => void;
 }
-
-type BuilderMode = 'visual' | 'raw';
 
 interface Feedback {
   intent: Intent;
@@ -59,33 +66,26 @@ export function JobBuilderDialog({
   onClose,
   onCreate,
 }: JobBuilderDialogProps) {
-  const [mode, setMode] = useState<BuilderMode>('visual');
   const [jobId, setJobId] = useState(createVisualJobId);
   const [builder, setBuilder] = useState(createDefaultJobBuilderDraft);
+  const [presetId, setPresetId] = useState(DEFAULT_JOB_BUILDER_PRESET_ID);
   const [viewportRevision, setViewportRevision] = useState(0);
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(
     null,
   );
   const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const [rawInput, setRawInput] = useState(() =>
-    JSON.stringify(
-      jobBuilderToOptimizeRequest(createDefaultJobBuilderDraft(), jobId),
-      null,
-      2,
-    ),
-  );
+  const [rawDraft, setRawDraft] = useState<string | null>(null);
 
   const visualRequest = useMemo(
     () => jobBuilderToOptimizeRequest(builder, jobId),
     [builder, jobId],
   );
+  const rawInput = rawDraft ?? JSON.stringify(visualRequest, null, 2);
+  const rawDirty = rawDraft !== null;
   const validation = useJobBuilderValidation(builder, jobId, existingJobIds);
-  const rawRequestValid = useMemo(
-    () => isRawRequestValid(rawInput, existingJobIds),
-    [existingJobIds, rawInput],
-  );
 
   function clearFeedback(): void {
+    setRawDraft(null);
     setFeedback(null);
   }
 
@@ -110,7 +110,10 @@ export function JobBuilderDialog({
   function updateLocation(
     locationId: string,
     patch: Partial<
-      Pick<JobBuilderLocation, 'openTime' | 'closeTime' | 'stayMinutes'>
+      Pick<
+        JobBuilderLocation,
+        'id' | 'name' | 'placeId' | 'openTime' | 'closeTime' | 'stayMinutes'
+      >
     >,
   ): void {
     setBuilder((current) => ({
@@ -119,6 +122,9 @@ export function JobBuilderDialog({
         location.id === locationId ? { ...location, ...patch } : location,
       ),
     }));
+    if (patch.id !== undefined && selectedLocationId === locationId) {
+      setSelectedLocationId(patch.id);
+    }
     clearFeedback();
   }
 
@@ -132,47 +138,65 @@ export function JobBuilderDialog({
   }
 
   function reorderLocation(locationId: string, targetIndex: number): void {
+    setBuilder((current) =>
+      reorderJobBuilderLocation(current, locationId, targetIndex),
+    );
+    clearFeedback();
+  }
+
+  function shuffleLocations(): void {
+    setBuilder((current) => shuffleJobBuilderLocations(current));
+    clearFeedback();
+  }
+
+  function updateTravelTimeSource(source: TravelTimeSource): void {
+    setBuilder((current) => ({ ...current, travelTimeSource: source }));
+    clearFeedback();
+  }
+
+  function updateTravelTimeMatrixCell(
+    rowIndex: number,
+    columnIndex: number,
+    value: JobBuilderTravelTimeMatrixCell,
+  ): void {
+    setBuilder((current) =>
+      updateJobBuilderTravelTimeMatrixCell(
+        current,
+        rowIndex,
+        columnIndex,
+        value,
+      ),
+    );
+    clearFeedback();
+  }
+
+  function updateTravelTimeMatrix(
+    matrix: JobBuilderTravelTimeMatrixCell[][],
+  ): void {
     setBuilder((current) => ({
       ...current,
-      locations: reorderJobBuilderLocations(
-        current.locations,
-        locationId,
-        targetIndex,
-      ),
+      travelTimeSource: 'direct',
+      travelTimeMatrix: matrix.map((row) => [...row]),
     }));
     clearFeedback();
   }
 
   function updateSettings(
-    patch: Partial<Pick<JobBuilderState, 'startTime' | 'debug'>>,
+    patch: Partial<Pick<JobBuilderState, 'startTime' | 'travelMode' | 'debug'>>,
   ): void {
     setBuilder((current) => ({ ...current, ...patch }));
     clearFeedback();
   }
 
-  function resetVisualBuilder(): void {
-    const nextBuilder = createDefaultJobBuilderDraft();
-    setBuilder(nextBuilder);
-    setJobId(createVisualJobId());
-    setSelectedLocationId(null);
-    setViewportRevision((current) => current + 1);
-    setFeedback(null);
-  }
-
-  function resetRawRequest(): void {
-    const nextJobId = createVisualJobId();
-    const nextBuilder = createDefaultJobBuilderDraft();
-    setBuilder(nextBuilder);
-    setJobId(nextJobId);
-    setSelectedLocationId(null);
-    setViewportRevision((current) => current + 1);
-    setRawInput(
-      JSON.stringify(
-        jobBuilderToOptimizeRequest(nextBuilder, nextJobId),
-        null,
-        2,
-      ),
-    );
+  function loadPreset(): void {
+    const applied = applyJobBuilderPreset(presetId, viewportRevision);
+    if (!applied) {
+      return;
+    }
+    setBuilder(applied.builder);
+    setSelectedLocationId(applied.selectedLocationId);
+    setViewportRevision(applied.viewportRevision);
+    setRawDraft(null);
     setFeedback(null);
   }
 
@@ -239,13 +263,7 @@ export function JobBuilderDialog({
     return parsed.data;
   }
 
-  function switchToRaw(): void {
-    setRawInput(JSON.stringify(visualRequest, null, 2));
-    setMode('raw');
-    setFeedback(null);
-  }
-
-  function switchToVisual(): void {
+  function applyRawToForm(): void {
     const request = parseRaw();
     if (!request) {
       return;
@@ -262,12 +280,15 @@ export function JobBuilderDialog({
     setBuilder(nextBuilder);
     setJobId(request.job_id);
     setSelectedLocationId(nextBuilder.locations[0]?.id ?? null);
-    setFeedback(null);
-    setMode('visual');
+    setRawDraft(null);
+    setFeedback({
+      intent: Intent.SUCCESS,
+      message: 'Raw JSON을 Form에 적용했습니다.',
+    });
   }
 
   function createJob(): void {
-    const request = mode === 'visual' ? validateVisual() : parseRaw();
+    const request = validateVisual();
     if (request) {
       onCreate(request);
     }
@@ -285,52 +306,30 @@ export function JobBuilderDialog({
       canOutsideClickClose={false}
     >
       <DialogBody className="job-builder-dialog-body">
-        <div className="job-builder-mode-switch">
-          <div className="job-builder-mode-actions">
-            <ButtonGroup size="small">
-              <Button
-                active={mode === 'visual'}
-                icon="map"
-                onClick={() => {
-                  if (mode === 'raw') {
-                    switchToVisual();
-                  }
-                }}
-              >
-                Visual Builder
-              </Button>
-              <Button
-                active={mode === 'raw'}
-                icon="code"
-                onClick={() => {
-                  if (mode === 'visual') {
-                    switchToRaw();
-                  }
-                }}
-              >
-                Raw JSON
-              </Button>
-            </ButtonGroup>
-            {mode === 'visual' ? (
-              <Button
-                icon="reset"
-                size="small"
-                variant="minimal"
-                onClick={resetVisualBuilder}
-              >
-                기본 위치 복원
-              </Button>
-            ) : null}
-          </div>
-          <span className={Classes.TEXT_MUTED}>
-            {mode === 'visual'
-              ? '지도와 위치 목록으로 요청을 구성합니다.'
-              : 'Advanced / Debug 편집 모드'}
-          </span>
-        </div>
-
-        {mode === 'visual' ? (
+        <JobBuilderContentFlow
+          validationStatus={validation.status}
+          validationErrors={validation.errors}
+          feedback={feedback}
+        >
           <div className="job-builder-visual">
+            <JobBuilderSettings
+              jobId={jobId}
+              state={builder}
+              startTimeError={validation.validation?.startTimeError}
+              minJobDurationMsError={
+                validation.validation?.minJobDurationMsError
+              }
+              onJobIdChange={(nextJobId) => {
+                setJobId(nextJobId);
+                clearFeedback();
+              }}
+              onChange={updateSettings}
+            />
+            <JobBuilderPresetPicker
+              presetId={presetId}
+              onPresetChange={setPresetId}
+              onApply={loadPreset}
+            />
             <div className="job-builder-main-grid">
               <JobBuilderMap
                 locations={builder.locations}
@@ -341,6 +340,7 @@ export function JobBuilderDialog({
               />
               <JobBuilderLocationList
                 locations={builder.locations}
+                placeIdRequired={builder.travelTimeSource === 'tcache'}
                 selectedLocationId={selectedLocationId}
                 errors={validation.validation?.locationErrors ?? {}}
                 validationStatus={validation.status}
@@ -349,71 +349,57 @@ export function JobBuilderDialog({
                 onUpdate={updateLocation}
                 onRemove={removeLocation}
                 onReorder={reorderLocation}
+                onShuffle={shuffleLocations}
               />
             </div>
-            <JobBuilderSettings
-              state={builder}
-              startTimeError={validation.validation?.startTimeError}
-              minJobDurationMsError={
-                validation.validation?.minJobDurationMsError
-              }
-              onChange={updateSettings}
+            <JobBuilderTravelTimeSource
+              source={builder.travelTimeSource}
+              locations={builder.locations}
+              matrix={builder.travelTimeMatrix}
+              onSourceChange={updateTravelTimeSource}
+              onMatrixCellChange={updateTravelTimeMatrixCell}
+              onMatrixChange={updateTravelTimeMatrix}
             />
-            <JobBuilderJsonPreview
-              request={visualRequest}
-              valid={validation.isValid}
+            <RawJsonEditor
+              input={rawInput}
+              dirty={rawDirty}
+              onChange={(input) => {
+                setRawDraft(input);
+                setFeedback(null);
+              }}
+              onApply={applyRawToForm}
+              onFormat={() => {
+                const request = parseRaw();
+                if (request) {
+                  setRawDraft(JSON.stringify(request, null, 2));
+                }
+              }}
+              onReset={() => {
+                setRawDraft(null);
+                setFeedback(null);
+              }}
             />
           </div>
-        ) : (
-          <RawJsonEditor
-            input={rawInput}
-            onChange={(input) => {
-              setRawInput(input);
-              setFeedback(null);
-            }}
-            onFormat={() => {
-              const request = parseRaw();
-              if (request) {
-                setRawInput(JSON.stringify(request, null, 2));
-              }
-            }}
-            onReset={resetRawRequest}
-          />
-        )}
-
-        {mode === 'visual' &&
-        validation.status === 'invalid' &&
-        validation.errors.length > 0 ? (
-          <Callout
-            className="job-builder-validation-summary"
-            compact
-            intent={Intent.DANGER}
-            role="alert"
-          >
-            {validation.errors.join(' ')}
-          </Callout>
-        ) : null}
-
-        {feedback ? (
-          <Callout
-            className="job-builder-feedback"
-            compact
-            intent={feedback.intent}
-            role={feedback.intent === Intent.DANGER ? 'alert' : 'status'}
-          >
-            {feedback.message}
-          </Callout>
-        ) : null}
+        </JobBuilderContentFlow>
       </DialogBody>
       <DialogFooter
         actions={
           <>
             <Button onClick={onClose}>취소</Button>
             <Button
+              icon="tick"
+              onClick={rawDirty ? applyRawToForm : validateVisual}
+            >
+              검증
+            </Button>
+            <Button
               icon="play"
               intent={Intent.PRIMARY}
-              disabled={
-                mode === 'visual' ? !validation.isValid : !rawRequestValid
+              disabled={!validation.isValid || rawDirty}
+              title={
+                rawDirty
+                  ? 'Raw JSON 변경사항을 먼저 Form에 적용하세요.'
+                  : undefined
               }
               onClick={createJob}
             >
@@ -428,12 +414,16 @@ export function JobBuilderDialog({
 
 function RawJsonEditor({
   input,
+  dirty,
   onChange,
+  onApply,
   onFormat,
   onReset,
 }: {
   input: string;
+  dirty: boolean;
   onChange: (input: string) => void;
+  onApply: () => void;
   onFormat: () => void;
   onReset: () => void;
 }) {
@@ -441,15 +431,26 @@ function RawJsonEditor({
     <section className="job-builder-raw-editor">
       <header>
         <div>
-          <h2 className={Classes.HEADING}>Advanced / 요청 JSON</h2>
-          <p>Raw JSON은 visual builder와 동시에 편집되지 않습니다.</p>
+          <h2 className={Classes.HEADING}>Raw JSON</h2>
+          <p>
+            Form과 같은 요청을 표시합니다. JSON을 수정한 뒤 Form에 적용하면
+            양방향 변환됩니다.
+          </p>
         </div>
         <ButtonGroup size="small" variant="minimal">
           <Button icon="code" onClick={onFormat}>
             포맷
           </Button>
           <Button icon="reset" onClick={onReset}>
-            샘플 복원
+            Form에서 복원
+          </Button>
+          <Button
+            icon="import"
+            intent={dirty ? Intent.PRIMARY : Intent.NONE}
+            disabled={!dirty}
+            onClick={onApply}
+          >
+            Form에 적용
           </Button>
         </ButtonGroup>
       </header>
@@ -464,20 +465,6 @@ function RawJsonEditor({
       />
     </section>
   );
-}
-
-function isRawRequestValid(
-  input: string,
-  existingJobIds: ReadonlySet<string>,
-): boolean {
-  try {
-    const parsed = trouteOptimizeRequestSchema.safeParse(
-      JSON.parse(input) as unknown,
-    );
-    return parsed.success && !existingJobIds.has(parsed.data.job_id);
-  } catch {
-    return false;
-  }
 }
 
 function formatSchemaIssues(

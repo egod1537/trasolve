@@ -334,7 +334,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  padding: 24px 16px;
+  padding: 4vh 2vw;
   overflow: auto;
   overscroll-behavior: contain;
   background: var(--bg-backdrop);
@@ -343,8 +343,11 @@
 }
 
 .route-optimization-modal {
-  width: min(420px, 100%);
-  max-height: calc(100dvh - 48px);
+  display: flex;
+  flex-direction: column;
+  width: min(1500px, 96vw);
+  height: min(920px, 92vh);
+  max-height: 92vh;
   overflow: hidden;
   box-shadow: var(--shadow-map-overlay);
   animation: route-optimization-modal-in 180ms ease-out;
@@ -423,50 +426,817 @@
   stroke-width: 1.8;
 }
 
-.route-optimization-modal-form {
+.route-optimization-modal-body {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+}
+
+.route-optimization-days {
+  width: 244px;
+  flex: none;
+  padding: 16px 12px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border-default);
+  background: var(--bg-subtle);
+}
+
+.route-optimization-days h3,
+.route-optimization-diff h3 {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.route-optimization-day-list {
   display: grid;
-  max-height: calc(100dvh - 162px);
-  gap: 14px;
-  padding: 15px 16px 16px;
+  min-width: 0;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.route-optimization-day-list button {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: 3px;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.route-optimization-day-list button:hover {
+  background: var(--bg-hover);
+}
+
+.route-optimization-day-list button.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  background: color-mix(in srgb, var(--accent) 11%, transparent);
+}
+
+.route-optimization-day-name {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.route-optimization-day-name strong {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-optimization-day-name > span,
+.route-optimization-day-status {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-optimization-day-list button.is-running .route-optimization-day-status {
+  color: var(--accent);
+}
+
+.route-optimization-day-list button.is-failed .route-optimization-day-status {
+  color: var(--danger);
+}
+
+.route-optimization-day-list
+  button.has-input-issue
+  .route-optimization-day-status {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.route-optimization-result {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  align-content: start;
+  gap: 16px;
+  padding: 18px;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 
-.route-optimization-stay-duration-option {
+.route-optimization-day-title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   min-width: 0;
-  gap: 16px;
-  padding: 12px;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
   border: 1px solid var(--border-default);
-  border-radius: 10px;
+  border-radius: 11px;
   background: var(--bg-subtle);
-  cursor: pointer;
 }
 
-.route-optimization-stay-duration-option > span {
+.route-optimization-day-title > div {
   display: grid;
   min-width: 0;
   gap: 2px;
 }
 
-.route-optimization-stay-duration-option strong {
-  font-size: 13px;
-  font-weight: 650;
+.route-optimization-day-title span {
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.3;
 }
 
-.route-optimization-stay-duration-option small {
+.route-optimization-day-title h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.route-optimization-status {
+  flex: none;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--bg-surface);
+}
+
+.route-optimization-status.is-running {
+  color: var(--accent);
+}
+
+.route-optimization-status.is-failed {
+  color: var(--danger);
+}
+
+.route-optimization-status.is-blocked {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.route-optimization-settings,
+.route-optimization-map-section,
+.route-optimization-schedule-section {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+
+.route-optimization-settings {
+  padding: 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 11px;
+  background: var(--bg-surface);
+}
+
+.route-optimization-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.route-optimization-section-heading > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.route-optimization-section-heading h3,
+.route-optimization-section-heading p {
+  margin: 0;
+}
+
+.route-optimization-section-heading h3 {
+  font-size: 13px;
+}
+
+.route-optimization-section-heading p,
+.route-optimization-section-heading > span {
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1.4;
 }
 
-.route-optimization-stay-duration-option input {
+.route-optimization-section-heading > span {
   flex: none;
-  width: 18px;
-  height: 18px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  font-weight: 700;
+}
+
+.route-optimization-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.route-optimization-setting-card {
+  display: grid;
+  min-width: 0;
+  min-height: 92px;
+  align-content: start;
+  gap: 5px;
+  padding: 10px 11px;
+  border: 1px solid var(--border-default);
+  border-radius: 9px;
+  background: var(--bg-subtle);
+}
+
+fieldset.route-optimization-setting-card {
+  margin: 0;
+}
+
+.route-optimization-setting-card > span:first-child,
+.route-optimization-setting-card legend,
+.route-optimization-setting-card small {
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.route-optimization-setting-card legend {
+  padding: 0;
+}
+
+.route-optimization-setting-card strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-optimization-setting-card select,
+.route-optimization-time-field input {
+  min-width: 0;
+  height: 30px;
+  border: 1px solid var(--border-default);
+  border-radius: 7px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 11px;
+}
+
+.route-optimization-policy-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+}
+
+.route-optimization-policy-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.route-optimization-policy-options input {
+  width: 12px;
+  height: 12px;
+  margin: 0;
   accent-color: var(--accent);
+}
+
+.route-optimization-policy-options input:disabled + span {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.route-optimization-setting-card select {
+  width: 100%;
+  padding: 0 8px;
+}
+
+.route-optimization-setting-card select:focus-visible,
+.route-optimization-time-field input:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  outline-offset: 1px;
+}
+
+.route-optimization-setting-card select:disabled,
+.route-optimization-time-field input:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.route-optimization-time-field {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.route-optimization-time-field > span {
+  flex: none;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.route-optimization-time-field input {
+  width: 104px;
+  margin-left: auto;
+  padding: 0 7px;
+}
+
+.route-optimization-settings-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.route-optimization-validation {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--danger) 8%, var(--bg-surface));
+}
+
+.route-optimization-validation-icon {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--danger);
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.route-optimization-validation > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.route-optimization-validation strong {
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.route-optimization-validation p,
+.route-optimization-validation > div > span {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.route-optimization-validation p {
+  color: var(--text-primary);
+  font-weight: 650;
+}
+
+.route-optimization-validation > div > span {
+  color: var(--text-muted);
+}
+
+.route-optimization-map-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.route-optimization-map-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 11px;
+  background: var(--bg-surface);
+}
+
+.route-optimization-map-panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 45px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.route-optimization-map-panel > header > div {
+  display: grid;
+  gap: 1px;
+}
+
+.route-optimization-map-panel > header strong {
+  font-size: 12px;
+}
+
+.route-optimization-map-panel > header span,
+.route-optimization-map-order {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.route-optimization-map-status,
+.route-optimization-marker-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.route-optimization-marker-legend i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16a34a;
+}
+
+.route-optimization-marker-legend i.is-destination {
+  margin-left: 2px;
+  background: #dc2626;
+}
+
+.route-optimization-geometry {
+  flex: none;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: var(--bg-subtle);
+}
+
+.route-optimization-geometry.is-ready {
+  background: color-mix(in srgb, var(--color-success-strong) 12%, transparent);
+  color: var(--color-success-strong);
+}
+
+.route-optimization-google-map {
+  height: 300px;
+}
+
+.route-optimization-map-placeholder {
+  display: grid;
+  height: 300px;
+  place-items: center;
+  padding: 24px;
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.route-optimization-map-placeholder p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.route-optimization-map-order {
+  min-height: 30px;
+  margin: 0;
+  padding: 8px 10px;
+  overflow: hidden;
+  border-top: 1px solid var(--border-default);
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-optimization-schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.route-optimization-schedule-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 11px;
+  background: var(--bg-surface);
+}
+
+.route-optimization-schedule-panel > header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.route-optimization-schedule-panel > header strong {
+  font-size: 12px;
+}
+
+.route-optimization-schedule-panel > header span {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.route-optimization-schedule-list {
+  display: grid;
+  max-height: 360px;
+  margin: 0;
+  padding: 10px 12px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.route-optimization-schedule-list > li {
+  display: grid;
+  min-width: 0;
+}
+
+.route-optimization-schedule-stop {
+  display: flex;
+  min-width: 0;
+  gap: 9px;
+  padding: 9px;
+  border: 1px solid var(--border-default);
+  border-radius: 9px;
+  background: var(--bg-subtle);
+}
+
+.route-optimization-schedule-index {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.route-optimization-schedule-place {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 6px;
+}
+
+.route-optimization-schedule-place-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 8px;
+}
+
+.route-optimization-schedule-place-heading strong {
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-optimization-schedule-place-heading span {
+  flex: none;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.route-optimization-schedule-place .place-time-summary {
+  display: block;
+  min-width: 0;
+}
+
+.route-optimization-schedule-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 9px;
+  color: var(--text-muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.route-optimization-schedule-leg {
+  display: grid;
+  grid-template-columns: 22px auto minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  min-height: 32px;
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.route-optimization-schedule-leg > span:first-child {
+  width: 1px;
+  height: 32px;
+  justify-self: center;
+  background: var(--border-default);
+}
+
+.route-optimization-schedule-leg > strong {
+  color: var(--text-secondary);
+  font-size: 9px;
+}
+
+.route-optimization-schedule-leg > span:last-child {
+  font-variant-numeric: tabular-nums;
+}
+
+.route-optimization-schedule-placeholder {
+  display: grid;
+  min-height: 180px;
+  margin: 0;
+  padding: 24px;
+  place-items: center;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.route-optimization-schedule-placeholder.is-running::before {
+  width: 7px;
+  height: 7px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  content: '';
+  animation: route-optimization-pulse 1.1s ease-in-out infinite;
+}
+
+.route-optimization-diff {
+  display: grid;
+  gap: 9px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 11px;
+}
+
+.route-optimization-result-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.95fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.route-optimization-result-details {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+
+.route-optimization-order-diff {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 5px 10px;
+  align-items: baseline;
+}
+
+.route-optimization-order-diff > span,
+.route-optimization-position-changes > span {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.route-optimization-order-diff p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.route-optimization-after-order .is-changed {
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 13%, transparent);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.route-optimization-position-changes {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-default);
+}
+
+.route-optimization-position-changes ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.route-optimization-position-changes li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  font-size: 10px;
+}
+
+.route-optimization-position-changes li strong {
+  overflow: hidden;
+  max-width: 160px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-optimization-position-changes li > span {
+  color: var(--accent);
+  font-weight: 750;
+}
+
+.route-optimization-diff-message {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.route-optimization-diff-message.is-running::before {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  content: '';
+  animation: route-optimization-pulse 1.1s ease-in-out infinite;
+}
+
+.route-optimization-summary-list {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 17px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.route-optimization-summary-list li::marker {
+  color: var(--accent);
+}
+
+.route-optimization-metrics table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.route-optimization-metrics th,
+.route-optimization-metrics td {
+  padding: 6px 8px;
+  border-top: 1px solid var(--border-default);
+  text-align: right;
+}
+
+.route-optimization-metrics tr > :first-child {
+  text-align: left;
+}
+
+.route-optimization-metrics thead th {
+  border-top: 0;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.route-optimization-metric-change > span,
+.route-optimization-metric-change > small {
+  display: block;
+}
+
+.route-optimization-metric-change > span {
+  font-weight: 750;
+}
+
+.route-optimization-metric-change > small {
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.route-optimization-metric-change.is-improvement {
+  color: var(--color-success-strong);
+}
+
+.route-optimization-metric-change.is-warning {
+  color: var(--color-warning-strong);
+}
+
+.route-optimization-metric-change.is-neutral {
+  color: var(--text-muted);
 }
 
 .route-optimization-modal-notice,
@@ -486,9 +1256,26 @@
 
 .route-optimization-modal-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  padding-top: 4px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-default);
+}
+
+.route-optimization-progress {
+  min-width: 0;
+  margin-right: auto;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-optimization-progress.is-blocked {
+  color: var(--danger);
+  font-weight: 650;
 }
 
 @keyframes route-optimization-backdrop-in {
@@ -501,6 +1288,127 @@
   from {
     transform: translateY(6px) scale(0.985);
     opacity: 0;
+  }
+}
+
+@keyframes route-optimization-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 1100px) {
+  .route-optimization-settings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .route-optimization-result-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 800px) {
+  .route-optimization-modal-backdrop {
+    padding: 0;
+  }
+
+  .route-optimization-modal {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+  }
+
+  .route-optimization-modal-body {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .route-optimization-days {
+    width: auto;
+    padding: 10px 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .route-optimization-days h3 {
+    display: none;
+  }
+
+  .route-optimization-day-list {
+    display: flex;
+    width: max-content;
+    margin-top: 0;
+  }
+
+  .route-optimization-day-list button {
+    width: 142px;
+  }
+
+  .route-optimization-map-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .route-optimization-schedule-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .route-optimization-result {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .route-optimization-google-map {
+    height: 270px;
+  }
+
+  .route-optimization-map-placeholder {
+    height: 270px;
+  }
+
+  .route-optimization-marker-legend {
+    display: none;
+  }
+
+  .route-optimization-geometry {
+    max-width: 142px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .route-optimization-modal-actions {
+    flex-wrap: wrap;
+  }
+
+  .route-optimization-progress {
+    width: 100%;
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .route-optimization-settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .route-optimization-setting-card {
+    min-height: 0;
+  }
+
+  .route-optimization-day-title {
+    align-items: flex-start;
+  }
+
+  .route-optimization-modal-actions > button {
+    flex: 1;
   }
 }
 
