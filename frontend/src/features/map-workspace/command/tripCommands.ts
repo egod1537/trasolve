@@ -1,9 +1,10 @@
-import type {
-  PlaceStyle,
-  Trip,
-  TripPlace,
-  TripPolyline,
-  TripPolylineMode,
+import {
+  tripIdSchema,
+  type PlaceStyle,
+  type Trip,
+  type TripPlace,
+  type TripPolyline,
+  type TripPolylineMode,
 } from '@trasolve/shared';
 import {
   DEFAULT_PLACE_PREFERRED_DURATION_MINUTES,
@@ -22,12 +23,26 @@ export function createRenameTripCommand(title: string): TripCommand {
 }
 
 export function createAddDayCommand(title: string): TripCommand {
-  return defineTripCommand((trip) => ({
+  return defineTripCommand((trip) =>
+    addDay(trip, title, `pending-${crypto.randomUUID()}`),
+  );
+}
+
+export function createAddDayCommandWithPendingId(
+  title: string,
+  pendingId: string,
+): TripCommand {
+  const id = readPendingId(pendingId);
+  return defineTripCommand((trip) => addDay(trip, title, id));
+}
+
+function addDay(trip: Trip, title: string, id: string): Trip {
+  return {
     ...trip,
     days: [
       ...trip.days,
       {
-        id: `pending-${crypto.randomUUID()}`,
+        id,
         title,
         color: '#2563eb',
         places: [],
@@ -35,7 +50,7 @@ export function createAddDayCommand(title: string): TripCommand {
         layerItems: [],
       },
     ],
-  }));
+  };
 }
 
 export function createRenameDayCommand(
@@ -90,6 +105,27 @@ export function createAddPlaceCommand(
   dayId: string,
   input: PlaceInput,
 ): TripCommand {
+  return createAddPlaceCommandWithIdFactory(
+    dayId,
+    input,
+    () => `pending-${crypto.randomUUID()}`,
+  );
+}
+
+export function createAddPlaceCommandWithPendingId(
+  dayId: string,
+  input: PlaceInput,
+  pendingId: string,
+): TripCommand {
+  const id = readPendingId(pendingId);
+  return createAddPlaceCommandWithIdFactory(dayId, input, () => id);
+}
+
+function createAddPlaceCommandWithIdFactory(
+  dayId: string,
+  input: PlaceInput,
+  createId: () => string,
+): TripCommand {
   const placeInput = structuredClone(input);
   return defineTripCommand((trip) => {
     const day = trip.days.find((candidate) => candidate.id === dayId);
@@ -104,7 +140,7 @@ export function createAddPlaceCommand(
       preferredDurationMinutes:
         placeInput.preferredDurationMinutes ??
         DEFAULT_PLACE_PREFERRED_DURATION_MINUTES,
-      id: `pending-${crypto.randomUUID()}`,
+      id: createId(),
       order: day.places.length + 1,
     };
     day.places.push(place);
@@ -166,6 +202,13 @@ export function createUpdatePlaceCommand(
   patch: Partial<PlaceInput>,
 ): TripCommand {
   return createPlacePatchCommand(placeId, patch);
+}
+
+export function createRenamePlaceCommand(
+  placeId: string,
+  name: string,
+): TripCommand {
+  return createPlacePatchCommand(placeId, { name });
 }
 
 export function createUpdateMemoCommand(
@@ -246,4 +289,12 @@ function findPolyline(trip: Trip, polylineId: string): TripPolyline {
     throw new Error('연결선을 찾을 수 없습니다.');
   }
   return polyline;
+}
+
+function readPendingId(value: string): string {
+  const parsed = tripIdSchema.safeParse(value);
+  if (!parsed.success || !parsed.data.startsWith('pending-')) {
+    throw new Error('새 여행 항목 ID가 올바르지 않습니다.');
+  }
+  return parsed.data;
 }

@@ -3,8 +3,14 @@ import { placeOpeningHoursSchema } from './places.js';
 
 // Safe as a single filename segment on Windows and Unix.
 export const tripIdSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/);
-const title = z.string().trim().min(1).max(200);
+export const TRIP_MAX_DAYS = 100;
+export const TRIP_DAY_MAX_PLACES = 500;
 export const TRIP_PLACE_MAX_DURATION_MINUTES = 24 * 60;
+export const tripTitleSchema = z.string().trim().min(1).max(200);
+export const tripMemoSchema = z.string().max(4000);
+export const tripClockTimeSchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const locationSchema = z.strictObject({
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
@@ -27,13 +33,12 @@ export const placeStyleSchema = z.strictObject({
   type: placeStyleTypeSchema,
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
 });
-const clockTimeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const placeFields = {
   placeId: z.string().trim().min(1).max(1024).optional(),
-  name: title,
+  name: tripTitleSchema,
   address: z.string().max(2000).optional(),
   location: locationSchema,
-  memo: z.string().max(4000).optional(),
+  memo: tripMemoSchema.optional(),
   openingHours: placeOpeningHoursSchema.optional(),
   placeStyle: placeStyleSchema.optional(),
   visitDurationMinutes: z
@@ -48,7 +53,7 @@ const placeFields = {
     .min(0)
     .max(TRIP_PLACE_MAX_DURATION_MINUTES)
     .optional(),
-  time: clockTimeSchema.optional(),
+  time: tripClockTimeSchema.optional(),
 };
 export const tripPlaceSchema = z.strictObject({
   id: tripIdSchema,
@@ -203,10 +208,10 @@ function migrateDay(value: unknown): unknown {
 
 const tripDayObjectSchema = z.strictObject({
   id: tripIdSchema,
-  title,
+  title: tripTitleSchema,
   date: z.iso.date().optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-  places: z.array(tripPlaceSchema).max(500),
+  places: z.array(tripPlaceSchema).max(TRIP_DAY_MAX_PLACES),
   polylines: z.array(tripPolylineSchema).max(500).default([]),
   layerItems: z.array(tripLayerItemSchema).max(1000),
 });
@@ -216,7 +221,7 @@ const tripInputDaySchema = z.preprocess(
   migrateDay,
   z.strictObject({
     id: tripIdSchema.optional(),
-    title,
+    title: tripTitleSchema,
     date: z.iso.date().optional(),
     color: z
       .string()
@@ -230,7 +235,7 @@ const tripInputDaySchema = z.preprocess(
           order: z.number().int().min(1).max(500).optional(),
         }),
       )
-      .max(500),
+      .max(TRIP_DAY_MAX_PLACES),
     polylines: z
       .array(
         tripPolylineSchema.extend({
@@ -246,10 +251,10 @@ const tripInputDaySchema = z.preprocess(
 
 export const tripInputSchema = z
   .strictObject({
-    title,
+    title: tripTitleSchema,
     startDate: z.iso.date().optional(),
     endDate: z.iso.date().optional(),
-    days: z.array(tripInputDaySchema).max(100),
+    days: z.array(tripInputDaySchema).max(TRIP_MAX_DAYS),
   })
   .refine(
     (trip) =>
@@ -262,10 +267,10 @@ export const tripSchema = z
   .strictObject({
     id: tripIdSchema,
     userId: tripIdSchema,
-    title,
+    title: tripTitleSchema,
     startDate: z.iso.date().optional(),
     endDate: z.iso.date().optional(),
-    days: z.array(tripDaySchema).max(100),
+    days: z.array(tripDaySchema).max(TRIP_MAX_DAYS),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })

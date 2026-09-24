@@ -1,5 +1,12 @@
 export { TravelMode } from './travelMode.js';
 export { CHAT_LIMITS } from './chat.js';
+export {
+  TRIP_COMMAND_PLAN_FINGERPRINT_MAX_LENGTH,
+  TRIP_COMMAND_PLAN_MAX_OPERATIONS,
+  TRIP_COMMAND_PLAN_STEP_ID_MAX_LENGTH,
+  TRIP_COMMAND_PLAN_VALIDATION_MESSAGE_MAX_LENGTH,
+  TRIP_COMMAND_PLAN_VERSION,
+} from './tripCommandPlan.js';
 
 export const API_ROUTES = {
   health: '/api/health',
