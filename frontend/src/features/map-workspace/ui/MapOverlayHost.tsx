@@ -1,5 +1,10 @@
 import { lazy, memo, Suspense, type RefObject } from 'react';
-import type { TripDay, TripPolyline, TripPolylineMode } from '@trasolve/shared';
+import type {
+  TripDay,
+  TripPolyline,
+  TripPolylineMode,
+  TripScheduleUpdate,
+} from '@trasolve/shared';
 import { BottomContextPanel } from '@/features/map-workspace/components/bottom-panel/BottomContextPanel';
 import { MapToolPanel } from '@/features/map-workspace/components/bottom-panel/MapToolPanel';
 import { MultiSelectionActionPanel } from '@/features/map-workspace/components/bottom-panel/MultiSelectionActionPanel';
@@ -33,9 +38,9 @@ type Props = {
   ) => Promise<boolean>;
   onDeletePlaces: (placeIds: readonly string[]) => Promise<boolean>;
   onClearSelection: () => void;
-  onApplyOptimizedRoute: (
+  onApplyOptimizedSchedule: (
     dayId: string,
-    placeIds: readonly string[],
+    schedule: TripScheduleUpdate,
   ) => Promise<boolean>;
 };
 
@@ -57,7 +62,7 @@ export const MapOverlayHost = memo(function MapOverlayHost({
   onUpdatePolylineModes,
   onDeletePlaces,
   onClearSelection,
-  onApplyOptimizedRoute,
+  onApplyOptimizedSchedule,
 }: Props) {
   return (
     <>
@@ -98,7 +103,7 @@ export const MapOverlayHost = memo(function MapOverlayHost({
             days={days}
             initialDayId={activeDay?.id}
             onClose={onCloseRouteOptimization}
-            onApply={onApplyOptimizedRoute}
+            onApply={onApplyOptimizedSchedule}
           />
         </Suspense>
       )}

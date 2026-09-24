@@ -1,12 +1,15 @@
 import {
   trouteOptimizeRequestSchema,
+  trouteStartPolicySchema,
   trouteTravelModeSchema,
   type TrouteOptimizeRequest,
   type TrouteOptimizeResponse,
   type TrouteSolverCandidate,
+  type TrouteStartPolicy,
   type TrouteTravelMode,
   type TripDay,
   type TripPlace,
+  type TripScheduleUpdate,
 } from '@trasolve/shared';
 import { getPlaceOpeningStatus } from '@/entities/place';
 
@@ -14,6 +17,16 @@ type RouteOptimizationDay = TripDay & {
   minimumStartTime?: string;
   startTime?: string;
   travelMode?: string;
+};
+
+export type RouteOptimizationStartPolicy = 'fixed' | 'earliest' | 'latest';
+
+export type RouteOptimizationRequestOptions = {
+  selectedStartPlaceId: string;
+  selectedEndPlaceId: string;
+  startPolicy: RouteOptimizationStartPolicy;
+  startTime: string | null;
+  travelMode: TrouteTravelMode;
 };
 
 const DEFAULT_START_TIME = '09:00';
@@ -27,6 +40,11 @@ const TRAVEL_MODE_BY_POLYLINE_MODE = {
   transit: 'TRANSIT',
   driving: 'DRIVING',
 } as const satisfies Record<string, TrouteTravelMode>;
+const START_POLICY_BY_UI = {
+  fixed: 'FIXED',
+  earliest: 'EARLIEST',
+  latest: 'LATEST',
+} as const satisfies Record<RouteOptimizationStartPolicy, TrouteStartPolicy>;
 
 type LocationConstraint = {
   openTime: string;
@@ -42,12 +60,55 @@ export type RouteOptimizationDiagnostics = {
   openingHoursFallbackPlaceNames: readonly string[];
 };
 
+export type RouteOptimizationScheduleStop = {
+  placeId: string;
+  arrivalTime: string;
+  serviceStartTime: string;
+  departureTime: string;
+  travelMinutesFromPrevious: number | null;
+  waitMinutes: number;
+  stayMinutes: number;
+  syncStayMinutes: boolean;
+};
+
+export type RouteOptimizationSchedule = {
+  placeIds: readonly string[];
+  stops: readonly RouteOptimizationScheduleStop[];
+};
+
 export function getRouteOptimizationIssue(
   activeDay: RouteOptimizationDay,
+  options?: RouteOptimizationRequestOptions,
 ): string | null {
   const orderedPlaces = getOrderedPlaces(activeDay);
   if (orderedPlaces.length < 2) {
     return '경로 최적화에는 2개 이상의 장소가 필요합니다.';
+  }
+  const resolved = resolveRequestOptions(activeDay, orderedPlaces, options);
+  const placeIds = new Set(orderedPlaces.map((place) => place.id));
+  if (!placeIds.has(resolved.selectedStartPlaceId)) {
+    return '시작점은 현재 Day에 포함된 장소여야 합니다.';
+  }
+  if (!placeIds.has(resolved.selectedEndPlaceId)) {
+    return '종점은 현재 Day에 포함된 장소여야 합니다.';
+  }
+  if (resolved.selectedStartPlaceId === resolved.selectedEndPlaceId) {
+    return '시작점과 종점은 서로 다른 장소여야 합니다.';
+  }
+  if (!trouteStartPolicySchema.safeParse(resolved.startPolicy).success) {
+    return '지원하지 않는 시작 방식입니다.';
+  }
+  if (resolved.startPolicy === 'FIXED') {
+    if (!resolved.startTime || !isClockTime(resolved.startTime)) {
+      return '지정 시각 시작은 HH:mm 형식의 시작 시각이 필요합니다.';
+    }
+    if (!isTenMinuteClock(resolved.startTime)) {
+      return '지정 시작 시각은 10분 단위여야 합니다.';
+    }
+  }
+  const travelMode = resolved.travelMode;
+  if (!trouteTravelModeSchema.safeParse(travelMode).success) {
+    return `지원하지 않는 이동수단입니다: ${String(travelMode)}`;
   }
   const missingPlaceIds = orderedPlaces.filter(
     (place) => !place.placeId?.trim(),
@@ -56,14 +117,6 @@ export function getRouteOptimizationIssue(
     return `실제 이동시간 조회에 Place ID가 필요합니다: ${missingPlaceIds
       .map((place) => place.name)
       .join(', ')}`;
-  }
-  const startTime = resolveMinimumStartTime(activeDay, orderedPlaces);
-  if (!isClockTime(startTime)) {
-    return '최소 출발 가능 시각을 HH:mm 형식으로 입력해 주세요.';
-  }
-  const travelMode = resolveTravelMode(activeDay);
-  if (!trouteTravelModeSchema.safeParse(travelMode).success) {
-    return `지원하지 않는 이동수단입니다: ${String(travelMode)}`;
   }
   for (const place of orderedPlaces) {
     const constraint = getLocationConstraint(activeDay, place);
@@ -76,19 +129,21 @@ export function getRouteOptimizationIssue(
 
 export function createRouteOptimizationRequest(
   activeDay: RouteOptimizationDay,
-  travelMode: TrouteTravelMode = getRouteOptimizationTravelMode(activeDay),
+  options?: RouteOptimizationRequestOptions,
 ): TrouteOptimizeRequest {
-  const issue = getRouteOptimizationIssue(activeDay);
+  const issue = getRouteOptimizationIssue(activeDay, options);
   if (issue) {
     throw new Error(issue);
   }
   const orderedPlaces = getOrderedPlaces(activeDay);
-  const constraints = orderedPlaces.map((place) =>
+  const resolved = resolveRequestOptions(activeDay, orderedPlaces, options);
+  const requestPlaces = orderRouteOptimizationPlaces(activeDay, resolved);
+  const constraints = requestPlaces.map((place) =>
     getLocationConstraint(activeDay, place),
   );
   const request = {
     job_id: createRouteOptimizationJobId(activeDay.id),
-    locations: orderedPlaces.map((place, index) => {
+    locations: requestPlaces.map((place, index) => {
       const constraint = constraints[index]!;
       return {
         id: place.id.trim(),
@@ -98,8 +153,11 @@ export function createRouteOptimizationRequest(
         stay_minutes: constraint.stayMinutes,
       };
     }),
-    start_time: resolveMinimumStartTime(activeDay, orderedPlaces),
-    travel_mode: travelMode,
+    start_policy: resolved.startPolicy,
+    ...(resolved.startPolicy === 'FIXED'
+      ? { start_time: resolved.startTime! }
+      : {}),
+    travel_mode: resolved.travelMode,
   };
   try {
     return trouteOptimizeRequestSchema.parse(request);
@@ -156,6 +214,105 @@ export function getBestOptimizationCandidate(
   };
 }
 
+export function createRouteOptimizationSchedule(
+  response: TrouteOptimizeResponse,
+  candidate: TrouteSolverCandidate,
+  activeDay: TripDay,
+): RouteOptimizationSchedule | null {
+  const route = [...response.route].sort(
+    (left, right) => left.order - right.order,
+  );
+  if (
+    route.length !== candidate.route.length ||
+    route.some((stop, index) => stop.location_id !== candidate.route[index])
+  ) {
+    return null;
+  }
+
+  const placesById = new Map(
+    activeDay.places.map((place) => [place.id, place]),
+  );
+  const stops: RouteOptimizationScheduleStop[] = [];
+  for (const [index, stop] of route.entries()) {
+    const place = placesById.get(stop.location_id);
+    if (!place) {
+      return null;
+    }
+    const requestedStayMinutes =
+      stop.stay_minutes ??
+      place.visitDurationMinutes ??
+      place.preferredDurationMinutes ??
+      0;
+    const serviceStartTime = resolveServiceStartTime(
+      stop.arrival_time,
+      stop.service_start_time,
+      stop.departure_time,
+      stop.wait_minutes,
+      requestedStayMinutes,
+      index === 0,
+    );
+    if (!serviceStartTime) {
+      return null;
+    }
+    const departureTime =
+      stop.departure_time ??
+      addClockMinutes(serviceStartTime, requestedStayMinutes);
+    if (!departureTime) {
+      return null;
+    }
+    const scheduledWaitMinutes = getForwardMinutes(
+      stop.arrival_time,
+      serviceStartTime,
+    );
+    const scheduledStayMinutes = getForwardMinutes(
+      serviceStartTime,
+      departureTime,
+    );
+    if (scheduledWaitMinutes === null || scheduledStayMinutes === null) {
+      return null;
+    }
+    const waitMinutes = stop.wait_minutes ?? scheduledWaitMinutes;
+    const stayMinutes = stop.stay_minutes ?? scheduledStayMinutes;
+    const previousDeparture = stops.at(-1)?.departureTime;
+    const travelMinutesFromPrevious = previousDeparture
+      ? getForwardMinutes(previousDeparture, stop.arrival_time)
+      : null;
+    if (index > 0 && travelMinutesFromPrevious === null) {
+      return null;
+    }
+    stops.push({
+      placeId: stop.location_id,
+      arrivalTime: stop.arrival_time,
+      serviceStartTime,
+      departureTime,
+      travelMinutesFromPrevious,
+      waitMinutes,
+      stayMinutes,
+      syncStayMinutes: stop.stay_minutes !== undefined,
+    });
+  }
+  return { placeIds: candidate.route, stops };
+}
+
+export function createTripScheduleUpdate(
+  schedule: RouteOptimizationSchedule,
+  selectedStartPlaceId: string,
+  selectedEndPlaceId: string,
+): TripScheduleUpdate {
+  return {
+    placeIds: schedule.placeIds,
+    stops: schedule.stops.map((stop) => ({
+      placeId: stop.placeId,
+      time: stop.serviceStartTime,
+      ...(stop.syncStayMinutes
+        ? { visitDurationMinutes: stop.stayMinutes }
+        : {}),
+    })),
+    expectedStartPlaceId: selectedStartPlaceId,
+    expectedEndPlaceId: selectedEndPlaceId,
+  };
+}
+
 export function getCurrentDayRoutePath(
   activeDay: TripDay,
   travelMode: TrouteTravelMode,
@@ -194,6 +351,10 @@ function getPolylineTravelMode(
 export function isApplicableCandidate(
   candidate: TrouteSolverCandidate | null,
   activeDay: TripDay,
+  options?: Pick<
+    RouteOptimizationRequestOptions,
+    'selectedStartPlaceId' | 'selectedEndPlaceId'
+  >,
 ): candidate is TrouteSolverCandidate {
   if (!candidate?.feasible || candidate.error || isTimedOut(candidate)) {
     return false;
@@ -202,13 +363,43 @@ export function isApplicableCandidate(
   const orderedPlaces = [...activeDay.places].sort(
     (left, right) => left.order - right.order,
   );
+  const selectedStartPlaceId =
+    options?.selectedStartPlaceId ?? orderedPlaces[0]?.id;
+  const selectedEndPlaceId =
+    options?.selectedEndPlaceId ?? orderedPlaces.at(-1)?.id;
   return (
     candidate.route.length === currentIds.size &&
     new Set(candidate.route).size === currentIds.size &&
     candidate.route.every((placeId) => currentIds.has(placeId)) &&
-    candidate.route[0] === orderedPlaces[0]?.id &&
-    candidate.route.at(-1) === orderedPlaces.at(-1)?.id
+    candidate.route[0] === selectedStartPlaceId &&
+    candidate.route.at(-1) === selectedEndPlaceId
   );
+}
+
+export function orderRouteOptimizationPlaces(
+  activeDay: TripDay,
+  options: Pick<
+    RouteOptimizationRequestOptions,
+    'selectedStartPlaceId' | 'selectedEndPlaceId'
+  >,
+): TripPlace[] {
+  const orderedPlaces = getOrderedPlaces(activeDay);
+  const start = orderedPlaces.find(
+    (place) => place.id === options.selectedStartPlaceId,
+  );
+  const end = orderedPlaces.find(
+    (place) => place.id === options.selectedEndPlaceId,
+  );
+  if (!start || !end || start.id === end.id) {
+    return orderedPlaces;
+  }
+  return [
+    start,
+    ...orderedPlaces.filter(
+      (place) => place.id !== start.id && place.id !== end.id,
+    ),
+    end,
+  ];
 }
 
 export function isTimedOut(candidate: TrouteSolverCandidate): boolean {
@@ -333,6 +524,31 @@ function getReferenceDate(activeDay: TripDay, place: TripPlace): Date {
     : new Date(utcNoon - offsetMinutes * 60_000);
 }
 
+function resolveRequestOptions(
+  activeDay: RouteOptimizationDay,
+  orderedPlaces: readonly TripPlace[],
+  options?: RouteOptimizationRequestOptions,
+): {
+  selectedStartPlaceId: string;
+  selectedEndPlaceId: string;
+  startPolicy: TrouteStartPolicy;
+  startTime: string | null;
+  travelMode: TrouteTravelMode;
+} {
+  return {
+    selectedStartPlaceId:
+      options?.selectedStartPlaceId ?? orderedPlaces[0]?.id ?? '',
+    selectedEndPlaceId:
+      options?.selectedEndPlaceId ?? orderedPlaces.at(-1)?.id ?? '',
+    startPolicy: START_POLICY_BY_UI[options?.startPolicy ?? 'latest'],
+    startTime:
+      options?.startTime ??
+      (options ? null : resolveMinimumStartTime(activeDay, orderedPlaces)),
+    travelMode:
+      options?.travelMode ?? getRouteOptimizationTravelMode(activeDay),
+  };
+}
+
 function resolveMinimumStartTime(
   activeDay: RouteOptimizationDay,
   orderedPlaces: readonly TripPlace[],
@@ -370,6 +586,44 @@ function createRouteOptimizationJobId(dayId: string): string {
 
 function isClockTime(value: string): boolean {
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+function resolveServiceStartTime(
+  arrivalTime: string,
+  serviceStartTime: string | undefined,
+  departureTime: string | undefined,
+  waitMinutes: number | undefined,
+  stayMinutes: number,
+  isStart: boolean,
+): string | null {
+  if (serviceStartTime) {
+    return serviceStartTime;
+  }
+  if (isStart) {
+    return arrivalTime;
+  }
+  if (waitMinutes !== undefined) {
+    return addClockMinutes(arrivalTime, waitMinutes);
+  }
+  if (departureTime) {
+    return addClockMinutes(departureTime, -stayMinutes);
+  }
+  return arrivalTime;
+}
+
+function addClockMinutes(time: string, minutes: number): string | null {
+  const total = clockToMinutes(time) + minutes;
+  if (total < 0 || total >= MINUTES_PER_DAY) {
+    return null;
+  }
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(
+    total % 60,
+  ).padStart(2, '0')}`;
+}
+
+function getForwardMinutes(from: string, to: string): number | null {
+  const difference = clockToMinutes(to) - clockToMinutes(from);
+  return difference >= 0 ? difference : null;
 }
 
 function isTenMinuteClock(value: string): boolean {

@@ -44,6 +44,7 @@ export const trouteTravelModeSchema = z.enum([
   'WALKING',
   'BICYCLING',
 ]);
+export const trouteStartPolicySchema = z.enum(['FIXED', 'EARLIEST', 'LATEST']);
 
 export const trouteErrorPayloadSchema = z.strictObject({
   code: z
@@ -89,12 +90,42 @@ export const trouteOptimizeRequestSchema = z
   .strictObject({
     job_id: trouteJobIdSchema,
     locations: z.array(trouteLocationSchema).min(2).max(500),
-    start_time: timeOfDaySchema,
+    start_policy: trouteStartPolicySchema.optional(),
+    start_time: timeOfDaySchema.optional(),
     travel_mode: trouteTravelModeSchema.optional(),
     travel_time_matrix: trouteTravelTimeMatrixSchema.optional(),
     debug: trouteDebugOptionsSchema.optional(),
   })
   .superRefine((request, context) => {
+    if (
+      request.start_policy === undefined &&
+      request.start_time === undefined
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Start time is required when no start policy is provided.',
+        path: ['start_time'],
+      });
+    } else if (request.start_policy === 'FIXED') {
+      if (request.start_time === undefined) {
+        context.addIssue({
+          code: 'custom',
+          message: 'Start time is required for the FIXED start policy.',
+          path: ['start_time'],
+        });
+      }
+    }
+    if (
+      request.start_time !== undefined &&
+      clockMinutes(request.start_time) % 10 !== 0
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Start time must use a 10-minute increment.',
+        path: ['start_time'],
+      });
+    }
+
     const ids = new Set<string>();
     request.locations.forEach((location, index) => {
       if (ids.has(location.id)) {
@@ -111,6 +142,22 @@ export const trouteOptimizeRequestSchema = z
           code: 'custom',
           message: 'Opening time must not be later than closing time.',
           path: ['locations', index, 'close_time'],
+        });
+      }
+      for (const field of ['open_time', 'close_time'] as const) {
+        if (clockMinutes(location[field]) % 10 !== 0) {
+          context.addIssue({
+            code: 'custom',
+            message: 'Location times must use a 10-minute increment.',
+            path: ['locations', index, field],
+          });
+        }
+      }
+      if (location.stay_minutes % 10 !== 0) {
+        context.addIssue({
+          code: 'custom',
+          message: 'Stay minutes must use a 10-minute increment.',
+          path: ['locations', index, 'stay_minutes'],
         });
       }
     });
@@ -158,11 +205,19 @@ export const trouteOptimizeRequestSchema = z
     });
   });
 
+function clockMinutes(value: string): number {
+  const [hours = 0, minutes = 0] = value.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
 export const trouteRouteStopSchema = z.object({
   location_id: z.string().refine((value) => value.trim().length > 0),
   order: z.number().int().min(0).max(MAX_U32),
   arrival_time: timeOfDaySchema,
+  service_start_time: timeOfDaySchema.optional(),
   departure_time: timeOfDaySchema.optional(),
+  wait_minutes: z.number().int().min(0).max(MAX_U32).optional(),
+  stay_minutes: z.number().int().min(0).max(MAX_U32).optional(),
 });
 
 export const trouteSolverObjectiveScoreSchema = z.object({

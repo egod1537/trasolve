@@ -61,15 +61,17 @@ export class TrouteClient {
       );
     }
 
-    const response = await this.request(
-      'integration/jobs',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsedRequest.data),
-      },
-      true,
-    );
+    let response: { status: number; body: unknown };
+    try {
+      response = await this.submitJobRequest(parsedRequest.data);
+    } catch (cause) {
+      if (!this.shouldRetryLegacyLatest(cause, parsedRequest.data)) {
+        throw cause;
+      }
+      response = await this.submitJobRequest(
+        this.createLegacyLatestRequest(parsedRequest.data),
+      );
+    }
     if (response.status !== 202) {
       throw this.invalidResponseError();
     }
@@ -238,6 +240,45 @@ export class TrouteClient {
   private readonly baseUrl: URL;
   private readonly timeoutMs: number;
 
+  private async submitJobRequest(
+    request: TrouteOptimizeRequest,
+  ): Promise<{ status: number; body: unknown }> {
+    return this.request(
+      'integration/jobs',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      },
+      true,
+    );
+  }
+
+  private shouldRetryLegacyLatest(
+    cause: unknown,
+    request: TrouteOptimizeRequest,
+  ): boolean {
+    return (
+      request.start_policy === 'LATEST' &&
+      request.start_time === undefined &&
+      cause instanceof TrouteClientError &&
+      cause.kind === 'upstream_http' &&
+      cause.upstreamStatus === 400 &&
+      isInvalidUpstreamRequest(cause.upstreamBody)
+    );
+  }
+
+  private createLegacyLatestRequest(
+    request: TrouteOptimizeRequest,
+  ): TrouteOptimizeRequest {
+    const legacyRequest: TrouteOptimizeRequest = {
+      ...request,
+      start_time: '00:00',
+    };
+    delete legacyRequest.start_policy;
+    return trouteOptimizeRequestSchema.parse(legacyRequest);
+  }
+
   private parseJobId(jobId: string): string {
     const parsed = trouteJobIdSchema.safeParse(jobId);
     if (!parsed.success) {
@@ -403,5 +444,18 @@ function isTrouteJobEventType(value: string): value is TrouteJobEventType {
     value === 'completed' ||
     value === 'failed' ||
     value === 'cancelled'
+  );
+}
+
+function isInvalidUpstreamRequest(body: unknown): boolean {
+  if (!body || typeof body !== 'object' || !('error' in body)) {
+    return false;
+  }
+  const error = body.error;
+  return (
+    !!error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    error.code === 'INVALID_REQUEST'
   );
 }

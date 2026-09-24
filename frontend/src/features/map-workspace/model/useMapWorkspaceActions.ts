@@ -3,6 +3,7 @@ import type {
   PlaceDetails,
   PlaceStyle,
   TripPolylineMode,
+  TripScheduleUpdate,
 } from '@trasolve/shared';
 import type { GeoPoint, MapClickEvent } from '@/shared/types/mapTypes';
 import type { TripEditController } from '@/features/map-workspace/controller/TripEditController';
@@ -195,9 +196,9 @@ export function useMapWorkspaceActions(
     (placeIds: readonly string[]) => controller.removePlaces(placeIds),
     [controller],
   );
-  const applyOptimizedRoute = useCallback(
-    (dayId: string, placeIds: readonly string[]) =>
-      controller.reorderDayPlaces(dayId, placeIds),
+  const applyOptimizedSchedule = useCallback(
+    (dayId: string, schedule: TripScheduleUpdate) =>
+      controller.applyOptimizedSchedule(dayId, schedule),
     [controller],
   );
 
@@ -244,13 +245,13 @@ export function useMapWorkspaceActions(
         onUpdateSelectedPolylineModes: updateSelectedPolylineModes,
         onRemoveSelectedPlaces: removeSelectedPlaces,
         onClearSelection: clearMapSelection,
-        onApplyOptimizedRoute: applyOptimizedRoute,
+        onApplyOptimizedSchedule: applyOptimizedSchedule,
       },
     }),
     [
       addLayer,
       addGooglePlace,
-      applyOptimizedRoute,
+      applyOptimizedSchedule,
       clearMapSelection,
       clearPlaceSelection,
       closeGooglePlace,

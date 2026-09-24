@@ -69,6 +69,7 @@ export async function optimizeDayRoute(
         readApiError(
           responseBody.body,
           `최적화 요청이 HTTP ${response.status}로 실패했습니다.`,
+          parsedRequest.data,
         ),
       );
     }
@@ -183,12 +184,38 @@ function formatOptimizationJobError(error: TrouteJobState['error']): string {
     return '경로 최적화에 실패했습니다.';
   }
 
-  if (error.code === 'NO_FEASIBLE_ROUTE') {
+  if (
+    error.code === 'NO_FEASIBLE_ROUTE' ||
+    error.code === 'NO_FEASIBLE_SCHEDULE'
+  ) {
     return '현재 영업시간과 체류시간 조건으로 가능한 경로를 찾지 못했습니다.';
   }
 
+  if (isProviderConfigurationError(error.code)) {
+    return '경로 조회 제공자가 설정되어 있지 않습니다. 서버 설정을 확인해 주세요.';
+  }
+
+  if (isInvalidTimeWindowError(error.code)) {
+    return '장소 영업시간 또는 방문시간 범위가 올바르지 않습니다.';
+  }
+
+  const detail = error.detail?.toLowerCase() ?? '';
+  if (
+    error.code === 'INVALID_REQUEST' &&
+    (detail.includes('time window') || detail.includes('open_time'))
+  ) {
+    return '장소 영업시간 또는 방문시간 범위가 올바르지 않습니다.';
+  }
+
   if (error.code === 'ROUTING_UNAVAILABLE') {
-    const detail = error.detail?.toLowerCase() ?? '';
+    if (
+      detail.includes('provider') &&
+      (detail.includes('not configured') ||
+        detail.includes('configuration') ||
+        detail.includes('api key'))
+    ) {
+      return '경로 조회 제공자가 설정되어 있지 않습니다. 서버 설정을 확인해 주세요.';
+    }
     if (
       detail.includes('place id') &&
       (detail.includes('invalid') || detail.includes('not found'))
@@ -281,7 +308,61 @@ function createAbortError(
   return new RouteOptimizationApiError('경로 최적화 요청이 취소되었습니다.');
 }
 
-function readApiError(body: unknown, fallback: string): string {
+function readApiError(
+  body: unknown,
+  fallback: string,
+  request?: TrouteOptimizeRequest,
+): string {
   const parsed = apiErrorSchema.safeParse(body);
-  return parsed.success ? parsed.data.error.message : fallback;
+  if (!parsed.success) {
+    return fallback;
+  }
+  const { code, message } = parsed.data.error;
+  if (code === 'TROUTE_NOT_CONFIGURED') {
+    return '경로 최적화 서버가 설정되어 있지 않습니다.';
+  }
+  if (code === 'TROUTE_UNAVAILABLE') {
+    return '경로 최적화 서버에 연결할 수 없습니다.';
+  }
+  if (code === 'TROUTE_TIMEOUT') {
+    return '경로 최적화 요청 시간이 초과됐습니다.';
+  }
+  if (code === 'TROUTE_START_POLICY_UNSUPPORTED') {
+    return `${formatStartPolicy(request?.start_policy)} 시작 방식은 현재 troute 서버에서 지원하지 않습니다.`;
+  }
+  if (isInvalidTimeWindowError(code)) {
+    return '장소 영업시간 또는 방문시간 범위가 올바르지 않습니다.';
+  }
+  return message;
+}
+
+function isProviderConfigurationError(code: string): boolean {
+  return (
+    code === 'PROVIDER_NOT_CONFIGURED' ||
+    code === 'ROUTING_PROVIDER_NOT_CONFIGURED' ||
+    code === 'ROUTING_CONFIGURATION_ERROR'
+  );
+}
+
+function isInvalidTimeWindowError(code: string): boolean {
+  return (
+    code === 'INVALID_TIME_WINDOW' ||
+    code === 'TIME_WINDOW_INVALID' ||
+    code === 'INVALID_SCHEDULE_WINDOW'
+  );
+}
+
+function formatStartPolicy(
+  policy: TrouteOptimizeRequest['start_policy'] | undefined,
+): string {
+  switch (policy) {
+    case 'FIXED':
+      return '지정 시각';
+    case 'EARLIEST':
+      return '최대한 이르게';
+    case 'LATEST':
+      return '최대한 늦게';
+    default:
+      return '선택한';
+  }
 }

@@ -74,7 +74,7 @@ export function applyOptimizeRequestToBuilder(
   }
   return {
     locations,
-    startTime: request.start_time,
+    startTime: request.start_time ?? current.startTime,
     travelMode: request.travel_mode ?? DEFAULT_TROUTE_TRAVEL_MODE,
     travelTimeSource:
       request.travel_time_matrix === undefined ? 'tcache' : 'direct',

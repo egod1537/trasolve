@@ -20,3 +20,16 @@ export type PlaceStyleType = z.infer<typeof placeStyleTypeSchema>;
 export type TripPlace = z.infer<typeof tripPlaceSchema>;
 export type TripPolylineMode = z.infer<typeof tripPolylineModeSchema>;
 export type TripPolyline = z.infer<typeof tripPolylineSchema>;
+
+export type TripScheduleStopUpdate = {
+  placeId: string;
+  time: string;
+  visitDurationMinutes?: number;
+};
+
+export type TripScheduleUpdate = {
+  placeIds: readonly string[];
+  stops: readonly TripScheduleStopUpdate[];
+  expectedStartPlaceId: string;
+  expectedEndPlaceId: string;
+};
