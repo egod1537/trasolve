@@ -1,5 +1,5 @@
 import type { TrouteProgressStage } from '@trasolve/shared';
-import { useId } from 'react';
+import { useEffect, useId, useRef, type RefObject } from 'react';
 import type { RouteOptimizationProgress } from '@/features/route-optimization/api/routeOptimizationApi';
 import { Button } from '@/shared/ui/Button';
 import { Dialog } from '@/shared/ui/Dialog';
@@ -22,15 +22,72 @@ type Props = {
   onRetry: () => void;
 };
 
-const PROGRESS_STEPS: readonly {
+const PROGRESS_STEPS = [
+  {
+    stage: 'accepted',
+    label: '요청 접수',
+    message: '최적화 요청을 접수했습니다.',
+  },
+  {
+    stage: 'validating_request',
+    label: '입력 검증',
+    message: '장소와 일정 조건을 검증하고 있습니다.',
+  },
+  {
+    stage: 'selecting_provider',
+    label: '경로 제공자 선택',
+    message: '경로 제공자를 선택하고 있습니다.',
+  },
+  {
+    stage: 'preparing_matrix',
+    label: '이동시간 조회 준비',
+    message: '장소 간 이동시간 조회를 준비하고 있습니다.',
+  },
+  {
+    stage: 'fetching_travel_times',
+    label: '이동시간 조회',
+    message: '장소 간 이동시간을 조회하고 있습니다.',
+  },
+  {
+    stage: 'building_matrix',
+    label: '이동시간 행렬 구성',
+    message: '이동시간 행렬을 구성하고 있습니다.',
+  },
+  {
+    stage: 'generating_candidates',
+    label: '초기 경로 후보 생성',
+    message: '초기 경로 후보를 생성하고 있습니다.',
+  },
+  {
+    stage: 'optimizing_route',
+    label: '경로 최적화',
+    message: '방문 순서를 최적화하고 있습니다.',
+  },
+  {
+    stage: 'selecting_best_candidate',
+    label: '최적 경로 선택',
+    message: '후보 경로를 비교하고 있습니다.',
+  },
+  {
+    stage: 'scheduling',
+    label: '일정 계산',
+    message: '방문 일정을 계산하고 있습니다.',
+  },
+  {
+    stage: 'validating_schedule',
+    label: '일정 제약 검증',
+    message: '영업시간과 체류시간 제약을 검증하고 있습니다.',
+  },
+  {
+    stage: 'finalizing_result',
+    label: '결과 생성',
+    message: '최적화 결과를 정리하고 있습니다.',
+  },
+] as const satisfies readonly {
   stage: TrouteProgressStage;
   label: string;
-}[] = [
-  { stage: 'accepted', label: '요청 준비' },
-  { stage: 'building_matrix', label: '이동시간 조회' },
-  { stage: 'solving', label: '경로 탐색' },
-  { stage: 'scheduling', label: '결과 정리' },
-];
+  message: string;
+}[];
 
 type StepState = 'completed' | 'running' | 'waiting' | 'failed' | 'cancelled';
 
@@ -44,13 +101,20 @@ export function RouteOptimizationProgressDialog({
 }: Props) {
   const titleId = useId();
   const descriptionId = useId();
+  const currentStepRef = useRef<HTMLLIElement>(null);
   const terminal =
     phase === 'completed' || phase === 'failed' || phase === 'cancelled';
-  const active = phase === 'submitting' || phase === 'running';
-  const percentage =
-    phase === 'running' || phase === 'completed'
-      ? progress?.progress
-      : undefined;
+  const active =
+    phase === 'submitting' || phase === 'running' || phase === 'cancelling';
+  const percentage = phase === 'completed' ? 100 : progress?.progress;
+  const showMeter = active || percentage !== undefined;
+  const stage = progress?.stage ?? null;
+  const unknownStage =
+    phase !== 'completed' && stage !== null && getProgressStepIndex(stage) < 0;
+
+  useEffect(() => {
+    currentStepRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [phase, stage]);
 
   return (
     <Dialog
@@ -78,13 +142,11 @@ export function RouteOptimizationProgressDialog({
           </div>
         ) : null}
 
-        {phase !== 'failed' &&
-        phase !== 'cancelled' &&
-        (phase !== 'completed' || percentage !== undefined) ? (
+        {showMeter ? (
           <div className="route-optimization-progress-meter">
             <Progress
               value={percentage}
-              tone={phase === 'completed' ? 'success' : 'accent'}
+              tone={getProgressTone(phase)}
               animated={active}
               label={
                 percentage === undefined
@@ -96,15 +158,29 @@ export function RouteOptimizationProgressDialog({
           </div>
         ) : null}
 
-        <ol className="route-optimization-progress-steps">
+        <ol
+          className="route-optimization-progress-steps"
+          aria-label="경로 최적화 단계"
+          tabIndex={0}
+        >
+          {unknownStage ? (
+            <ProgressStep
+              label="처리 중"
+              state={getCurrentStepState(phase)}
+              phase={phase}
+              currentStepRef={currentStepRef}
+            />
+          ) : null}
           {PROGRESS_STEPS.map((step, index) => {
-            const state = getStepState(phase, progress?.stage ?? null, index);
+            const state = getStepState(phase, stage, index);
             return (
-              <li key={step.stage} className={`is-${state}`}>
-                <span aria-hidden="true" />
-                <strong>{step.label}</strong>
-                <small>{formatStepState(state, phase)}</small>
-              </li>
+              <ProgressStep
+                key={step.stage}
+                label={step.label}
+                state={state}
+                phase={phase}
+                currentStepRef={currentStepRef}
+              />
             );
           })}
         </ol>
@@ -142,6 +218,32 @@ export function RouteOptimizationProgressDialog({
   );
 }
 
+function ProgressStep({
+  label,
+  state,
+  phase,
+  currentStepRef,
+}: {
+  label: string;
+  state: StepState;
+  phase: RouteOptimizationProgressPhase;
+  currentStepRef: RefObject<HTMLLIElement | null>;
+}) {
+  const current =
+    state === 'running' || state === 'failed' || state === 'cancelled';
+  return (
+    <li
+      ref={current ? currentStepRef : undefined}
+      className={`is-${state}`}
+      aria-current={current ? 'step' : undefined}
+    >
+      <span aria-hidden="true" />
+      <strong>{label}</strong>
+      <small>{formatStepState(state, phase)}</small>
+    </li>
+  );
+}
+
 function getTitle(phase: RouteOptimizationProgressPhase): string {
   switch (phase) {
     case 'completed':
@@ -161,37 +263,35 @@ function getMessage(
   phase: RouteOptimizationProgressPhase,
   progress: RouteOptimizationProgress | null,
 ): string {
+  if (progress?.last_message) {
+    return progress.last_message;
+  }
   switch (phase) {
     case 'submitting':
       return '최적화 요청을 전송하고 있습니다.';
     case 'running':
-      return progress?.last_message ?? formatStageMessage(progress?.stage);
+      return formatStageMessage(progress?.stage);
     case 'completed':
-      return '최적화 결과를 화면에 반영하고 있습니다.';
+      return '최적화가 완료되었습니다.';
     case 'failed':
       return '요청을 다시 시도하거나 팝업을 닫을 수 있습니다.';
     case 'cancelling':
       return '실행 중인 요청과 진행 상태 연결을 정리하고 있습니다.';
     case 'cancelled':
-      return '기존 경로와 이전 최적화 결과는 그대로 유지됩니다.';
+      return '최적화가 취소되었습니다.';
   }
 }
 
 function formatStageMessage(
   stage: RouteOptimizationProgress['stage'] | undefined,
 ): string {
-  switch (stage) {
-    case 'accepted':
-      return '최적화 요청을 준비하고 있습니다.';
-    case 'building_matrix':
-      return '이동시간 데이터를 분석하고 있습니다.';
-    case 'solving':
-      return '가능한 방문 순서를 탐색하고 있습니다.';
-    case 'scheduling':
-      return '최적화된 일정을 정리하고 있습니다.';
-    default:
-      return '서버의 진행 상태를 기다리고 있습니다.';
+  if (stage === 'solving') {
+    return '방문 순서를 최적화하고 있습니다.';
   }
+  return (
+    PROGRESS_STEPS.find((step) => step.stage === stage)?.message ??
+    '서버의 진행 상태를 기다리고 있습니다.'
+  );
 }
 
 function getStepState(
@@ -202,10 +302,11 @@ function getStepState(
   if (phase === 'completed') {
     return 'completed';
   }
-  const currentIndex = Math.max(
-    0,
-    PROGRESS_STEPS.findIndex((step) => step.stage === stage),
-  );
+  const resolvedIndex = getProgressStepIndex(stage);
+  const currentIndex = stage === null ? 0 : resolvedIndex;
+  if (currentIndex < 0) {
+    return 'waiting';
+  }
   if (index < currentIndex) {
     return 'completed';
   }
@@ -219,6 +320,43 @@ function getStepState(
     return 'cancelled';
   }
   return 'running';
+}
+
+function getCurrentStepState(
+  phase: RouteOptimizationProgressPhase,
+): Exclude<StepState, 'completed' | 'waiting'> {
+  if (phase === 'failed') {
+    return 'failed';
+  }
+  if (phase === 'cancelled') {
+    return 'cancelled';
+  }
+  return 'running';
+}
+
+function getProgressStepIndex(stage: TrouteProgressStage | null): number {
+  if (stage === 'solving') {
+    return PROGRESS_STEPS.findIndex(
+      (step) => step.stage === 'optimizing_route',
+    );
+  }
+  return PROGRESS_STEPS.findIndex((step) => step.stage === stage);
+}
+
+function getProgressTone(
+  phase: RouteOptimizationProgressPhase,
+): 'accent' | 'danger' | 'warning' | 'success' {
+  switch (phase) {
+    case 'completed':
+      return 'success';
+    case 'failed':
+      return 'danger';
+    case 'cancelling':
+    case 'cancelled':
+      return 'warning';
+    default:
+      return 'accent';
+  }
 }
 
 function formatStepState(

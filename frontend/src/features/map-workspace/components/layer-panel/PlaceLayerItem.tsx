@@ -124,7 +124,9 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
       </span>
       <PlaceTimeTimeline
         time={place.time}
-        visitDurationMinutes={place.visitDurationMinutes}
+        visitDurationMinutes={
+          place.preferredDurationMinutes ?? place.visitDurationMinutes
+        }
         openingHours={place.openingHours}
         variant="compact"
       />
@@ -143,6 +145,7 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
       dropPosition={dropPosition}
       previewOffset={previewOffset}
       treeNodeVariant={routeRole}
+      endpointRole={routeRole === 'destination' ? 'end' : routeRole}
       onOpenDetails={openDetails}
       statusIndicator={<LayerValidationIndicator validation={validation} />}
       chevron={

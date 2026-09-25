@@ -762,6 +762,12 @@
 .trip-polyline-item > .trip-layer-row {
   background: var(--trip-route-row-bg);
 }
+.trip-place-item.is-start-place > .trip-layer-row {
+  background: color-mix(in srgb, var(--color-success) 7%, transparent);
+}
+.trip-place-item.is-end-place > .trip-layer-row {
+  background: color-mix(in srgb, var(--color-danger) 7%, transparent);
+}
 .trip-layer-item:where(:not(.is-disabled)) > .trip-layer-row:hover {
   background: var(--color-surface-hover);
 }
@@ -1247,6 +1253,7 @@
 }
 .trip-polyline-content {
   display: grid;
+  flex: 1;
   min-width: 0;
   gap: 3px;
 }
@@ -1261,6 +1268,15 @@
 .trip-polyline-mode {
   color: var(--color-muted);
   font-size: 10px;
+}
+.trip-polyline-time-summary {
+  display: block;
+  min-width: 0;
+  margin-top: 1px;
+}
+.trip-polyline-time-summary .time-range-timeline.is-travel {
+  --time-range-range-height: 3px;
+  --time-range-event-size: 4px;
 }
 .trip-place-content {
   display: grid;
@@ -1339,13 +1355,17 @@
   min-width: 0;
 }
 .trip-layer-item .time-range-timeline.is-compact {
-  --time-range-axis-height: 42px;
-  --time-range-baseline-top: 15px;
-  --time-range-tick-label-top: 9px;
-  --time-range-tick-top: 12px;
-  --time-range-event-label-bottom: 11px;
-  --time-range-event-top: 11px;
-  --time-range-label-top: 32px;
+  --time-range-axis-height: 58px;
+  --time-range-baseline-top: 17px;
+  --time-range-tick-label-top: 25px;
+  --time-range-tick-top: 14px;
+  --time-range-event-label-bottom: 12px;
+  --time-range-event-end-label-top: 12px;
+  --time-range-event-top: 13px;
+  --time-range-label-top: 49px;
+}
+.trip-polyline-time-summary .time-range-timeline.is-compact {
+  --time-range-axis-height: 49px;
 }
 .place-time-detail {
   color: var(--color-text-secondary);

@@ -22,11 +22,11 @@ import {
   createRouteOptimizationSchedule,
   createTripScheduleUpdate,
   getBestOptimizationCandidate,
+  getOptimizationStayMinutes,
   getRouteOptimizationDiagnostics,
   getRouteOptimizationIssue,
   getRouteOptimizationTravelMode,
   isApplicableCandidate,
-  orderRouteOptimizationPlaces,
   type RouteOptimizationRequestOptions,
   type RouteOptimizationStartPolicy,
 } from '@/features/route-optimization/model/routeOptimization';
@@ -116,6 +116,7 @@ export function RouteOptimizationModal({
   >(() => createInitialDayStates(days));
   const [applying, setApplying] = useState(false);
   const [mapComparisonOpen, setMapComparisonOpen] = useState(false);
+  const [endpointMenuOpen, setEndpointMenuOpen] = useState(false);
   const [progressDialog, setProgressDialog] =
     useState<ProgressDialogState | null>(null);
   const selectedDay =
@@ -134,8 +135,9 @@ export function RouteOptimizationModal({
   const diagnostics = getRouteOptimizationDiagnostics(selectedDay);
   const travelMode = selectedSettings.travelMode;
   const beforePlaces = useMemo(
-    () => orderRouteOptimizationPlaces(selectedDay, selectedSettings),
-    [selectedDay, selectedSettings],
+    () =>
+      [...selectedDay.places].sort((left, right) => left.order - right.order),
+    [selectedDay.places],
   );
   const afterPlaces = useMemo(
     () =>
@@ -181,6 +183,34 @@ export function RouteOptimizationModal({
           }
         : createIdleDayState(),
     }));
+  };
+
+  const setStartPlace = (placeId: string) => {
+    if (placeId === selectedSettings.selectedStartPlaceId) {
+      return;
+    }
+    updateSelectedSettings(
+      placeId === selectedSettings.selectedEndPlaceId
+        ? {
+            selectedStartPlaceId: placeId,
+            selectedEndPlaceId: selectedSettings.selectedStartPlaceId,
+          }
+        : { selectedStartPlaceId: placeId },
+    );
+  };
+
+  const setEndPlace = (placeId: string) => {
+    if (placeId === selectedSettings.selectedEndPlaceId) {
+      return;
+    }
+    updateSelectedSettings(
+      placeId === selectedSettings.selectedStartPlaceId
+        ? {
+            selectedStartPlaceId: selectedSettings.selectedEndPlaceId,
+            selectedEndPlaceId: placeId,
+          }
+        : { selectedEndPlaceId: placeId },
+    );
   };
 
   const runOptimization = useCallback(
@@ -414,8 +444,12 @@ export function RouteOptimizationModal({
       labelledBy={titleId}
       describedBy={descriptionId}
       busy={selectedState.status === 'running' || applying}
-      closeOnBackdrop={!applying && !mapComparisonOpen && !progressDialog}
-      closeOnEscape={!applying && !mapComparisonOpen && !progressDialog}
+      closeOnBackdrop={
+        !applying && !mapComparisonOpen && !progressDialog && !endpointMenuOpen
+      }
+      closeOnEscape={
+        !applying && !mapComparisonOpen && !progressDialog && !endpointMenuOpen
+      }
       onClose={onClose}
     >
       <header className="route-optimization-modal-header">
@@ -440,7 +474,10 @@ export function RouteOptimizationModal({
           dayStates={dayStates}
           daySettings={daySettings}
           selectedDayId={selectedDay.id}
-          onSelect={setSelectedDayId}
+          onSelect={(dayId) => {
+            setEndpointMenuOpen(false);
+            setSelectedDayId(dayId);
+          }}
         />
 
         <main className="route-optimization-result">
@@ -487,15 +524,26 @@ export function RouteOptimizationModal({
                 </header>
                 <div className="route-optimization-comparison-card-body">
                   <RouteComparisonMap
+                    key={`before-${selectedDay.id}`}
                     title="Before"
                     ariaLabel={`${selectedDay.title} 현재 방문 순서 지도`}
                     layer={`route-optimization-before-${selectedDay.id}`}
                     places={beforePlaces}
+                    selectedStartPlaceId={selectedSettings.selectedStartPlaceId}
+                    selectedEndPlaceId={selectedSettings.selectedEndPlaceId}
+                    editableEndpoints
+                    onSetStartPlace={setStartPlace}
+                    onSetEndPlace={setEndPlace}
+                    onEndpointMenuOpenChange={setEndpointMenuOpen}
                     onExpand={() => setMapComparisonOpen(true)}
                   />
                   <RouteSchedulePreview
                     variant="before"
                     places={beforePlaces}
+                    selectedStartPlaceId={selectedSettings.selectedStartPlaceId}
+                    selectedEndPlaceId={selectedSettings.selectedEndPlaceId}
+                    onSetStartPlace={setStartPlace}
+                    onSetEndPlace={setEndPlace}
                   />
                 </div>
               </article>
@@ -514,6 +562,10 @@ export function RouteOptimizationModal({
                       ariaLabel={`${selectedDay.title} 최적화 방문 순서 지도`}
                       layer={`route-optimization-after-${selectedDay.id}`}
                       places={afterPlaces}
+                      selectedStartPlaceId={
+                        selectedSettings.selectedStartPlaceId
+                      }
+                      selectedEndPlaceId={selectedSettings.selectedEndPlaceId}
                       onExpand={() => setMapComparisonOpen(true)}
                     />
                   ) : (
@@ -529,6 +581,8 @@ export function RouteOptimizationModal({
                     variant="after"
                     places={afterPlaces}
                     schedule={optimizedSchedule}
+                    selectedStartPlaceId={selectedSettings.selectedStartPlaceId}
+                    selectedEndPlaceId={selectedSettings.selectedEndPlaceId}
                     running={selectedState.status === 'running'}
                     hasResult={displayCandidate !== null}
                   />
@@ -623,6 +677,8 @@ export function RouteOptimizationModal({
           beforePlaces={beforePlaces}
           afterPlaces={afterPlaces}
           hasAfter={displayCandidate !== null}
+          selectedStartPlaceId={selectedSettings.selectedStartPlaceId}
+          selectedEndPlaceId={selectedSettings.selectedEndPlaceId}
           onClose={() => setMapComparisonOpen(false)}
         />
       ) : null}
@@ -705,26 +761,6 @@ function OptimizationSettings({
   const selectedStart = orderedPlaces.find(
     (place) => place.id === settings.selectedStartPlaceId,
   );
-  const changeStartPlace = (placeId: string) => {
-    onChange(
-      placeId === settings.selectedEndPlaceId
-        ? {
-            selectedStartPlaceId: placeId,
-            selectedEndPlaceId: settings.selectedStartPlaceId,
-          }
-        : { selectedStartPlaceId: placeId },
-    );
-  };
-  const changeEndPlace = (placeId: string) => {
-    onChange(
-      placeId === settings.selectedStartPlaceId
-        ? {
-            selectedStartPlaceId: settings.selectedEndPlaceId,
-            selectedEndPlaceId: placeId,
-          }
-        : { selectedEndPlaceId: placeId },
-    );
-  };
   const changeStartPolicy = (startPolicy: RouteOptimizationStartPolicy) => {
     onChange({
       startPolicy,
@@ -739,61 +775,23 @@ function OptimizationSettings({
   };
   const startPolicyHelper =
     settings.startPolicy === 'fixed'
-      ? '입력한 시각에 출발합니다.'
+      ? '입력한 시각에 첫 장소 일정을 시작합니다.'
       : settings.startPolicy === 'earliest'
-        ? '가능한 가장 빠른 출발 시각을 탐색합니다.'
-        : '가능한 가장 늦은 출발 시각을 탐색합니다.';
+        ? '가능한 가장 빠른 일정 시작 시각을 탐색합니다.'
+        : '가능한 가장 늦은 일정 시작 시각을 탐색합니다.';
 
   return (
     <section className="route-optimization-settings">
       <div className="route-optimization-section-heading">
         <div>
           <h3>최적화 설정</h3>
-          <p>선택 Day의 시작·종점과 출발 조건을 설정합니다.</p>
+          <p>
+            시작점과 도착점은 아래 경로 비교의 지도 또는 일정에서 지정할 수
+            있습니다.
+          </p>
         </div>
       </div>
       <div className="route-optimization-settings-groups">
-        <section className="route-optimization-settings-group">
-          <div className="route-optimization-settings-group-heading">
-            <h4>경로 조건</h4>
-            <p>경로의 시작 장소와 마지막 장소를 선택합니다.</p>
-          </div>
-          <div className="route-optimization-route-fields">
-            <label className="route-optimization-setting-field">
-              <span>시작점</span>
-              <select
-                value={settings.selectedStartPlaceId}
-                disabled={disabled || orderedPlaces.length < 2}
-                aria-label="경로 최적화 시작점"
-                onChange={(event) => changeStartPlace(event.target.value)}
-              >
-                {orderedPlaces.map((place) => (
-                  <option key={place.id} value={place.id}>
-                    {place.name}
-                  </option>
-                ))}
-              </select>
-              <small>선택한 장소를 경로의 첫 장소로 사용</small>
-            </label>
-            <label className="route-optimization-setting-field">
-              <span>도착점</span>
-              <select
-                value={settings.selectedEndPlaceId}
-                disabled={disabled || orderedPlaces.length < 2}
-                aria-label="경로 최적화 종점"
-                onChange={(event) => changeEndPlace(event.target.value)}
-              >
-                {orderedPlaces.map((place) => (
-                  <option key={place.id} value={place.id}>
-                    {place.name}
-                  </option>
-                ))}
-              </select>
-              <small>선택한 장소를 경로의 마지막 장소로 사용</small>
-            </label>
-          </div>
-        </section>
-
         <section className="route-optimization-settings-group">
           <div className="route-optimization-settings-group-heading">
             <h4>출발 조건</h4>
@@ -1002,8 +1000,7 @@ function createDayKey(
       placeId: place.placeId,
       order: place.order,
       time: place.time,
-      visitDurationMinutes: place.visitDurationMinutes,
-      preferredDurationMinutes: place.preferredDurationMinutes,
+      stayMinutes: getOptimizationStayMinutes(place),
       openingHours: place.openingHours,
     })),
   });

@@ -231,17 +231,13 @@ export function createRouteOptimizationSchedule(
       return null;
     }
     const requestedStayMinutes =
-      stop.stay_minutes ??
-      place.visitDurationMinutes ??
-      place.preferredDurationMinutes ??
-      0;
+      stop.stay_minutes ?? getOptimizationStayMinutes(place);
     const serviceStartTime = resolveServiceStartTime(
       stop.arrival_time,
       stop.service_start_time,
       stop.departure_time,
       stop.wait_minutes,
       requestedStayMinutes,
-      index === 0,
     );
     if (!serviceStartTime) {
       return null;
@@ -371,8 +367,7 @@ function getLocationConstraint(
     place,
     getReferenceDate(activeDay, place),
   );
-  const stayMinutes =
-    place.visitDurationMinutes ?? place.preferredDurationMinutes ?? 0;
+  const stayMinutes = getOptimizationStayMinutes(place);
   const stayIssue = isTenMinuteStep(stayMinutes)
     ? null
     : `${place.name}의 체류시간은 10분 단위여야 합니다: ${stayMinutes}분`;
@@ -381,6 +376,15 @@ function getLocationConstraint(
     stayMinutes,
     issue: openingWindow.issue ?? stayIssue,
   };
+}
+
+export function getOptimizationStayMinutes(place: TripPlace): number {
+  return Math.max(
+    TROUTE_TIME_STEP_MINUTES,
+    place.preferredDurationMinutes ??
+      place.visitDurationMinutes ??
+      TROUTE_TIME_STEP_MINUTES,
+  );
 }
 
 function getOpeningWindow(
@@ -551,13 +555,9 @@ function resolveServiceStartTime(
   departureTime: string | undefined,
   waitMinutes: number | undefined,
   stayMinutes: number,
-  isStart: boolean,
 ): string | null {
   if (serviceStartTime) {
     return serviceStartTime;
-  }
-  if (isStart) {
-    return arrivalTime;
   }
   if (waitMinutes !== undefined) {
     return addClockMinutes(arrivalTime, waitMinutes);

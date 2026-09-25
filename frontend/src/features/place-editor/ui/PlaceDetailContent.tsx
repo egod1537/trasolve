@@ -323,7 +323,9 @@ export function PlaceDetailContent({
 
         <PlaceTimeTimeline
           time={place.time}
-          visitDurationMinutes={place.visitDurationMinutes}
+          visitDurationMinutes={
+            place.preferredDurationMinutes ?? place.visitDurationMinutes
+          }
           openingHours={openingHours}
           variant="expanded"
           readOnly={!canEditTime}

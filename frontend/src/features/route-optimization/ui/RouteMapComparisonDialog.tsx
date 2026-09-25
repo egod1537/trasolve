@@ -14,6 +14,8 @@ type Props = {
   beforePlaces: readonly TripPlace[];
   afterPlaces: readonly TripPlace[];
   hasAfter: boolean;
+  selectedStartPlaceId: string;
+  selectedEndPlaceId: string;
   onClose: () => void;
 };
 
@@ -23,6 +25,8 @@ export function RouteMapComparisonDialog({
   beforePlaces,
   afterPlaces,
   hasAfter,
+  selectedStartPlaceId,
+  selectedEndPlaceId,
   onClose,
 }: Props) {
   const titleId = useId();
@@ -66,6 +70,8 @@ export function RouteMapComparisonDialog({
           layer={`route-optimization-expanded-before-${dayId}`}
           places={beforePlaces}
           viewportPlaces={viewportPlaces}
+          selectedStartPlaceId={selectedStartPlaceId}
+          selectedEndPlaceId={selectedEndPlaceId}
         />
         {hasAfter ? (
           <RouteComparisonMap
@@ -75,6 +81,8 @@ export function RouteMapComparisonDialog({
             layer={`route-optimization-expanded-after-${dayId}`}
             places={afterPlaces}
             viewportPlaces={viewportPlaces}
+            selectedStartPlaceId={selectedStartPlaceId}
+            selectedEndPlaceId={selectedEndPlaceId}
           />
         ) : (
           <RouteComparisonPlaceholder

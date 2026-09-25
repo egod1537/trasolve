@@ -10,7 +10,6 @@ import {
 import {
   DEFAULT_PLACE_PREFERRED_DURATION_MINUTES,
   DEFAULT_PLACE_START_TIME,
-  DEFAULT_PLACE_VISIT_DURATION_MINUTES,
 } from '@/entities/place';
 import { pickRandomDayColor } from '@/entities/trip';
 import {
@@ -130,6 +129,10 @@ function createAddPlaceCommandWithIdFactory(
   createId: () => string,
 ): TripCommand {
   const placeInput = structuredClone(input);
+  const durationMinutes =
+    placeInput.preferredDurationMinutes ??
+    placeInput.visitDurationMinutes ??
+    DEFAULT_PLACE_PREFERRED_DURATION_MINUTES;
   return defineTripCommand((trip) => {
     const day = trip.days.find((candidate) => candidate.id === dayId);
     if (!day) {
@@ -138,11 +141,8 @@ function createAddPlaceCommandWithIdFactory(
     const place: TripPlace = {
       ...placeInput,
       time: placeInput.time ?? DEFAULT_PLACE_START_TIME,
-      visitDurationMinutes:
-        placeInput.visitDurationMinutes ?? DEFAULT_PLACE_VISIT_DURATION_MINUTES,
-      preferredDurationMinutes:
-        placeInput.preferredDurationMinutes ??
-        DEFAULT_PLACE_PREFERRED_DURATION_MINUTES,
+      visitDurationMinutes: durationMinutes,
+      preferredDurationMinutes: durationMinutes,
       id: createId(),
       order: day.places.length + 1,
     };
@@ -266,11 +266,15 @@ export function createApplyOptimizedScheduleCommand(
     day.places = orderedIds.map((placeId) => {
       const place = placesById.get(placeId)!;
       const stop = stopsById.get(placeId)!;
+      const durationMinutes =
+        stop.visitDurationMinutes ??
+        place.preferredDurationMinutes ??
+        place.visitDurationMinutes;
       return {
         ...place,
         time: stop.time,
-        visitDurationMinutes:
-          stop.visitDurationMinutes ?? place.visitDurationMinutes,
+        visitDurationMinutes: durationMinutes,
+        preferredDurationMinutes: durationMinutes,
       };
     });
     return trip;
@@ -344,11 +348,26 @@ function createPlacePatchCommand(
   placeId: string,
   patch: Partial<PlaceInput>,
 ): TripCommand {
-  const placePatch = structuredClone(patch);
+  const placePatch = synchronizePlaceDurations(structuredClone(patch));
   return defineTripCommand((trip) => {
     Object.assign(findPlace(trip, placeId), placePatch);
     return trip;
   });
+}
+
+function synchronizePlaceDurations(
+  patch: Partial<PlaceInput>,
+): Partial<PlaceInput> {
+  const durationMinutes =
+    patch.preferredDurationMinutes ?? patch.visitDurationMinutes;
+  if (durationMinutes === undefined) {
+    return patch;
+  }
+  return {
+    ...patch,
+    visitDurationMinutes: durationMinutes,
+    preferredDurationMinutes: durationMinutes,
+  };
 }
 
 function findPlace(trip: Trip, placeId: string): TripPlace {

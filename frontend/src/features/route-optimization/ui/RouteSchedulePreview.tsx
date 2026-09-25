@@ -2,34 +2,61 @@ import type { TripPlace } from '@trasolve/shared';
 import type { ReactNode } from 'react';
 import { PlaceTimeTimeline } from '@/features/place-editor';
 import type { RouteOptimizationSchedule } from '@/features/route-optimization/model/routeOptimization';
+import { ScheduleLegTimeline } from './ScheduleLegTimeline';
 
 type Props =
   | {
       variant: 'before';
       places: readonly TripPlace[];
+      selectedStartPlaceId: string;
+      selectedEndPlaceId: string;
+      onSetStartPlace: (placeId: string) => void;
+      onSetEndPlace: (placeId: string) => void;
     }
   | {
       variant: 'after';
       places: readonly TripPlace[];
       schedule: RouteOptimizationSchedule | null;
+      selectedStartPlaceId: string;
+      selectedEndPlaceId: string;
       running: boolean;
       hasResult: boolean;
     };
 
 export function RouteSchedulePreview(props: Props) {
   return props.variant === 'before' ? (
-    <BeforeSchedule places={props.places} />
+    <BeforeSchedule
+      places={props.places}
+      selectedStartPlaceId={props.selectedStartPlaceId}
+      selectedEndPlaceId={props.selectedEndPlaceId}
+      onSetStartPlace={props.onSetStartPlace}
+      onSetEndPlace={props.onSetEndPlace}
+    />
   ) : (
     <AfterSchedule
       places={props.places}
       schedule={props.schedule}
+      selectedStartPlaceId={props.selectedStartPlaceId}
+      selectedEndPlaceId={props.selectedEndPlaceId}
       running={props.running}
       hasResult={props.hasResult}
     />
   );
 }
 
-function BeforeSchedule({ places }: { places: readonly TripPlace[] }) {
+function BeforeSchedule({
+  places,
+  selectedStartPlaceId,
+  selectedEndPlaceId,
+  onSetStartPlace,
+  onSetEndPlace,
+}: {
+  places: readonly TripPlace[];
+  selectedStartPlaceId: string;
+  selectedEndPlaceId: string;
+  onSetStartPlace: (placeId: string) => void;
+  onSetEndPlace: (placeId: string) => void;
+}) {
   return (
     <SchedulePanel title="일정" description="현재 일정">
       <ol className="route-optimization-schedule-list">
@@ -51,9 +78,20 @@ function BeforeSchedule({ places }: { places: readonly TripPlace[] }) {
                 time={place.time ?? null}
                 departureTime={departureTime}
                 stayMinutes={stayMinutes}
+                endpointActions={{
+                  isStart: place.id === selectedStartPlaceId,
+                  isEnd: place.id === selectedEndPlaceId,
+                  onSetStart: () => onSetStartPlace(place.id),
+                  onSetEnd: () => onSetEndPlace(place.id),
+                }}
               />
               {nextPlace ? (
-                <ScheduleLeg label="다음 일정까지" minutes={intervalMinutes} />
+                <ScheduleLeg
+                  label="다음 일정까지"
+                  minutes={intervalMinutes}
+                  startTime={departureTime}
+                  endTime={nextPlace.time}
+                />
               ) : null}
             </li>
           );
@@ -66,11 +104,15 @@ function BeforeSchedule({ places }: { places: readonly TripPlace[] }) {
 function AfterSchedule({
   places,
   schedule,
+  selectedStartPlaceId,
+  selectedEndPlaceId,
   running,
   hasResult,
 }: {
   places: readonly TripPlace[];
   schedule: RouteOptimizationSchedule | null;
+  selectedStartPlaceId: string;
+  selectedEndPlaceId: string;
   running: boolean;
   hasResult: boolean;
 }) {
@@ -97,6 +139,7 @@ function AfterSchedule({
       <ol className="route-optimization-schedule-list">
         {schedule.stops.map((stop, index) => {
           const place = placesById.get(stop.placeId);
+          const previousStop = schedule.stops[index - 1];
           if (!place) {
             return null;
           }
@@ -106,6 +149,17 @@ function AfterSchedule({
                 <ScheduleLeg
                   label="이동"
                   minutes={stop.travelMinutesFromPrevious}
+                  startTime={previousStop?.departureTime}
+                  endTime={stop.arrivalTime}
+                />
+              ) : null}
+              {stop.waitMinutes > 0 ? (
+                <ScheduleLeg
+                  label="대기"
+                  minutes={stop.waitMinutes}
+                  startTime={stop.arrivalTime}
+                  endTime={stop.serviceStartTime}
+                  kind="wait"
                 />
               ) : null}
               <SchedulePlace
@@ -116,6 +170,13 @@ function AfterSchedule({
                 departureTime={stop.departureTime}
                 waitMinutes={stop.waitMinutes}
                 stayMinutes={stop.stayMinutes}
+                endpointRole={
+                  stop.placeId === selectedStartPlaceId
+                    ? 'start'
+                    : stop.placeId === selectedEndPlaceId
+                      ? 'end'
+                      : undefined
+                }
               />
             </li>
           );
@@ -153,6 +214,8 @@ function SchedulePlace({
   departureTime,
   waitMinutes,
   stayMinutes,
+  endpointActions,
+  endpointRole,
 }: {
   index: number;
   place: TripPlace;
@@ -161,19 +224,68 @@ function SchedulePlace({
   departureTime: string | null;
   waitMinutes?: number;
   stayMinutes: number;
+  endpointActions?: {
+    isStart: boolean;
+    isEnd: boolean;
+    onSetStart: () => void;
+    onSetEnd: () => void;
+  };
+  endpointRole?: 'start' | 'end';
 }) {
+  const resolvedEndpointRole = endpointActions?.isStart
+    ? 'start'
+    : endpointActions?.isEnd
+      ? 'end'
+      : endpointRole;
   return (
-    <div className="route-optimization-schedule-stop">
+    <div
+      className={`route-optimization-schedule-stop${resolvedEndpointRole ? ` is-${resolvedEndpointRole}-place` : ''}`}
+    >
       <span className="route-optimization-schedule-index">{index + 1}</span>
       <div className="route-optimization-schedule-place">
+        {resolvedEndpointRole ? (
+          <span className="sr-only">
+            {resolvedEndpointRole === 'start' ? '시작점' : '도착점'}
+          </span>
+        ) : null}
         <div className="route-optimization-schedule-place-heading">
           <strong>{place.name}</strong>
-          <span>
+          {endpointActions ? (
+            <div className="route-optimization-endpoint-actions">
+              <button
+                type="button"
+                className={`is-start${endpointActions.isStart ? ' is-active' : ''}`}
+                aria-label={`${place.name}: 시작점으로 설정`}
+                aria-pressed={endpointActions.isStart}
+                onClick={endpointActions.onSetStart}
+              >
+                {endpointActions.isStart ? '✓ 시작점' : '시작'}
+              </button>
+              <button
+                type="button"
+                className={`is-end${endpointActions.isEnd ? ' is-active' : ''}`}
+                aria-label={`${place.name}: 도착점으로 설정`}
+                aria-pressed={endpointActions.isEnd}
+                onClick={endpointActions.onSetEnd}
+              >
+                {endpointActions.isEnd ? '✓ 도착점' : '도착'}
+              </button>
+            </div>
+          ) : (
+            <span>
+              {time && departureTime
+                ? `${time} ~ ${departureTime}`
+                : '시간 미설정'}
+            </span>
+          )}
+        </div>
+        {endpointActions ? (
+          <span className="route-optimization-schedule-time">
             {time && departureTime
               ? `${time} ~ ${departureTime}`
               : '시간 미설정'}
           </span>
-        </div>
+        ) : null}
         {time ? (
           <PlaceTimeTimeline
             time={time}
@@ -195,21 +307,38 @@ function SchedulePlace({
 function ScheduleLeg({
   label,
   minutes,
+  startTime,
+  endTime,
+  kind = 'travel',
 }: {
   label: string;
   minutes: number | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  kind?: 'travel' | 'wait';
 }) {
   return (
-    <div className="route-optimization-schedule-leg">
+    <div className={`route-optimization-schedule-leg is-${kind}`}>
       <span aria-hidden="true" />
-      <strong>{label}</strong>
-      <span>{minutes === null ? '시간 정보 없음' : `${minutes}분`}</span>
+      <div className="route-optimization-schedule-leg-content">
+        <div className="route-optimization-schedule-leg-heading">
+          <strong>{label}</strong>
+          <span>{minutes === null ? '—' : `${minutes}분`}</span>
+        </div>
+        <ScheduleLegTimeline
+          label={label}
+          durationMinutes={minutes}
+          startTime={startTime}
+          endTime={endTime}
+          kind={kind}
+        />
+      </div>
     </div>
   );
 }
 
 function getStayMinutes(place: TripPlace): number {
-  return place.visitDurationMinutes ?? place.preferredDurationMinutes ?? 0;
+  return place.preferredDurationMinutes ?? place.visitDurationMinutes ?? 0;
 }
 
 function addMinutes(time: string, minutes: number): string | null {

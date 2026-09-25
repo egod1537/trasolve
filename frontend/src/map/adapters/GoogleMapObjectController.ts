@@ -314,6 +314,20 @@ export class GoogleMapObjectController implements MapObjectController {
         listeners.add(unsubscribe);
         return unsubscribe;
       },
+      onContextMenu: (callback) => {
+        const listener = (event: MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
+          callback({ clientX: event.clientX, clientY: event.clientY });
+        };
+        content.addEventListener('contextmenu', listener);
+        const unsubscribe = () => {
+          content.removeEventListener('contextmenu', listener);
+          listeners.delete(unsubscribe);
+        };
+        listeners.add(unsubscribe);
+        return unsubscribe;
+      },
       onPointerEnter: (callback) => {
         const listener = () => callback();
         content.addEventListener('pointerenter', listener);

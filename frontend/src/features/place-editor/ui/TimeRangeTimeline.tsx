@@ -20,7 +20,7 @@ type Props = {
   backgroundRangeLabel?: string;
   ariaLabel: string;
   rangeLabel?: string;
-  tone?: 'primary' | 'opening' | 'warning' | 'muted';
+  tone?: 'primary' | 'opening' | 'warning' | 'muted' | 'travel';
   variant?: 'compact' | 'expanded';
   wrapAroundMidnight?: boolean;
   editable?: boolean;
@@ -319,7 +319,10 @@ function prepareRanges(
     .filter((range): range is PreparedRange => range !== undefined);
 }
 
-function positionEventLabels(events: readonly TimelineEvent[]) {
+function positionEventLabels(
+  events: readonly TimelineEvent[],
+  separateEdgeLanes = false,
+) {
   const positionedEvents = events
     .map((event) => ({ ...event }))
     .sort((left, right) => left.position - right.position);
@@ -327,7 +330,10 @@ function positionEventLabels(events: readonly TimelineEvent[]) {
   for (let index = 1; index < positionedEvents.length; index += 1) {
     const previous = positionedEvents[index - 1]!;
     const current = positionedEvents[index]!;
-    if (current.position - previous.position >= 18) {
+    if (
+      current.position - previous.position >= 18 ||
+      (separateEdgeLanes && current.edge !== previous.edge)
+    ) {
       continue;
     }
     previous.labelDirection ??= 'left';
@@ -376,6 +382,7 @@ export function TimeRangeTimeline({
   const positionedRanges = preparedRanges.flatMap((range) => range.segments);
   const events = positionEventLabels(
     preparedRanges.flatMap((range) => range.events),
+    true,
   );
   const preparedBackgroundRanges = prepareRanges(
     backgroundRanges,

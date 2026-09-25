@@ -149,7 +149,8 @@ function createMetrics(
       label: '일정 시작 시각',
       kind: 'time',
       before: beforeStart,
-      after: score?.latest_start ?? schedule?.stops[0]?.departureTime ?? null,
+      after:
+        schedule?.stops[0]?.serviceStartTime ?? score?.latest_start ?? null,
     },
     {
       key: 'finish',
@@ -157,7 +158,7 @@ function createMetrics(
       kind: 'time',
       before: beforeFinish,
       after:
-        score?.finish_time ?? schedule?.stops.at(-1)?.departureTime ?? null,
+        schedule?.stops.at(-1)?.departureTime ?? score?.finish_time ?? null,
     },
   ];
 }
@@ -260,7 +261,7 @@ function getScheduleTravelMinutes(
 }
 
 function getStayMinutes(place: TripPlace): number {
-  return place.visitDurationMinutes ?? place.preferredDurationMinutes ?? 0;
+  return place.preferredDurationMinutes ?? place.visitDurationMinutes ?? 0;
 }
 
 function formatMetricValue(value: MetricValue, kind: MetricKind): string {

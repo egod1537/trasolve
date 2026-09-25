@@ -16,6 +16,7 @@ type Props = {
   previewOffset?: number;
   dragHandle?: ReactNode;
   treeNodeVariant?: LayerTreeNodeVariant;
+  endpointRole?: 'start' | 'end';
   children: ReactNode;
   statusIndicator?: ReactNode;
   chevron?: ReactNode;
@@ -38,6 +39,7 @@ export function LayerItemShell({
   previewOffset = 0,
   dragHandle,
   treeNodeVariant,
+  endpointRole,
   children,
   statusIndicator,
   chevron,
@@ -49,7 +51,7 @@ export function LayerItemShell({
 
   return (
     <li
-      className={`trip-layer-item trip-${type}-item${isLast ? ' is-last' : ''}${selected ? ' is-selected' : ''}${detailsOpen ? ' is-details-open' : ''}${dragging ? ' is-dragging' : ''}${dropPosition ? ` is-drop-${dropPosition}` : ''}`}
+      className={`trip-layer-item trip-${type}-item${isLast ? ' is-last' : ''}${selected ? ' is-selected' : ''}${detailsOpen ? ' is-details-open' : ''}${dragging ? ' is-dragging' : ''}${dropPosition ? ` is-drop-${dropPosition}` : ''}${endpointRole ? ` is-${endpointRole}-place` : ''}`}
       data-day-id={dayId}
       data-layer-item-key={`${type}:${itemId}`}
       data-place-id={type === 'place' ? itemId : undefined}

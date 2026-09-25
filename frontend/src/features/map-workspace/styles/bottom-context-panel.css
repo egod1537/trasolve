@@ -673,15 +673,10 @@
   line-height: 1.4;
 }
 
-.route-optimization-route-fields,
 .route-optimization-departure-fields {
   display: grid;
   min-width: 0;
   gap: 10px;
-}
-
-.route-optimization-route-fields {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .route-optimization-departure-fields {
@@ -991,6 +986,70 @@ fieldset.route-optimization-setting-field {
   background: var(--color-floating-surface);
 }
 
+.route-endpoint-context-menu {
+  position: fixed;
+  z-index: calc(var(--z-dialog) + 1);
+  display: grid;
+  width: min(228px, calc(100vw - 20px));
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--color-floating-border);
+  border-radius: 10px;
+  background: var(--color-floating-surface);
+  box-shadow: var(--shadow-map-overlay);
+}
+
+.route-endpoint-context-menu > strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-endpoint-context-menu > div {
+  display: grid;
+  gap: 5px;
+}
+
+.route-endpoint-context-menu button,
+.route-optimization-endpoint-actions button {
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.route-endpoint-context-menu button {
+  min-height: 32px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  font-size: 10px;
+  text-align: left;
+}
+
+.route-endpoint-context-menu button:hover,
+.route-endpoint-context-menu button:focus-visible,
+.route-optimization-endpoint-actions button:hover,
+.route-optimization-endpoint-actions button:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.route-endpoint-context-menu button.is-start.is-active,
+.route-optimization-endpoint-actions button.is-start.is-active {
+  border-color: color-mix(in srgb, #16a34a 55%, var(--border-default));
+  background: color-mix(in srgb, #16a34a 12%, var(--bg-surface));
+  color: #15803d;
+}
+
+.route-endpoint-context-menu button.is-end.is-active,
+.route-optimization-endpoint-actions button.is-end.is-active {
+  border-color: color-mix(in srgb, #dc2626 55%, var(--border-default));
+  background: color-mix(in srgb, #dc2626 11%, var(--bg-surface));
+  color: #dc2626;
+}
+
 .route-map-comparison-backdrop {
   z-index: calc(var(--z-dialog) + 1);
   padding: 4vh 2vw;
@@ -1055,6 +1114,7 @@ fieldset.route-optimization-setting-field {
 .route-optimization-progress-dialog {
   display: grid;
   width: min(520px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
   overflow: hidden;
   box-shadow: var(--shadow-map-overlay);
   grid-template-rows: minmax(0, 1fr) auto;
@@ -1062,8 +1122,10 @@ fieldset.route-optimization-setting-field {
 
 .route-optimization-progress-content {
   display: grid;
-  gap: 20px;
+  min-height: 0;
+  gap: 16px;
   padding: 24px;
+  overflow: hidden;
 }
 
 .route-optimization-progress-content > header {
@@ -1105,9 +1167,19 @@ fieldset.route-optimization-setting-field {
 .route-optimization-progress-steps {
   display: grid;
   gap: 4px;
+  max-height: min(320px, 42vh);
   margin: 0;
-  padding: 0;
+  padding: 0 4px 0 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   list-style: none;
+}
+
+.route-optimization-progress-steps:focus-visible {
+  border-radius: 8px;
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .route-optimization-progress-steps li {
@@ -1121,11 +1193,17 @@ fieldset.route-optimization-setting-field {
 }
 
 .route-optimization-progress-steps li > span {
-  width: 10px;
-  height: 10px;
+  display: grid;
+  width: 14px;
+  height: 14px;
   justify-self: center;
+  place-items: center;
   border: 2px solid var(--border-strong);
   border-radius: 50%;
+  color: var(--color-visualization-contrast);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .route-optimization-progress-steps strong {
@@ -1141,6 +1219,10 @@ fieldset.route-optimization-setting-field {
 .route-optimization-progress-steps li.is-completed > span {
   border-color: var(--color-success-strong);
   background: var(--color-success-strong);
+}
+
+.route-optimization-progress-steps li.is-completed > span::before {
+  content: '✓';
 }
 
 .route-optimization-progress-steps li.is-running {
@@ -1162,9 +1244,17 @@ fieldset.route-optimization-setting-field {
   background: var(--danger);
 }
 
+.route-optimization-progress-steps li.is-failed > span::before {
+  content: '×';
+}
+
 .route-optimization-progress-steps li.is-cancelled > span {
   border-color: var(--warning);
   background: var(--warning);
+}
+
+.route-optimization-progress-steps li.is-cancelled > span::before {
+  content: '–';
 }
 
 .route-optimization-progress-server-status {
@@ -1281,6 +1371,28 @@ fieldset.route-optimization-setting-field {
   background: var(--bg-subtle);
 }
 
+.route-optimization-schedule-stop.is-start-place {
+  border-color: color-mix(
+    in srgb,
+    var(--color-success) 16%,
+    var(--border-default)
+  );
+  background: color-mix(in srgb, var(--color-success) 7%, var(--bg-subtle));
+}
+
+.route-optimization-schedule-stop.is-end-place {
+  border-color: color-mix(
+    in srgb,
+    var(--color-danger) 16%,
+    var(--border-default)
+  );
+  background: color-mix(in srgb, var(--color-danger) 7%, var(--bg-subtle));
+}
+
+.route-optimization-schedule-stop:hover {
+  background: var(--bg-hover);
+}
+
 .route-optimization-schedule-index {
   display: grid;
   width: 22px;
@@ -1323,6 +1435,26 @@ fieldset.route-optimization-setting-field {
   font-variant-numeric: tabular-nums;
 }
 
+.route-optimization-endpoint-actions {
+  display: flex;
+  flex: none;
+  gap: 4px;
+}
+
+.route-optimization-endpoint-actions button {
+  min-height: 24px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.route-optimization-schedule-time {
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
 .route-optimization-schedule-place .place-time-summary {
   display: block;
   min-width: 0;
@@ -1339,27 +1471,95 @@ fieldset.route-optimization-setting-field {
 
 .route-optimization-schedule-leg {
   display: grid;
-  grid-template-columns: 22px auto minmax(0, 1fr);
-  align-items: center;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: stretch;
   gap: 9px;
-  min-height: 32px;
+  min-height: 72px;
+  padding: 0 9px;
+  overflow: visible;
   color: var(--text-muted);
   font-size: 9px;
 }
 
 .route-optimization-schedule-leg > span:first-child {
   width: 1px;
-  height: 32px;
+  height: 100%;
   justify-self: center;
   background: var(--border-default);
 }
 
-.route-optimization-schedule-leg > strong {
+.route-optimization-schedule-leg-content {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  gap: 1px;
+  padding: 4px 0 2px;
+  overflow: visible;
+}
+
+.route-optimization-schedule-leg-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 8px;
+}
+
+.route-optimization-schedule-leg-heading > strong {
   color: var(--text-secondary);
   font-size: 9px;
 }
 
-.route-optimization-schedule-leg > span:last-child {
+.route-optimization-schedule-leg-heading > span {
+  font-variant-numeric: tabular-nums;
+}
+
+.route-optimization-schedule-leg .time-range-timeline {
+  overflow: visible;
+  --time-range-axis-height: 48px;
+  --time-range-baseline-top: 19px;
+  --time-range-range-height: 2px;
+  --time-range-tick-top: 16px;
+  --time-range-tick-label-top: 23px;
+  --time-range-event-top: 15px;
+  --time-range-event-size: 8px;
+  --time-range-event-label-bottom: 12px;
+  --time-range-event-end-label-top: 12px;
+  --time-range-event-label-font-size: 8px;
+}
+
+.route-optimization-schedule-leg .time-range-timeline-axis {
+  overflow: visible;
+}
+
+.route-optimization-schedule-leg.is-travel .time-range-timeline {
+  --time-range-accent: color-mix(
+    in srgb,
+    var(--color-primary) 58%,
+    var(--color-text-secondary)
+  );
+  --time-range-range-height: 3px;
+  --time-range-event-size: 4px;
+}
+
+.route-optimization-schedule-leg.is-travel .time-range-timeline-event i {
+  border-width: 1px;
+}
+
+.route-optimization-schedule-leg.is-wait .time-range-timeline-range {
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--time-range-accent) 0 4px,
+    transparent 4px 7px
+  );
+}
+
+.route-optimization-schedule-leg-fallback {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1625,7 +1825,6 @@ fieldset.route-optimization-setting-field {
     width: 142px;
   }
 
-  .route-optimization-route-fields,
   .route-optimization-departure-fields {
     grid-template-columns: minmax(0, 1fr);
   }

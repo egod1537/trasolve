@@ -13,9 +13,10 @@
   --time-range-range-offset: -1px;
   --time-range-tick-height: 7px;
   --time-range-tick-label-font-size: 8px;
-  --time-range-tick-label-top: 10px;
+  --time-range-tick-label-top: 25px;
   --time-range-tick-top: 14px;
   --time-range-event-label-bottom: 12px;
+  --time-range-event-end-label-top: 13px;
   --time-range-event-label-font-size: 9px;
   --time-range-event-size: 9px;
   --time-range-event-top: 13px;
@@ -39,6 +40,10 @@
   --time-range-accent: var(--color-text-muted);
 }
 
+.time-range-timeline.is-travel {
+  --time-range-accent: var(--color-text-secondary);
+}
+
 .time-range-timeline.is-expanded {
   --time-range-axis-height: 76px;
   --time-range-axis-margin-x: clamp(18px, 8%, 30px);
@@ -48,9 +53,10 @@
   --time-range-range-offset: -2px;
   --time-range-tick-height: 10px;
   --time-range-tick-label-font-size: 9px;
-  --time-range-tick-label-top: 15px;
+  --time-range-tick-label-top: 29px;
   --time-range-tick-top: 19px;
   --time-range-event-label-bottom: 17px;
+  --time-range-event-end-label-top: 16px;
   --time-range-event-label-font-size: 10px;
   --time-range-event-size: 11px;
   --time-range-event-top: 18px;
@@ -302,7 +308,6 @@
 
 .time-range-timeline-event time {
   position: absolute;
-  bottom: var(--time-range-event-label-bottom);
   left: 50%;
   color: var(--color-text-secondary);
   font-size: var(--time-range-event-label-font-size);
@@ -311,6 +316,16 @@
   line-height: 1;
   white-space: nowrap;
   transform: translateX(-50%);
+}
+
+.time-range-timeline-event.is-start time {
+  top: auto;
+  bottom: var(--time-range-event-label-bottom);
+}
+
+.time-range-timeline-event.is-end time {
+  top: var(--time-range-event-end-label-top);
+  bottom: auto;
 }
 
 .time-range-timeline-event.is-label-left time {
@@ -333,11 +348,6 @@
   right: 4px;
   left: auto;
   transform: none;
-}
-
-.time-range-timeline.has-background-ranges .time-range-timeline-event time {
-  top: 29px;
-  bottom: auto;
 }
 
 .time-range-timeline-background-event {

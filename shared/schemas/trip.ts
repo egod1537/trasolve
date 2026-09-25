@@ -161,15 +161,25 @@ function migratePlace(value: unknown): unknown {
     return value;
   }
   const place = value as Record<string, unknown>;
-  if (!('preferredTimeRange' in place) && !('durationMinutes' in place)) {
-    return place;
-  }
   const migrated = { ...place };
   delete migrated.preferredTimeRange;
   if ('durationMinutes' in migrated && !('visitDurationMinutes' in migrated)) {
     migrated.visitDurationMinutes = migrated.durationMinutes;
   }
   delete migrated.durationMinutes;
+
+  const preferredDurationMinutes = migrated.preferredDurationMinutes;
+  const visitDurationMinutes = migrated.visitDurationMinutes;
+  if (typeof preferredDurationMinutes === 'number') {
+    migrated.visitDurationMinutes = preferredDurationMinutes;
+    migrated.preferredDurationMinutes = preferredDurationMinutes;
+  } else if (
+    preferredDurationMinutes === undefined &&
+    typeof visitDurationMinutes === 'number'
+  ) {
+    migrated.visitDurationMinutes = visitDurationMinutes;
+    migrated.preferredDurationMinutes = visitDurationMinutes;
+  }
   return migrated;
 }
 

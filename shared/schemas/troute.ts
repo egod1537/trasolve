@@ -25,11 +25,27 @@ export const trouteJobIdSchema = z
   .max(128)
   .refine((value) => value.trim().length > 0);
 
-export const trouteProgressStageSchema = z.enum([
+const trouteKnownProgressStageSchema = z.enum([
   'accepted',
+  'validating_request',
+  'selecting_provider',
+  'preparing_matrix',
+  'fetching_travel_times',
   'building_matrix',
-  'solving',
+  'generating_candidates',
+  'optimizing_route',
+  'selecting_best_candidate',
   'scheduling',
+  'validating_schedule',
+  'finalizing_result',
+]);
+export const trouteProgressStageSchema = z.union([
+  trouteKnownProgressStageSchema,
+  z
+    .string()
+    .min(1)
+    .max(128)
+    .regex(/^[a-z][a-z0-9_]*$/),
 ]);
 export const trouteJobStatusSchema = z.enum([
   'pending',

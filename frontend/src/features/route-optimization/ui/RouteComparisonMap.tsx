@@ -1,8 +1,12 @@
 import type { TripPlace } from '@trasolve/shared';
-import { useEffect, useRef } from 'react';
-import type { MapMarkerHandle } from '@/map/adapters/MapObjectController';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type {
+  MapMarkerContextMenuEvent,
+  MapMarkerHandle,
+} from '@/map/adapters/MapObjectController';
 import { GoogleMap, useGoogleMap } from '@/map/components/GoogleMap';
 import { useMapPolyline } from '@/map/hooks/useMapPolyline';
+import { RouteEndpointContextMenu } from '@/features/route-optimization/ui/RouteEndpointContextMenu';
 import { IconButton } from '@/shared/ui/IconButton';
 import { ExpandIcon } from '@/shared/ui/icons';
 import {
@@ -21,6 +25,12 @@ type Props = {
   viewportPlaces?: readonly TripPlace[];
   heading?: string;
   onExpand?: () => void;
+  selectedStartPlaceId?: string;
+  selectedEndPlaceId?: string;
+  editableEndpoints?: boolean;
+  onSetStartPlace?: (placeId: string) => void;
+  onSetEndPlace?: (placeId: string) => void;
+  onEndpointMenuOpenChange?: (open: boolean) => void;
 };
 
 export function RouteComparisonMap({
@@ -31,7 +41,29 @@ export function RouteComparisonMap({
   viewportPlaces = places,
   heading = '지도',
   onExpand,
+  selectedStartPlaceId = places[0]?.id,
+  selectedEndPlaceId = places.at(-1)?.id,
+  editableEndpoints = false,
+  onSetStartPlace,
+  onSetEndPlace,
+  onEndpointMenuOpenChange,
 }: Props) {
+  const [endpointMenu, setEndpointMenu] = useState<{
+    layer: string;
+    placeId: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  const activeEndpointMenu =
+    endpointMenu?.layer === layer ? endpointMenu : null;
+  const menuPlace = activeEndpointMenu
+    ? places.find((place) => place.id === activeEndpointMenu.placeId)
+    : undefined;
+  const closeEndpointMenu = useCallback(() => {
+    setEndpointMenu(null);
+    onEndpointMenuOpenChange?.(false);
+  }, [onEndpointMenuOpenChange]);
+
   return (
     <section className="route-optimization-map-panel">
       <header>
@@ -42,8 +74,8 @@ export function RouteComparisonMap({
           </span>
         </div>
         <span className="route-optimization-marker-legend">
-          <i className="is-start" /> 출발
-          <i className="is-destination" /> 도착
+          <i className="is-start" /> 시작점
+          <i className="is-destination" /> 도착점
         </span>
       </header>
       <div className="route-optimization-map-canvas">
@@ -64,7 +96,26 @@ export function RouteComparisonMap({
             layer={layer}
             path={places.map((place) => place.location)}
           />
-          <ComparisonMarkers layer={layer} places={places} />
+          <ComparisonMarkers
+            layer={layer}
+            places={places}
+            selectedStartPlaceId={selectedStartPlaceId}
+            selectedEndPlaceId={selectedEndPlaceId}
+            editableEndpoints={editableEndpoints}
+            onMarkerContextMenu={
+              editableEndpoints
+                ? (placeId, event) => {
+                    setEndpointMenu({
+                      layer,
+                      placeId,
+                      x: event.clientX,
+                      y: event.clientY,
+                    });
+                    onEndpointMenuOpenChange?.(true);
+                  }
+                : undefined
+            }
+          />
         </GoogleMap>
         {onExpand ? (
           <IconButton
@@ -80,6 +131,17 @@ export function RouteComparisonMap({
       <p className="route-optimization-map-order">
         {places.map((place) => place.name).join(' → ')}
       </p>
+      {activeEndpointMenu && menuPlace && onSetStartPlace && onSetEndPlace ? (
+        <RouteEndpointContextMenu
+          placeName={menuPlace.name}
+          anchor={{ x: activeEndpointMenu.x, y: activeEndpointMenu.y }}
+          isStart={menuPlace.id === selectedStartPlaceId}
+          isEnd={menuPlace.id === selectedEndPlaceId}
+          onSetStart={() => onSetStartPlace(menuPlace.id)}
+          onSetEnd={() => onSetEndPlace(menuPlace.id)}
+          onClose={closeEndpointMenu}
+        />
+      ) : null}
     </section>
   );
 }
@@ -158,12 +220,28 @@ function ComparisonLine({
 function ComparisonMarkers({
   layer,
   places,
+  selectedStartPlaceId,
+  selectedEndPlaceId,
+  editableEndpoints,
+  onMarkerContextMenu,
 }: {
   layer: string;
   places: readonly TripPlace[];
+  selectedStartPlaceId?: string;
+  selectedEndPlaceId?: string;
+  editableEndpoints: boolean;
+  onMarkerContextMenu?: (
+    placeId: string,
+    event: MapMarkerContextMenuEvent,
+  ) => void;
 }) {
   const { objects } = useGoogleMap();
   const markers = useRef(new Map<string, MapMarkerHandle>());
+  const contextMenuHandler = useRef(onMarkerContextMenu);
+
+  useEffect(() => {
+    contextMenuHandler.current = onMarkerContextMenu;
+  }, [onMarkerContextMenu]);
 
   useEffect(() => {
     const ownedMarkers = markers.current;
@@ -186,23 +264,28 @@ function ComparisonMarkers({
           layer,
           position: place.location,
         });
+        if (editableEndpoints) {
+          marker.onContextMenu((event) =>
+            contextMenuHandler.current?.(place.id, event),
+          );
+        }
         markers.current.set(place.id, marker);
       }
+      const isStart = place.id === selectedStartPlaceId;
+      const isEnd = place.id === selectedEndPlaceId;
       marker.setPosition(place.location);
       marker.setTitle(
         `${index + 1}. ${place.name}${
-          index === 0 ? ' · 출발' : index === places.length - 1 ? ' · 도착' : ''
+          isStart ? ' · 시작점' : isEnd ? ' · 도착점' : ''
         }`,
       );
       marker.setLabel(String(index + 1));
       marker.setColor(
-        index === 0
-          ? '#16a34a'
-          : index === places.length - 1
-            ? '#dc2626'
-            : COMPARISON_COLOR,
+        isStart ? '#16a34a' : isEnd ? '#dc2626' : COMPARISON_COLOR,
       );
-      marker.setZIndex(index + 1);
+      marker.setZIndex(
+        isStart || isEnd ? places.length + index + 1 : index + 1,
+      );
     });
     for (const [placeId, marker] of markers.current) {
       if (!remaining.has(placeId)) {
@@ -210,6 +293,13 @@ function ComparisonMarkers({
         markers.current.delete(placeId);
       }
     }
-  }, [layer, objects, places]);
+  }, [
+    editableEndpoints,
+    layer,
+    objects,
+    places,
+    selectedEndPlaceId,
+    selectedStartPlaceId,
+  ]);
   return null;
 }
