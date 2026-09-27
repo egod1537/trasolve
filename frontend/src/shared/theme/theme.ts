@@ -1,7 +1,11 @@
+import {
+  preferenceRepository,
+  USER_PREFERENCE_KEYS,
+} from '@/shared/preferences/preferenceRepository';
+
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type ResolvedTheme = Exclude<ThemeMode, 'system'>;
 
-export const THEME_STORAGE_KEY = 'trasolve.theme';
 export const DARK_MODE_QUERY = '(prefers-color-scheme: dark)';
 
 export function getInitialThemeMode(): ThemeMode {
@@ -9,12 +13,8 @@ export function getInitialThemeMode(): ThemeMode {
     return 'system';
   }
 
-  try {
-    const storedMode = window.localStorage.getItem(THEME_STORAGE_KEY);
-    return isThemeMode(storedMode) ? storedMode : 'system';
-  } catch {
-    return 'system';
-  }
+  const storedMode = preferenceRepository.read(USER_PREFERENCE_KEYS.theme);
+  return isThemeMode(storedMode) ? storedMode : 'system';
 }
 
 export function resolveTheme(mode: ThemeMode): ResolvedTheme {
@@ -29,11 +29,7 @@ export function saveThemeMode(mode: ThemeMode): void {
     return;
   }
 
-  try {
-    window.localStorage.setItem(THEME_STORAGE_KEY, mode);
-  } catch {
-    // Theme switching still works when browser storage is unavailable.
-  }
+  preferenceRepository.write(USER_PREFERENCE_KEYS.theme, mode);
 }
 
 export function applyThemeToDocument(theme: ResolvedTheme): void {

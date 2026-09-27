@@ -25,6 +25,8 @@ jobs:
         run: npm ci
       - name: Check frontend architecture
         run: npm run architecture:check
+      - name: Check localization resources and usage
+        run: npm run localization:lint
       - name: Lint
         run: npm run lint
       - name: Typecheck

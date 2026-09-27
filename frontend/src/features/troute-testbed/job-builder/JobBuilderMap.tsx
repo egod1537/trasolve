@@ -9,6 +9,7 @@ import {
   useSelectedGooglePlace,
 } from '@/features/place-editor';
 import type { JobBuilderLocation } from '@/features/troute-testbed/job-builder/jobBuilderModel';
+import { useL } from '@/shared/i18n';
 
 interface JobBuilderMapProps {
   locations: JobBuilderLocation[];
@@ -25,6 +26,7 @@ export function JobBuilderMap({
   onSelectLocation,
   onAddPlace,
 }: JobBuilderMapProps) {
+  const L = useL();
   const mapRef = useRef<GoogleMapHandle>(null);
   const locationsRef = useRef(locations);
   const suppressSelectionPanRef = useRef<string | null>(null);
@@ -94,7 +96,7 @@ export function JobBuilderMap({
         ref={mapRef}
         center={{ lat: 37.5665, lng: 126.978 }}
         zoom={12}
-        ariaLabel="Job 위치 선택 지도"
+        ariaLabel={L('testbed:jobBuilderMap.ariaLabel.jobLocationSelectionMap')}
         options={{
           clickableIcons: true,
           mapTypeControl: false,
@@ -128,20 +130,31 @@ export function JobBuilderMap({
           <button
             type="button"
             className="job-builder-candidate-close"
-            aria-label="선택한 장소 닫기"
+            aria-label={L(
+              'testbed:tcacheRouteMap.ariaLabel.closeSelectedPlace',
+            )}
             onClick={googlePlace.close}
           >
             ×
           </button>
           {googlePlace.selection.status === 'loading' ? (
-            <p role="status">장소 정보를 불러오고 있습니다.</p>
+            <p role="status">
+              {L(
+                'testbed:tcacheRouteMap.description.loadingLocationInformation',
+              )}
+            </p>
           ) : googlePlace.selection.status === 'error' ? (
-            <p role="alert">장소 정보를 불러오지 못했습니다.</p>
+            <p role="alert">
+              {L(
+                'testbed:tcacheRouteMap.description.failedLoadLocationInformation',
+              )}
+            </p>
           ) : (
             <>
               <strong>{googlePlace.selection.place.name}</strong>
               <span>
-                {googlePlace.selection.place.address ?? '주소 정보 없음'}
+                {googlePlace.selection.place.address ??
+                  L('testbed:tcacheRouteMap.text.noAddressInformation')}
               </span>
               <button
                 type="button"
@@ -158,7 +171,9 @@ export function JobBuilderMap({
                   googlePlace.close();
                 }}
               >
-                {alreadyAddedLocation ? '추가된 장소 선택' : 'Job에 추가'}
+                {alreadyAddedLocation
+                  ? L('testbed:jobBuilderMap.action.selectAddedLocation')
+                  : L('testbed:jobBuilderMap.action.addJob')}
               </button>
             </>
           )}

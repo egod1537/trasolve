@@ -11,14 +11,15 @@ import {
   type TripPolyline,
   type TripPolylineMode,
 } from '@trasolve/shared';
-import { formatPolylineMode } from '@/features/map-workspace/domain/polylineMode';
+import type { QueryRouteDuration } from '@/features/map-workspace/domain/routeDuration';
 import {
+  formatPolylineMode,
   formatRouteDuration,
-  type QueryRouteDuration,
-} from '@/features/map-workspace/domain/routeDuration';
+} from '@/features/map-workspace/lib/mapFormatters';
 import type { TripPlace } from '@/entities/trip';
 import { useLayerDetailCardPlacement } from '@/features/map-workspace/components/layer-panel/LayerDetailCard';
 import { PolylineModeIcon } from '@/features/map-workspace/components/PolylineModeIcon';
+import { useL, L } from '@/shared/i18n';
 
 const ROUTE_SETTINGS_CARD_WIDTH = 442;
 
@@ -42,10 +43,22 @@ const TRAVEL_MODE_BY_POLYLINE_MODE: Record<RoutableMode, TravelMode> = {
 };
 
 const MODE_DESCRIPTIONS: Record<TripPolylineMode, string> = {
-  straight: '두 장소를 직선으로 연결합니다.',
-  walking: '도보 이동 경로를 사용합니다.',
-  transit: '대중교통 경로를 사용합니다.',
-  driving: '자동차 이동 경로를 사용합니다.',
+  get straight() {
+    return L(
+      'map:routeSettingsCard.mODEDESCRIPTIONS.text.straightLineConnectsTwoPlaces',
+    );
+  },
+  get walking() {
+    return L('map:routeSettingsCard.mODEDESCRIPTIONS.text.useWalkingRoutes');
+  },
+  get transit() {
+    return L(
+      'map:routeSettingsCard.mODEDESCRIPTIONS.text.usePublicTransportationRoutes',
+    );
+  },
+  get driving() {
+    return L('map:routeSettingsCard.mODEDESCRIPTIONS.text.useCarTravelRoutes');
+  },
 };
 
 type RouteModeOptionViewModel = {
@@ -102,12 +115,28 @@ function resolveDurationPresentation(state: DurationState): {
   ariaLabel: string;
 } {
   if (state.status === 'loading') {
-    return { label: '…', ariaLabel: '예상 시간 조회 중' };
+    return {
+      label: '…',
+      ariaLabel: L(
+        'map:routeSettingsCard.resolveDurationPresentation.ariaLabel.viewingEstimatedTime',
+      ),
+    };
   }
   if (state.status === 'error') {
-    return { label: '—', ariaLabel: '예상 시간 없음' };
+    return {
+      label: '—',
+      ariaLabel: L(
+        'map:routeSettingsCard.resolveDurationPresentation.ariaLabel.noEstimatedTime',
+      ),
+    };
   }
-  return { label: state.label, ariaLabel: `예상 시간 ${state.label}` };
+  return {
+    label: state.label,
+    ariaLabel: L(
+      'map:routeSettingsCard.resolveDurationPresentation.ariaLabel.estimatedTime',
+      { label: state.label },
+    ),
+  };
 }
 
 export function RouteSettingsCard({
@@ -121,6 +150,7 @@ export function RouteSettingsCard({
   onClose,
   onUpdateMode,
 }: Props) {
+  const L = useL();
   const [submitting, setSubmitting] = useState(false);
   const [durationStates, setDurationStates] = useState<DurationStates>(
     INITIAL_DURATION_STATES,
@@ -147,13 +177,13 @@ export function RouteSettingsCard({
             : resolveDurationPresentation(durationStates[mode]);
         return {
           mode,
-          label: formatPolylineMode(mode),
+          label: formatPolylineMode(mode, L),
           durationLabel: duration?.label,
           durationAriaLabel: duration?.ariaLabel,
           selected: mode === polyline.mode,
         };
       }),
-    [durationStates, polyline.mode],
+    [durationStates, L, polyline.mode],
   );
 
   useEffect(() => {
@@ -187,7 +217,7 @@ export function RouteSettingsCard({
                 ? { status: 'error' }
                 : {
                     status: 'ready',
-                    label: formatRouteDuration(durationMillis),
+                    label: formatRouteDuration(durationMillis, L),
                   },
           }));
         } catch {
@@ -207,6 +237,7 @@ export function RouteSettingsCard({
     fromPlaceId,
     fromPlaceLat,
     fromPlaceLng,
+    L,
     onQueryRouteDuration,
     toPlaceId,
     toPlaceLat,
@@ -233,14 +264,14 @@ export function RouteSettingsCard({
       className="route-settings-card"
       style={placement}
       role="dialog"
-      aria-label="경로 설정"
+      aria-label={L('map:routeSettingsCard.ariaLabel.routeSettings')}
       aria-busy={submitting}
       data-layer-detail-card
     >
       <div
         className="route-settings-mode-scroll"
         role="group"
-        aria-label="이동 방식 선택"
+        aria-label={L('map:routeSettingsCard.ariaLabel.chooseMethodTravel')}
       >
         <div className="route-settings-modes">
           {modeOptions.map((option) => (
@@ -250,7 +281,10 @@ export function RouteSettingsCard({
               className="route-settings-mode"
               aria-label={
                 option.durationAriaLabel
-                  ? `${option.label}, ${option.durationAriaLabel}`
+                  ? L('map:routeSettingsCard.ariaLabel.message', {
+                      label: option.label,
+                      durationAriaLabel: option.durationAriaLabel,
+                    })
                   : option.label
               }
               aria-pressed={option.selected}
@@ -278,14 +312,14 @@ export function RouteSettingsCard({
           <PolylineModeIcon mode={polyline.mode} />
         </span>
         <div>
-          <strong>{formatPolylineMode(polyline.mode)}</strong>
+          <strong>{formatPolylineMode(polyline.mode, L)}</strong>
           <p>{MODE_DESCRIPTIONS[polyline.mode]}</p>
         </div>
       </section>
 
       {submitting && (
         <p className="route-settings-status" role="status">
-          이동 방식을 저장하고 있습니다.
+          {L('map:routeSettingsCard.description.weReSavingWayMoving')}
         </p>
       )}
     </aside>

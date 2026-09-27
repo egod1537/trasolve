@@ -1,0 +1,35 @@
+{
+  "spreadsheet_id": "1iSn_gyYQXirzwhyXJQpMoO1jvuxzHot1bS7F3OxhDVY",
+  "candidates": [
+    {
+      "key": "common:landingPage.text.trasolve",
+      "value": "© {{year}} Trasolve",
+      "reason": "저작권 기호, 동적 연도, 브랜드명만으로 구성되어 번역이 필요하지 않음"
+    },
+    {
+      "key": "common:languageControl.language.ko",
+      "value": "한국어",
+      "reason": "언어 선택기에 표시하는 고정 자칭 언어명"
+    },
+    {
+      "key": "common:languageControl.language.ja",
+      "value": "日本語",
+      "reason": "언어 선택기에 표시하는 고정 자칭 언어명"
+    },
+    {
+      "key": "common:languageControl.language.en",
+      "value": "English",
+      "reason": "언어 선택기에 표시하는 고정 자칭 언어명"
+    },
+    {
+      "key": "testbed:tcacheResultMap.createMarkerModels.label.s",
+      "value": "S",
+      "reason": "지도 출발 marker의 고정 기술 표기"
+    },
+    {
+      "key": "testbed:tcacheResultMap.createMarkerModels.label.e",
+      "value": "E",
+      "reason": "지도 도착 marker의 고정 기술 표기"
+    }
+  ]
+}

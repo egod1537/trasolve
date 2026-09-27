@@ -27,6 +27,7 @@ export class TrouteHttpService {
     response: ServerResponse,
   ): Promise<void> {
     let createdJobId: string | null = null;
+    let optimizeRequest: Parameters<TrouteClient['submitJob']>[0] | null = null;
     response.setHeader('Content-Type', 'application/json; charset=utf-8');
     response.setHeader('Cache-Control', 'no-store');
     try {
@@ -62,6 +63,7 @@ export class TrouteHttpService {
           'troute 최적화 요청의 형식과 값을 확인해 주세요.',
         );
       }
+      optimizeRequest = parsed.data;
 
       this.jobs.create(parsed.data);
       createdJobId = parsed.data.job_id;
@@ -82,7 +84,7 @@ export class TrouteHttpService {
       if (response.destroyed || response.writableEnded) {
         return;
       }
-      const error = this.toHttpError(cause);
+      const error = this.toHttpError(cause, optimizeRequest);
       if (createdJobId !== null) {
         let synchronized = false;
         try {
@@ -190,7 +192,10 @@ export class TrouteHttpService {
     });
   }
 
-  private toHttpError(cause: unknown): TrouteHttpError {
+  private toHttpError(
+    cause: unknown,
+    request: Parameters<TrouteClient['submitJob']>[0] | null,
+  ): TrouteHttpError {
     if (cause instanceof TrouteHttpError) {
       return cause;
     }
@@ -244,6 +249,18 @@ export class TrouteHttpService {
         );
       case 'upstream_http': {
         const upstreamStatus = cause.upstreamStatus;
+        if (
+          upstreamStatus === 400 &&
+          request?.start_policy !== undefined &&
+          isInvalidUpstreamRequest(cause.upstreamBody)
+        ) {
+          return new TrouteHttpError(
+            400,
+            'TROUTE_START_POLICY_UNSUPPORTED',
+            '현재 troute 서버가 선택한 시작 방식을 지원하지 않습니다.',
+            upstreamStatus,
+          );
+        }
         const status =
           upstreamStatus !== undefined &&
           upstreamStatus >= 400 &&
@@ -277,4 +294,17 @@ export class TrouteHttpService {
       '서버의 TROUTE_BASE_URL 설정을 확인해 주세요.',
     );
   }
+}
+
+function isInvalidUpstreamRequest(body: unknown): boolean {
+  if (!body || typeof body !== 'object' || !('error' in body)) {
+    return false;
+  }
+  const error = body.error;
+  return (
+    !!error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    error.code === 'INVALID_REQUEST'
+  );
 }

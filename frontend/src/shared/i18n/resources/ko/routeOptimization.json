@@ -1,0 +1,413 @@
+{
+  "comparison": {
+    "label": {
+      "after": "변경 후",
+      "before": "변경 전"
+    }
+  },
+  "routeComparisonMap": {
+    "ariaLabel": {
+      "enlargeRouteMap": "{{title}} 경로 지도 확대"
+    },
+    "comparisonMarkers": {
+      "text": {
+        "arrivalPoint": "· 도착점",
+        "startingPoint": "· 시작점"
+      }
+    },
+    "text": {
+      "currentVisitOrder": "현재 방문 순서",
+      "destination": "도착점",
+      "map": "지도",
+      "optimizedVisitOrder": "최적화 방문 순서",
+      "startingPoint": "시작점"
+    }
+  },
+  "routeEndpointContextMenu": {
+    "action": {
+      "destinationPoint": "✓ 도착점",
+      "setAsDestination": "도착점으로 설정",
+      "setAsStartingPoint": "시작점으로 설정",
+      "startingPoint": "✓ 시작점"
+    },
+    "ariaLabel": {
+      "setStartingEndingPoints": "{{placeName}} 시작점 및 도착점 설정"
+    }
+  },
+  "routeMapComparisonDialog": {
+    "ariaLabel": {
+      "closeRouteMapComparison": "경로 지도 비교 닫기",
+      "currentVisitOrderExpandedMap": "{{dayTitle}} 현재 방문 순서 확대 지도",
+      "optimizedVisitOrderExpansionMap": "{{dayTitle}} 최적화 방문 순서 확대 지도"
+    },
+    "text": {
+      "comparesVisitOrder": "{{dayTitle}} 의 방문 순서를 비교합니다.",
+      "noOptimizationHasBeenRunYet": "아직 최적화를 실행하지 않았습니다."
+    },
+    "title": {
+      "routeMapComparison": "경로 지도 비교"
+    }
+  },
+  "routeOptimization": {
+    "error": {
+      "routeOptimizationRequestValueIncorrect": "경로 최적화 요청 값이 올바르지 않습니다."
+    },
+    "getLocationConstraint": {
+      "text": {
+        "stayTimeMustBe10Minute": "{{name}}의 체류시간은 10분 단위여야 합니다: {{stayMinutes}}분"
+      }
+    },
+    "getOpeningWindow": {
+      "text": {
+        "closingTimeMustBe10Minute": "{{name}}의 영업 종료 시각은 10분 단위여야 합니다: {{endText}}",
+        "hasNoValidBusinessHoursSelected": "{{name}}은 선택한 날짜에 유효한 영업시간이 없습니다.",
+        "nextBusinessHoursNotCurrentlySupported": "{{name}}의 익일 영업시간은 현재 경로 최적화에서 지원하지 않습니다.",
+        "openingTimeMustBe10Minute": "{{name}}의 영업 시작 시각은 10분 단위여야 합니다: {{startText}}"
+      }
+    },
+    "getRouteOptimizationIssue": {
+      "text": {
+        "endpointMustBeLocationIncludedCurrent": "종점은 현재 Day에 포함된 장소여야 합니다.",
+        "placeIdRequiredCheckActualTravel": "실제 이동시간 조회에 Place ID가 필요합니다: {{value}}",
+        "routeOptimizationRequiresTwoMoreLocations": "경로 최적화에는 2개 이상의 장소가 필요합니다.",
+        "specifiedStartTimeMustBe10": "지정 시작 시각은 10분 단위여야 합니다.",
+        "specifiedTimeStartRequiresStartTime": "지정 시각 시작은 HH:mm 형식의 시작 시각이 필요합니다.",
+        "startingEndingPointsMustBeDifferent": "시작점과 종점은 서로 다른 장소여야 합니다.",
+        "startingPointMustBeLocationIncluded": "시작점은 현재 Day에 포함된 장소여야 합니다.",
+        "thisStartupMethodNotSupported": "지원하지 않는 시작 방식입니다.",
+        "thisTransportationMethodNotSupported": "지원하지 않는 이동수단입니다: {{String}}"
+      }
+    }
+  },
+  "routeOptimizationApi": {
+    "createAbortError": {
+      "text": {
+        "routeOptimizationRequestHasBeenCancelled": "경로 최적화 요청이 취소되었습니다.",
+        "routeOptimizationRequestTimeExceededSeconds": "경로 최적화 요청 시간이 {{value}}초를 초과했습니다."
+      }
+    },
+    "error": {
+      "completedOptimizationJobHasNoResults": "완료된 최적화 Job에 결과가 없습니다.",
+      "errorOccurredWhileCommunicatingTroute": "troute와 통신하는 중 오류가 발생했습니다.",
+      "optimizationJobIdDoesNotMatch": "최적화 Job ID가 요청과 일치하지 않습니다.",
+      "optimizationProgressConnectionFailedHttp": "최적화 진행 상태 연결이 HTTP {{status}}로 실패했습니다.",
+      "optimizationProgressConnectionTerminatedWithoutResult": "최적화 진행 상태 연결이 결과 없이 종료되었습니다.",
+      "optimizationProgressDataFormatIncorrect": "최적화 진행 상태 데이터 형식이 올바르지 않습니다.",
+      "optimizationProgressDataNotJsonFormat": "최적화 진행 상태 데이터가 JSON 형식이 아닙니다.",
+      "optimizationProgressResponseFormatIncorrect": "최적화 진행 상태 응답 형식이 올바르지 않습니다.",
+      "optimizationRequestFailedHttp": "최적화 요청이 HTTP {{status}}로 실패했습니다.",
+      "optimizationRequestResponseFormatIncorrect": "최적화 요청 응답 형식이 올바르지 않습니다.",
+      "optimizationStatusQueryFailedHttp": "최적화 상태 조회가 HTTP {{status}}로 실패했습니다.",
+      "optimizationStatusResponseFormatIncorrect": "최적화 상태 응답 형식이 올바르지 않습니다.",
+      "routeOptimizationHasBeenCancelled": "경로 최적화가 취소되었습니다.",
+      "routeOptimizationRequestDataIncorrect": "경로 최적화 요청 데이터가 올바르지 않습니다."
+    },
+    "formatOptimizationJobError": {
+      "text": {
+        "failedRetrieveTravelTimeFromTcache": "tcache 또는 Google Routes에서 이동시간을 조회하지 못했습니다.",
+        "googleRoutesDidnTReturnDirections": "Google Routes가 해당 장소와 이동수단의 경로를 반환하지 않았습니다.",
+        "locationOpeningHoursVisitingHoursRange": "장소 영업시간 또는 방문시간 범위가 올바르지 않습니다.",
+        "noRouteLookupProviderSetUp": "경로 조회 제공자가 설정되어 있지 않습니다. 서버 설정을 확인해 주세요.",
+        "pathOptimizationFailed": "경로 최적화에 실패했습니다.",
+        "routeOptimizationProcessingTimedOut": "경로 최적화 처리 시간이 초과됐습니다.",
+        "routeSearchFailedBecauseThereWas": "유효하지 않은 Place ID가 있어 이동 경로를 조회하지 못했습니다.",
+        "travelTimeCouldNotBeRetrieved": "tcache 서버에 연결할 수 없어 이동시간을 조회하지 못했습니다.",
+        "weCouldNotFindPossibleRoute": "현재 영업시간과 체류시간 조건으로 가능한 경로를 찾지 못했습니다."
+      }
+    },
+    "formatStartPolicy": {
+      "text": {
+        "asLateAsPossible": "최대한 늦게",
+        "asSoonAsPossible": "최대한 이르게",
+        "designatedTime": "지정 시각",
+        "selected": "선택한"
+      }
+    },
+    "readApiError": {
+      "text": {
+        "routeOptimizationRequestTimedOut": "경로 최적화 요청 시간이 초과됐습니다.",
+        "routeOptimizationServerNotSetUp": "경로 최적화 서버가 설정되어 있지 않습니다.",
+        "startupMethodNotCurrentlySupportedBy": "{{formatStartPolicy}} 시작 방식은 현재 troute 서버에서 지원하지 않습니다.",
+        "unableConnectRouteOptimizationServer": "경로 최적화 서버에 연결할 수 없습니다."
+      }
+    }
+  },
+  "routeOptimizationMetrics": {
+    "createMetrics": {
+      "label": {
+        "scheduleEndTime": "일정 종료 시각",
+        "scheduleStartTime": "일정 시작 시각",
+        "totalTravelTime": "총 이동 시간",
+        "totalWaitingTime": "총 대기 시간"
+      }
+    },
+    "describeMetricDelta": {
+      "label": {
+        "decrease": "감소",
+        "faster": "빨라짐",
+        "increase": "증가",
+        "late": "늦어짐",
+        "matchesSpecifiedTime": "지정 시각과 일치",
+        "minutes": "{{absolute}}분 {{value}}",
+        "noChange": "변화 없음",
+        "noComparativeData": "비교 데이터 없음"
+      }
+    },
+    "description": {
+      "calculatingRouteMetrics": "경로 지표를 계산하고 있습니다.",
+      "compareKeyFiguresFromCurrentSchedule": "현재 일정과 최적화 결과의 핵심 수치를 비교합니다.",
+      "whenYouRunOptimizationYouCan": "최적화를 실행하면 Before/After 지표를 비교할 수 있습니다."
+    },
+    "formatMetricValue": {
+      "text": {
+        "minutes": "{{value}}분"
+      }
+    },
+    "title": {
+      "indicatorChange": "지표 변화"
+    }
+  },
+  "routeOptimizationModal": {
+    "action": {
+      "applyThisResult": "이 결과 적용",
+      "optimizationRun": "최적화 실행",
+      "runAgain": "다시 실행"
+    },
+    "ariaLabel": {
+      "closeRouteOptimization": "경로 최적화 닫기",
+      "currentVisitOrderMap": "{{title}} 현재 방문 순서 지도",
+      "optimizedVisitOrderMap": "{{title}} 최적화 방문 순서 지도"
+    },
+    "dayList": {
+      "ariaLabel": {
+        "selectDay": "Day 선택"
+      },
+      "text": {
+        "inputConfirmationRequired": "입력 확인 필요"
+      }
+    },
+    "description": {
+      "anyExistingSuccessResultsWillRemain": "기존 성공 결과는 그대로 유지됩니다.",
+      "compareCurrentRouteOptimizedRouteBy": "Day별 현재 경로와 최적화 경로를 비교합니다.",
+      "compareCurrentVisitSequenceOptimizedVisit": "현재 방문 순서와 최적화된 방문 순서를 비교합니다."
+    },
+    "formatDayStatus": {
+      "text": {
+        "beforeRunning": "실행 전",
+        "failure": "실패",
+        "optimized": "최적화 완료",
+        "preparingRun": "실행 준비 중",
+        "resultMaintenanceRerunFailure": "결과 유지 · 재실행 실패",
+        "running": "{{progress}}% 실행 중"
+      }
+    },
+    "getValidationResolution": {
+      "text": {
+        "addAtLeastTwoLocationsThis": "이 Day에 출발 장소와 도착 장소를 포함해 장소를 2개 이상 추가해 주세요.",
+        "checkLocationSBusinessHoursStay": "장소의 영업시간과 체류시간 입력을 확인한 뒤 다시 시도해 주세요.",
+        "enterStartTime10MinuteIncrements": "시작 시각을 09:00과 같은 형식의 10분 단위로 입력해 주세요.",
+        "selectDifferentLocationsCurrentDayAs": "현재 Day의 서로 다른 장소를 시작점과 종점으로 선택해 주세요.",
+        "selectPlaceDisplayedPlaceSearchAgain": "장소 검색에서 표시된 장소를 다시 선택해 Google Place ID를 저장해 주세요.",
+        "setDaySModeTransportationAs": "Day의 이동수단을 대중교통, 자동차, 도보 또는 자전거로 설정해 주세요."
+      }
+    },
+    "optimizationSettings": {
+      "ariaLabel": {
+        "fixedStartTime": "고정 시작 시각",
+        "routeOptimizationTransportation": "경로 최적화 이동수단"
+      },
+      "description": {
+        "enter10MinuteIncrements": "10분 단위로 입력",
+        "sameAppliesOptimizationRequestsComparisonMaps": "최적화 요청과 비교 지도에 동일하게 적용",
+        "setMethodFindingDepartureTimeMeans": "출발 시각을 찾는 방식과 이동수단을 설정합니다.",
+        "startingEndingPointsCanBeSpecified": "시작점과 도착점은 아래 경로 비교의 지도 또는 일정에서 지정할 수 있습니다."
+      },
+      "label": {
+        "startupMethod": "시작 방식"
+      },
+      "text": {
+        "exploreEarliestPossibleScheduleStartTime": "가능한 가장 빠른 일정 시작 시각을 탐색합니다.",
+        "exploreLatestPossibleEventStartTime": "가능한 가장 늦은 일정 시작 시각을 탐색합니다.",
+        "firstLocationScheduleStartsAtTime": "입력한 시각에 첫 장소 일정을 시작합니다.",
+        "meansTransportation": "이동수단",
+        "startTime": "시작 시각"
+      },
+      "title": {
+        "departureConditions": "출발 조건",
+        "optimizationSettings": "최적화 설정"
+      }
+    },
+    "optimizationValidationPanel": {
+      "text": {
+        "unableRunOptimization": "최적화를 실행할 수 없습니다"
+      }
+    },
+    "tRAVELMODEOPTIONS": {
+      "label": {
+        "bicycle": "자전거",
+        "car": "자동차",
+        "publicTransportation": "대중교통",
+        "walk": "도보"
+      }
+    },
+    "text": {
+      "awaitingOptimizationResults": "최적화 결과를 기다리고 있습니다.",
+      "currentVisitOrderCurrentSchedule": "현재 방문 순서 · 현재 일정",
+      "failedApplyOptimizationResultsDay": "최적화 결과를 Day에 적용하지 못했습니다.",
+      "noBusinessHoursInformationOptimizationRequests": "영업시간 정보 없음: {{placeNames}}. 최적화 요청에는 00:00~23:50 임시 범위를 사용합니다.",
+      "notExecutable": "실행 불가 · {{inputIssue}}",
+      "optimizationVisitOrderOptimizationSchedule": "최적화 방문 순서 · 최적화 일정",
+      "pathOptimization": "{{title}} 경로 최적화",
+      "routeOptimizationRequestFailed": "경로 최적화 요청에 실패했습니다.",
+      "selectDay": "선택 Day",
+      "where": "{{length}}곳"
+    },
+    "title": {
+      "pathComparison": "경로 비교",
+      "routeOptimization": "경로 최적화"
+    },
+    "tooltip": {
+      "itCannotBeAppliedBecauseSchedule": "최적화 결과의 일정 정보를 확인할 수 없어 적용할 수 없습니다."
+    }
+  },
+  "routeOptimizationProgressDialog": {
+    "action": {
+      "canceling": "취소 중"
+    },
+    "ariaLabel": {
+      "pathOptimizationPhase": "경로 최적화 단계"
+    },
+    "description": {
+      "routeOptimizationRequestCouldNotBe": "경로 최적화 요청을 완료하지 못했습니다."
+    },
+    "formatServerStatus": {
+      "text": {
+        "running": "실행 중",
+        "waiting": "대기 중"
+      }
+    },
+    "formatStageMessage": {
+      "text": {
+        "waitingServerSProgress": "서버의 진행 상태를 기다리고 있습니다."
+      }
+    },
+    "formatStepState": {
+      "text": {
+        "canceled": "취소됨",
+        "done": "완료",
+        "progress": "진행 중",
+        "waiting": "대기"
+      }
+    },
+    "getMessage": {
+      "text": {
+        "cleaningUpConnectionsBetweenRunningRequests": "실행 중인 요청과 진행 상태 연결을 정리하고 있습니다.",
+        "optimizationComplete": "최적화가 완료되었습니다.",
+        "optimizationHasBeenCancelled": "최적화가 취소되었습니다.",
+        "sendingOptimizationRequest": "최적화 요청을 전송하고 있습니다.",
+        "youCanRetryRequestClosePop": "요청을 다시 시도하거나 팝업을 닫을 수 있습니다."
+      }
+    },
+    "getTitle": {
+      "text": {
+        "cancelingOptimization": "최적화를 취소하고 있습니다",
+        "optimizationComplete": "최적화가 완료되었습니다",
+        "optimizationHasBeenCanceled": "최적화가 취소되었습니다",
+        "optimizingRoute": "경로를 최적화하고 있습니다",
+        "pathOptimizationFailed": "경로 최적화 실패"
+      }
+    },
+    "pROGRESSSTEPS": {
+      "label": {
+        "chooseOptimalRoute": "최적 경로 선택",
+        "constructingTravelTimeMatrix": "이동시간 행렬 구성",
+        "generateInitialRouteCandidates": "초기 경로 후보 생성",
+        "generateResults": "결과 생성",
+        "inputValidation": "입력 검증",
+        "preparingCheckTravelTime": "이동시간 조회 준비",
+        "requestReceived": "요청 접수",
+        "scheduleCalculation": "일정 계산",
+        "scheduleConstraintVerification": "일정 제약 검증",
+        "selectRouteProvider": "경로 제공자 선택",
+        "travelTimeInquiry": "이동시간 조회"
+      },
+      "message": {
+        "comparingCandidatePaths": "후보 경로를 비교하고 있습니다.",
+        "optimizationRequestHasBeenReceived": "최적화 요청을 접수했습니다.",
+        "weCalculatingItineraryVisit": "방문 일정을 계산하고 있습니다.",
+        "weConstructingTravelTimeMatrix": "이동시간 행렬을 구성하고 있습니다.",
+        "weGeneratingInitialRouteCandidates": "초기 경로 후보를 생성하고 있습니다.",
+        "weLookingUpTravelTimesBetween": "장소 간 이동시간을 조회하고 있습니다.",
+        "weOptimizingOrderVisits": "방문 순서를 최적화하고 있습니다.",
+        "weOrganizingOptimizationResults": "최적화 결과를 정리하고 있습니다.",
+        "wePreparingCheckTravelTimesBetween": "장소 간 이동시간 조회를 준비하고 있습니다.",
+        "weVerifyingBusinessHoursResidenceTime": "영업시간과 체류시간 제약을 검증하고 있습니다.",
+        "weVerifyingLocationScheduleConditions": "장소와 일정 조건을 검증하고 있습니다.",
+        "youSelectingRouteProvider": "경로 제공자를 선택하고 있습니다."
+      }
+    },
+    "text": {
+      "message": "{{percentage}}%",
+      "processing": "처리 중",
+      "routeOptimizationProgress": "경로 최적화 진행 중",
+      "routeOptimizationProgress2": "경로 최적화 진행률 {{percentage}}%",
+      "serverStatus": "서버 상태: {{status}}"
+    }
+  },
+  "routeSchedulePreview": {
+    "afterSchedule": {
+      "description": {
+        "afterOptimizingYouCanSeeItinerary": "최적화를 실행하면 장소별 방문 일정을 확인할 수 있습니다.",
+        "previewCannotBeCreatedBecauseItinerary": "결과의 일정 정보가 방문 순서와 일치하지 않아 미리보기를 만들 수 없습니다.",
+        "weCalculatingOptimizedSchedule": "최적화된 일정을 계산하고 있습니다."
+      },
+      "text": {
+        "move": "이동",
+        "optimizationSchedule": "최적화 일정"
+      }
+    },
+    "beforeSchedule": {
+      "text": {
+        "currentSchedule": "현재 일정",
+        "untilNextSchedule": "다음 일정까지"
+      },
+      "tooltip": {
+        "schedule": "일정"
+      }
+    },
+    "scheduleLeg": {
+      "text": {
+        "minutes": "{{minutes}}분"
+      }
+    },
+    "schedulePlace": {
+      "action": {
+        "arrival": "도착",
+        "start": "시작"
+      },
+      "ariaLabel": {
+        "setAsDestination": "{{name}}: 도착점으로 설정",
+        "setAsStartingPoint": "{{name}}: 시작점으로 설정"
+      },
+      "text": {
+        "message": "{{time}} ~ {{departureTime}}",
+        "timeNotSet": "시간 미설정"
+      }
+    },
+    "text": {
+      "arrival": "도착 {{arrivalTime}}",
+      "departure": "출발 {{departureTime}}",
+      "minutesStay": "체류 {{stayMinutes}}분",
+      "waitMinutes": "대기 {{waitMinutes}} 분"
+    }
+  },
+  "scheduleLegTimeline": {
+    "ariaLabel": {
+      "minutes": "{{label}} {{startTime}}부터 {{endTime}}까지, {{durationMinutes}}분"
+    },
+    "text": {
+      "noTimeInformation": "시간 정보 없음",
+      "noTravelTimeInformation": "이동 시간 정보 없음"
+    }
+  }
+}

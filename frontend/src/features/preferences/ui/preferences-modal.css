@@ -1,0 +1,98 @@
+.preferences-popup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 420px;
+  max-width: calc(100% - 32px);
+  padding: var(--space-5);
+  overflow-wrap: anywhere;
+  box-shadow: var(--shadow-map-overlay);
+}
+
+.preferences-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.preferences-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.preferences-close {
+  flex: none;
+}
+
+.preferences-form {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.preferences-group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.preferences-group legend {
+  margin-bottom: var(--space-2);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.preferences-options {
+  display: grid;
+  gap: 2px;
+}
+
+.preferences-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 38px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.preferences-option:hover,
+.preferences-option:focus-within {
+  background: var(--bg-hover);
+}
+
+.preferences-option input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.preferences-option:has(input:disabled) {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.preferences-error {
+  margin: var(--space-2) var(--space-3) 0;
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.preferences-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 480px) {
+  .preferences-popup {
+    width: 100%;
+  }
+}

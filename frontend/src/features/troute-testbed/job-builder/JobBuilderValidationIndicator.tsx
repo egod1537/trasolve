@@ -1,6 +1,7 @@
 import { Icon } from '@blueprintjs/core';
 import { Tooltip } from '@/shared/ui/Tooltip';
 import type { JobBuilderValidationStatus } from '@/features/troute-testbed/job-builder/useJobBuilderValidation';
+import { useL, L } from '@/shared/i18n';
 
 interface Props {
   status: JobBuilderValidationStatus;
@@ -8,17 +9,49 @@ interface Props {
 }
 
 const STATUS_DETAILS = {
-  idle: { icon: 'circle', label: '검증 대기' },
-  validating: { icon: 'refresh', label: '검증 중' },
-  valid: { icon: 'tick-circle', label: '요청이 유효합니다' },
-  invalid: { icon: 'error', label: '수정이 필요한 항목이 있습니다' },
+  idle: {
+    icon: 'circle',
+    get label() {
+      return L(
+        'testbed:jobBuilderValidationIndicator.sTATUSDETAILS.label.waitingVerification',
+      );
+    },
+  },
+  validating: {
+    icon: 'refresh',
+    get label() {
+      return L(
+        'testbed:jobBuilderValidationIndicator.sTATUSDETAILS.label.verifying',
+      );
+    },
+  },
+  valid: {
+    icon: 'tick-circle',
+    get label() {
+      return L(
+        'testbed:jobBuilderValidationIndicator.sTATUSDETAILS.label.requestValid',
+      );
+    },
+  },
+  invalid: {
+    icon: 'error',
+    get label() {
+      return L(
+        'testbed:jobBuilderValidationIndicator.sTATUSDETAILS.label.thereItemsThatNeedCorrection',
+      );
+    },
+  },
 } as const;
 
 export function JobBuilderValidationIndicator({ status, errorCount }: Props) {
+  const L = useL();
   const details = STATUS_DETAILS[status];
   const label =
     status === 'invalid' && errorCount > 0
-      ? `${details.label} (${errorCount}개)`
+      ? L('testbed:jobBuilderValidationIndicator.text.message', {
+          label: details.label,
+          errorCount: errorCount,
+        })
       : details.label;
 
   return (

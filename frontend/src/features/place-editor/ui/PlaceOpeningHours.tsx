@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import type { PlaceOpeningHours as PlaceOpeningHoursData } from '@trasolve/shared';
 import { getPlaceOpeningStatus } from '@/entities/place';
 import { TimeRangeTimeline } from '@/features/place-editor/ui/TimeRangeTimeline';
+import { createPlaceOpeningHoursMessages } from '@/features/place-editor/lib/placeOpeningHoursMessages';
+import { useL } from '@/shared/i18n';
 
 type Props = {
   hours?: PlaceOpeningHoursData;
@@ -18,8 +20,12 @@ export function PlaceOpeningHours({
   detailsControlId,
   onToggleDetails,
 }: Props) {
+  const L = useL();
   const [now, setNow] = useState(() => new Date());
-  const status = useMemo(() => getPlaceOpeningStatus(hours, now), [hours, now]);
+  const status = useMemo(
+    () => getPlaceOpeningStatus(hours, now, createPlaceOpeningHoursMessages(L)),
+    [L, hours, now],
+  );
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
@@ -28,18 +34,23 @@ export function PlaceOpeningHours({
 
   if (loadState !== 'ready') {
     return (
-      <section className="place-opening-hours is-unknown" aria-label="영업시간">
+      <section
+        className="place-opening-hours is-unknown"
+        aria-label={L('place:placeDetailContent.tooltip.businessHours')}
+      >
         <p className="place-opening-status">
           <span className="place-opening-status-dot" aria-hidden="true" />
           <strong>
             {loadState === 'loading'
-              ? '영업시간 불러오는 중'
-              : '영업시간 정보 없음'}
+              ? L('place:placeOpeningHours.text.loadingBusinessHours')
+              : L('place:placeOpeningHours.text.noBusinessHoursInformation')}
           </strong>
         </p>
         {loadState === 'error' && (
           <p className="place-opening-explanation">
-            장소 영업시간을 불러오지 못했습니다.
+            {L(
+              'place:placeOpeningHours.description.locationOpeningHoursCouldNotBe',
+            )}
           </p>
         )}
       </section>
@@ -57,15 +68,22 @@ export function PlaceOpeningHours({
           ? 'primary'
           : 'opening';
   const timelineLabel = status.timelineRanges.length
-    ? `오늘 영업시간: ${status.timelineRanges
-        .map((range) => `${range.startText}부터 ${range.endText}까지`)
-        .join(', ')}`
-    : '오늘 영업 구간 없음';
+    ? L('place:placeOpeningHours.text.businessHoursToday', {
+        value: status.timelineRanges
+          .map((range) =>
+            L('place:placeOpeningHours.text.from', {
+              startText: range.startText,
+              endText: range.endText,
+            }),
+          )
+          .join(', '),
+      })
+    : L('place:placeOpeningHours.text.noOpeningsToday');
 
   return (
     <section
       className={`place-opening-hours is-${status.type}`}
-      aria-label="영업시간"
+      aria-label={L('place:placeDetailContent.tooltip.businessHours')}
     >
       <div className="place-opening-header-row">
         <p className="place-opening-status">
@@ -79,11 +97,13 @@ export function PlaceOpeningHours({
             aria-expanded={detailsOpen}
             aria-controls={detailsControlId}
             aria-label={
-              detailsOpen ? '영업시간 상세 닫기' : '영업시간 전체 보기'
+              detailsOpen
+                ? L('place:placeDetailContent.text.closeBusinessHoursDetails')
+                : L('place:placeOpeningHours.ariaLabel.viewAllBusinessHours')
             }
             onClick={onToggleDetails}
           >
-            영업시간 전체 보기
+            {L('place:placeOpeningHours.ariaLabel.viewAllBusinessHours')}
             <svg viewBox="0 0 16 16" aria-hidden="true">
               <path d="m6 3 5 5-5 5" />
             </svg>
@@ -94,11 +114,15 @@ export function PlaceOpeningHours({
       {showTodayHours &&
         (status.todayHours.length <= 1 ? (
           <p className="place-opening-today">
-            오늘 {status.todayHours[0] ?? '휴무'}
+            {L('place:placeOpeningHours.formatNextOpen.text.today')}
+            {status.todayHours[0] ??
+              L('place:placeOpeningHours.formatWeeklyHours.text.closed')}
           </p>
         ) : (
           <div className="place-opening-today is-split">
-            <span>오늘</span>
+            <span>
+              {L('place:placeOpeningHours.formatNextOpen.text.today')}
+            </span>
             <ul>
               {status.todayHours.map((range) => (
                 <li key={range}>{range}</li>

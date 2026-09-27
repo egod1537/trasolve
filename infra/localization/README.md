@@ -100,6 +100,51 @@ root, the sync command owns all `.json` files in the `ko`, `ja`, and `en`
 directories and removes stale namespace files after all spreadsheet data has
 passed validation.
 
+## Runtime classification policy
+
+Every user-facing value belongs to one inventory class:
+
+- `LOCALIZED`: translatable UI text stored in Google Sheets and rendered with
+  `L('namespace:key')`.
+- `NON_LOCALIZED`: an intentional literal such as a brand, protocol, locale
+  code, keyboard key, or raw API field rendered with `NL('literal')`. These
+  values do not belong in Google Sheets.
+- `DYNAMIC_DATA`: user-authored, demo, or external-provider content. Keep the
+  original expression or data value; do not wrap it in `L()` or `NL()`.
+
+Run the classification audit with:
+
+```sh
+npm run localization:audit
+```
+
+Pass `-- --inventory` to print the complete inventory. ESLint enforces direct
+TSX user-facing literals in error mode. A new literal must be replaced by
+`L()`, explicitly marked with literal-only `NL()`, or remain a dynamic
+expression. The audit also reports existing Sheet keys that are cleanup
+candidates; it never deletes or edits Sheet rows.
+
+Run the CI localization lint with:
+
+```sh
+npm run localization:lint
+```
+
+The custom ESLint rule checks JSX text, user-facing attributes and props,
+presentation formatter returns, and registered UI message calls. User-facing
+template literals and string concatenation must use an interpolation key.
+`L()` requires a static `namespace:key`, while `NL()` requires exactly one
+non-empty static literal. Per-line and per-file disables for the localization
+rule are rejected; exceptions belong in the central rule configuration.
+
+The separate localization lint validates the Git-tracked production resources
+without contacting Google Sheets. It checks locale namespace/key equality,
+empty translations, nested key collisions, namespace/key shape,
+interpolation-variable parity, referenced-key existence, and L/NL contracts.
+Unused resource keys are reported as warnings and can be centrally documented
+in `unused-key-whitelist.json`; all other findings fail the command. The report
+also includes every `NL()` literal and source location for audit.
+
 ## Validation
 
 The command fails before writing resources when it encounters:

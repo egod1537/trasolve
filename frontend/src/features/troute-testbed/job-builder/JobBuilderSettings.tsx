@@ -1,34 +1,123 @@
-import { Classes, Switch } from '@blueprintjs/core';
-import { TROUTE_MAX_DEBUG_JOB_DURATION_MS } from '@trasolve/shared';
+import { Classes, HTMLSelect, Switch } from '@blueprintjs/core';
+import {
+  TROUTE_MAX_DEBUG_JOB_DURATION_MS,
+  type TrouteTravelMode,
+} from '@trasolve/shared';
 import { VISIT_TIME_GRANULARITY_MINUTES } from '@/entities/place';
 import type { JobBuilderState } from '@/features/troute-testbed/job-builder/jobBuilderModel';
+import { useL, L } from '@/shared/i18n';
 
 interface JobBuilderSettingsProps {
+  jobId: string;
   state: JobBuilderState;
   startTimeError?: string;
   minJobDurationMsError?: string;
+  onJobIdChange: (jobId: string) => void;
   onChange: (
-    patch: Partial<Pick<JobBuilderState, 'startTime' | 'debug'>>,
+    patch: Partial<Pick<JobBuilderState, 'startTime' | 'travelMode' | 'debug'>>,
   ) => void;
 }
 
+const TRAVEL_MODE_OPTIONS: readonly {
+  value: TrouteTravelMode;
+  label: string;
+}[] = [
+  {
+    value: 'TRANSIT',
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.publicTransportation');
+    },
+  },
+  {
+    value: 'DRIVING',
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.car');
+    },
+  },
+  {
+    value: 'WALKING',
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.walk');
+    },
+  },
+  {
+    value: 'BICYCLING',
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.bicycle');
+    },
+  },
+];
+
 export function JobBuilderSettings({
+  jobId,
   state,
   startTimeError,
   minJobDurationMsError,
+  onJobIdChange,
   onChange,
 }: JobBuilderSettingsProps) {
+  const L = useL();
   return (
     <section
       className="job-builder-settings"
       aria-labelledby="job-settings-title"
     >
       <h2 id="job-settings-title" className={Classes.HEADING}>
-        요청 설정
+        {L('testbed:jobBuilderSettings.title.basicInformation')}
       </h2>
       <div className="job-builder-settings-fields">
         <label className="job-builder-settings-row">
-          <span>시작 시각</span>
+          <span>{L('testbed:jobDetail.overview.text.jobId')}</span>
+          <input
+            className="bp6-input job-builder-job-id-input"
+            type="text"
+            value={jobId}
+            onChange={(event) => onJobIdChange(event.currentTarget.value)}
+          />
+          <small>
+            {L(
+              'testbed:jobBuilderSettings.description.uniqueIdThatIdentifiesTrouteJob',
+            )}
+          </small>
+        </label>
+
+        <label className="job-builder-settings-row">
+          <span>
+            {L('testbed:jobRequestSummary.label.meansTransportation')}
+          </span>
+          <HTMLSelect
+            aria-label={L(
+              'testbed:jobRequestSummary.label.meansTransportation',
+            )}
+            value={state.travelMode}
+            onChange={(event) =>
+              onChange({
+                travelMode: event.currentTarget.value as TrouteTravelMode,
+              })
+            }
+          >
+            {TRAVEL_MODE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </HTMLSelect>
+          <small>
+            {L(
+              'testbed:jobBuilderSettings.description.thisTransportationMethodUsedByTcache',
+            )}
+            {state.travelTimeSource === 'direct'
+              ? ` ${L(
+                  'testbed:jobBuilderSettings.description.directMatrixValuesPreservedButNot',
+                )}`
+              : ''}
+          </small>
+        </label>
+
+        <label className="job-builder-settings-row">
+          <span>
+            {L('testbed:jobBuilderSettings.text.minimumDepartureTime')}
+          </span>
           <input
             className="bp6-input"
             type="time"
@@ -41,14 +130,23 @@ export function JobBuilderSettings({
             <small className="job-builder-field-error" role="alert">
               {startTimeError}
             </small>
-          ) : null}
+          ) : (
+            <small>
+              {L(
+                'testbed:jobBuilderSettings.description.solverSearchesLatestPossibleDepartureTime',
+              )}
+            </small>
+          )}
         </label>
 
+        <h3 className="job-builder-settings-subheading">
+          {L('testbed:jobBuilderSettings.title.advancedDebug')}
+        </h3>
         <div className="job-builder-settings-row">
-          <span>디버그 모드</span>
+          <span>{L('testbed:jobBuilderSettings.text.debugMode')}</span>
           <Switch
             checked={state.debug.enabled}
-            label="사용"
+            label={L('testbed:jobRequestSummary.text.use')}
             onChange={(event) =>
               onChange({
                 debug: {
@@ -61,7 +159,9 @@ export function JobBuilderSettings({
         </div>
 
         <label className="job-builder-settings-row">
-          <span>최소 실행 시간</span>
+          <span>
+            {L('testbed:jobRequestSummary.label.minimumExecutionTime')}
+          </span>
           <span className="job-builder-duration-input">
             <input
               className="bp6-input"
@@ -88,7 +188,7 @@ export function JobBuilderSettings({
                 })
               }
             />
-            <span>ms</span>
+            <span>{L('testbed:jobRequestSummary.text.ms')}</span>
           </span>
           {minJobDurationMsError ? (
             <small className="job-builder-field-error" role="alert">
@@ -98,11 +198,11 @@ export function JobBuilderSettings({
         </label>
 
         <div className="job-builder-settings-row">
-          <span>경로 결과 섞기</span>
+          <span>{L('testbed:jobRequestSummary.label.shufflePathResults')}</span>
           <Switch
             checked={state.debug.shuffleResultRoute}
             disabled={!state.debug.enabled}
-            label="사용"
+            label={L('testbed:jobRequestSummary.text.use')}
             onChange={(event) =>
               onChange({
                 debug: {
@@ -115,9 +215,9 @@ export function JobBuilderSettings({
         </div>
 
         <p className="job-builder-debug-help">
-          Testbed 전용 옵션입니다. Job을 최소 지정 시간 동안 실행하여 progress와
-          SSE 표시를 테스트합니다. 경로 결과 섞기는 출발지와 도착지는 유지하고
-          중간 경유지 결과 순서를 임의로 섞습니다.
+          {L(
+            'testbed:jobBuilderSettings.description.thisTestbedOnlyOptionTestProgress',
+          )}
         </p>
       </div>
     </section>

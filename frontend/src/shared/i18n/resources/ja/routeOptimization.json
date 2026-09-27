@@ -1,0 +1,413 @@
+{
+  "comparison": {
+    "label": {
+      "after": "変更後",
+      "before": "変更前"
+    }
+  },
+  "routeComparisonMap": {
+    "ariaLabel": {
+      "enlargeRouteMap": "{{title}}ルートマップの拡大"
+    },
+    "comparisonMarkers": {
+      "text": {
+        "arrivalPoint": "・到着地",
+        "startingPoint": "・出発地"
+      }
+    },
+    "text": {
+      "currentVisitOrder": "現在の訪問順序",
+      "destination": "到着地",
+      "map": "地図",
+      "optimizedVisitOrder": "最適化訪問順序",
+      "startingPoint": "出発地"
+    }
+  },
+  "routeEndpointContextMenu": {
+    "action": {
+      "destinationPoint": "✓ 到着地",
+      "setAsDestination": "到着地に設定",
+      "setAsStartingPoint": "出発地に設定",
+      "startingPoint": "✓ 出発地"
+    },
+    "ariaLabel": {
+      "setStartingEndingPoints": "{{placeName}}の出発地と到着地を設定"
+    }
+  },
+  "routeMapComparisonDialog": {
+    "ariaLabel": {
+      "closeRouteMapComparison": "ルートマップ比較を閉じる",
+      "currentVisitOrderExpandedMap": "{{dayTitle}}の現在の訪問順を示す拡大地図",
+      "optimizedVisitOrderExpansionMap": "{{dayTitle}}最適化訪問順拡大マップ"
+    },
+    "text": {
+      "comparesVisitOrder": "{{dayTitle}}の訪問順を比較します。",
+      "noOptimizationHasBeenRunYet": "まだ最適化を実行していません。"
+    },
+    "title": {
+      "routeMapComparison": "ルートマップの比較"
+    }
+  },
+  "routeOptimization": {
+    "error": {
+      "routeOptimizationRequestValueIncorrect": "ルート最適化リクエストの値が正しくありません。"
+    },
+    "getLocationConstraint": {
+      "text": {
+        "stayTimeMustBe10Minute": "{{name}}の滞在時間は10分単位でなければなりません：{{stayMinutes}}分"
+      }
+    },
+    "getOpeningWindow": {
+      "text": {
+        "closingTimeMustBe10Minute": "{{name}}の営業終了時刻は10分単位でなければなりません：{{endText}}",
+        "hasNoValidBusinessHoursSelected": "{{name}}は、選択した日付に有効な営業時間がありません。",
+        "nextBusinessHoursNotCurrentlySupported": "{{name}}の翌営業日は現在、ルート最適化ではサポートされていません。",
+        "openingTimeMustBe10Minute": "{{name}}の営業開始時刻は10分単位でなければなりません：{{startText}}"
+      }
+    },
+    "getRouteOptimizationIssue": {
+      "text": {
+        "endpointMustBeLocationIncludedCurrent": "到着地はこの日程に含まれる場所である必要があります。",
+        "placeIdRequiredCheckActualTravel": "実際の移動時間照会にはPlace IDが必要です：{{value}}",
+        "routeOptimizationRequiresTwoMoreLocations": "ルート最適化には2つ以上の場所が必要です。",
+        "specifiedStartTimeMustBe10": "指定開始時刻は10分単位でなければなりません。",
+        "specifiedTimeStartRequiresStartTime": "指定時刻の開始には、HH：mm形式の開始時刻が必要です。",
+        "startingEndingPointsMustBeDifferent": "出発地と到着地は別の場所にする必要があります。",
+        "startingPointMustBeLocationIncluded": "出発地はこの日程に含まれる場所である必要があります。",
+        "thisStartupMethodNotSupported": "この出発時刻の設定方法はサポートされていません。",
+        "thisTransportationMethodNotSupported": "サポートしていない移動手段です。{{String}}"
+      }
+    }
+  },
+  "routeOptimizationApi": {
+    "createAbortError": {
+      "text": {
+        "routeOptimizationRequestHasBeenCancelled": "ルート最適化要求がキャンセルされました。",
+        "routeOptimizationRequestTimeExceededSeconds": "ルート最適化要求時間が{{value}}秒を超えました。"
+      }
+    },
+    "error": {
+      "completedOptimizationJobHasNoResults": "完了した最適化ジョブには結果がありません。",
+      "errorOccurredWhileCommunicatingTroute": "troute との通信中にエラーが発生しました。",
+      "optimizationJobIdDoesNotMatch": "Optimization Job ID does not match request.",
+      "optimizationProgressConnectionFailedHttp": "最適化の進行状況 HTTP {{status}} で接続に失敗しました。",
+      "optimizationProgressConnectionTerminatedWithoutResult": "最適化の進行状況接続は結果なしで終了しました。",
+      "optimizationProgressDataFormatIncorrect": "最適化の進行状況データ型が正しくありません。",
+      "optimizationProgressDataNotJsonFormat": "最適化の進行状況データはJSON形式ではありません。",
+      "optimizationProgressResponseFormatIncorrect": "最適化の進行状況の応答形式が正しくありません。",
+      "optimizationRequestFailedHttp": "最適化リクエストが HTTP {{status}} で失敗しました。",
+      "optimizationRequestResponseFormatIncorrect": "最適化要求の応答形式が正しくありません。",
+      "optimizationStatusQueryFailedHttp": "最適化ステータスのクエリが HTTP {{status}} で失敗しました。",
+      "optimizationStatusResponseFormatIncorrect": "最適化ステータスの応答形式が正しくありません。",
+      "routeOptimizationHasBeenCancelled": "ルートの最適化がキャンセルされました。",
+      "routeOptimizationRequestDataIncorrect": "経路最適化要求データが不正です。"
+    },
+    "formatOptimizationJobError": {
+      "text": {
+        "failedRetrieveTravelTimeFromTcache": "tcacheまたはGoogle Routesで移動時間を検索できませんでした。",
+        "googleRoutesDidnTReturnDirections": "Google Routesはその場所と移動手段のルートを返していません。",
+        "locationOpeningHoursVisitingHoursRange": "場所営業時間または訪問時間の範囲が正しくありません。",
+        "noRouteLookupProviderSetUp": "ルートルックアッププロバイダが設定されていません。サーバー設定を確認してください。",
+        "pathOptimizationFailed": "ルート最適化に失敗しました。",
+        "routeOptimizationProcessingTimedOut": "ルート最適化処理がタイムアウトしました。",
+        "routeSearchFailedBecauseThereWas": "無効なPlace IDがあるため、移動ルートを検索できませんでした。",
+        "travelTimeCouldNotBeRetrieved": "tcacheサーバーに接続できなかったため、移動時間を検索できませんでした。",
+        "weCouldNotFindPossibleRoute": "現在、営業時間と滞在時間の条件で可能なルートが見つかりませんでした。"
+      }
+    },
+    "formatStartPolicy": {
+      "text": {
+        "asLateAsPossible": "できるだけ遅く",
+        "asSoonAsPossible": "できるだけ早く",
+        "designatedTime": "指定時刻",
+        "selected": "選択"
+      }
+    },
+    "readApiError": {
+      "text": {
+        "routeOptimizationRequestTimedOut": "ルート最適化要求がタイムアウトしました。",
+        "routeOptimizationServerNotSetUp": "ルート最適化サーバーが設定されていません。",
+        "startupMethodNotCurrentlySupportedBy": "{{formatStartPolicy}}による出発時刻の設定は、現在trouteサーバーではサポートされていません。",
+        "unableConnectRouteOptimizationServer": "ルート最適化サーバーに接続できません。"
+      }
+    }
+  },
+  "routeOptimizationMetrics": {
+    "createMetrics": {
+      "label": {
+        "scheduleEndTime": "スケジュール終了時刻",
+        "scheduleStartTime": "スケジュール開始時刻",
+        "totalTravelTime": "総移動時間",
+        "totalWaitingTime": "総待ち時間"
+      }
+    },
+    "describeMetricDelta": {
+      "label": {
+        "decrease": "削減",
+        "faster": "速い",
+        "increase": "増加",
+        "late": "遅れる",
+        "matchesSpecifiedTime": "指定時刻と一致",
+        "minutes": "{{absolute}}分{{value}}",
+        "noChange": "変化なし",
+        "noComparativeData": "比較データなし"
+      }
+    },
+    "description": {
+      "calculatingRouteMetrics": "ルート指標を計算しています。",
+      "compareKeyFiguresFromCurrentSchedule": "現在のスケジュールと最適化結果の主要指標を比較します。",
+      "whenYouRunOptimizationYouCan": "最適化を実行すると、Before/After 指標を比較できます。"
+    },
+    "formatMetricValue": {
+      "text": {
+        "minutes": "{{value}}分"
+      }
+    },
+    "title": {
+      "indicatorChange": "指標の変化"
+    }
+  },
+  "routeOptimizationModal": {
+    "action": {
+      "applyThisResult": "この結果を適用",
+      "optimizationRun": "最適化を実行",
+      "runAgain": "やり直す"
+    },
+    "ariaLabel": {
+      "closeRouteOptimization": "ルート最適化を閉じる",
+      "currentVisitOrderMap": "{{title}}の現在の訪問順マップ",
+      "optimizedVisitOrderMap": "{{title}}最適化訪問順序マップ"
+    },
+    "dayList": {
+      "ariaLabel": {
+        "selectDay": "日選択"
+      },
+      "text": {
+        "inputConfirmationRequired": "入力確認が必要"
+      }
+    },
+    "description": {
+      "anyExistingSuccessResultsWillRemain": "既存の成功結果はそのまま残ります。",
+      "compareCurrentRouteOptimizedRouteBy": "各日の現在のルートと最適化ルートを比較します。",
+      "compareCurrentVisitSequenceOptimizedVisit": "現在の訪問順序と最適化された訪問順序を比較します。"
+    },
+    "formatDayStatus": {
+      "text": {
+        "beforeRunning": "実行前",
+        "failure": "失敗",
+        "optimized": "最適化完了",
+        "preparingRun": "実行準備中",
+        "resultMaintenanceRerunFailure": "結果の維持・再実行失敗",
+        "running": "{{progress}}％実行中"
+      }
+    },
+    "getValidationResolution": {
+      "text": {
+        "addAtLeastTwoLocationsThis": "この日に出発地と到着地を含む2か所以上を追加してください。",
+        "checkLocationSBusinessHoursStay": "場所の営業時間と滞在時間の入力を確認してから、もう一度お試しください。",
+        "enterStartTime10MinuteIncrements": "開始時刻を09:00と同じ形式の10分単位で入力してください。",
+        "selectDifferentLocationsCurrentDayAs": "この日の別々の場所を出発地と到着地として選択してください。",
+        "selectPlaceDisplayedPlaceSearchAgain": "場所検索で表示された場所をもう一度選択してGoogle Place IDを保存してください。",
+        "setDaySModeTransportationAs": "Dayの移動手段を公共交通機関、自動車、徒歩または自転車に設定してください。"
+      }
+    },
+    "optimizationSettings": {
+      "ariaLabel": {
+        "fixedStartTime": "固定開始時刻",
+        "routeOptimizationTransportation": "ルート最適化の移動手段"
+      },
+      "description": {
+        "enter10MinuteIncrements": "10分単位で入力",
+        "sameAppliesOptimizationRequestsComparisonMaps": "最適化リクエストと比較マップに同じように適用",
+        "setMethodFindingDepartureTimeMeans": "出発時刻の検索方法と移動手段を設定します。",
+        "startingEndingPointsCanBeSpecified": "出発地と到着地は、下のルート比較の地図またはスケジュールで指定できます。"
+      },
+      "label": {
+        "startupMethod": "出発時刻の設定方法"
+      },
+      "text": {
+        "exploreEarliestPossibleScheduleStartTime": "できるだけ早いスケジュールの開始時刻を調べます。",
+        "exploreLatestPossibleEventStartTime": "可能な限り遅いスケジュール開始時刻を探します。",
+        "firstLocationScheduleStartsAtTime": "入力した時刻に最初の場所のスケジュールを開始します。",
+        "meansTransportation": "移動手段",
+        "startTime": "開始時刻"
+      },
+      "title": {
+        "departureConditions": "出発条件",
+        "optimizationSettings": "最適化設定"
+      }
+    },
+    "optimizationValidationPanel": {
+      "text": {
+        "unableRunOptimization": "最適化を実行できません"
+      }
+    },
+    "tRAVELMODEOPTIONS": {
+      "label": {
+        "bicycle": "自転車",
+        "car": "車",
+        "publicTransportation": "公共交通機関",
+        "walk": "徒歩"
+      }
+    },
+    "text": {
+      "awaitingOptimizationResults": "最適化の結果を待っています。",
+      "currentVisitOrderCurrentSchedule": "現在の訪問順序・現在のスケジュール",
+      "failedApplyOptimizationResultsDay": "最適化の結果を日に適用できませんでした。",
+      "noBusinessHoursInformationOptimizationRequests": "営業時間情報なし：{{placeNames}}。最適化リクエストでは00:00～23:50の時間範囲を一時的に使用します。",
+      "notExecutable": "実行不可 · {{inputIssue}}",
+      "optimizationVisitOrderOptimizationSchedule": "最適化後の訪問順・スケジュール",
+      "pathOptimization": "{{title}}のルート最適化",
+      "routeOptimizationRequestFailed": "ルート最適化要求に失敗しました。",
+      "selectDay": "選択 Day",
+      "where": "{{length}}か所"
+    },
+    "title": {
+      "pathComparison": "ルート比較",
+      "routeOptimization": "ルート最適化"
+    },
+    "tooltip": {
+      "itCannotBeAppliedBecauseSchedule": "最適化結果のスケジュール情報を確認できず、適用できません。"
+    }
+  },
+  "routeOptimizationProgressDialog": {
+    "action": {
+      "canceling": "キャンセル中"
+    },
+    "ariaLabel": {
+      "pathOptimizationPhase": "ルート最適化の段階"
+    },
+    "description": {
+      "routeOptimizationRequestCouldNotBe": "ルート最適化要求を完了できませんでした。"
+    },
+    "formatServerStatus": {
+      "text": {
+        "running": "実行中",
+        "waiting": "待機中"
+      }
+    },
+    "formatStageMessage": {
+      "text": {
+        "waitingServerSProgress": "サーバーの進行状況を待っています。"
+      }
+    },
+    "formatStepState": {
+      "text": {
+        "canceled": "キャンセル済み",
+        "done": "完了",
+        "progress": "進行中",
+        "waiting": "待機"
+      }
+    },
+    "getMessage": {
+      "text": {
+        "cleaningUpConnectionsBetweenRunningRequests": "実行中の要求と進行状況接続をクリーンアップしています。",
+        "optimizationComplete": "最適化が完了しました。",
+        "optimizationHasBeenCancelled": "最適化はキャンセルされました。",
+        "sendingOptimizationRequest": "最適化リクエストを送信しています。",
+        "youCanRetryRequestClosePop": "リクエストを再試行するか、ポップアップを閉じることができます。"
+      }
+    },
+    "getTitle": {
+      "text": {
+        "cancelingOptimization": "最適化をキャンセルしています",
+        "optimizationComplete": "最適化が完了しました",
+        "optimizationHasBeenCanceled": "最適化がキャンセルされました",
+        "optimizingRoute": "ルートを最適化しています",
+        "pathOptimizationFailed": "ルート最適化に失敗しました"
+      }
+    },
+    "pROGRESSSTEPS": {
+      "label": {
+        "chooseOptimalRoute": "最適ルートの選択",
+        "constructingTravelTimeMatrix": "移動時間行列の構成",
+        "generateInitialRouteCandidates": "初期ルート候補を生成",
+        "generateResults": "結果の生成",
+        "inputValidation": "入力検証",
+        "preparingCheckTravelTime": "移動時間照会の準備",
+        "requestReceived": "リクエスト受付",
+        "scheduleCalculation": "スケジュールを計算",
+        "scheduleConstraintVerification": "スケジュール制約検証",
+        "selectRouteProvider": "ルートプロバイダーを選択",
+        "travelTimeInquiry": "移動時間の照会"
+      },
+      "message": {
+        "comparingCandidatePaths": "候補経路を比較しています。",
+        "optimizationRequestHasBeenReceived": "最適化リクエストを受け取りました。",
+        "weCalculatingItineraryVisit": "訪問スケジュールを計算しています。",
+        "weConstructingTravelTimeMatrix": "移動時間行列を構成しています。",
+        "weGeneratingInitialRouteCandidates": "初期ルート候補を生成しています。",
+        "weLookingUpTravelTimesBetween": "場所間の移動時間を照会しています。",
+        "weOptimizingOrderVisits": "訪問順序を最適化しています。",
+        "weOrganizingOptimizationResults": "最適化結果をまとめています。",
+        "wePreparingCheckTravelTimesBetween": "場所間の移動時間の照会を準備しています。",
+        "weVerifyingBusinessHoursResidenceTime": "営業時間と滞留時間制約を検証しています。",
+        "weVerifyingLocationScheduleConditions": "場所とスケジュールの条件を検証しています。",
+        "youSelectingRouteProvider": "ルートプロバイダーを選択しています。"
+      }
+    },
+    "text": {
+      "message": "{{percentage}}%",
+      "processing": "処理中",
+      "routeOptimizationProgress": "ルート最適化中",
+      "routeOptimizationProgress2": "ルート最適化の進捗状況{{percentage}}％",
+      "serverStatus": "サーバーの状態：{{status}}"
+    }
+  },
+  "routeSchedulePreview": {
+    "afterSchedule": {
+      "description": {
+        "afterOptimizingYouCanSeeItinerary": "最適化を実行すると、場所ごとの訪問スケジュールを確認できます。",
+        "previewCannotBeCreatedBecauseItinerary": "結果のスケジュール情報が訪問順と一致しないため、プレビューを作成できません。",
+        "weCalculatingOptimizedSchedule": "最適化されたスケジュールを計算しています。"
+      },
+      "text": {
+        "move": "移動",
+        "optimizationSchedule": "最適化後のスケジュール"
+      }
+    },
+    "beforeSchedule": {
+      "text": {
+        "currentSchedule": "現在のスケジュール",
+        "untilNextSchedule": "次のスケジュールまで"
+      },
+      "tooltip": {
+        "schedule": "スケジュール"
+      }
+    },
+    "scheduleLeg": {
+      "text": {
+        "minutes": "{{minutes}}分"
+      }
+    },
+    "schedulePlace": {
+      "action": {
+        "arrival": "到着地",
+        "start": "出発地"
+      },
+      "ariaLabel": {
+        "setAsDestination": "{{name}}を到着地に設定",
+        "setAsStartingPoint": "{{name}}を出発地に設定"
+      },
+      "text": {
+        "message": "{{time}} ~ {{departureTime}}",
+        "timeNotSet": "時間未設定"
+      }
+    },
+    "text": {
+      "arrival": "到着{{arrivalTime}}",
+      "departure": "出発{{departureTime}}",
+      "minutesStay": "滞在{{stayMinutes}}分",
+      "waitMinutes": "待機{{waitMinutes}}分"
+    }
+  },
+  "scheduleLegTimeline": {
+    "ariaLabel": {
+      "minutes": "{{label}}{{startTime}}から{{endTime}}まで、{{durationMinutes}}分"
+    },
+    "text": {
+      "noTimeInformation": "時間情報なし",
+      "noTravelTimeInformation": "移動時間情報なし"
+    }
+  }
+}

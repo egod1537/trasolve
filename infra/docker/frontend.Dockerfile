@@ -30,7 +30,8 @@ RUN npm run build -w @trasolve/shared \
 
 FROM caddy:2.10-alpine
 
-COPY infra/docker/frontend.Caddyfile /etc/caddy/Caddyfile
+ARG FRONTEND_CADDYFILE=infra/docker/frontend.Caddyfile
+COPY ${FRONTEND_CADDYFILE} /etc/caddy/Caddyfile
 COPY --from=build /app/frontend/dist /srv
 
 EXPOSE 3000

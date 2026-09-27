@@ -1,0 +1,132 @@
+{
+  "action": {
+    "add": "Add",
+    "apply": "Apply",
+    "cancel": "Cancel",
+    "close": "Close",
+    "copy": "Copy",
+    "delete": "Delete",
+    "refresh": "Refresh",
+    "retry": "Try again",
+    "save": "Save",
+    "select": "Select",
+    "signOut": "Sign out"
+  },
+  "dragHandle": {
+    "ariaLabel": {
+      "changeOrder": "Change {{label}} order"
+    },
+    "tooltip": {
+      "changeOrderByDraggingUsingAlt": "Change order by dragging or using Alt + ↑/↓ keys",
+      "orderOriginDestinationCannotBeChanged": "The order of origin and destination cannot be changed."
+    }
+  },
+  "featureSection": {
+    "features": {
+      "description": {
+        "checkLocationMovementOrderBetweenLocations": "View locations and travel order alongside the schedule.",
+        "organizePlacesTimesVisitByDate": "Organize the places and times to visit by date.",
+        "startPlanningTripByReferringDifferent": "Start planning your trip with another itinerary as a reference."
+      },
+      "title": {
+        "movementPath": "Travel route",
+        "travelItinerary": "Travel itinerary",
+        "travelTemplate": "Travel template"
+      }
+    },
+    "title": {
+      "manageSchedulesRoutesTogether": "Manage schedules and routes together."
+    }
+  },
+  "header": {
+    "ariaLabel": {
+      "buildCommitNewTab": "Build commit {{sha}} (new tab)",
+      "buildInformation": "Build Information",
+      "mainMenu": "Main menu",
+      "trasolveHome": "Trasolve Home"
+    },
+    "text": {
+      "goServices": "Go to Services"
+    }
+  },
+  "hero": {
+    "ariaLabel": {
+      "startMenu": "Start menu"
+    },
+    "description": {
+      "makeTravelPlanByLookingAt": "Plan your trip while viewing the travel route.",
+      "placeScheduleOnePlan": "Bring places and schedules together in one plan,"
+    },
+    "text": {
+      "gettingStarted": "Get started",
+      "viewFeatures": "View features"
+    },
+    "title": {
+      "organizeItAllAtOnce": "all in one place.",
+      "travelItineraryRoute": "Plan your itinerary and route"
+    }
+  },
+  "jobs": {
+    "jOBSTATUSLABELS": {
+      "text": {
+        "canceled": "Cancelled",
+        "done": "Complete",
+        "running": "Running",
+        "waiting": "Pending"
+      }
+    }
+  },
+  "landingPage": {
+    "healthLabels": {
+      "text": {
+        "checkingServiceConnectionStatus": "Checking service connection status",
+        "serviceApiConnectionNotPossible": "Service API connection not possible",
+        "serviceApiConnectionPossible": "Service API connection possible"
+      }
+    },
+    "render": {
+      "description": {
+        "travelPlanningServiceCurrentlyPreparation": "Travel planning service is currently in preparation."
+      }
+    },
+    "text": {
+      "trasolve": "© {{year}} Trasolve"
+    }
+  },
+  "languageControl": {
+    "ariaLabel": {
+      "selectLanguage": "Select language"
+    },
+    "error": {
+      "failedChangeLanguage": "Failed to change language."
+    },
+    "label": {
+      "language": "Language"
+    },
+    "language": {
+      "en": "English",
+      "ja": "日本語",
+      "ko": "한국어"
+    }
+  },
+  "routes": {
+    "loadingLabel": {
+      "pageLoading": "The page is loading."
+    }
+  },
+  "status": {
+    "error": "Error"
+  },
+  "themeControl": {
+    "ariaLabel": {
+      "theme": "Theme: {{label}}"
+    },
+    "themeOptions": {
+      "label": {
+        "dark": "Dark",
+        "light": "Light",
+        "system": "System"
+      }
+    }
+  }
+}

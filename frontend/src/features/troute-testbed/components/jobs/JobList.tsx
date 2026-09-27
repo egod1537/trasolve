@@ -2,6 +2,7 @@ import { NonIdealState } from '@blueprintjs/core';
 import { memo, useEffect, useMemo, useRef } from 'react';
 import type { TestbedJob } from '@/entities/route-job';
 import { JobListItem } from '@/features/troute-testbed/components/jobs/JobListItem';
+import { useL } from '@/shared/i18n';
 
 interface JobListProps {
   jobs: TestbedJob[];
@@ -14,6 +15,7 @@ export const JobList = memo(function JobList({
   selectedJobId,
   onSelect,
 }: JobListProps) {
+  const L = useL();
   const listRef = useRef<HTMLDivElement>(null);
   const orderedJobs = useMemo(
     () => [...jobs].sort((left, right) => right.createdAt - left.createdAt),
@@ -34,8 +36,10 @@ export const JobList = memo(function JobList({
       <NonIdealState
         className="job-list-empty"
         icon="inbox"
-        title="아직 Job이 없습니다."
-        description="새 Job을 만들어 최적화 요청을 실행하세요."
+        title={L('testbed:jobList.tooltip.thereNoJobsYet')}
+        description={L(
+          'testbed:jobList.text.createNewJobRunOptimizationRequest',
+        )}
       />
     );
   }
@@ -45,7 +49,7 @@ export const JobList = memo(function JobList({
       ref={listRef}
       className="job-list"
       role="listbox"
-      aria-label="테스트베드 Jobs"
+      aria-label={L('testbed:jobList.ariaLabel.testbedJobs')}
     >
       {orderedJobs.map((job) => (
         <JobListItem

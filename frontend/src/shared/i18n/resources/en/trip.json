@@ -1,0 +1,61 @@
+{
+  "shareTripModal": {
+    "action": {
+      "shareDrive": "Share on Drive"
+    },
+    "ariaLabel": {
+      "copyShareLink": "Copy Share Link",
+      "shareDriveFeaturePreparation": "Share on Drive, feature in preparation",
+      "shareMapClose": "Share Map Close"
+    },
+    "description": {
+      "anyoneAccessCanSeeNameProfile": "Anyone with access can see your name and profile picture in My Maps and Drive."
+    },
+    "label": {
+      "shareLink": "share link"
+    },
+    "text": {
+      "allowOthersSearchFindThisMap": "Allow others to search and find this map on the Internet",
+      "anyoneLinkCanViewIt": "Anyone with the link can view it",
+      "copied": "copied",
+      "copyFailed": "Copy failed"
+    },
+    "title": {
+      "shareMap": "share map"
+    },
+    "tooltip": {
+      "driveSharingFeaturePreparation": "Drive sharing feature in preparation"
+    }
+  },
+  "tripMapping": {
+    "tripToView": {
+      "text": {
+        "dateBeDetermined": "Date to be determined"
+      }
+    }
+  },
+  "tripPickerPopup": {
+    "action": {
+      "open": "open"
+    },
+    "ariaLabel": {
+      "closeTravelSelection": "Close travel selection",
+      "delete": "Delete {{title}}"
+    },
+    "description": {
+      "itSBringingYouTravel": "Loading trips."
+    },
+    "text": {
+      "createExampleTripTokyo": "Create an example trip to Tokyo",
+      "createNewTrip": "Create a new trip",
+      "daysLocations": "{{dayCount}} days · {{placeCount}} locations",
+      "makeFirstTrip": "Make your first trip."
+    },
+    "title": {
+      "myTrip": "my trip"
+    },
+    "tooltip": {
+      "thereNoSavedTrips": "There are no saved trips."
+    }
+  }
+}

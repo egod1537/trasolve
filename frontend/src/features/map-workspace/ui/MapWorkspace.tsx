@@ -14,19 +14,25 @@ import { useMapWorkspaceActions } from '@/features/map-workspace/model/useMapWor
 import { MapWorkspaceViewport } from '@/features/map-workspace/ui/MapWorkspaceViewport';
 import { RenderProfiler } from '@/shared/lib/RenderProfiler';
 import '@/features/map-workspace/styles/map.css';
+import { useL } from '@/shared/i18n';
 
 export function MapWorkspace({
   onQueryRouteDuration,
 }: {
   onQueryRouteDuration: QueryRouteDuration;
 }) {
+  const L = useL();
   const { trip, status, error } = useTripState();
   const controller = useTripEditController();
   useTripHistoryShortcuts(controller);
   const ui = useMapWorkspace(trip);
   const googlePlace = useSelectedGooglePlace();
   const sidebarRef = useRef<HTMLElement>(null);
-  const tripView = useMemo(() => tripToView(trip), [trip]);
+  const tripView = useMemo(
+    () =>
+      tripToView(trip, L('trip:tripMapping.tripToView.text.dateBeDetermined')),
+    [L, trip],
+  );
   const selectedTripPlace = useMemo(
     () => selectTripPlace(trip, ui.selectedPlaceId),
     [trip, ui.selectedPlaceId],

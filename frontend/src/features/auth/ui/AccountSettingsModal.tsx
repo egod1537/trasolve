@@ -1,14 +1,15 @@
 import { useId } from 'react';
-import type { GoogleOAuthUser } from '@trasolve/shared';
+import type { AuthUser } from '@trasolve/shared';
 import { Button } from '@/shared/ui/Button';
 import { Dialog } from '@/shared/ui/Dialog';
 import { IconButton } from '@/shared/ui/IconButton';
 import { CloseIcon } from '@/shared/ui/icons';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import '@/features/auth/ui/account-settings.css';
+import { NL, useL } from '@/shared/i18n';
 
 type Props = {
-  user: GoogleOAuthUser;
+  user: AuthUser;
   loggingOut: boolean;
   onClose: () => void;
   onLogout: () => void;
@@ -20,6 +21,7 @@ export function AccountSettingsModal({
   onClose,
   onLogout,
 }: Props) {
+  const L = useL();
   const titleId = useId();
 
   return (
@@ -32,11 +34,15 @@ export function AccountSettingsModal({
       onClose={onClose}
     >
       <header className="account-settings-header">
-        <h2 id={titleId}>계정 설정</h2>
+        <h2 id={titleId}>
+          {L('auth:accountSettingsModal.title.accountSettings')}
+        </h2>
         <IconButton
           className="account-settings-close"
-          aria-label="계정 설정 닫기"
-          title="닫기"
+          aria-label={L(
+            'auth:accountSettingsModal.ariaLabel.closeAccountSettings',
+          )}
+          title={L('common:action.close')}
           variant="ghost"
           size="sm"
           icon={<CloseIcon />}
@@ -66,26 +72,31 @@ export function AccountSettingsModal({
             className="account-settings-badge"
             tone={user.emailVerified ? 'success' : 'danger'}
           >
-            {user.emailVerified ? '이메일 인증됨' : '이메일 미인증'}
+            {user.emailVerified
+              ? L('auth:accountSettingsModal.text.emailVerified')
+              : L('auth:accountSettingsModal.text.emailNotVerified')}
           </StatusBadge>
         </div>
       </div>
 
       <dl className="account-settings-details">
-        <dt>로그인 방식</dt>
-        <dd>Google</dd>
-        <dt>계정 ID</dt>
+        <dt>{L('auth:accountSettingsModal.label.loginMethod')}</dt>
+        <dd>{NL('Google')}</dd>
+        <dt>{L('auth:accountSettingsModal.label.accountId')}</dt>
         <dd className="account-settings-id">{user.id}</dd>
       </dl>
 
       <p className="account-settings-note">
-        이 계정 정보는 Google 로그인에서 가져오며, 이 앱에서 직접 수정할 수
-        없습니다. 이름이나 프로필 사진을 바꾸려면 Google 계정에서 변경해 주세요.
+        {L(
+          'auth:accountSettingsModal.description.thisAccountInformationComesFromGoogle',
+        )}
       </p>
 
       <div className="account-settings-actions">
         <Button variant="danger" loading={loggingOut} onClick={onLogout}>
-          {loggingOut ? '로그아웃 중…' : '로그아웃'}
+          {loggingOut
+            ? L('auth:accountSettingsModal.action.loggingOut')
+            : L('common:action.signOut')}
         </Button>
       </div>
     </Dialog>

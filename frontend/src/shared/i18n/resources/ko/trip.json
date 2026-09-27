@@ -1,0 +1,61 @@
+{
+  "shareTripModal": {
+    "action": {
+      "shareDrive": "Drive에서 공유"
+    },
+    "ariaLabel": {
+      "copyShareLink": "공유 링크 복사",
+      "shareDriveFeaturePreparation": "Drive에서 공유, 기능 준비 중",
+      "shareMapClose": "지도 공유 닫기"
+    },
+    "description": {
+      "anyoneAccessCanSeeNameProfile": "액세스 권한이 있는 모든 사용자는 내 지도 및 Drive에서 내 이름과 프로필 사진을 볼 수 있습니다."
+    },
+    "label": {
+      "shareLink": "공유 링크"
+    },
+    "text": {
+      "allowOthersSearchFindThisMap": "다른 사람이 인터넷에서 이 지도를 검색하고 찾도록 허용",
+      "anyoneLinkCanViewIt": "링크가 있는 사용자는 누구나 볼 수 있음",
+      "copied": "복사됨",
+      "copyFailed": "복사 실패"
+    },
+    "title": {
+      "shareMap": "지도 공유"
+    },
+    "tooltip": {
+      "driveSharingFeaturePreparation": "Drive 공유 기능 준비 중"
+    }
+  },
+  "tripMapping": {
+    "tripToView": {
+      "text": {
+        "dateBeDetermined": "날짜 미정"
+      }
+    }
+  },
+  "tripPickerPopup": {
+    "action": {
+      "open": "열기"
+    },
+    "ariaLabel": {
+      "closeTravelSelection": "여행 선택 닫기",
+      "delete": "{{title}} 삭제"
+    },
+    "description": {
+      "itSBringingYouTravel": "여행을 불러오고 있습니다."
+    },
+    "text": {
+      "createExampleTripTokyo": "도쿄 예시 여행 만들기",
+      "createNewTrip": "새 여행 만들기",
+      "daysLocations": "Day {{dayCount}}개 · {{placeCount}}개 장소",
+      "makeFirstTrip": "첫 여행을 만들어 보세요."
+    },
+    "title": {
+      "myTrip": "내 여행"
+    },
+    "tooltip": {
+      "thereNoSavedTrips": "저장된 여행이 없습니다."
+    }
+  }
+}

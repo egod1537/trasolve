@@ -7,10 +7,11 @@ import {
   useState,
 } from 'react';
 import type { TripPolyline, TripPolylineMode } from '@trasolve/shared';
-import { formatPolylineMode } from '@/features/map-workspace/domain/polylineMode';
+import { formatPolylineMode } from '@/features/map-workspace/lib/mapFormatters';
 import { PolylineModeIcon } from '@/features/map-workspace/components/PolylineModeIcon';
 import { PolylineModeOptions } from '@/features/map-workspace/components/PolylineModeOptions';
 import '@/features/map-workspace/styles/bottom-context-panel.css';
+import { useL } from '@/shared/i18n';
 
 type Props = {
   selectedPlaceIds: readonly string[];
@@ -36,6 +37,7 @@ export function LayerBulkActionBar({
   onDeletePlaces,
   onClearSelection,
 }: Props) {
+  const L = useL();
   const rootRef = useRef<HTMLDivElement>(null);
   const modeTriggerRef = useRef<HTMLButtonElement>(null);
   const deleteTriggerRef = useRef<HTMLButtonElement>(null);
@@ -115,7 +117,9 @@ export function LayerBulkActionBar({
         setModeOpen(false);
         requestAnimationFrame(() => modeTriggerRef.current?.focus());
       } else {
-        setActionError('이동수단을 변경하지 못했습니다.');
+        setActionError(
+          L('map:layerBulkActionBar.text.failedChangeModeTransportation'),
+        );
       }
     } finally {
       setOperation(null);
@@ -130,7 +134,9 @@ export function LayerBulkActionBar({
     setActionError(null);
     try {
       if (!(await onDeletePlaces(selectedPlaceIds))) {
-        setActionError('선택한 장소를 삭제하지 못했습니다.');
+        setActionError(
+          L('map:layerBulkActionBar.text.failedDeleteSelectedLocation'),
+        );
       }
     } finally {
       setOperation(null);
@@ -142,13 +148,23 @@ export function LayerBulkActionBar({
       ref={rootRef}
       className="layer-bulk-action-bar"
       role="toolbar"
-      aria-label="선택 항목 일괄 작업"
+      aria-label={L(
+        'map:layerBulkActionBar.ariaLabel.batchOperationsSelections',
+      )}
       aria-busy={operation !== null}
     >
       <span className="layer-bulk-selection-count">
-        <strong>{totalCount}개 선택됨</strong>
+        <strong>
+          {L('map:layerBulkActionBar.text.selected', {
+            totalCount: totalCount,
+          })}
+        </strong>
         {!!selectedPolylines.length && (
-          <span>· 경로 {selectedPolylines.length}개</span>
+          <span>
+            {L('map:layerBulkActionBar.text.paths', {
+              length: selectedPolylines.length,
+            })}
+          </span>
         )}
       </span>
       {mutationError && (
@@ -157,7 +173,7 @@ export function LayerBulkActionBar({
           role="alert"
           title={mutationError}
         >
-          작업 실패
+          {L('map:layerBulkActionBar.text.taskFailed')}
         </span>
       )}
 
@@ -168,7 +184,9 @@ export function LayerBulkActionBar({
               ref={modeTriggerRef}
               type="button"
               className="layer-bulk-mode-trigger"
-              aria-label="선택한 경로 이동수단 변경"
+              aria-label={L(
+                'map:layerBulkActionBar.ariaLabel.changeSelectedRouteTransportationMethod',
+              )}
               aria-haspopup="dialog"
               aria-expanded={modeOpen}
               aria-controls={modeOpen ? modePopupId : undefined}
@@ -182,8 +200,8 @@ export function LayerBulkActionBar({
               {commonMode && <PolylineModeIcon mode={commonMode} />}
               <span>
                 {commonMode
-                  ? formatPolylineMode(commonMode)
-                  : '이동수단 · 혼합'}
+                  ? formatPolylineMode(commonMode, L)
+                  : L('map:layerBulkActionBar.text.transportationMixed')}
               </span>
               <svg
                 className="layer-bulk-chevron"
@@ -198,9 +216,13 @@ export function LayerBulkActionBar({
                 id={modePopupId}
                 className="layer-bulk-mode-popover"
                 role="dialog"
-                aria-label="이동수단 일괄 변경"
+                aria-label={L(
+                  'map:layerBulkActionBar.ariaLabel.bulkChangeMeansTransportation',
+                )}
               >
-                <strong>이동수단</strong>
+                <strong>
+                  {L('map:layerBulkActionBar.text.meansTransportation')}
+                </strong>
                 <PolylineModeOptions
                   mode={commonMode}
                   busy={disabled}
@@ -219,7 +241,10 @@ export function LayerBulkActionBar({
               ref={deleteTriggerRef}
               type="button"
               className="layer-bulk-delete-trigger"
-              aria-label={`선택한 장소 ${selectedPlaceIds.length}개 삭제`}
+              aria-label={L(
+                'map:layerBulkActionBar.ariaLabel.deleteSelectedLocations',
+                { length: selectedPlaceIds.length },
+              )}
               aria-haspopup="dialog"
               aria-expanded={deleteOpen}
               aria-controls={deleteOpen ? deletePopupId : undefined}
@@ -233,7 +258,7 @@ export function LayerBulkActionBar({
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" />
               </svg>
-              <span>삭제</span>
+              <span>{L('common:action.delete')}</span>
             </button>
             {deleteOpen && (
               <section
@@ -245,10 +270,15 @@ export function LayerBulkActionBar({
               >
                 <div>
                   <strong id={deleteTitleId}>
-                    선택한 장소 {selectedPlaceIds.length}개를 삭제하시겠습니까?
+                    {L(
+                      'map:layerBulkActionBar.text.youSureYouWantDeleteSelected',
+                      { length: selectedPlaceIds.length },
+                    )}
                   </strong>
                   <p id={deleteDescriptionId}>
-                    연결 경로는 장소 순서에 맞춰 자동으로 다시 구성됩니다.
+                    {L(
+                      'map:layerBulkActionBar.description.connectionRoutesAutomaticallyReorganizedMatchOrder',
+                    )}
                   </p>
                 </div>
                 {actionError && (
@@ -268,7 +298,7 @@ export function LayerBulkActionBar({
                       );
                     }}
                   >
-                    취소
+                    {L('common:action.cancel')}
                   </button>
                   <button
                     type="button"
@@ -277,7 +307,9 @@ export function LayerBulkActionBar({
                     disabled={disabled}
                     onClick={() => void deletePlaces()}
                   >
-                    {operation === 'delete' ? '삭제 중…' : '삭제'}
+                    {operation === 'delete'
+                      ? L('map:layerBulkActionBar.action.deleting')
+                      : L('common:action.delete')}
                   </button>
                 </div>
               </section>

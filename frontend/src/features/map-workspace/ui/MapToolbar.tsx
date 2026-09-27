@@ -49,7 +49,7 @@ export const MapToolbar = memo(function MapToolbar({
           onOpenQuickSearch={openQuickSearch}
           onSelectPlace={selectPlace}
         />
-        {!aiOpen && <MapUserControls />}
+        <MapUserControls />
       </div>
       <RenderProfiler id="map-ai-panel">
         <MapAiRegion open={aiOpen} onOpenChange={setAiOpen} />

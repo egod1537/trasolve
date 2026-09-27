@@ -10,6 +10,9 @@ branch별 Docker 배포를 수행하는 프로젝트입니다. GitHub Actions는
 Frontend는 `app`, `pages`, `map`, `api`, `shared`, `assets`로 구성합니다.
 [소스 구조와 파일 이동 목록](docs/frontend-source-layout.md)을 참고하세요.
 
+PostgreSQL 개발 실행, migration, 초기화와 backup 절차는
+[DB 개발 안내](docs/database.md)를 참고하세요.
+
 ### Trip persistence
 
 Frontend는 `MapPage → TripRepository`로 목록·선택·생성·삭제를 처리합니다.
@@ -20,12 +23,19 @@ Frontend는 `MapPage → TripRepository`로 목록·선택·생성·삭제를 �
 
 `/map`은 backend에서 내 여행 목록을 불러오며 여행 생성·열기·제목/순서 저장·삭제를 지원합니다.
 `TripHttpService → TripController → TripRepository`로 처리하고,
-`instances.ts`에서 `LocalFileTripRepository`를 주입합니다. shared Trip 계약을 사용하며
-기본 저장 위치는 `.local/trasolve/users/local-user/trips/<tripId>.json`입니다.
-`TRASOLVE_DATA_DIR`와 `TRASOLVE_LOCAL_USER_ID`로 저장 루트와 임시 사용자를 설정합니다.
-파일은 검증 후 임시 파일에 쓰고 rename하며 사용자 범위를 분리합니다. 실제 인증은 아직 없고
-같은 서버의 클라이언트는 설정된 local user를 공유합니다.
-배포는 host의 `runtime/trasolve`를 container `/data`에 연결해 저장합니다. [API·저장소·PostgreSQL 교체 안내](docs/trip-maps.md)를 참고하세요.
+composition root에서 `PostgresTripRepository`를 주입합니다. title/date/ownership/version은
+관계형 column에, 편집 본문은 검증된 `StoredTripV1` JSONB에 저장합니다. revision은 bigint
+문자열 ETag로 다루며 PUT/DELETE의 If-Match와 함께 owner 및 expected revision을 비교합니다.
+stale revision은 412이며 frontend repository는 PUT을 자동 재시도하지 않고 최신 Trip을
+다시 불러와 저장 충돌을 표시합니다.
+Trip API actor는 Google `sub`나 요청 데이터가 아니라 DB session의 내부 `users.id`로
+결정합니다. 인증되지 않은 요청은 401이고 다른 사용자의 여행은 404입니다.
+`LocalFileTripRepository`는 debug의 로컬 persistence와 migration/rollback 확인에 사용하지만
+production runtime은 사용하거나 dual-write하지 않습니다. 기존 `local-user` 파일도 자동
+귀속하지 않습니다.
+[legacy Trip 이관 도구와 backup/restore 절차](docs/database.md#기존-file-trip-이관)는
+명시적인 source owner와 내부 `users.id`, 검증된 file backup을 요구합니다.
+[API·저장소 안내](docs/trip-maps.md)를 참고하세요.
 
 ### AI chat
 
@@ -610,3 +620,7 @@ npm run build
 - backend: `http://127.0.0.1:43127/api/health`
 
 frontend와 backend는 HTTP로만 통신하며 shared는 양쪽의 API 계약만 제공합니다.
+`npm run dev`의 backend는 기본적으로 `.local/trasolve` 아래의 로컬
+사용자·세션·Trip 저장소를 사용하므로 PostgreSQL 없이 시작할 수 있습니다.
+production은 PostgreSQL이 기본이며, 로컬에서 production persistence를 검증할 때만
+`TRASOLVE_PERSISTENCE_MODE=postgres`와 `DATABASE_URL`을 설정합니다.

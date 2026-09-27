@@ -12,6 +12,11 @@ export type MapMarkerIcon = {
   paths: readonly string[];
 };
 
+export type MapMarkerContextMenuEvent = {
+  clientX: number;
+  clientY: number;
+};
+
 export type MapMarkerOptions = MapObjectBaseOptions & {
   position: GeoPoint;
   title?: string;
@@ -30,6 +35,9 @@ export interface MapMarkerHandle extends MapObjectHandle {
   setLabel(label?: string): void;
   setEmphasis(emphasis: MapMarkerEmphasis): void;
   onClick(callback: () => void): () => void;
+  onContextMenu(
+    callback: (event: MapMarkerContextMenuEvent) => void,
+  ): () => void;
   onPointerEnter(callback: () => void): () => void;
   onPointerLeave(callback: () => void): () => void;
 }

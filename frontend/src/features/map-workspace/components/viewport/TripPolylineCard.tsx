@@ -15,13 +15,14 @@ import type {
 } from '@trasolve/shared';
 import { PolylineModeIcon } from '@/features/map-workspace/components/PolylineModeIcon';
 import { PolylineModeOptions } from '@/features/map-workspace/components/PolylineModeOptions';
+import { calculatePolylineDistanceMeters } from '@/features/map-workspace/domain/polylineMetrics';
 import {
-  calculatePolylineDistanceMeters,
   formatPolylineDistance,
-} from '@/features/map-workspace/domain/polylineMetrics';
-import { formatPolylineMode } from '@/features/map-workspace/domain/polylineMode';
+  formatPolylineMode,
+} from '@/features/map-workspace/lib/mapFormatters';
 import { MapPopupCardShell } from '@/shared/ui/map/MapPopupCardShell';
 import { SideDetailCard } from '@/shared/ui/map/SideDetailCard';
+import { useL } from '@/shared/i18n';
 
 type Props = {
   day: TripDay;
@@ -54,6 +55,7 @@ export const TripPolylineCard = forwardRef<TripPolylineCardHandle, Props>(
     },
     ref,
   ) {
+    const L = useL();
     const [modeEditorOpen, setModeEditorOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const groupRef = useRef<HTMLDivElement>(null);
@@ -64,6 +66,7 @@ export const TripPolylineCard = forwardRef<TripPolylineCardHandle, Props>(
     const path = polyline.path ?? [fromPlace.location, toPlace.location];
     const distance = formatPolylineDistance(
       calculatePolylineDistanceMeters(path),
+      L,
     );
     const closeModeEditor = useCallback(() => setModeEditorOpen(false), []);
 
@@ -100,20 +103,27 @@ export const TripPolylineCard = forwardRef<TripPolylineCardHandle, Props>(
           className="trip-polyline-card"
           title={connectionName}
           subtitle={
-            <p className="trip-place-card-position">{day.title} · 이동 구간</p>
+            <p className="trip-place-card-position">
+              {L('map:tripPolylineCard.text.movementSection', {
+                title: day.title,
+              })}
+            </p>
           }
-          closeLabel="Trip 경로 카드 닫기"
+          closeLabel={L('map:tripPolylineCard.text.closeTripRouteCard')}
           onClose={onClose}
           headerActionsLayout="stacked-below-close"
           headerActions={
             <button
               type="button"
               className="trip-polyline-mode-trigger"
-              aria-label={`이동수단 변경: ${formatPolylineMode(polyline.mode)}`}
+              aria-label={L(
+                'map:tripPolylineCard.ariaLabel.changeModeTransportation',
+                { formatPolylineMode: formatPolylineMode(polyline.mode, L) },
+              )}
               aria-haspopup="dialog"
               aria-expanded={modeEditorOpen}
               aria-controls={modeCardId}
-              title={formatPolylineMode(polyline.mode)}
+              title={formatPolylineMode(polyline.mode, L)}
               disabled={disabled}
               onClick={() => setModeEditorOpen((open) => !open)}
             >
@@ -131,22 +141,24 @@ export const TripPolylineCard = forwardRef<TripPolylineCardHandle, Props>(
           <div className="trip-polyline-card-body">
             <dl className="trip-polyline-details">
               <div>
-                <dt>거리</dt>
+                <dt>{L('map:tripPolylineCard.label.distance')}</dt>
                 <dd>{distance}</dd>
               </div>
               <div>
-                <dt>예상 이동시간</dt>
-                <dd>경로 계산 전</dd>
+                <dt>{L('map:tripPolylineCard.label.estimatedTravelTime')}</dt>
+                <dd>{L('map:tripPolylineCard.text.beforeRouteCalculation')}</dd>
               </div>
               <div>
-                <dt>메모</dt>
-                <dd className="is-empty">설정 안 됨</dd>
+                <dt>{L('map:tripPolylineCard.label.memo')}</dt>
+                <dd className="is-empty">
+                  {L('map:tripPolylineCard.text.notSet')}
+                </dd>
               </div>
             </dl>
 
             {(busy || submitting) && (
               <p className="trip-place-saving" role="status">
-                이동 방식을 저장하고 있습니다.
+                {L('map:routeSettingsCard.description.weReSavingWayMoving')}
               </p>
             )}
             {mutationError && (
@@ -160,10 +172,12 @@ export const TripPolylineCard = forwardRef<TripPolylineCardHandle, Props>(
         {modeEditorOpen && (
           <SideDetailCard
             id={modeCardId}
-            title="이동 방식"
+            title={L('map:tripPolylineCard.tooltip.wayMoving')}
             groupRef={groupRef}
             mainCardRef={mainCardRef}
-            closeLabel="이동 방식 설정 닫기"
+            closeLabel={L(
+              'map:tripPolylineCard.text.closeTravelMethodSettings',
+            )}
             onClose={closeModeEditor}
           >
             <div className="trip-polyline-mode-card-body">

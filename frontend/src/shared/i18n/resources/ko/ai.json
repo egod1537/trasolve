@@ -1,0 +1,102 @@
+{
+  "chatMarkdown": {
+    "components": {
+      "ariaLabel": {
+        "table": "표"
+      }
+    }
+  },
+  "mapAiButton": {
+    "actionLabel": {
+      "text": {
+        "closeAiPanel": "AI 패널 닫기",
+        "openAiPanel": "AI 패널 열기"
+      }
+    },
+    "label": {
+      "text": {
+        "generatingAiResponse": "AI 응답 생성 중 · {{actionLabel}}"
+      }
+    }
+  },
+  "mapAiPanel": {
+    "action": {
+      "creating": "생성 중",
+      "transfer": "전송"
+    },
+    "ariaLabel": {
+      "aiChatList": "AI 채팅 목록",
+      "closeAiAssistant": "AI 도우미 닫기",
+      "closeChatList": "채팅 목록 닫기",
+      "currentConversation": "현재 대화",
+      "openChatList": "채팅 목록 열기",
+      "saveAsMarkdown": "Markdown으로 저장",
+      "trasolveAiTravelAssistant": "Trasolve AI 여행 도우미"
+    },
+    "createThread": {
+      "title": {
+        "newChat": "새 채팅"
+      }
+    },
+    "description": {
+      "thereNoDialogue": "대화가 없습니다.",
+      "travelAssistant": "여행 도우미",
+      "weWillHelpYouPlanTrip": "지도와 일정을 보면서 여행 계획을 도와드릴게요."
+    },
+    "formatRelativeTime": {
+      "text": {
+        "daysAgo": "{{elapsedDays}}일 전",
+        "hoursAgo": "{{elapsedHours}}시간 전",
+        "justNow": "방금 전",
+        "minutesAgo": "{{elapsedMinutes}}분 전"
+      }
+    },
+    "label": {
+      "sendMessageAiTravelAssistant": "AI 여행 도우미에게 메시지 보내기"
+    },
+    "placeholder": {
+      "askAboutTravel": "여행에 대해 물어보세요"
+    },
+    "renderThread": {
+      "action": {
+        "cancelCreation": "생성 취소",
+        "changeName": "이름 변경",
+        "storage": "보관",
+        "unarchive": "보관 해제"
+      },
+      "ariaLabel": {
+        "chatName": "채팅 이름",
+        "generatingAiResponse": "AI 응답 생성 중",
+        "menu": "{{title}} 메뉴"
+      },
+      "tooltip": {
+        "chatMenu": "채팅 메뉴"
+      }
+    },
+    "submitMessage": {
+      "error": {
+        "answerCouldNotBeRetrievedTry": "답변을 불러올 수 없습니다. 다시 시도해 주세요."
+      }
+    },
+    "text": {
+      "chatSearch": "채팅 검색",
+      "iMThinkingAnswer": "답변을 생각하고 있어요."
+    },
+    "title": {
+      "archived": "보관됨",
+      "recentConversations": "최근 대화",
+      "trasolveAi": "트라솔브 AI"
+    }
+  },
+  "mapAiUnreadPreviews": {
+    "ariaLabel": {
+      "openUnconfirmedAiResponse": "{{threadTitle}}의 확인하지 않은 AI 응답 열기",
+      "unconfirmedAiResponse": "확인하지 않은 AI 응답"
+    },
+    "toPreviewText": {
+      "text": {
+        "code": "코드"
+      }
+    }
+  }
+}

@@ -3,6 +3,7 @@ import type { PlaceDetails } from '@trasolve/shared';
 import type { SelectedGooglePlace } from '@/entities/place';
 import { MapPopupCardShell } from '@/shared/ui/map/MapPopupCardShell';
 import { PlaceOpeningHours } from '@/features/place-editor/ui/PlaceOpeningHours';
+import { getLanguage, useL } from '@/shared/i18n';
 
 type Props = {
   selection: Exclude<SelectedGooglePlace, null>;
@@ -12,8 +13,6 @@ type Props = {
   onClose: () => void;
   onAddToTrip: (dayId: string, place: PlaceDetails) => Promise<boolean>;
 };
-
-const reviewCount = new Intl.NumberFormat('ko-KR');
 
 function displayUrl(url: string) {
   try {
@@ -59,22 +58,33 @@ function InfoRow({
 }
 
 function Rating({ place }: { place: PlaceDetails }) {
+  const L = useL();
+  const reviewCount = new Intl.NumberFormat(getLanguage());
   if (place.rating === undefined) {
     return null;
   }
   return (
     <p
       className="place-info-rating"
-      aria-label={`평점 ${place.rating.toFixed(1)}점${
-        place.userRatingCount === undefined
-          ? ''
-          : `, 리뷰 ${reviewCount.format(place.userRatingCount)}개`
-      }`}
+      aria-label={L('place:googlePlaceCard.rating.ariaLabel.ratingPoints', {
+        toFixed: place.rating.toFixed(1),
+        value:
+          place.userRatingCount === undefined
+            ? ''
+            : L('place:googlePlaceCard.rating.ariaLabel.reviews', {
+                format: reviewCount.format(place.userRatingCount),
+              }),
+      })}
     >
       <span aria-hidden="true">★</span>
       <strong>{place.rating.toFixed(1)}</strong>
       {place.userRatingCount !== undefined && (
-        <small>· 리뷰 {reviewCount.format(place.userRatingCount)}개</small>
+        <small>
+          ·{' '}
+          {L('place:googlePlaceCard.text.reviews', {
+            reviewCount: reviewCount.format(place.userRatingCount),
+          })}
+        </small>
       )}
     </p>
   );
@@ -88,6 +98,7 @@ export function GooglePlaceCard({
   onClose,
   onAddToTrip,
 }: Props) {
+  const L = useL();
   const [submitting, setSubmitting] = useState(false);
   const [addFailed, setAddFailed] = useState(false);
   const place = selection.status === 'loaded' ? selection.place : null;
@@ -113,26 +124,38 @@ export function GooglePlaceCard({
   return (
     <MapPopupCardShell
       className="google-place-card"
-      title={place?.name ?? '장소 정보'}
+      title={
+        place?.name ?? L('place:googlePlaceCard.tooltip.locationInformation')
+      }
       subtitle={
         place?.category ? (
           <p className="place-info-card-category">{place.category}</p>
         ) : undefined
       }
-      closeLabel="Google 장소 상세 카드 닫기"
+      closeLabel={L('place:googlePlaceCard.text.closeGooglePlacesDetailCard')}
       onClose={onClose}
     >
       {selection.status === 'loading' && (
         <div className="place-info-card-state" role="status">
           <span className="place-info-card-spinner" aria-hidden="true" />
-          <p>장소 정보를 불러오고 있습니다.</p>
+          <p>
+            {L('place:googlePlaceCard.description.loadingLocationInformation')}
+          </p>
         </div>
       )}
 
       {selection.status === 'error' && (
         <div className="place-info-card-state is-error" role="alert">
-          <p>장소 정보를 불러오지 못했습니다.</p>
-          <span>잠시 후 다른 장소를 선택해 다시 시도해 주세요.</span>
+          <p>
+            {L(
+              'place:googlePlaceCard.description.failedLoadLocationInformation',
+            )}
+          </p>
+          <span>
+            {L(
+              'place:googlePlaceCard.text.selectDifferentLocationTryAgainLater',
+            )}
+          </span>
         </div>
       )}
 
@@ -144,19 +167,28 @@ export function GooglePlaceCard({
 
             <dl className="place-info-details">
               {place.address && (
-                <InfoRow icon="address" label="주소">
+                <InfoRow
+                  icon="address"
+                  label={L('place:googlePlaceCard.text.address')}
+                >
                   {place.address}
                 </InfoRow>
               )}
               {place.website && (
-                <InfoRow icon="web" label="웹사이트">
+                <InfoRow
+                  icon="web"
+                  label={L('place:googlePlaceCard.text.website')}
+                >
                   <a href={place.website} target="_blank" rel="noreferrer">
                     {displayUrl(place.website)}
                   </a>
                 </InfoRow>
               )}
               {place.phoneNumber && (
-                <InfoRow icon="phone" label="전화번호">
+                <InfoRow
+                  icon="phone"
+                  label={L('place:googlePlaceCard.text.phoneNumber')}
+                >
                   <a href={`tel:${place.phoneNumber.replace(/[^\d+]/g, '')}`}>
                     {place.phoneNumber}
                   </a>
@@ -172,7 +204,7 @@ export function GooglePlaceCard({
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Google 지도에서 보기
+                  {L('place:googlePlaceCard.text.viewGoogleMaps')}
                   <span aria-hidden="true">↗</span>
                 </a>
               </div>
@@ -183,11 +215,15 @@ export function GooglePlaceCard({
             <span
               className="place-info-add-control"
               data-tooltip={
-                activeDayId ? undefined : '레이어를 하나 추가해주세요'
+                activeDayId
+                  ? undefined
+                  : L('place:googlePlaceCard.text.addAnotherLayer')
               }
               tabIndex={activeDayId ? undefined : 0}
               aria-label={
-                activeDayId ? undefined : '레이어를 하나 추가해주세요'
+                activeDayId
+                  ? undefined
+                  : L('place:googlePlaceCard.text.addAnotherLayer')
               }
             >
               <button
@@ -202,12 +238,15 @@ export function GooglePlaceCard({
                 }}
               >
                 <span aria-hidden="true">＋</span>
-                {submitting ? '추가하는 중...' : '일정에 추가'}
+                {submitting
+                  ? L('place:googlePlaceCard.action.adding')
+                  : L('place:googlePlaceCard.action.addSchedule')}
               </button>
             </span>
             {addFailed && (
               <p className="place-info-action-error" role="alert">
-                {mutationError ?? '장소를 추가하지 못했습니다.'}
+                {mutationError ??
+                  L('place:googlePlaceCard.description.failedAddLocation')}
               </p>
             )}
           </footer>

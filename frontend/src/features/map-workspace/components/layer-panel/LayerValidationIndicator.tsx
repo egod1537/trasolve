@@ -1,4 +1,5 @@
 import type { LayerValidationState } from '@/entities/trip';
+import { useL } from '@/shared/i18n';
 
 type Props = {
   validation?: LayerValidationState;
@@ -23,6 +24,7 @@ function ErrorIcon() {
 }
 
 export function LayerValidationIndicator({ validation }: Props) {
+  const L = useL();
   const issues = validation?.issues.filter(
     (issue) => issue.level === 'error' || issue.level === 'warning',
   );
@@ -33,7 +35,10 @@ export function LayerValidationIndicator({ validation }: Props) {
   const level = issues.some((issue) => issue.level === 'error')
     ? 'error'
     : 'warning';
-  const levelLabel = level === 'error' ? '오류' : '주의';
+  const levelLabel =
+    level === 'error'
+      ? L('map:layerValidationIndicator.text.error')
+      : L('map:layerValidationIndicator.text.caution');
   const summary = `${levelLabel}: ${issues.map((issue) => issue.message).join(', ')}`;
 
   return (
@@ -48,7 +53,11 @@ export function LayerValidationIndicator({ validation }: Props) {
       <span className="trip-layer-validation-tooltip" role="tooltip">
         {issues.map((issue, index) => (
           <span key={`${issue.code ?? issue.message}-${index}`}>
-            <strong>{issue.level === 'error' ? '오류' : '주의'}</strong>
+            <strong>
+              {issue.level === 'error'
+                ? L('map:layerValidationIndicator.text.error')
+                : L('map:layerValidationIndicator.text.caution')}
+            </strong>
             {issue.message}
           </span>
         ))}

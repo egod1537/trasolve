@@ -206,6 +206,17 @@ export class JobEventSubscriptionManager {
       return false;
     }
 
+    const current = this.jobs.get(channel.jobId);
+    if (
+      event.type === 'progress' &&
+      current.status === event.state.status &&
+      current.stage === event.state.stage &&
+      current.progress === event.state.progress
+    ) {
+      this.rememberEventCursor(channel, event, false);
+      return false;
+    }
+
     const result = this.jobs.applyRemoteEvent(event.state, {
       ...(event.id === undefined ? {} : { eventId: event.id }),
       ...(event.sequence === undefined ? {} : { sequence: event.sequence }),
@@ -214,15 +225,7 @@ export class JobEventSubscriptionManager {
     if (!result.applied) {
       return false;
     }
-    if (event.id) {
-      channel.seenEventIds.add(event.id);
-    }
-    if (event.lastEventId) {
-      channel.lastEventId = event.lastEventId;
-    }
-    if (event.sequence !== undefined) {
-      channel.lastSequence = event.sequence;
-    }
+    this.rememberEventCursor(channel, event);
 
     const snapshot = this.jobs.getMirrorSnapshot(channel.jobId);
     this.publish(channel, {
@@ -238,6 +241,22 @@ export class JobEventSubscriptionManager {
       return true;
     }
     return false;
+  }
+
+  private rememberEventCursor(
+    channel: JobChannel,
+    event: TrouteJobEvent,
+    rememberEventId = true,
+  ): void {
+    if (rememberEventId && event.id) {
+      channel.seenEventIds.add(event.id);
+    }
+    if (event.lastEventId) {
+      channel.lastEventId = event.lastEventId;
+    }
+    if (event.sequence !== undefined) {
+      channel.lastSequence = event.sequence;
+    }
   }
 
   private async recover(

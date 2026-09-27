@@ -1,6 +1,7 @@
 import Markdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import '@/features/ai-chat/ui/chat-markdown.css';
+import { L } from '@/shared/i18n';
 
 const components: Components = {
   a: ({ href, title, children }) => {
@@ -21,7 +22,7 @@ const components: Components = {
     <div
       className="chat-markdown-table"
       role="region"
-      aria-label="표"
+      aria-label={L('ai:chatMarkdown.components.ariaLabel.table')}
       tabIndex={0}
     >
       <table>{children}</table>

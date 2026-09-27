@@ -6,10 +6,11 @@ import {
 import type { TripStore } from '@/features/map-workspace/store/TripStore';
 import type { TripCommand } from '@/features/map-workspace/command/TripCommand';
 import { TripHistory } from '@/features/map-workspace/command/TripHistory';
+import { L } from '@/shared/i18n';
 
 type CommandOperation = {
   type: 'command';
-  command: TripCommand;
+  commands: readonly TripCommand[];
 };
 
 type HistoryOperation = {
@@ -35,7 +36,14 @@ export class TripCommandDispatcher {
   }
 
   public execute(command: TripCommand): Promise<boolean> {
-    return this.enqueue({ type: 'command', command });
+    return this.enqueue({ type: 'command', commands: [command] });
+  }
+
+  public executeBatch(commands: readonly TripCommand[]): Promise<boolean> {
+    if (commands.length === 0) {
+      return Promise.resolve(false);
+    }
+    return this.enqueue({ type: 'command', commands: [...commands] });
   }
 
   public undo(): Promise<boolean> {
@@ -61,12 +69,13 @@ export class TripCommandDispatcher {
     });
   }
 
-  private applyCommand(command: TripCommand): boolean {
+  private applyCommands(commands: readonly TripCommand[]): boolean {
     const current = this.store.getState();
     try {
-      const next = this.normalizeTrip(
-        command.apply(structuredClone(current.trip)),
-      );
+      let next = structuredClone(current.trip);
+      for (const command of commands) {
+        next = this.normalizeTrip(command.apply(next));
+      }
       this.history.record(current.trip);
       this.store.setState({ trip: next, status: 'dirty', error: null });
       return true;
@@ -74,7 +83,9 @@ export class TripCommandDispatcher {
       this.store.setState({
         ...current,
         status: 'error',
-        error: '여행 변경 값이 올바르지 않습니다.',
+        error: L(
+          'map:tripCommandDispatcher.applyCommands.error.travelChangeValueIncorrect',
+        ),
       });
       return false;
     }
@@ -103,7 +114,9 @@ export class TripCommandDispatcher {
       this.store.setState({
         ...current,
         status: 'error',
-        error: '여행 변경 기록을 복원할 수 없습니다.',
+        error: L(
+          'map:tripCommandDispatcher.applyHistoryOperation.error.tripChangeHistoryCannotBeRestored',
+        ),
       });
       return false;
     }
@@ -113,7 +126,7 @@ export class TripCommandDispatcher {
     operation: CommandOperation | HistoryOperation,
   ): boolean {
     return operation.type === 'command'
-      ? this.applyCommand(operation.command)
+      ? this.applyCommands(operation.commands)
       : this.applyHistoryOperation(operation.type);
   }
 

@@ -1,0 +1,38 @@
+{
+  "chat": {
+    "error": {
+      "answerCouldNotBeRetrievedTry": "The answer could not be retrieved. Please try again later.",
+      "chatResponseFormatIncorrect": "Chat response format is incorrect.",
+      "unableConnectChatServerTryAgain": "Unable to connect to chat server. Please try again later.",
+      "waitingTimeReplyHasBeenExceeded": "The waiting time for reply has been exceeded. Please try again."
+    }
+  },
+  "openwebui": {
+    "error": {
+      "modelListCouldNotBeLoaded": "The model list could not be loaded.",
+      "modelListResponseFormatIncorrect": "The model list response format is incorrect.",
+      "unableConnectModelListServer": "Unable to connect to model list server.",
+      "waitingTimeModelListHasExpired": "The waiting time for the model list has expired."
+    }
+  },
+  "places": {
+    "error": {
+      "placeLookupFailedHttp": "Place lookup failed (HTTP {{status}})",
+      "placeSearchResponseFormatIncorrect": "The place search response format is incorrect.",
+      "venueDetailResponseFormatIncorrect": "The venue detail response format is incorrect."
+    }
+  },
+  "routes": {
+    "error": {
+      "routeLookupFailedHttp": "Route lookup failed (HTTP {{status}})",
+      "routeResponseFormatIncorrect": "The route response format is incorrect."
+    }
+  },
+  "trips": {
+    "error": {
+      "travelRequestCannotBeProcessed": "Your travel request cannot be processed.",
+      "travelRequestTimedOutRefreshList": "The travel request timed out. Please refresh the list to check whether you want to save.",
+      "unableConnectTravelServer": "Unable to connect to travel server."
+    }
+  }
+}

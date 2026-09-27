@@ -21,6 +21,7 @@ import type {
   TrouteCancelGatewayResult,
   TrouteGatewayResult,
 } from '@/entities/route-job';
+import { L } from '@/shared/i18n';
 
 const REQUEST_TIMEOUT_MS = 35_000;
 const JOB_INSPECTION_TIMEOUT_MS = 5_000;
@@ -83,7 +84,9 @@ export function parseTrouteJobEvent(
   try {
     body = JSON.parse(data) as unknown;
   } catch {
-    throw new Error('troute Job SSE data가 JSON 형식이 아닙니다.');
+    throw new Error(
+      L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
+    );
   }
 
   const envelope = getEventSchema(type).safeParse(body);
@@ -103,7 +106,9 @@ export function parseTrouteJobEvent(
   if (rawState.success && eventMatchesState(type, rawState.data)) {
     return { state: rawState.data };
   }
-  throw new Error(`troute Job ${type} SSE data 형식이 올바르지 않습니다.`);
+  throw new Error(
+    L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
+  );
 }
 
 export async function cancelTrouteJob(
@@ -125,8 +130,8 @@ export async function cancelTrouteJob(
   } catch {
     throw new TrouteCancelNetworkError(
       timeout.aborted
-        ? 'Job 강제 종료 응답 대기 시간이 초과됐습니다.'
-        : 'Job 강제 종료를 위해 Trasolve backend에 연결할 수 없습니다.',
+        ? L('testbed:trouteTestbed.text.unknownErrorOccurredWhileForcingJob')
+        : L('testbed:trouteTestbed.text.unknownErrorOccurredWhileForcingJob'),
       performance.now() - startedAt,
     );
   }
@@ -162,13 +167,15 @@ export async function getTrouteJob(
   );
   if (!response.ok) {
     throw new Error(
-      `troute job 조회가 HTTP ${response.status}로 실패했습니다.`,
+      L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
     );
   }
 
   const parsed = trouteJobStateSchema.safeParse(await response.json());
   if (!parsed.success) {
-    throw new Error('troute job 조회 응답 형식이 올바르지 않습니다.');
+    throw new Error(
+      L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
+    );
   }
   return parsed.data;
 }
@@ -186,7 +193,7 @@ export async function listTrouteJobs(
   );
   if (!response.ok) {
     throw new Error(
-      `troute Job 목록 조회가 HTTP ${response.status}로 실패했습니다.`,
+      L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
     );
   }
 
@@ -194,7 +201,9 @@ export async function listTrouteJobs(
     await response.json(),
   );
   if (!parsed.success) {
-    throw new Error('troute Job 목록 응답 형식이 올바르지 않습니다.');
+    throw new Error(
+      L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
+    );
   }
   return parsed.data.jobs;
 }
@@ -203,9 +212,7 @@ export async function optimizeRouteWithTroute(
   request: TrouteOptimizeRequest,
   signal?: AbortSignal,
 ): Promise<TrouteGatewayResult> {
-  const requestBody = JSON.stringify(
-    trouteOptimizeRequestSchema.parse(request),
-  );
+  const requestBody = createTrouteOptimizeRequestBody(request);
   const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
   const requestSignal = signal ? AbortSignal.any([signal, timeout]) : timeout;
   const startedAt = performance.now();
@@ -224,8 +231,12 @@ export async function optimizeRouteWithTroute(
     const durationMs = performance.now() - startedAt;
     throw new TrouteNetworkError(
       timeout.aborted
-        ? 'Trasolve backend 응답 대기 시간이 초과됐습니다.'
-        : 'Trasolve backend에 연결할 수 없습니다.',
+        ? L(
+            'testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend',
+          )
+        : L(
+            'testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend',
+          ),
       durationMs,
       requestBody,
     );
@@ -259,13 +270,21 @@ export async function optimizeRouteWithTroute(
     optimization: parsed?.success ? parsed.data : null,
     responseValidationError:
       parsedSubmission?.success && acceptedJobId === null
-        ? '응답 job_id가 요청 job_id와 일치하지 않습니다.'
+        ? L(
+            'testbed:troute.optimizeRouteWithTroute.text.responseJobIdDoesNotMatch',
+          )
         : parsed && !parsed.success && !parsedSubmission?.success
           ? parsed.error.issues
               .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
               .join('; ')
           : null,
   };
+}
+
+export function createTrouteOptimizeRequestBody(
+  request: TrouteOptimizeRequest,
+): string {
+  return JSON.stringify(trouteOptimizeRequestSchema.parse(request));
 }
 
 function getEventSchema(type: TrouteJobEventType) {

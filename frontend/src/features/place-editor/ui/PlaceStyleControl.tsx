@@ -12,6 +12,7 @@ import type { PlaceStyle, PlaceStyleType } from '@trasolve/shared';
 import { PLACE_STYLE_OPTIONS, PLACE_STYLE_PALETTE } from '@/entities/place';
 import { PlaceStyleIcon } from '@/features/place-editor/ui/PlaceStyleIcon';
 import { CloseIcon } from '@/shared/ui/icons';
+import { useL, type Localize } from '@/shared/i18n';
 
 const POPOVER_GAP = 8;
 const VIEWPORT_GAP = 8;
@@ -37,6 +38,37 @@ function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(Math.max(value, minimum), maximum);
 }
 
+function getPlaceStyleLabel(type: PlaceStyleType, L: Localize): string {
+  switch (type) {
+    case 'general':
+      return L('place:placeStyle.pLACESTYLEOPTIONS.label.generalPlace');
+    case 'landmark':
+      return L('place:placeStyle.pLACESTYLEOPTIONS.label.landmark');
+    case 'restaurant':
+      return L('place:placeCategory.pLACECATEGORYLABELS.text.restaurant');
+    case 'cafe':
+      return L('place:placeCategory.pLACECATEGORYLABELS.text.cafe');
+    case 'shopping':
+      return L('place:placeStyle.pLACESTYLEOPTIONS.label.shopping');
+    case 'lodging':
+      return L('place:placeCategory.pLACECATEGORYLABELS.text.accommodation');
+    case 'culture':
+      return L('place:placeStyle.pLACESTYLEOPTIONS.label.museumCulture');
+    case 'nature':
+      return L('place:placeStyle.pLACESTYLEOPTIONS.label.parksNature');
+    case 'observatory':
+      return L('place:placeStyle.pLACESTYLEOPTIONS.label.observatory');
+    case 'transit':
+      return L(
+        'place:placeStyle.pLACESTYLEOPTIONS.label.transportationStation',
+      );
+    case 'entertainment':
+      return L('place:placeStyle.pLACESTYLEOPTIONS.label.entertainment');
+    case 'other':
+      return L('place:placeStyle.pLACESTYLEOPTIONS.label.guitar');
+  }
+}
+
 export function PlaceStyleControl({
   placeId,
   placeName,
@@ -47,6 +79,11 @@ export function PlaceStyleControl({
   triggerLabel,
   onChangeStyle,
 }: Props) {
+  const L = useL();
+  const placeStyleOptions = PLACE_STYLE_OPTIONS.map((option) => ({
+    ...option,
+    label: getPlaceStyleLabel(option.type, L),
+  }));
   const popoverId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -230,23 +267,27 @@ export function PlaceStyleControl({
       data-layer-interactive-popover=""
       data-placement={popoverPlacement}
       role="dialog"
-      aria-label={`${placeName} 아이콘 및 색상 설정`}
+      aria-label={L('place:placeStyleControl.ariaLabel.setIconColor', {
+        placeName: placeName,
+      })}
       style={popoverStyle}
     >
       <button
         type="button"
         className="trip-place-style-close"
-        aria-label="스타일 설정 닫기"
-        title="닫기"
+        aria-label={L('place:placeStyleControl.ariaLabel.closeStyleSettings')}
+        title={L('common:action.close')}
         onClick={() => closePopover(true)}
       >
         <CloseIcon />
       </button>
       <div className="trip-place-style-content">
         <fieldset disabled={busy}>
-          <legend className="sr-only">장소 타입</legend>
+          <legend className="sr-only">
+            {L('place:placeStyleControl.label.locationType')}
+          </legend>
           <div className="trip-place-style-types">
-            {PLACE_STYLE_OPTIONS.map((option) => (
+            {placeStyleOptions.map((option) => (
               <button
                 key={option.type}
                 type="button"
@@ -269,14 +310,18 @@ export function PlaceStyleControl({
           </div>
         </fieldset>
         <fieldset disabled={busy}>
-          <legend className="sr-only">색상</legend>
+          <legend className="sr-only">
+            {L('place:placeStyleControl.label.color')}
+          </legend>
           <div className="trip-place-style-palette">
             {PLACE_STYLE_PALETTE.map((color) => (
               <button
                 key={color}
                 type="button"
                 className="trip-place-style-cell is-color"
-                aria-label={`${color} 색상`}
+                aria-label={L('place:placeStyleControl.ariaLabel.color', {
+                  color: color,
+                })}
                 aria-pressed={style.color.toLowerCase() === color}
                 style={{ '--palette-color': color } as CSSProperties}
                 onClick={() => {
@@ -300,11 +345,18 @@ export function PlaceStyleControl({
         className={`trip-place-style-control${className ? ` ${className}` : ''}`}
         style={{ '--place-color': style.color } as CSSProperties}
         disabled={busy || !visible}
-        aria-label={triggerLabel ?? `${placeName} 아이콘 및 색상 변경`}
+        aria-label={
+          triggerLabel ??
+          L('place:placeStyleControl.ariaLabel.changeIconColor', {
+            placeName: placeName,
+          })
+        }
         aria-haspopup="dialog"
         aria-expanded={popoverOpen}
         aria-controls={popoverOpen ? popoverId : undefined}
-        title={triggerLabel ?? '아이콘 및 색상 변경'}
+        title={
+          triggerLabel ?? L('place:placeStyleControl.tooltip.changeIconsColors')
+        }
         onClick={(event) => {
           event.stopPropagation();
           if (popoverOpenRef.current) {

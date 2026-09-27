@@ -28,6 +28,7 @@ import { isActiveTcacheJob } from '@/features/tcache-route-testbed/model/types';
 import { useTheme } from '@/shared/theme/useTheme';
 import '@blueprintjs/core/lib/css/blueprint.css';
 import '@/features/tcache-route-testbed/tcache-route-testbed.css';
+import { L } from '@/shared/i18n';
 
 const JOB_LIST_POLL_MS = 2_000;
 const FALLBACK_POLL_MS = 1_000;
@@ -168,7 +169,7 @@ export function TcacheRouteTestbed() {
             source: 'testbed',
             target: 'trasolve',
             method: 'GET',
-            label: 'Result request',
+            label: L('testbed:tcacheRouteTestbed.label.resultRequest'),
             path,
           },
         ],
@@ -188,7 +189,7 @@ export function TcacheRouteTestbed() {
               source: 'trasolve',
               target: 'testbed',
               method: 'GET',
-              label: 'Result response',
+              label: L('testbed:tcacheRouteTestbed.label.resultResponse'),
               path,
               status: response.httpStatus,
               latencyMs: response.durationMs,
@@ -211,7 +212,7 @@ export function TcacheRouteTestbed() {
                 source: 'trasolve',
                 target: 'testbed',
                 method: 'GET',
-                label: 'Result error',
+                label: L('testbed:tcacheRouteTestbed.label.resultError'),
                 path,
                 error: errorMessage(cause),
               },
@@ -371,7 +372,7 @@ export function TcacheRouteTestbed() {
             source: 'testbed',
             target: 'trasolve',
             event: 'reconnect',
-            label: 'SSE reconnect',
+            label: L('testbed:tcacheRouteTestbed.label.sseReconnect'),
             path: getTcacheRouteEventsPath(jobId),
           });
         }
@@ -395,7 +396,7 @@ export function TcacheRouteTestbed() {
                     source: 'trasolve',
                     target: 'testbed',
                     event: 'open',
-                    label: 'SSE open',
+                    label: L('testbed:tcacheRouteTestbed.label.sseOpen'),
                     path: getTcacheRouteEventsPath(jobId),
                     status: 200,
                   },
@@ -407,7 +408,11 @@ export function TcacheRouteTestbed() {
           if (terminal || disposed) {
             return;
           }
-          throw new Error('tcache SSE 연결이 종료되었습니다.');
+          throw new Error(
+            L(
+              'testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred',
+            ),
+          );
         } catch (cause) {
           if (disposed || terminal || streamController.signal.aborted) {
             return;
@@ -426,7 +431,7 @@ export function TcacheRouteTestbed() {
                 source: 'trasolve',
                 target: 'testbed',
                 event: 'disconnect',
-                label: 'SSE disconnect',
+                label: L('testbed:tcacheRouteTestbed.label.sseDisconnect'),
                 path: getTcacheRouteEventsPath(jobId),
                 error: errorMessage(cause),
               },
@@ -702,7 +707,11 @@ function applyStreamEvent(
       status: 'failed',
       completedAt: timestamp,
       sseState: 'idle',
-      error: readEventError(payload) ?? 'tcache Route Job이 실패했습니다.',
+      error:
+        readEventError(payload) ??
+        L(
+          'testbed:tcacheRouteTestbed.applyStreamEvent.error.tcacheRouteJobFailed',
+        ),
     };
   } else if (event.type === 'cancelled') {
     next = {
@@ -843,7 +852,7 @@ function abortableDelay(
 function errorMessage(cause: unknown): string {
   return cause instanceof Error
     ? cause.message
-    : '알 수 없는 오류가 발생했습니다.';
+    : L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred');
 }
 
 function isConnectivityFailure(cause: unknown): boolean {

@@ -388,6 +388,8 @@ a.build-commit:hover {
 
   .header-inner {
     min-height: 72px;
+    flex-wrap: wrap;
+    padding-block: 12px;
   }
 
   .build-metadata {

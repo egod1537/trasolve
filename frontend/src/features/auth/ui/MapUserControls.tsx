@@ -3,6 +3,8 @@ import { ThemeControl } from '@/shared/theme/ThemeControl';
 import '@/features/auth/ui/map-user-controls.css';
 import { useCurrentUser } from '@/features/auth/model/useCurrentUser';
 import { AccountSettingsModal } from '@/features/auth/ui/AccountSettingsModal';
+import { PreferencesModal } from '@/features/preferences/ui/PreferencesModal';
+import { LanguageControl, useL } from '@/shared/i18n';
 
 function initialOf(name: string): string {
   return name.trim().slice(0, 1).toUpperCase() || '?';
@@ -87,9 +89,11 @@ function PersonIcon() {
 type OpenMenu = 'app' | 'profile' | null;
 
 export function MapUserControls() {
+  const L = useL();
   const { state, login, logout, authNotice } = useCurrentUser();
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const appMenuId = useId();
@@ -134,29 +138,31 @@ export function MapUserControls() {
       setLoggingOut(false);
       setOpenMenu(null);
       setAccountSettingsOpen(false);
+      setPreferencesOpen(false);
     }
   };
 
   const user = state.status === 'signed-in' ? state.user : null;
   const displayName = user ? (user.name ?? user.email) : null;
   const profileLabel = user
-    ? `${displayName} 프로필`
-    : 'Google 계정으로 로그인';
+    ? L('auth:mapUserControls.text.profile', { displayName: displayName })
+    : L('auth:mapUserControls.text.signGoogleAccount');
 
   return (
     <div
       ref={rootRef}
       className="map-user-controls"
       role="group"
-      aria-label="사용자 메뉴"
+      aria-label={L('auth:mapUserControls.ariaLabel.userMenu')}
     >
+      <LanguageControl className="map-language-control" />
       <ThemeControl className="map-theme-control" />
       <span className="map-user-control-anchor">
         <button
           type="button"
           className="map-app-menu-button"
-          aria-label="앱 메뉴"
-          title="앱 메뉴"
+          aria-label={L('auth:mapUserControls.ariaLabel.appMenu')}
+          title={L('auth:mapUserControls.ariaLabel.appMenu')}
           aria-haspopup="menu"
           aria-expanded={openMenu === 'app'}
           aria-controls={openMenu === 'app' ? appMenuId : undefined}
@@ -169,22 +175,24 @@ export function MapUserControls() {
           <div id={appMenuId} className="map-user-menu" role="menu">
             <a className="map-user-menu-item" role="menuitem" href="/">
               <HomeIcon />
-              <span>홈으로 이동</span>
+              <span>{L('auth:mapUserControls.text.goHome')}</span>
             </a>
             <a className="map-user-menu-item" role="menuitem" href="/map">
               <MapPinIcon />
-              <span>내 여행 지도</span>
+              <span>{L('auth:mapUserControls.text.myTravelMap')}</span>
             </a>
             <div className="map-user-menu-divider" role="separator" />
             <button
               type="button"
               className="map-user-menu-item"
               role="menuitem"
-              disabled
-              title="준비 중"
+              onClick={() => {
+                setOpenMenu(null);
+                setPreferencesOpen(true);
+              }}
             >
               <GearIcon />
-              <span>환경설정</span>
+              <span>{L('auth:mapUserControls.text.preferences')}</span>
             </button>
           </div>
         )}
@@ -254,7 +262,9 @@ export function MapUserControls() {
                 }}
               >
                 <GearIcon />
-                <span>계정 설정</span>
+                <span>
+                  {L('auth:accountSettingsModal.title.accountSettings')}
+                </span>
               </button>
               <button
                 type="button"
@@ -264,7 +274,11 @@ export function MapUserControls() {
                 onClick={() => void handleLogout()}
               >
                 <LogoutIcon />
-                <span>{loggingOut ? '로그아웃 중…' : '로그아웃'}</span>
+                <span>
+                  {loggingOut
+                    ? L('auth:accountSettingsModal.action.loggingOut')
+                    : L('common:action.signOut')}
+                </span>
               </button>
             </div>
           ) : (
@@ -288,7 +302,7 @@ export function MapUserControls() {
                 }}
               >
                 <LoginIcon />
-                <span>Google로 로그인</span>
+                <span>{L('auth:mapUserControls.text.signGoogle')}</span>
               </button>
             </div>
           ))}
@@ -300,6 +314,9 @@ export function MapUserControls() {
           onClose={() => setAccountSettingsOpen(false)}
           onLogout={() => void handleLogout()}
         />
+      )}
+      {preferencesOpen && (
+        <PreferencesModal onClose={() => setPreferencesOpen(false)} />
       )}
     </div>
   );

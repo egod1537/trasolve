@@ -1,8 +1,22 @@
-export { API_ROUTES, CHAT_LIMITS, TravelMode } from './constants/index.js';
+export {
+  API_ROUTES,
+  CHAT_LIMITS,
+  TRIP_COMMAND_PLAN_FINGERPRINT_MAX_LENGTH,
+  TRIP_COMMAND_PLAN_MAX_OPERATIONS,
+  TRIP_COMMAND_PLAN_STEP_ID_MAX_LENGTH,
+  TRIP_COMMAND_PLAN_VALIDATION_MESSAGE_MAX_LENGTH,
+  TRIP_COMMAND_PLAN_VERSION,
+  TravelMode,
+} from './constants/index.js';
 
 export {
   tripIdSchema,
+  TRIP_DAY_MAX_PLACES,
+  TRIP_MAX_DAYS,
   TRIP_PLACE_MAX_DURATION_MINUTES,
+  tripClockTimeSchema,
+  tripMemoSchema,
+  tripTitleSchema,
   tripSchema,
   tripInputSchema,
   tripDaySchema,
@@ -26,7 +40,37 @@ export type {
   TripPlace,
   TripPolyline,
   TripPolylineMode,
+  TripScheduleStopUpdate,
+  TripScheduleUpdate,
 } from './types/trip.js';
+
+export {
+  tripCommandPlanAddPlaceSourceSchema,
+  tripCommandPlanDayPositionSchema,
+  tripCommandPlanDayReferenceSchema,
+  tripCommandPlanOperationSchema,
+  tripCommandPlanPlaceReferenceSchema,
+  tripCommandPlanPolylineReferenceSchema,
+  tripCommandPlanPlacePositionSchema,
+  tripCommandPlanSchema,
+  tripCommandPlanStepIdSchema,
+  tripCommandPlanValidationErrorCodeSchema,
+  tripCommandPlanValidationErrorSchema,
+} from './schemas/tripCommandPlan.js';
+
+export type {
+  TripCommandPlan,
+  TripCommandPlanAddPlaceSource,
+  TripCommandPlanDayPosition,
+  TripCommandPlanDayReference,
+  TripCommandPlanOperation,
+  TripCommandPlanPlaceReference,
+  TripCommandPlanPolylineReference,
+  TripCommandPlanPlacePosition,
+  TripCommandPlanStepId,
+  TripCommandPlanValidationError,
+  TripCommandPlanValidationErrorCode,
+} from './types/tripCommandPlan.js';
 
 export {
   routeOptimizationPlaceSchema,
@@ -105,18 +149,18 @@ export type {
 } from './types/chat.js';
 
 export {
+  googleOAuthProfileSchema,
   googleOAuthResultSchema,
-  googleOAuthUserSchema,
 } from './schemas/googleOAuth.js';
 
 export type {
+  GoogleOAuthProfile,
   GoogleOAuthResult,
-  GoogleOAuthUser,
 } from './types/googleOAuth.js';
 
-export { authMeResponseSchema } from './schemas/auth.js';
+export { authMeResponseSchema, authUserSchema } from './schemas/auth.js';
 
-export type { AuthMeResponse } from './types/auth.js';
+export type { AuthMeResponse, AuthUser } from './types/auth.js';
 
 export {
   openWebUIModelSchema,
@@ -140,6 +184,7 @@ export {
   trouteJobCompletedEventSchema,
   trouteJobFailedEventSchema,
   trouteJobIdSchema,
+  trouteLegacyFlatJobEventSchema,
   trouteJobProgressEventSchema,
   trouteJobSnapshotEventSchema,
   trouteJobStateSchema,
@@ -149,12 +194,18 @@ export {
   trouteOptimizeRequestSchema,
   trouteOptimizeResponseSchema,
   trouteProgressStageSchema,
+  trouteProviderSelectionSourceSchema,
   trouteRemoteJobListResponseSchema,
   trouteRemoteJobSchema,
   trouteRemoteJobSummarySchema,
   trouteRemoteTimelineEntrySchema,
   trouteRemoteTimelineSchema,
+  trouteRouteProviderSchema,
   trouteRouteStopSchema,
+  trouteSolverCandidateSchema,
+  trouteSolverObjectiveScoreSchema,
+  trouteStartPolicySchema,
+  trouteTravelModeSchema,
 } from './schemas/troute.js';
 
 export type {
@@ -165,6 +216,7 @@ export type {
   TrouteJobCancelledEvent,
   TrouteJobCompletedEvent,
   TrouteJobFailedEvent,
+  TrouteLegacyFlatJobEvent,
   TrouteJobProgressEvent,
   TrouteJobSnapshotEvent,
   TrouteJobState,
@@ -174,10 +226,16 @@ export type {
   TrouteOptimizeRequest,
   TrouteOptimizeResponse,
   TrouteProgressStage,
+  TrouteProviderSelectionSource,
   TrouteRemoteJob,
   TrouteRemoteJobListResponse,
   TrouteRemoteJobSummary,
   TrouteRemoteTimeline,
   TrouteRemoteTimelineEntry,
+  TrouteRouteProvider,
   TrouteRouteStop,
+  TrouteSolverCandidate,
+  TrouteSolverObjectiveScore,
+  TrouteStartPolicy,
+  TrouteTravelMode,
 } from './types/troute.js';

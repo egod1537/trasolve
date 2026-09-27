@@ -5,7 +5,6 @@ export type {
 export {
   getFinalOptimization,
   hasResultMismatch,
-  JOB_STATUS_LABELS,
   mergeRemoteJob,
   mergeRemoteJobHistory,
   selectActiveJobId,

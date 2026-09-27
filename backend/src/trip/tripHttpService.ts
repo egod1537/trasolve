@@ -1,15 +1,19 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { TRIP_BODY_LIMIT, tripInputSchema } from '@trasolve/shared';
+import {
+  AuthenticationRequiredError,
+  type CurrentUserResolver,
+} from '../auth/currentUserResolver.js';
 import type { TripController } from './tripController.js';
 import {
   TripError,
   invalidTripRequest,
+  tripAuthenticationRequired,
+  tripPreconditionRequired,
   tripStorageUnavailable,
 } from './errors.js';
 
-export type CurrentUserResolver = (
-  request: IncomingMessage,
-) => string | Promise<string>;
+const revisionPattern = /^[1-9]\d*$/;
 
 export class TripHttpService {
   public constructor(
@@ -37,6 +41,7 @@ export class TripHttpService {
           '지원하지 않는 요청 방식입니다.',
         );
       }
+      const actorUserId = await this.currentUser.require(request);
       let tripId: string | undefined;
       try {
         tripId =
@@ -46,37 +51,54 @@ export class TripHttpService {
       } catch {
         throw invalidTripRequest();
       }
-      const userId = await this.currentUser(request);
       let body: unknown;
+      let revision: string | undefined;
       let status = 200;
       switch (request.method) {
         case 'GET':
-          body =
-            tripId === undefined
-              ? await this.controller.listTrips(userId)
-              : await this.controller.getTrip(userId, tripId);
+          if (tripId === undefined) {
+            body = await this.controller.listTrips(actorUserId);
+          } else {
+            const stored = await this.controller.getTrip(actorUserId, tripId);
+            body = stored.trip;
+            revision = stored.revision;
+          }
           break;
-        case 'POST':
-          body = await this.controller.createTrip(
-            userId,
+        case 'POST': {
+          const stored = await this.controller.createTrip(
+            actorUserId,
             await this.readInput(request),
           );
+          body = stored.trip;
+          revision = stored.revision;
           status = 201;
           break;
-        case 'PUT':
-          body = await this.controller.saveTrip(
-            userId,
+        }
+        case 'PUT': {
+          const stored = await this.controller.saveTrip(
+            actorUserId,
             tripId!,
+            this.parseIfMatch(request),
             await this.readInput(request),
           );
+          body = stored.trip;
+          revision = stored.revision;
           break;
+        }
         case 'DELETE':
-          await this.controller.deleteTrip(userId, tripId!);
+          revision = await this.controller.deleteTrip(
+            actorUserId,
+            tripId!,
+            this.parseIfMatch(request),
+          );
           status = 204;
           break;
       }
       if (response.destroyed) {
         return;
+      }
+      if (revision) {
+        response.setHeader('ETag', this.formatEtag(revision));
       }
       response.writeHead(status);
       response.end(status === 204 ? undefined : JSON.stringify(body));
@@ -85,12 +107,38 @@ export class TripHttpService {
         return;
       }
       const error =
-        cause instanceof TripError ? cause : tripStorageUnavailable();
+        cause instanceof TripError
+          ? cause
+          : cause instanceof AuthenticationRequiredError
+            ? tripAuthenticationRequired()
+            : tripStorageUnavailable();
       response.writeHead(error.status);
       response.end(
         JSON.stringify({ error: { code: error.code, message: error.message } }),
       );
     }
+  }
+
+  private parseIfMatch(request: IncomingMessage): string {
+    const header = request.headers['if-match'];
+    if (header === undefined) {
+      throw tripPreconditionRequired();
+    }
+    if (Array.isArray(header)) {
+      throw invalidTripRequest();
+    }
+    const match = /^"([1-9]\d*)"$/.exec(header.trim());
+    if (!match) {
+      throw invalidTripRequest();
+    }
+    return match[1];
+  }
+
+  private formatEtag(revision: string): string {
+    if (!revisionPattern.test(revision)) {
+      throw tripStorageUnavailable();
+    }
+    return `"${revision}"`;
   }
 
   private async readInput(request: IncomingMessage) {

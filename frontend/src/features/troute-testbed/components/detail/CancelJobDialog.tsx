@@ -6,6 +6,7 @@ import {
   DialogFooter,
   Intent,
 } from '@blueprintjs/core';
+import { useL } from '@/shared/i18n';
 
 interface CancelJobDialogProps {
   isOpen: boolean;
@@ -22,12 +23,13 @@ export function CancelJobDialog({
   onCancel,
   onConfirm,
 }: CancelJobDialogProps) {
+  const L = useL();
   return (
     <Dialog
       className="cancel-job-dialog"
       role="alertdialog"
       isOpen={isOpen}
-      title="Job 강제 종료"
+      title={L('testbed:cancelJobDialog.tooltip.forceQuitJob')}
       icon="warning-sign"
       isCloseButtonShown={false}
       canEscapeKeyClose={!loading}
@@ -36,17 +38,22 @@ export function CancelJobDialog({
       onClose={onCancel}
     >
       <DialogBody>
-        <p>현재 실행 중인 Job을 종료합니다.</p>
         <p>
-          이미 수행된 계산과 기록은 유지되며, 종료 후 다시 실행하려면 새 Job을
-          생성해야 합니다.
+          {L(
+            'testbed:cancelJobDialog.description.terminatesCurrentlyRunningJob',
+          )}
+        </p>
+        <p>
+          {L(
+            'testbed:cancelJobDialog.description.calculationsRecordsThatHaveAlreadyBeen',
+          )}
         </p>
       </DialogBody>
       <DialogFooter
         actions={
           <>
             <Button disabled={loading} onClick={onCancel}>
-              취소
+              {L('common:action.cancel')}
             </Button>
             <Button
               icon="stop"
@@ -55,7 +62,7 @@ export function CancelJobDialog({
               disabled={loading}
               onClick={onConfirm}
             >
-              강제 종료
+              {L('testbed:cancelJobDialog.tooltip.forceQuitJob')}
             </Button>
           </>
         }

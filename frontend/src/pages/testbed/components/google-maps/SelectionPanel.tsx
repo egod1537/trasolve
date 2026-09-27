@@ -1,10 +1,14 @@
 import type { MapClickEvent, MapPlace } from '@/map/types/googleMapComponent';
 import type { Endpoint } from '@/pages/testbed/components/google-maps/types';
 import { Coordinates } from '@/pages/testbed/components/google-maps/Coordinates';
+import { useL, L, NL } from '@/shared/i18n';
 
 function endpointFromPoint(point: MapClickEvent): Endpoint {
   return {
-    text: `${point.lat}, ${point.lng}`,
+    text: L('testbed:tcacheLocationList.text.message2', {
+      lat: point.lat,
+      lng: point.lng,
+    }),
     location: point.placeId
       ? { type: 'place', placeId: point.placeId }
       : { type: 'coordinates', lat: point.lat, lng: point.lng },
@@ -39,17 +43,21 @@ export function SelectionPanel({
   onIntermediateSelect,
   onDestinationSelect,
 }: Props) {
+  const L = useL();
   return (
     <div className="maps-test-selections">
-      <section aria-label="Last Map Click">
-        <h2>Last Map Click · 선택 좌표</h2>
+      <section aria-label={L('testbed:selectionPanel.ariaLabel.lastMapClick')}>
+        <h2>
+          {L('testbed:selectionPanel.title.lastMapClickSelectCoordinates')}
+        </h2>
         {clicked ? (
           <>
             <Coordinates point={clicked} />
             <dl className="maps-test-data">
-              <dt>placeId</dt>
+              <dt>{NL('placeId')}</dt>
               <dd>
-                {clicked.placeId ?? '없음 · 장소 아이콘을 클릭해 주세요.'}
+                {clicked.placeId ??
+                  L('testbed:selectionPanel.text.noneClickLocationIcon')}
               </dd>
             </dl>
             <div className="maps-test-actions">
@@ -58,40 +66,53 @@ export function SelectionPanel({
                 disabled={pending}
                 onClick={() => onOriginSelect(endpointFromPoint(clicked))}
               >
-                출발지로 설정
+                {L('testbed:tcacheRouteMap.action.setAsDeparturePoint')}
               </button>
               <button
                 type="button"
                 disabled={pending || !canAddIntermediate}
                 onClick={() => onIntermediateSelect(endpointFromPoint(clicked))}
               >
-                경유지로 추가
+                {L('testbed:tcacheRouteMap.action.addAsStopover')}
               </button>
               <button
                 type="button"
                 disabled={pending}
                 onClick={() => onDestinationSelect(endpointFromPoint(clicked))}
               >
-                도착지로 설정
+                {L('testbed:tcacheRouteMap.action.setAsDestination')}
               </button>
             </div>
           </>
         ) : (
-          <p>지도를 클릭하면 좌표를 길찾기에 사용할 수 있습니다.</p>
+          <p>
+            {L(
+              'testbed:selectionPanel.description.clickMapUseCoordinatesDirections',
+            )}
+          </p>
         )}
       </section>
-      <section aria-label="선택한 장소">
-        <h2>선택 장소</h2>
+      <section
+        aria-label={L('testbed:selectionPanel.ariaLabel.selectedLocation')}
+      >
+        <h2>{L('testbed:selectionPanel.title.placeChoice')}</h2>
         {selectedPlace ? (
           <>
             <dl className="maps-test-data">
-              <dt>이름</dt>
+              <dt>
+                {L(
+                  'testbed:jobBuilderLocationList.jobBuilderLocationItem.text.name',
+                )}
+              </dt>
               <dd>{selectedPlace.name}</dd>
-              <dt>주소</dt>
-              <dd>{selectedPlace.address || '제공되지 않음'}</dd>
+              <dt>{L('testbed:selectionPanel.label.address')}</dt>
+              <dd>
+                {selectedPlace.address ||
+                  L('testbed:routeResultModel.nOTAVAILABLE.text.notProvided')}
+              </dd>
               {selectedPlace.id && (
                 <>
-                  <dt>place id</dt>
+                  <dt>{L('testbed:selectionPanel.label.placeId')}</dt>
                   <dd>{selectedPlace.id}</dd>
                 </>
               )}
@@ -103,7 +124,7 @@ export function SelectionPanel({
                 disabled={pending}
                 onClick={() => onOriginSelect(endpointFromPlace(selectedPlace))}
               >
-                출발지로 설정
+                {L('testbed:tcacheRouteMap.action.setAsDeparturePoint')}
               </button>
               <button
                 type="button"
@@ -112,7 +133,7 @@ export function SelectionPanel({
                   onIntermediateSelect(endpointFromPlace(selectedPlace))
                 }
               >
-                경유지로 추가
+                {L('testbed:tcacheRouteMap.action.addAsStopover')}
               </button>
               <button
                 type="button"
@@ -121,12 +142,16 @@ export function SelectionPanel({
                   onDestinationSelect(endpointFromPlace(selectedPlace))
                 }
               >
-                도착지로 설정
+                {L('testbed:tcacheRouteMap.action.setAsDestination')}
               </button>
             </div>
           </>
         ) : (
-          <p>검색 결과에서 장소를 선택해 주세요.</p>
+          <p>
+            {L(
+              'testbed:selectionPanel.description.selectLocationFromSearchResults',
+            )}
+          </p>
         )}
       </section>
     </div>

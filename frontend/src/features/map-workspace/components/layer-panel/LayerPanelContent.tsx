@@ -13,6 +13,7 @@ import {
   DayLayerSection,
   type SelectionProps,
 } from '@/features/map-workspace/components/layer-panel/DayLayerSection';
+import { useL } from '@/shared/i18n';
 
 type Props = Omit<
   SelectionProps,
@@ -147,6 +148,7 @@ export const LayerPanelContent = memo(function LayerPanelContent({
   selectionRevision,
   ...selection
 }: Props) {
+  const L = useL();
   const {
     selectedDayId,
     selectedPlaceId,
@@ -427,7 +429,9 @@ export const LayerPanelContent = memo(function LayerPanelContent({
         />
       ))}
       {!days.length && (
-        <p className="trip-empty-day">아직 여행 일정이 없습니다.</p>
+        <p className="trip-empty-day">
+          {L('map:layerPanelContent.description.thereNoTravelPlansYet')}
+        </p>
       )}
     </div>
   );

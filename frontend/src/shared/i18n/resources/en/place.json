@@ -1,0 +1,316 @@
+{
+  "googlePlaceCard": {
+    "action": {
+      "addSchedule": "add to schedule",
+      "adding": "Adding..."
+    },
+    "description": {
+      "failedAddLocation": "Failed to add location.",
+      "failedLoadLocationInformation": "Failed to load location information.",
+      "loadingLocationInformation": "Loading location information."
+    },
+    "rating": {
+      "ariaLabel": {
+        "ratingPoints": "Rating {{toFixed}}points{{value}}",
+        "reviews": ", {{format}} reviews"
+      }
+    },
+    "text": {
+      "addAnotherLayer": "Please add another layer",
+      "address": "address",
+      "closeGooglePlacesDetailCard": "Close the Google Places detail card",
+      "phoneNumber": "phone number",
+      "reviews": "{{reviewCount}} reviews",
+      "selectDifferentLocationTryAgainLater": "Please select a different location and try again later.",
+      "viewGoogleMaps": "View on Google Maps",
+      "website": "website"
+    },
+    "tooltip": {
+      "locationInformation": "Location information"
+    }
+  },
+  "mapSearchToolbar": {
+    "ariaLabel": {
+      "mapPlaceSearch": "map place search",
+      "openQuickSearch": "Open quick search ({{quickSearchShortcutLabel}})",
+      "placeSearchResults": "Place search results",
+      "search": "search",
+      "searchPlace": "Search for a place"
+    },
+    "description": {
+      "noSearchResults": "No search results",
+      "searchingLocation": "Searching for a location."
+    },
+    "runSearch": {
+      "text": {
+        "enterAtLeastTwoCharactersAs": "Please enter at least two characters as a search term."
+      }
+    },
+    "searchAutocomplete": {
+      "text": {
+        "locationSearchFailedTryAgain": "Location search failed. Please try again."
+      }
+    },
+    "selectSuggestion": {
+      "text": {
+        "failedLoadLocationInformationSelectAgain": "Failed to load location information. Please select again."
+      }
+    },
+    "text": {
+      "noAddressInformation": "No address information"
+    },
+    "tooltip": {
+      "quickSearch": "Quick Search ({{quickSearchShortcutLabel}})"
+    }
+  },
+  "placeCategory": {
+    "pLACECATEGORYLABELS": {
+      "text": {
+        "accommodation": "accommodation",
+        "cafe": "cafe",
+        "educationalFacilities": "educational facilities",
+        "medicalFacility": "medical facility",
+        "park": "park",
+        "place": "place",
+        "restaurant": "restaurant",
+        "store": "store",
+        "touristAttraction": "tourist attraction",
+        "transportationFacilities": "transportation facilities"
+      }
+    }
+  },
+  "placeDeleteConfirmCard": {
+    "action": {
+      "deleting": "Deleting…"
+    },
+    "ariaLabel": {
+      "confirmDeletion": "Confirm deletion of {{placeName}}",
+      "removeFromCalendar": "Remove {{placeName}} from calendar"
+    },
+    "text": {
+      "willBeRemovedFromCurrentSchedule": "“ {{placeName}} ” will be removed from your current schedule.",
+      "youSureYouWantDeleteIt": "Are you sure you want to delete it from your calendar?"
+    }
+  },
+  "placeDetailContent": {
+    "ariaLabel": {
+      "edit": "Edit",
+      "editPlaceName": "Edit {{name}} place name",
+      "memo": "{{name}} memo {{value}}",
+      "notes": "{{name}} notes",
+      "removeFromCalendar": "Remove from calendar"
+    },
+    "description": {
+      "doubleClickEnterNote": "Double click to enter a note",
+      "noNotes": "no notes",
+      "setTimeYouWillStayAt": "Please set the time you will stay at this location"
+    },
+    "text": {
+      "changeVenueStyle": "Change venue style",
+      "closeBusinessHoursDetails": "Close business hours details",
+      "closeLocationDetailsCard": "Close location details card",
+      "savingNote": "Saving a note."
+    },
+    "title": {
+      "desiredStayTime": "Desired stay time",
+      "memo": "memo"
+    },
+    "tooltip": {
+      "businessHours": "Business hours",
+      "doubleClickEdit": "Double click to edit",
+      "doubleClickEditPlaceName": "Double click to edit place name"
+    }
+  },
+  "placeDuration": {
+    "formatDurationMinutes": {
+      "text": {
+        "hours": "{{hours}} hours",
+        "hoursMinutes": "{{hours}} hours {{minutes}} minutes",
+        "minutes": "{{minutes}} minutes"
+      }
+    }
+  },
+  "placeDurationControl": {
+    "ariaLabel": {
+      "desiredLengthStay": "Desired length of stay: {{value}}",
+      "selectDesiredStayTime": "Select desired stay time"
+    },
+    "formatDurationOption": {
+      "text": {
+        "minutes": "{{durationMinutes}} minutes"
+      }
+    },
+    "text": {
+      "dwellTimeEnterManually": "Dwell time to enter manually",
+      "enterDirectlyMinutes": "Enter directly (in {{stepMinutes}} minutes)",
+      "minutes": "minutes",
+      "notSet": "Not set",
+      "selectTime": "Please select a time",
+      "set2": "set"
+    }
+  },
+  "placeOpeningHours": {
+    "ariaLabel": {
+      "viewAllBusinessHours": "View all business hours"
+    },
+    "description": {
+      "locationOpeningHoursCouldNotBe": "The location opening hours could not be retrieved."
+    },
+    "formatDuration": {
+      "text": {
+        "hoursMinutes": "{{hours}} hours {{remainingMinutes}} minutes",
+        "minutes": "{{rounded}} minutes"
+      }
+    },
+    "formatNextOpen": {
+      "text": {
+        "open": "{{prefix}} {{formatClockTime}} open",
+        "today": "today",
+        "tomorrow": "tomorrow"
+      }
+    },
+    "formatTodayHours": {
+      "text": {
+        "after": "After {{formatClockTime}}",
+        "message": "{{formatClockTime}} ~ {{value}}{{formatClockTime}}",
+        "message2": "{{formatClockTime}} ~ {{formatClockTime}}",
+        "nextDay": "next day"
+      }
+    },
+    "formatWeeklyHours": {
+      "text": {
+        "closed": "Closed",
+        "open24HoursFromMondaySunday": "Open 24 hours from Monday to Sunday"
+      }
+    },
+    "getPlaceOpeningStatus": {
+      "text": {
+        "businessStartsAfter": "Business starts after {{formatDuration}}",
+        "closedAfter": "Closed after {{formatDuration}}",
+        "noRealTimeStatusCalculatedAs": "No real-time status is calculated as there is no local time zone information for the location."
+      }
+    },
+    "shortWeekdayLabels": {
+      "text": {
+        "angry": "Tue",
+        "gold": "Fri",
+        "month": "Mon",
+        "neck": "Thu",
+        "number": "Wed",
+        "sat": "Sat",
+        "work": "Sun"
+      }
+    },
+    "text": {
+      "beforeSales": "Before sales",
+      "businessHoursToday": "Business hours today: {{value}}",
+      "closed": "Closed",
+      "dueSoon": "Due soon",
+      "from": "From {{startText}} to {{endText}}",
+      "loadingBusinessHours": "Loading business hours",
+      "needCheckBusinessHours": "Need to check business hours",
+      "noBusinessHoursInformation": "No business hours information",
+      "noOpeningsToday": "No openings today",
+      "open": "Open",
+      "open24Hours": "Open 24 hours"
+    },
+    "weekdayLabels": {
+      "text": {
+        "friday": "friday",
+        "monday": "monday",
+        "saturday": "saturday",
+        "sunday": "sunday",
+        "thursday": "Thursday",
+        "tuesday": "tuesday",
+        "wednesday": "Wednesday"
+      }
+    }
+  },
+  "placeOpeningHoursDetails": {
+    "description": {
+      "weeklyBusinessHoursInformationNotAvailable": "Weekly business hours information is not available."
+    },
+    "label": {
+      "businessHoursToday": "Business hours today"
+    },
+    "title": {
+      "businessHoursByDay": "Business hours by day"
+    }
+  },
+  "placeStyle": {
+    "pLACESTYLEOPTIONS": {
+      "label": {
+        "entertainment": "entertainment",
+        "generalPlace": "general place",
+        "guitar": "guitar",
+        "landmark": "landmark",
+        "museumCulture": "Museum/Culture",
+        "observatory": "observatory",
+        "parksNature": "Parks/Nature",
+        "shopping": "shopping",
+        "transportationStation": "Transportation/Station"
+      }
+    }
+  },
+  "placeStyleControl": {
+    "ariaLabel": {
+      "changeIconColor": "Change {{placeName}} icon and color",
+      "closeStyleSettings": "Close style settings",
+      "color": "{{color}} color",
+      "setIconColor": "Set {{placeName}} icon and color"
+    },
+    "label": {
+      "color": "color",
+      "locationType": "Location type"
+    },
+    "tooltip": {
+      "changeIconsColors": "Change icons and colors"
+    }
+  },
+  "placeTimeTimeline": {
+    "ariaLabel": {
+      "visitVisitDuration": "visit {{formatClockTime}}, visit duration {{formatDurationMinutes}}",
+      "visitingHoursHaveNotBeenSet": "Visiting hours have not been set. Select a start time for your visit from the timeline."
+    },
+    "createTimelineModel": {
+      "text": {
+        "fromSales": "From Sales {{startText}} to {{endText}}",
+        "visit": "Visit {{arrivalText}}",
+        "visitDuration": "Visit Duration {{formatDurationMinutes}}"
+      }
+    },
+    "expandedTimeline": {
+      "ariaLabel": {
+        "timeTimeline": "time timeline"
+      },
+      "description": {
+        "clickTimelineSetVisitTimes": "Click on the timeline to set visit times"
+      },
+      "text": {
+        "youSavingTime": "You are saving time."
+      },
+      "title": {
+        "time": "time"
+      }
+    },
+    "formatCompactDuration": {
+      "text": {
+        "minutes": "{{remainder}} minutes"
+      }
+    },
+    "text": {
+      "visit": "Visit {{formatCompactDuration}}"
+    }
+  },
+  "timeRangeTimeline": {
+    "ariaLabel": {
+      "adjustVisitStartTime": "Adjust visit start time",
+      "adjustmentStayEndTime": "Adjustment of stay end time",
+      "selectVisitStartTime": "Select visit start time"
+    },
+    "tooltip": {
+      "adjustByDraggingUsingLeftRight": "Adjust by dragging or using the left and right arrow keys",
+      "selectVisitStartTimeByClicking": "Select the visit start time by clicking or using the arrow keys and Enter."
+    }
+  }
+}

@@ -3,7 +3,6 @@ import type { PlaceStyle } from '@trasolve/shared';
 import type { usePlaceReorder } from '@/features/map-workspace/hooks/usePlaceReorder';
 import type { LayerSelectionModifiers } from '@/features/map-workspace/model/useMapWorkspace';
 import type { LayerValidationState, TripPlace } from '@/entities/trip';
-import { formatDurationMinutes } from '@/entities/place';
 import { resolvePlaceStyle } from '@/entities/place';
 import { PlaceTimeTimeline } from '@/features/place-editor';
 import { InlineRename } from '@/shared/ui/InlineRename';
@@ -12,6 +11,8 @@ import { LayerItemChevron } from '@/features/map-workspace/components/layer-pane
 import { LayerItemShell } from '@/features/map-workspace/components/layer-panel/LayerItemShell';
 import { LayerValidationIndicator } from '@/features/map-workspace/components/layer-panel/LayerValidationIndicator';
 import { PlaceStyleControl } from '@/features/place-editor';
+import { useL } from '@/shared/i18n';
+import { formatDurationMinutes } from '@/shared/i18n/formatters';
 
 type ReorderControls = ReturnType<typeof usePlaceReorder>;
 type RouteRole = 'start' | 'destination';
@@ -75,6 +76,7 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
   onDragLostPointerCapture,
   onDragKeyDown,
 }: Props) {
+  const L = useL();
   const placeStyle = resolvePlaceStyle(place.placeStyle, dayColor);
   const startNameEditing = (event: MouseEvent<HTMLSpanElement>) => {
     event.preventDefault();
@@ -101,7 +103,9 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
         {editing ? (
           <InlineRename
             value={place.name}
-            ariaLabel={`${place.name} 이름 수정`}
+            ariaLabel={L('map:placeLayerItem.content.ariaLabel.editName', {
+              name: place.name,
+            })}
             className="trip-place-name-input"
             onCommit={commitName}
             onCancel={finishNameEditing}
@@ -113,18 +117,27 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
         )}
         {routeRole && (
           <span className="sr-only">
-            {routeRole === 'start' ? '출발 장소' : '도착 장소'}
+            {routeRole === 'start'
+              ? L('map:placeLayerItem.content.text.departureLocation')
+              : L('map:placeLayerItem.content.text.arrivalLocation')}
           </span>
         )}
         {place.preferredDurationMinutes !== undefined && (
           <span className="trip-place-stay-duration">
-            체류 {formatDurationMinutes(place.preferredDurationMinutes)}
+            {L('map:placeLayerItem.text.stay', {
+              formatDurationMinutes: formatDurationMinutes(
+                place.preferredDurationMinutes,
+                L,
+              ),
+            })}
           </span>
         )}
       </span>
       <PlaceTimeTimeline
         time={place.time}
-        visitDurationMinutes={place.visitDurationMinutes}
+        visitDurationMinutes={
+          place.preferredDurationMinutes ?? place.visitDurationMinutes
+        }
         openingHours={place.openingHours}
         variant="compact"
       />
@@ -143,6 +156,7 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
       dropPosition={dropPosition}
       previewOffset={previewOffset}
       treeNodeVariant={routeRole}
+      endpointRole={routeRole === 'destination' ? 'end' : routeRole}
       onOpenDetails={openDetails}
       statusIndicator={<LayerValidationIndicator validation={validation} />}
       chevron={
@@ -150,7 +164,12 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
           variant="item"
           expanded={detailsOpen}
           controls={detailsOpen ? 'layer-place-detail-card' : undefined}
-          label={`${place.name} 상세 ${detailsOpen ? '닫기' : '열기'}`}
+          label={L('map:placeLayerItem.text.details', {
+            name: place.name,
+            value: detailsOpen
+              ? L('common:action.close')
+              : L('map:placeLayerItem.text.open'),
+          })}
           detailControl
           onClick={(event) => {
             event.stopPropagation();
@@ -190,7 +209,9 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
         style={placeStyle}
         visible
         busy={false}
-        triggerLabel={`${place.name} 아이콘 및 색상 변경`}
+        triggerLabel={L('map:placeLayerItem.text.changeIconColor', {
+          name: place.name,
+        })}
         onChangeStyle={onUpdatePlaceStyle}
       />
       {editing ? (

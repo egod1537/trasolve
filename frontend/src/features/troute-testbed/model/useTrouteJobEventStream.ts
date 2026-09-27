@@ -9,6 +9,7 @@ import {
   parseTrouteJobEvent,
   type TrouteJobEventType,
 } from '@/features/troute-testbed/api/troute';
+import { useL } from '@/shared/i18n';
 
 const EVENT_TYPES: readonly TrouteJobEventType[] = [
   'snapshot',
@@ -45,6 +46,7 @@ export function useTrouteJobEventStream(
   jobId: string | null,
   { onJob }: Options = {},
 ) {
+  const L = useL();
   const [state, setState] = useState<StreamState>({
     jobId,
     status: jobId === null ? 'idle' : 'connecting',
@@ -95,7 +97,11 @@ export function useTrouteJobEventStream(
       try {
         const parsed = parseTrouteJobEvent(type, event.data);
         if (parsed.state.job_id !== jobId) {
-          throw new Error('선택한 Job과 SSE event의 Job ID가 다릅니다.');
+          throw new Error(
+            L(
+              'testbed:useTrouteJobEventStream.text.jobCannotProcessRealTimeEvents',
+            ),
+          );
         }
         if (
           parsed.sequence !== undefined &&
@@ -133,7 +139,9 @@ export function useTrouteJobEventStream(
           'retrying',
           cause instanceof Error
             ? cause.message
-            : 'Job 실시간 event를 처리할 수 없습니다.',
+            : L(
+                'testbed:useTrouteJobEventStream.text.jobCannotProcessRealTimeEvents',
+              ),
         );
       }
     };
@@ -154,7 +162,12 @@ export function useTrouteJobEventStream(
       nextSource.onopen = () => updateState('open');
       nextSource.onerror = () => {
         if (!disposed && source === nextSource) {
-          updateState('retrying', '실시간 연결이 끊겨 다시 연결하고 있습니다.');
+          updateState(
+            'retrying',
+            L(
+              'testbed:useTrouteJobEventStream.text.liveConnectionWasLostBeingReconnected',
+            ),
+          );
         }
       };
       for (const type of EVENT_TYPES) {
@@ -200,7 +213,9 @@ export function useTrouteJobEventStream(
           'retrying',
           cause instanceof Error
             ? cause.message
-            : 'Job 상태를 다시 동기화할 수 없습니다.',
+            : L(
+                'testbed:useTrouteJobEventStream.text.jobStatusCannotBeResynchronized',
+              ),
         );
         connect();
       } finally {
@@ -237,7 +252,7 @@ export function useTrouteJobEventStream(
       closeSource();
       resyncRef.current = () => Promise.resolve();
     };
-  }, [jobId, onJob]);
+  }, [jobId, L, onJob]);
 
   return state.jobId === jobId
     ? { status: state.status, error: state.error, resync }

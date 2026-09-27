@@ -4,23 +4,50 @@ import type {
   Endpoint,
   IntermediateInput,
 } from '@/pages/testbed/components/google-maps/types';
+import { useL, L } from '@/shared/i18n';
 
 const modes: { value: TravelMode; label: string }[] = [
-  { value: TravelMode.DRIVING, label: '자동차' },
-  { value: TravelMode.WALKING, label: '도보' },
-  { value: TravelMode.TRANSIT, label: '대중교통' },
-  { value: TravelMode.BICYCLING, label: '자전거' },
+  {
+    value: TravelMode.DRIVING,
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.car');
+    },
+  },
+  {
+    value: TravelMode.WALKING,
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.walk');
+    },
+  },
+  {
+    value: TravelMode.TRANSIT,
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.publicTransportation');
+    },
+  },
+  {
+    value: TravelMode.BICYCLING,
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.bicycle');
+    },
+  },
 ];
 
 function describeEndpoint(endpoint: Endpoint): string {
   const location = endpoint.location;
   if (location?.type === 'place') {
-    return `선택한 장소 · placeId: ${location.placeId}`;
+    return L(
+      'testbed:directionsPanel.describeEndpoint.text.selectedPlacePlaceid',
+      { placeId: location.placeId },
+    );
   }
   if (location?.type === 'coordinates') {
-    return `좌표: ${location.lat}, ${location.lng}`;
+    return L('testbed:directionsPanel.describeEndpoint.text.coordinates', {
+      lat: location.lat,
+      lng: location.lng,
+    });
   }
-  return '주소 문자열';
+  return L('testbed:directionsPanel.describeEndpoint.text.addressString');
 }
 
 type Props = {
@@ -58,6 +85,7 @@ export function DirectionsPanel({
   onAlternativesChange,
   onSubmit,
 }: Props) {
+  const L = useL();
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -68,9 +96,9 @@ export function DirectionsPanel({
   return (
     <form onSubmit={handleSubmit}>
       <fieldset disabled={pending}>
-        <legend>길찾기</legend>
+        <legend>{L('testbed:directionsPanel.label.directions')}</legend>
         <label>
-          출발지
+          {L('testbed:jobResultMapComparison.locationSequence.label.departure')}
           <input
             required
             value={origin.text}
@@ -83,7 +111,11 @@ export function DirectionsPanel({
           const descriptionId = `${inputId}-description`;
           return (
             <div className="maps-test-intermediate" key={intermediate.id}>
-              <label htmlFor={inputId}>경유지 {index + 1}</label>
+              <label htmlFor={inputId}>
+                {L('testbed:directionsPanel.text.waypoint', {
+                  value: index + 1,
+                })}
+              </label>
               <div className="maps-test-intermediate-row">
                 <input
                   id={inputId}
@@ -96,11 +128,16 @@ export function DirectionsPanel({
                 <button
                   type="button"
                   className="maps-test-intermediate-remove"
-                  aria-label={`경유지 ${index + 1} 삭제`}
-                  title={`경유지 ${index + 1} 삭제`}
+                  aria-label={L(
+                    'testbed:directionsPanel.ariaLabel.deleteWaypoint',
+                    { value: index + 1 },
+                  )}
+                  title={L('testbed:directionsPanel.ariaLabel.deleteWaypoint', {
+                    value: index + 1,
+                  })}
                   onClick={() => onIntermediateRemove(intermediate.id)}
                 >
-                  삭제
+                  {L('common:action.delete')}
                 </button>
               </div>
               <small id={descriptionId}>
@@ -115,10 +152,10 @@ export function DirectionsPanel({
           disabled={!canAddIntermediate}
           onClick={onIntermediateAdd}
         >
-          + 경유지 추가
+          {L('testbed:directionsPanel.action.addWaypoint')}
         </button>
         <label>
-          도착지
+          {L('testbed:jobResultMapComparison.locationSequence.label.arrival')}
           <input
             required
             value={destination.text}
@@ -127,7 +164,7 @@ export function DirectionsPanel({
           <small>{describeEndpoint(destination)}</small>
         </label>
         <label>
-          이동수단
+          {L('testbed:jobRequestSummary.label.meansTransportation')}
           <select
             value={travelMode}
             onChange={(event) => {
@@ -152,13 +189,15 @@ export function DirectionsPanel({
             checked={alternatives}
             onChange={(event) => onAlternativesChange(event.target.checked)}
           />
-          대체 경로 요청
+          {L('testbed:tcacheRouteOptions.text.alternateRouteRequest')}
         </label>
         <button
           type="submit"
           disabled={!origin.text.trim() || !destination.text.trim()}
         >
-          {pending ? '요청 중…' : '길찾기'}
+          {pending
+            ? L('testbed:directionsPanel.action.requesting')
+            : L('testbed:directionsPanel.label.directions')}
         </button>
       </fieldset>
     </form>

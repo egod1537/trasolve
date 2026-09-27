@@ -2,6 +2,7 @@ import type {
   TrouteCancelGatewayResult,
   TrouteGatewayResult,
 } from '@/entities/route-job';
+import { L, NL } from '@/shared/i18n';
 
 export type GatewayOutcome =
   | 'accepted'
@@ -56,11 +57,22 @@ export function describeGatewayError(result: TrouteGatewayResult): string {
     return describeHttpError(
       result.httpStatus,
       result.errorResponse,
-      'Trasolve backend 요청이 실패했습니다.',
+      L(
+        'testbed:gatewayResultModel.describeGatewayError.text.trasolveBackendRequestFailed',
+      ),
     );
   }
   if (!result.optimization && !result.acceptedJobId) {
-    return `응답 검증 실패: ${result.responseValidationError ?? '성공 응답이 troute 계약과 일치하지 않습니다.'}`;
+    return L(
+      'testbed:gatewayResultModel.describeGatewayError.text.responseValidationFailed',
+      {
+        value:
+          result.responseValidationError ??
+          L(
+            'testbed:gatewayResultModel.describeGatewayError.text.successResponseDoesNotMatchTroute',
+          ),
+      },
+    );
   }
   return '';
 }
@@ -70,11 +82,15 @@ export function describeCancelError(result: TrouteCancelGatewayResult): string {
     return describeHttpError(
       result.httpStatus,
       result.errorResponse,
-      'Job 강제 종료 요청이 실패했습니다.',
+      L(
+        'testbed:gatewayResultModel.describeCancelError.text.requestForceTerminateJobFailed',
+      ),
     );
   }
   if (!result.jobState) {
-    return 'Job 강제 종료 응답 형식이 올바르지 않습니다.';
+    return L(
+      'testbed:gatewayResultModel.describeCancelError.text.jobForceTerminationResponseFormatIncorrect',
+    );
   }
   return '';
 }
@@ -86,11 +102,11 @@ function describeHttpError(
 ): string {
   return errorResponse
     ? [
-        `HTTP ${httpStatus}`,
+        `${NL('HTTP')} ${httpStatus}`,
         errorResponse.error.code,
         errorResponse.error.message,
       ]
         .filter(Boolean)
         .join(' · ')
-    : `${fallback} (HTTP ${httpStatus})`;
+    : `${fallback} (${NL('HTTP')} ${httpStatus})`;
 }

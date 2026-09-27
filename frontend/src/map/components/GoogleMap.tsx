@@ -24,6 +24,7 @@ import type {
   GoogleMapStatus,
 } from '@/map/types/googleMapComponent';
 import '@/map/components/google-map.css';
+import { useL } from '@/shared/i18n';
 
 type MapContextValue = {
   adapter: MapAdapter;
@@ -56,6 +57,7 @@ export function useGoogleMap() {
 }
 
 export function GoogleMap(props: GoogleMapProps) {
+  const L = useL();
   const { resolvedTheme } = useTheme();
   const {
     ref,
@@ -66,7 +68,7 @@ export function GoogleMap(props: GoogleMapProps) {
     polylines,
     className,
     style,
-    ariaLabel = '지도',
+    ariaLabel = L('map:googleMap.ariaLabel.map'),
     children,
     renderStatus,
   } = props;
@@ -120,7 +122,9 @@ export function GoogleMap(props: GoogleMapProps) {
       runtimeRef.current = null;
       setRuntime(null);
       setStatus('error');
-      latest.current.onError?.(new Error('Google Maps 인증에 실패했습니다.'));
+      latest.current.onError?.(
+        new Error(L('map:googleMap.text.googleMapsAuthenticationFailed')),
+      );
     };
     window.addEventListener(mapsAuthErrorEvent, authFailed);
     void createGoogleMapRuntime(canvas, controller.signal, {
@@ -158,7 +162,7 @@ export function GoogleMap(props: GoogleMapProps) {
       runtimeRef.current = null;
       ownedRuntime?.dispose();
     };
-  }, [mapId, resolvedTheme]);
+  }, [L, mapId, resolvedTheme]);
 
   useEffect(() => {
     if (!runtime) {
@@ -244,14 +248,16 @@ export function GoogleMap(props: GoogleMapProps) {
           >
             <p>
               {status === 'loading'
-                ? '지도를 불러오고 있습니다'
+                ? L('map:mapCanvas.renderMapStatus.title.mapLoading')
                 : status === 'missing-key'
-                  ? '지도 연결을 설정해 주세요.'
-                  : '지도를 불러올 수 없습니다. 연결을 확인해 주세요.'}
+                  ? L('map:googleMap.description.setUpMapConnection')
+                  : L(
+                      'map:googleMap.description.mapCannotBeLoadedCheckConnection',
+                    )}
             </p>
             {status === 'error' && (
               <button type="button" onClick={() => window.location.reload()}>
-                다시 시도
+                {L('common:action.retry')}
               </button>
             )}
           </div>

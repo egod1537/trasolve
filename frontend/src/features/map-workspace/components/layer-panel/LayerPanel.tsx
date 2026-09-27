@@ -16,6 +16,7 @@ import { LayerPanelHeader } from '@/features/map-workspace/components/layer-pane
 import { LayerPanelContent } from '@/features/map-workspace/components/layer-panel/LayerPanelContent';
 import { LayerPlaceDetailCard } from '@/features/map-workspace/components/layer-panel/LayerPlaceDetailCard';
 import { ShareTripModal } from '@/features/map-workspace/components/share/ShareTripModal';
+import { useL } from '@/shared/i18n';
 
 type DetailTarget =
   { type: 'place'; id: string } | { type: 'polyline'; id: string } | null;
@@ -84,6 +85,7 @@ export const LayerPanel = memo(function LayerPanel({
   selectedPolylineIds,
   ...contentProps
 }: Props) {
+  const L = useL();
   const [detailTarget, setDetailTarget] = useState<DetailTarget>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const shareButtonRef = useRef<HTMLButtonElement>(null);
@@ -212,7 +214,7 @@ export const LayerPanel = memo(function LayerPanel({
         ref={sidebarRef}
         className="layer-panel trip-sidebar"
         inert={busy}
-        aria-label="여행 일정"
+        aria-label={L('map:layerPanel.ariaLabel.travelItinerary')}
       >
         <LayerPanelHeader
           trip={trip}

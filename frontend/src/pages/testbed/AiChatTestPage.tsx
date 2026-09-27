@@ -4,8 +4,10 @@ import { listOpenWebUIModels, type OpenWebUIModel } from '@/features/ai-chat';
 import { MapAiPanel } from '@/features/ai-chat';
 import '@/pages/testbed/styles/testbed.css';
 import '@/pages/testbed/styles/ai-chat-test.css';
+import { NL, useL } from '@/shared/i18n';
 
 function AiChatTestContent() {
+  const L = useL();
   const [conversation, setConversation] = useState(0);
   const [models, setModels] = useState<OpenWebUIModel[]>([]);
   const [modelsPending, setModelsPending] = useState(false);
@@ -33,7 +35,9 @@ function AiChatTestContent() {
       setModelsError(
         cause instanceof Error
           ? cause.message
-          : '모델 목록을 불러올 수 없습니다.',
+          : L(
+              'testbed:aiChatTestPage.aiChatTestContent.text.modelListCouldNotBeLoaded',
+            ),
       );
     } finally {
       setModelsPending(false);
@@ -43,48 +47,75 @@ function AiChatTestContent() {
   return (
     <main className="testbed-page ai-chat-test-page">
       <header className="testbed-header">
-        <a href="/testbed">← 테스트베드 목록</a>
-        <h1>AI Chat Test Bed</h1>
-        <p>실제 채팅 API로 대화, 응답 대기, 오류 표시를 확인합니다.</p>
+        <a href="/testbed">
+          {L('testbed:aiChatTestPage.aiChatTestContent.text.testbedList')}
+        </a>
+        <h1>
+          {L('testbed:aiChatTestPage.aiChatTestContent.title.aiChatTestBed')}
+        </h1>
+        <p>
+          {L(
+            'testbed:aiChatTestPage.aiChatTestContent.description.checkConversationsWaitResponsesDisplayErrors',
+          )}
+        </p>
       </header>
       <div className="ai-chat-test-toolbar">
-        <code>POST {API_ROUTES.chat}</code>
+        <code>
+          {NL('POST')} {API_ROUTES.chat}
+        </code>
         <button
           type="button"
           onClick={() => setConversation((value) => value + 1)}
         >
-          대화 초기화
+          {L(
+            'testbed:aiChatTestPage.aiChatTestContent.action.resetConversation',
+          )}
         </button>
       </div>
       <p className="ai-chat-test-hint">
-        Enter로 전송 · Shift+Enter로 줄바꿈 · 초기화하면 진행 중인 요청도
-        취소됩니다.
+        {L(
+          'testbed:aiChatTestPage.aiChatTestContent.description.sendEnterBreakLineShiftEnter',
+        )}
       </p>
       <section
         className="ai-chat-test-models"
         aria-labelledby="ai-models-title"
       >
         <div>
-          <h2 id="ai-models-title">OpenWebUI Models</h2>
-          <code>GET {API_ROUTES.openWebUIModels}</code>
+          <h2 id="ai-models-title">
+            {L(
+              'testbed:aiChatTestPage.aiChatTestContent.title.openwebuiModels',
+            )}
+          </h2>
+          <code>
+            {NL('GET')} {API_ROUTES.openWebUIModels}
+          </code>
         </div>
         <button
           type="button"
           disabled={modelsPending}
           onClick={() => void loadModels()}
         >
-          {modelsPending ? '불러오는 중…' : '모델 목록 조회'}
+          {modelsPending
+            ? L('testbed:aiChatTestPage.aiChatTestContent.action.loading')
+            : L(
+                'testbed:aiChatTestPage.aiChatTestContent.action.viewModelList',
+              )}
         </button>
         {modelsError ? <p role="alert">{modelsError}</p> : null}
         {modelsLoaded ? (
           models.length ? (
             <label className="ai-chat-test-model-selector">
-              요청 모델
+              {L('testbed:aiChatTestPage.aiChatTestContent.label.requestModel')}
               <select
                 value={selectedModel}
                 onChange={(event) => setSelectedModel(event.target.value)}
               >
-                <option value="">서버 기본 모델 (OPENWEBUI_MODEL)</option>
+                <option value="">
+                  {L(
+                    'testbed:aiChatTestPage.aiChatTestContent.text.serverDefaultModelOpenwebuiModel',
+                  )}
+                </option>
                 {models.map((model) => (
                   <option key={model.id} value={model.id}>
                     {model.name} ({model.id})
@@ -93,7 +124,11 @@ function AiChatTestContent() {
               </select>
             </label>
           ) : (
-            <p role="status">사용 가능한 모델이 없습니다.</p>
+            <p role="status">
+              {L(
+                'testbed:aiChatTestPage.aiChatTestContent.description.thereNoModelsAvailable',
+              )}
+            </p>
           )
         ) : null}
       </section>

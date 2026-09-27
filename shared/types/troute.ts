@@ -7,6 +7,7 @@ import type {
   trouteJobCancelledEventSchema,
   trouteJobCompletedEventSchema,
   trouteJobFailedEventSchema,
+  trouteLegacyFlatJobEventSchema,
   trouteJobProgressEventSchema,
   trouteJobSnapshotEventSchema,
   trouteJobStateSchema,
@@ -16,12 +17,18 @@ import type {
   trouteOptimizeRequestSchema,
   trouteOptimizeResponseSchema,
   trouteProgressStageSchema,
+  trouteProviderSelectionSourceSchema,
   trouteRemoteJobListResponseSchema,
   trouteRemoteJobSchema,
   trouteRemoteJobSummarySchema,
   trouteRemoteTimelineEntrySchema,
   trouteRemoteTimelineSchema,
   trouteRouteStopSchema,
+  trouteRouteProviderSchema,
+  trouteSolverCandidateSchema,
+  trouteSolverObjectiveScoreSchema,
+  trouteStartPolicySchema,
+  trouteTravelModeSchema,
 } from '../schemas/troute.js';
 
 export type TrouteProgressStage = z.infer<typeof trouteProgressStageSchema>;
@@ -29,6 +36,9 @@ export type TrouteDebugOptions = z.infer<typeof trouteDebugOptionsSchema>;
 export type TrouteErrorPayload = z.infer<typeof trouteErrorPayloadSchema>;
 export type TrouteJobStatus = z.infer<typeof trouteJobStatusSchema>;
 export type TrouteJobState = z.infer<typeof trouteJobStateSchema>;
+export type TrouteLegacyFlatJobEvent = z.infer<
+  typeof trouteLegacyFlatJobEventSchema
+>;
 export type TrouteJobSnapshotEvent = z.infer<
   typeof trouteJobSnapshotEventSchema
 >;
@@ -51,7 +61,17 @@ export type TrouteJobHistoryResponse = z.infer<
 >;
 export type TrouteLocation = z.infer<typeof trouteLocationSchema>;
 export type TrouteOptimizeRequest = z.infer<typeof trouteOptimizeRequestSchema>;
+export type TrouteStartPolicy = z.infer<typeof trouteStartPolicySchema>;
+export type TrouteTravelMode = z.infer<typeof trouteTravelModeSchema>;
+export type TrouteRouteProvider = z.infer<typeof trouteRouteProviderSchema>;
+export type TrouteProviderSelectionSource = z.infer<
+  typeof trouteProviderSelectionSourceSchema
+>;
 export type TrouteRouteStop = z.infer<typeof trouteRouteStopSchema>;
+export type TrouteSolverObjectiveScore = z.infer<
+  typeof trouteSolverObjectiveScoreSchema
+>;
+export type TrouteSolverCandidate = z.infer<typeof trouteSolverCandidateSchema>;
 export type TrouteOptimizeResponse = z.infer<
   typeof trouteOptimizeResponseSchema
 >;

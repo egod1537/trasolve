@@ -23,6 +23,7 @@ import { MapPopupCardShell } from '@/shared/ui/map/MapPopupCardShell';
 import { PlaceOpeningHours } from '@/features/place-editor/ui/PlaceOpeningHours';
 import { PlaceOpeningHoursDetails } from '@/features/place-editor/ui/PlaceOpeningHoursDetails';
 import { SideDetailCard } from '@/shared/ui/map/SideDetailCard';
+import { useL } from '@/shared/i18n';
 
 type PlaceDetailPlace = Omit<TripPlace, 'location'>;
 type PlaceDetailDay = Pick<TripDay, 'id' | 'title' | 'color'>;
@@ -71,6 +72,7 @@ export function PlaceDetailContent({
   onUpdateStyle,
   onRemove,
 }: Props) {
+  const L = useL();
   const details = usePlaceDetails(place.placeId);
   const [timeSubmitting, setTimeSubmitting] = useState(false);
   const [titleEditing, setTitleEditing] = useState(false);
@@ -241,7 +243,9 @@ export function PlaceDetailContent({
                 visible
                 busy={disabled}
                 className="trip-place-card-style-control"
-                triggerLabel="장소 스타일 변경"
+                triggerLabel={L(
+                  'place:placeDetailContent.text.changeVenueStyle',
+                )}
                 onChangeStyle={onUpdateStyle}
               />
             ) : (
@@ -252,7 +256,10 @@ export function PlaceDetailContent({
             {titleEditing ? (
               <InlineRename
                 value={place.name}
-                ariaLabel={`${place.name} 장소명 수정`}
+                ariaLabel={L(
+                  'place:placeDetailContent.ariaLabel.editPlaceName',
+                  { name: place.name },
+                )}
                 className="trip-place-card-title-input"
                 disabled={titleSubmitting}
                 onCommit={(draft) => void saveTitle(draft)}
@@ -264,7 +271,9 @@ export function PlaceDetailContent({
                 role="button"
                 tabIndex={disabled ? -1 : 0}
                 aria-disabled={disabled}
-                title="더블클릭하여 장소명 수정"
+                title={L(
+                  'place:placeDetailContent.tooltip.doubleClickEditPlaceName',
+                )}
                 onDoubleClick={startTitleEditing}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === 'F2') {
@@ -282,7 +291,7 @@ export function PlaceDetailContent({
           </span>
         }
         subtitle={<p className="trip-place-card-position">{day.title}</p>}
-        closeLabel="장소 상세 카드 닫기"
+        closeLabel={L('place:placeDetailContent.text.closeLocationDetailsCard')}
         onClose={onClose}
         headerActions={
           canRemove ? (
@@ -290,8 +299,10 @@ export function PlaceDetailContent({
               ref={deleteTriggerRef}
               type="button"
               className="trip-place-header-action trip-place-delete-trigger"
-              aria-label="일정에서 삭제"
-              title="일정에서 삭제"
+              aria-label={L(
+                'place:placeDetailContent.ariaLabel.removeFromCalendar',
+              )}
+              title={L('place:placeDetailContent.ariaLabel.removeFromCalendar')}
               aria-haspopup="dialog"
               aria-expanded={deleteConfirmOpen}
               aria-controls={deleteConfirmOpen ? deleteConfirmId : undefined}
@@ -323,7 +334,9 @@ export function PlaceDetailContent({
 
         <PlaceTimeTimeline
           time={place.time}
-          visitDurationMinutes={place.visitDurationMinutes}
+          visitDurationMinutes={
+            place.preferredDurationMinutes ?? place.visitDurationMinutes
+          }
           openingHours={openingHours}
           variant="expanded"
           readOnly={!canEditTime}
@@ -334,8 +347,10 @@ export function PlaceDetailContent({
 
         <section className="trip-place-duration-section">
           <div className="trip-place-duration-heading">
-            <h3>희망 체류 시간</h3>
-            <small>이 장소에서 머무를 시간을 설정해 주세요</small>
+            <h3>{L('place:placeDetailContent.title.desiredStayTime')}</h3>
+            <small>
+              {L('place:placeDetailContent.description.setTimeYouWillStayAt')}
+            </small>
           </div>
           <PlaceDurationControl
             preferredDurationMinutes={place.preferredDurationMinutes}
@@ -355,7 +370,7 @@ export function PlaceDetailContent({
 
         <div className="trip-place-card-body">
           <section className="trip-place-management-section">
-            <h3>메모</h3>
+            <h3>{L('place:placeDetailContent.title.memo')}</h3>
             {memoEditing ? (
               <form
                 className="trip-place-memo-editor"
@@ -368,7 +383,9 @@ export function PlaceDetailContent({
                   ref={memoTextareaRef}
                   value={memoDraft}
                   maxLength={4000}
-                  aria-label={`${place.name} 메모`}
+                  aria-label={L('place:placeDetailContent.ariaLabel.notes', {
+                    name: place.name,
+                  })}
                   disabled={disabled}
                   onChange={(event) => setMemoDraft(event.target.value)}
                   onKeyDown={(event) => {
@@ -388,17 +405,19 @@ export function PlaceDetailContent({
                 />
                 <div className="trip-place-memo-editor-actions">
                   {memoSubmitting && (
-                    <span role="status">메모를 저장하고 있습니다.</span>
+                    <span role="status">
+                      {L('place:placeDetailContent.text.savingNote')}
+                    </span>
                   )}
                   <button type="submit" disabled={disabled}>
-                    저장
+                    {L('common:action.save')}
                   </button>
                   <button
                     type="button"
                     disabled={disabled}
                     onClick={cancelMemoEditing}
                   >
-                    취소
+                    {L('common:action.cancel')}
                   </button>
                 </div>
               </form>
@@ -410,8 +429,13 @@ export function PlaceDetailContent({
                 role="button"
                 tabIndex={disabled ? -1 : 0}
                 aria-disabled={disabled}
-                aria-label={`${place.name} 메모 ${place.memo ? '수정' : '추가'}`}
-                title="더블클릭하여 수정"
+                aria-label={L('place:placeDetailContent.ariaLabel.memo', {
+                  name: place.name,
+                  value: place.memo
+                    ? L('place:placeDetailContent.ariaLabel.edit')
+                    : L('common:action.add'),
+                })}
+                title={L('place:placeDetailContent.tooltip.doubleClickEdit')}
                 onDoubleClick={startMemoEditing}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
@@ -420,7 +444,10 @@ export function PlaceDetailContent({
                   }
                 }}
               >
-                {place.memo || '메모를 입력하려면 더블클릭하세요'}
+                {place.memo ||
+                  L(
+                    'place:placeDetailContent.description.doubleClickEnterNote',
+                  )}
               </p>
             ) : (
               <p
@@ -428,7 +455,8 @@ export function PlaceDetailContent({
                   place.memo ? 'trip-place-memo' : 'trip-place-memo is-empty'
                 }
               >
-                {place.memo || '메모 없음'}
+                {place.memo ||
+                  L('place:placeDetailContent.description.noNotes')}
               </p>
             )}
           </section>
@@ -437,7 +465,7 @@ export function PlaceDetailContent({
             googlePlace?.address ||
             googlePlace?.googleMapsUrl) && (
             <section className="trip-place-management-section">
-              <h3>장소 정보</h3>
+              <h3>{L('place:googlePlaceCard.tooltip.locationInformation')}</h3>
               {(place.address || googlePlace?.address) && (
                 <p className="trip-place-address">
                   {googlePlace?.address ?? place.address}
@@ -450,7 +478,7 @@ export function PlaceDetailContent({
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Google 지도에서 보기
+                  {L('place:googlePlaceCard.text.viewGoogleMaps')}
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M14 5h5v5M19 5l-8 8M18 13v6H5V6h6" />
                   </svg>
@@ -470,10 +498,12 @@ export function PlaceDetailContent({
       {openingHoursDetailOpen && openingHours && (
         <SideDetailCard
           id={openingHoursCardId}
-          title="영업시간"
+          title={L('place:placeDetailContent.tooltip.businessHours')}
           groupRef={cardGroupRef}
           mainCardRef={mainCardRef}
-          closeLabel="영업시간 상세 닫기"
+          closeLabel={L(
+            'place:placeDetailContent.text.closeBusinessHoursDetails',
+          )}
           onClose={() => setOpeningHoursDetailOpen(false)}
         >
           <PlaceOpeningHoursDetails hours={openingHours} />

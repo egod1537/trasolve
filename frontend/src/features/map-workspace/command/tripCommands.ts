@@ -1,19 +1,22 @@
-import type {
-  PlaceStyle,
-  Trip,
-  TripPlace,
-  TripPolyline,
-  TripPolylineMode,
+import {
+  tripIdSchema,
+  type PlaceStyle,
+  type Trip,
+  type TripPlace,
+  type TripPolyline,
+  type TripPolylineMode,
+  type TripScheduleUpdate,
 } from '@trasolve/shared';
 import {
   DEFAULT_PLACE_PREFERRED_DURATION_MINUTES,
   DEFAULT_PLACE_START_TIME,
-  DEFAULT_PLACE_VISIT_DURATION_MINUTES,
 } from '@/entities/place';
+import { pickRandomDayColor } from '@/entities/trip';
 import {
   defineTripCommand,
   type TripCommand,
 } from '@/features/map-workspace/command/TripCommand';
+import { L } from '@/shared/i18n';
 
 export type PlaceInput = Omit<TripPlace, 'id' | 'order'>;
 
@@ -22,20 +25,35 @@ export function createRenameTripCommand(title: string): TripCommand {
 }
 
 export function createAddDayCommand(title: string): TripCommand {
-  return defineTripCommand((trip) => ({
+  return defineTripCommand((trip) =>
+    addDay(trip, title, `pending-${crypto.randomUUID()}`),
+  );
+}
+
+export function createAddDayCommandWithPendingId(
+  title: string,
+  pendingId: string,
+): TripCommand {
+  const id = readPendingId(pendingId);
+  return defineTripCommand((trip) => addDay(trip, title, id));
+}
+
+function addDay(trip: Trip, title: string, id: string): Trip {
+  const color = pickRandomDayColor(trip.days.map((day) => day.color));
+  return {
     ...trip,
     days: [
       ...trip.days,
       {
-        id: `pending-${crypto.randomUUID()}`,
+        id,
         title,
-        color: '#2563eb',
+        color,
         places: [],
         polylines: [],
         layerItems: [],
       },
     ],
-  }));
+  };
 }
 
 export function createRenameDayCommand(
@@ -45,7 +63,7 @@ export function createRenameDayCommand(
   return defineTripCommand((trip) => {
     const day = trip.days.find((candidate) => candidate.id === dayId);
     if (!day) {
-      throw new Error('이름을 변경할 날짜를 찾을 수 없습니다.');
+      throw new Error(L('map:tripCommands.error.iCanTFindDateChange'));
     }
     day.title = title;
     return trip;
@@ -59,7 +77,7 @@ export function createUpdateDayColorCommand(
   return defineTripCommand((trip) => {
     const day = trip.days.find((candidate) => candidate.id === dayId);
     if (!day) {
-      throw new Error('색상을 변경할 날짜를 찾을 수 없습니다.');
+      throw new Error(L('map:tripCommands.error.iCanTFindDateChange2'));
     }
     day.color = color;
     return trip;
@@ -73,7 +91,7 @@ export function createMoveDayCommand(
   return defineTripCommand((trip) => {
     const sourceIndex = trip.days.findIndex((day) => day.id === dayId);
     if (sourceIndex < 0 || !Number.isInteger(targetIndex)) {
-      throw new Error('이동할 날짜와 순서를 확인해 주세요.');
+      throw new Error(L('map:tripCommands.error.confirmDateOrderMovement'));
     }
 
     const [day] = trip.days.splice(sourceIndex, 1);
@@ -90,21 +108,43 @@ export function createAddPlaceCommand(
   dayId: string,
   input: PlaceInput,
 ): TripCommand {
+  return createAddPlaceCommandWithIdFactory(
+    dayId,
+    input,
+    () => `pending-${crypto.randomUUID()}`,
+  );
+}
+
+export function createAddPlaceCommandWithPendingId(
+  dayId: string,
+  input: PlaceInput,
+  pendingId: string,
+): TripCommand {
+  const id = readPendingId(pendingId);
+  return createAddPlaceCommandWithIdFactory(dayId, input, () => id);
+}
+
+function createAddPlaceCommandWithIdFactory(
+  dayId: string,
+  input: PlaceInput,
+  createId: () => string,
+): TripCommand {
   const placeInput = structuredClone(input);
+  const durationMinutes =
+    placeInput.preferredDurationMinutes ??
+    placeInput.visitDurationMinutes ??
+    DEFAULT_PLACE_PREFERRED_DURATION_MINUTES;
   return defineTripCommand((trip) => {
     const day = trip.days.find((candidate) => candidate.id === dayId);
     if (!day) {
-      throw new Error('장소를 추가할 날짜를 선택해 주세요.');
+      throw new Error(L('map:tripCommands.error.selectDateYouWouldLikeAdd'));
     }
     const place: TripPlace = {
       ...placeInput,
       time: placeInput.time ?? DEFAULT_PLACE_START_TIME,
-      visitDurationMinutes:
-        placeInput.visitDurationMinutes ?? DEFAULT_PLACE_VISIT_DURATION_MINUTES,
-      preferredDurationMinutes:
-        placeInput.preferredDurationMinutes ??
-        DEFAULT_PLACE_PREFERRED_DURATION_MINUTES,
-      id: `pending-${crypto.randomUUID()}`,
+      visitDurationMinutes: durationMinutes,
+      preferredDurationMinutes: durationMinutes,
+      id: createId(),
       order: day.places.length + 1,
     };
     day.places.push(place);
@@ -140,13 +180,13 @@ export function createMovePlaceCommand(
   return defineTripCommand((trip) => {
     const target = trip.days.find((day) => day.id === targetDayId);
     if (!target || !Number.isInteger(targetIndex)) {
-      throw new Error('이동할 날짜와 순서를 확인해 주세요.');
+      throw new Error(L('map:tripCommands.error.confirmDateOrderMovement'));
     }
     const source = trip.days.find((day) =>
       day.places.some((place) => place.id === placeId),
     );
     if (!source) {
-      throw new Error('이동할 장소를 찾을 수 없습니다.');
+      throw new Error(L('map:tripCommands.error.canTFindPlaceMove'));
     }
     const sourceIndex = source.places.findIndex(
       (place) => place.id === placeId,
@@ -161,11 +201,101 @@ export function createMovePlaceCommand(
   });
 }
 
+export function createReorderDayPlacesCommand(
+  dayId: string,
+  placeIds: readonly string[],
+): TripCommand {
+  const orderedIds = [...placeIds];
+  return defineTripCommand((trip) => {
+    const day = trip.days.find((candidate) => candidate.id === dayId);
+    if (!day) {
+      throw new Error(L('map:tripCommands.error.iCanTFindDateChange3'));
+    }
+    const uniqueIds = new Set(orderedIds);
+    const currentIds = new Set(day.places.map((place) => place.id));
+    const currentStartId = day.places[0]?.id;
+    const currentDestinationId = day.places.at(-1)?.id;
+    if (
+      orderedIds.length !== day.places.length ||
+      uniqueIds.size !== orderedIds.length ||
+      orderedIds.some((placeId) => !currentIds.has(placeId)) ||
+      orderedIds[0] !== currentStartId ||
+      orderedIds.at(-1) !== currentDestinationId
+    ) {
+      throw new Error(
+        L('map:tripCommands.error.orderPlacesOptimizationResultsDoesNot'),
+      );
+    }
+    const placesById = new Map(day.places.map((place) => [place.id, place]));
+    day.places = orderedIds.map((placeId) => placesById.get(placeId)!);
+    return trip;
+  });
+}
+
+export function createApplyOptimizedScheduleCommand(
+  dayId: string,
+  schedule: TripScheduleUpdate,
+): TripCommand {
+  const update = structuredClone(schedule);
+  return defineTripCommand((trip) => {
+    const day = trip.days.find((candidate) => candidate.id === dayId);
+    if (!day) {
+      throw new Error(
+        L('map:tripCommands.error.dateWhichScheduleAppliesCannotBe'),
+      );
+    }
+    const currentIds = new Set(day.places.map((place) => place.id));
+    const orderedIds = update.placeIds;
+    const uniqueOrderedIds = new Set(orderedIds);
+    const stopsById = new Map(update.stops.map((stop) => [stop.placeId, stop]));
+    if (
+      orderedIds.length !== day.places.length ||
+      uniqueOrderedIds.size !== orderedIds.length ||
+      orderedIds.some((placeId) => !currentIds.has(placeId)) ||
+      update.stops.length !== orderedIds.length ||
+      stopsById.size !== update.stops.length ||
+      orderedIds.some((placeId) => !stopsById.has(placeId)) ||
+      orderedIds[0] !== update.expectedStartPlaceId ||
+      orderedIds.at(-1) !== update.expectedEndPlaceId ||
+      !currentIds.has(update.expectedStartPlaceId) ||
+      !currentIds.has(update.expectedEndPlaceId)
+    ) {
+      throw new Error(
+        L('map:tripCommands.error.locationStartEndPointOptimizationSchedule'),
+      );
+    }
+
+    const placesById = new Map(day.places.map((place) => [place.id, place]));
+    day.places = orderedIds.map((placeId) => {
+      const place = placesById.get(placeId)!;
+      const stop = stopsById.get(placeId)!;
+      const durationMinutes =
+        stop.visitDurationMinutes ??
+        place.preferredDurationMinutes ??
+        place.visitDurationMinutes;
+      return {
+        ...place,
+        time: stop.time,
+        visitDurationMinutes: durationMinutes,
+        preferredDurationMinutes: durationMinutes,
+      };
+    });
+    return trip;
+  });
+}
+
 export function createUpdatePlaceCommand(
   placeId: string,
   patch: Partial<PlaceInput>,
 ): TripCommand {
   return createPlacePatchCommand(placeId, patch);
+}
+
+export function createRenamePlaceCommand(
+  placeId: string,
+  name: string,
+): TripCommand {
+  return createPlacePatchCommand(placeId, { name });
 }
 
 export function createUpdateMemoCommand(
@@ -221,11 +351,26 @@ function createPlacePatchCommand(
   placeId: string,
   patch: Partial<PlaceInput>,
 ): TripCommand {
-  const placePatch = structuredClone(patch);
+  const placePatch = synchronizePlaceDurations(structuredClone(patch));
   return defineTripCommand((trip) => {
     Object.assign(findPlace(trip, placeId), placePatch);
     return trip;
   });
+}
+
+function synchronizePlaceDurations(
+  patch: Partial<PlaceInput>,
+): Partial<PlaceInput> {
+  const durationMinutes =
+    patch.preferredDurationMinutes ?? patch.visitDurationMinutes;
+  if (durationMinutes === undefined) {
+    return patch;
+  }
+  return {
+    ...patch,
+    visitDurationMinutes: durationMinutes,
+    preferredDurationMinutes: durationMinutes,
+  };
 }
 
 function findPlace(trip: Trip, placeId: string): TripPlace {
@@ -233,7 +378,7 @@ function findPlace(trip: Trip, placeId: string): TripPlace {
     .flatMap((day) => day.places)
     .find((candidate) => candidate.id === placeId);
   if (!place) {
-    throw new Error('장소를 찾을 수 없습니다.');
+    throw new Error(L('map:tripCommands.error.locationNotFound'));
   }
   return place;
 }
@@ -243,7 +388,15 @@ function findPolyline(trip: Trip, polylineId: string): TripPolyline {
     .flatMap((day) => day.polylines)
     .find((item) => item.id === polylineId);
   if (!polyline) {
-    throw new Error('연결선을 찾을 수 없습니다.');
+    throw new Error(L('map:tripCommands.error.connectorNotFound'));
   }
   return polyline;
+}
+
+function readPendingId(value: string): string {
+  const parsed = tripIdSchema.safeParse(value);
+  if (!parsed.success || !parsed.data.startsWith('pending-')) {
+    throw new Error(L('map:tripCommands.error.newTripItemIdIncorrect'));
+  }
+  return parsed.data;
 }

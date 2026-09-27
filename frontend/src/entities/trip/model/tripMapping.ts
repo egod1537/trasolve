@@ -1,11 +1,12 @@
 import type { Trip, TripInput } from '@trasolve/shared';
 import type { Trip as TripView } from '@/entities/trip/model/trip';
 
-export function tripToView(trip: Trip): TripView {
+export function tripToView(trip: Trip, undatedPeriod: string): TripView {
   return {
     title: trip.title,
     period:
-      [trip.startDate, trip.endDate].filter(Boolean).join(' — ') || '날짜 미정',
+      [trip.startDate, trip.endDate].filter(Boolean).join(' — ') ||
+      undatedPeriod,
     days: trip.days.map((day) => ({
       ...day,
       places: day.places.map((place) => ({

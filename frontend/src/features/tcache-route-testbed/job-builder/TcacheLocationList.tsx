@@ -16,6 +16,7 @@ import { getTcacheRouteLocationRole } from '@/features/tcache-route-testbed/mode
 import type { TcacheRouteLocationDraft } from '@/features/tcache-route-testbed/job-builder/tcacheJobBuilderModel';
 import { MAX_TCACHE_LOCATIONS } from '@/features/tcache-route-testbed/job-builder/tcacheJobBuilderModel';
 import { DragHandle } from '@/shared/ui/DragHandle';
+import { useL } from '@/shared/i18n';
 
 interface TcacheLocationListProps {
   locations: TcacheRouteLocationDraft[];
@@ -44,6 +45,7 @@ export function TcacheLocationList({
   onRemove,
   onReorder,
 }: TcacheLocationListProps) {
+  const L = useL();
   const listRef = useRef<HTMLOListElement>(null);
   const rowRefs = useRef(new Map<string, HTMLLIElement>());
   const dragRef = useRef<DragState | null>(null);
@@ -171,9 +173,13 @@ export function TcacheLocationList({
     <aside className="tcache-builder-location-panel">
       <header className="tcache-section-heading">
         <div>
-          <h2 className={Classes.HEADING}>위치 목록</h2>
+          <h2 className={Classes.HEADING}>
+            {L('testbed:tcacheLocationList.title.locationList')}
+          </h2>
           <p className={Classes.TEXT_MUTED}>
-            첫 위치는 출발지, 마지막 위치는 도착지입니다.
+            {L(
+              'testbed:tcacheLocationList.description.firstLocationOriginLastLocationDestination',
+            )}
           </p>
         </div>
         <Button
@@ -182,15 +188,17 @@ export function TcacheLocationList({
           disabled={locations.length >= MAX_TCACHE_LOCATIONS}
           onClick={onAddEmpty}
         >
-          위치 추가
+          {L('testbed:tcacheLocationList.action.addLocation')}
         </Button>
       </header>
       <ol ref={listRef} className="tcache-builder-locations">
         {locations.length === 0 ? (
           <NonIdealState
             icon="map-marker"
-            title="위치가 없습니다."
-            description="장소를 두 개 이상 추가해 주세요."
+            title={L('testbed:tcacheLocationList.tooltip.thereNoLocation')}
+            description={L(
+              'testbed:tcacheLocationList.text.addMoreThanOneLocation',
+            )}
           />
         ) : (
           locations.map((location, index) => {
@@ -211,7 +219,16 @@ export function TcacheLocationList({
                 onClick={() => onSelect(location.id)}
               >
                 <DragHandle
-                  label={`${location.name || `${index + 1}번째 위치`} 위치 순서 변경`}
+                  label={L(
+                    'testbed:tcacheLocationList.text.changeOrderPositions',
+                    {
+                      value:
+                        location.name ||
+                        L('testbed:tcacheLocationList.text.thPosition', {
+                          value: index + 1,
+                        }),
+                    },
+                  )}
                   dragging={dragging}
                   onPointerDown={(event) =>
                     startDrag(location.id, index, event)
@@ -236,13 +253,21 @@ export function TcacheLocationList({
                       <span>
                         {location.address ??
                           location.placeId ??
-                          `${location.lat}, ${location.lng}`}
+                          L('testbed:tcacheLocationList.text.message2', {
+                            lat: location.lat,
+                            lng: location.lng,
+                          })}
                       </span>
                     </>
                   ) : (
                     <InputGroup
-                      aria-label={`${index + 1}번째 위치 주소`}
-                      placeholder="주소 직접 입력 또는 지도에서 선택"
+                      aria-label={L(
+                        'testbed:tcacheLocationList.ariaLabel.thLocationAddress',
+                        { value: index + 1 },
+                      )}
+                      placeholder={L(
+                        'testbed:tcacheLocationList.placeholder.enterAddressDirectlySelectFromMap',
+                      )}
                       value={location.address ?? ''}
                       onClick={(event) => event.stopPropagation()}
                       onChange={(event) =>
@@ -258,7 +283,13 @@ export function TcacheLocationList({
                   {getTcacheRouteLocationRole(index, locations.length)}
                 </Tag>
                 <Button
-                  aria-label={`${location.name || `${index + 1}번째 위치`} 삭제`}
+                  aria-label={L('testbed:tcacheLocationList.ariaLabel.delete', {
+                    value:
+                      location.name ||
+                      L('testbed:tcacheLocationList.text.thPosition', {
+                        value: index + 1,
+                      }),
+                  })}
                   icon="cross"
                   size="small"
                   variant="minimal"

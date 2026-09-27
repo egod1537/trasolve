@@ -7,66 +7,137 @@ import {
   type Trip,
   type TripInput,
 } from '@trasolve/shared';
-import type { TripRepository } from './tripRepository.js';
-import { TripError, invalidTripRequest } from './errors.js';
+import {
+  TripAlreadyExistsError,
+  TripRepositoryNotFoundError,
+  TripRevisionConflictError,
+  type StoredTripHandle,
+  type TripRepository,
+} from './tripRepository.js';
+import {
+  TripError,
+  invalidTripRequest,
+  tripAlreadyExists,
+  tripRevisionConflict,
+} from './errors.js';
 
 export class TripController {
   public constructor(private readonly repository: TripRepository) {}
 
-  public async listTrips(userId: string): Promise<Trip[]> {
-    this.validateIds(userId);
-    return this.repository.listByUser(userId);
+  public async listTrips(actorUserId: string): Promise<Trip[]> {
+    this.validateIds(actorUserId);
+    return (await this.repository.list(actorUserId)).map(
+      (stored) => stored.trip,
+    );
   }
 
-  public async getTrip(userId: string, tripId: string): Promise<Trip> {
-    this.validateIds(userId, tripId);
-    const trip = await this.repository.getById(userId, tripId);
-    if (!trip) {
-      throw new TripError(404, 'TRIP_NOT_FOUND', '여행을 찾을 수 없습니다.');
-    }
-    return trip;
+  public async getTrip(
+    actorUserId: string,
+    tripId: string,
+  ): Promise<StoredTripHandle> {
+    this.validateIds(actorUserId, tripId);
+    return this.getStoredTrip(actorUserId, tripId);
   }
 
-  public async createTrip(userId: string, input: TripInput): Promise<Trip> {
-    this.validateIds(userId);
+  public async createTrip(
+    actorUserId: string,
+    input: TripInput,
+  ): Promise<StoredTripHandle> {
+    this.validateIds(actorUserId);
+    const ownerUserId = actorUserId;
     const now = new Date().toISOString();
     const trip = this.normalize(input, {
       id: randomUUID(),
-      userId,
+      userId: ownerUserId,
       createdAt: now,
       updatedAt: now,
     });
-    await this.repository.save(userId, trip);
-    return trip;
+    try {
+      return await this.repository.create(actorUserId, trip);
+    } catch (cause) {
+      if (cause instanceof TripAlreadyExistsError) {
+        throw tripAlreadyExists();
+      }
+      throw cause;
+    }
   }
 
   public async saveTrip(
-    userId: string,
+    actorUserId: string,
     tripId: string,
+    expectedRevision: string,
     input: TripInput,
-  ): Promise<Trip> {
-    this.validateIds(userId, tripId);
+  ): Promise<StoredTripHandle> {
+    this.validateIds(actorUserId, tripId);
     // Serialize the whole read/modify/write operation, including delete.
-    return this.serialize(userId, tripId, async () => {
-      const existing = await this.getTrip(userId, tripId);
+    return this.serialize(actorUserId, tripId, async () => {
+      const stored = await this.getStoredTrip(actorUserId, tripId);
+      if (stored.revision !== expectedRevision) {
+        throw tripRevisionConflict();
+      }
+      const existing = stored.trip;
       const updatedAt = new Date(
         Math.max(Date.now(), Date.parse(existing.updatedAt) + 1),
       ).toISOString();
       const trip = this.normalize(input, { ...existing, updatedAt }, existing);
-      await this.repository.save(userId, trip);
-      return trip;
+      try {
+        return await this.repository.update(
+          actorUserId,
+          tripId,
+          expectedRevision,
+          trip,
+        );
+      } catch (cause) {
+        this.rethrowWriteError(cause);
+      }
     });
   }
 
-  public async deleteTrip(userId: string, tripId: string): Promise<void> {
-    this.validateIds(userId, tripId);
-    await this.serialize(userId, tripId, async () => {
-      await this.getTrip(userId, tripId);
-      await this.repository.delete(userId, tripId);
+  public async deleteTrip(
+    actorUserId: string,
+    tripId: string,
+    expectedRevision: string,
+  ): Promise<string> {
+    this.validateIds(actorUserId, tripId);
+    return this.serialize(actorUserId, tripId, async () => {
+      const stored = await this.getStoredTrip(actorUserId, tripId);
+      if (stored.revision !== expectedRevision) {
+        throw tripRevisionConflict();
+      }
+      try {
+        return await this.repository.softDelete(
+          actorUserId,
+          tripId,
+          expectedRevision,
+        );
+      } catch (cause) {
+        this.rethrowWriteError(cause);
+      }
     });
   }
 
   private readonly mutations = new Map<string, Promise<unknown>>();
+
+  private async getStoredTrip(
+    actorUserId: string,
+    tripId: string,
+  ): Promise<StoredTripHandle> {
+    const stored = await this.repository.get(actorUserId, tripId);
+    if (!stored) {
+      throw new TripError(404, 'TRIP_NOT_FOUND', '여행을 찾을 수 없습니다.');
+    }
+    return stored;
+  }
+
+  private rethrowWriteError(cause: unknown): never {
+    if (cause instanceof TripRevisionConflictError) {
+      throw tripRevisionConflict();
+    }
+    if (cause instanceof TripRepositoryNotFoundError) {
+      throw new TripError(404, 'TRIP_NOT_FOUND', '여행을 찾을 수 없습니다.');
+    }
+    throw cause;
+  }
 
   private normalize(
     input: TripInput,
@@ -205,11 +276,11 @@ export class TripController {
   }
 
   private async serialize<T>(
-    userId: string,
+    actorUserId: string,
     tripId: string,
     operation: () => Promise<T>,
   ): Promise<T> {
-    const key = `${userId}/${tripId}`;
+    const key = `${actorUserId}/${tripId}`;
     const current = (this.mutations.get(key) ?? Promise.resolve())
       .catch(() => undefined)
       .then(operation);

@@ -1,6 +1,8 @@
 import type { TripPolylineMode } from '@trasolve/shared';
-import { POLYLINE_MODE_OPTIONS } from '@/features/map-workspace/domain/polylineMode';
+import { POLYLINE_MODES } from '@/features/map-workspace/domain/polylineMode';
+import { formatPolylineMode } from '@/features/map-workspace/lib/mapFormatters';
 import { PolylineModeIcon } from '@/features/map-workspace/components/PolylineModeIcon';
+import { useL } from '@/shared/i18n';
 
 type Props = {
   mode: TripPolylineMode | null;
@@ -15,20 +17,21 @@ export function PolylineModeOptions({
   showLabels = false,
   onSelect,
 }: Props) {
+  const L = useL();
   return (
     <div className={`polyline-mode-options${showLabels ? ' is-labeled' : ''}`}>
-      {POLYLINE_MODE_OPTIONS.map((option) => (
+      {POLYLINE_MODES.map((option) => (
         <button
-          key={option.value}
+          key={option}
           type="button"
-          aria-label={option.label}
-          aria-pressed={mode === option.value}
-          title={option.label}
+          aria-label={formatPolylineMode(option, L)}
+          aria-pressed={mode === option}
+          title={formatPolylineMode(option, L)}
           disabled={busy}
-          onClick={() => onSelect(option.value)}
+          onClick={() => onSelect(option)}
         >
-          <PolylineModeIcon mode={option.value} />
-          {showLabels && <span>{option.label}</span>}
+          <PolylineModeIcon mode={option} />
+          {showLabels && <span>{formatPolylineMode(option, L)}</span>}
         </button>
       ))}
     </div>

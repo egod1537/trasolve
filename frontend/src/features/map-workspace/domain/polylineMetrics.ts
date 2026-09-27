@@ -33,14 +33,3 @@ export function calculatePolylineDistanceMeters(
   }
   return distance;
 }
-
-export function formatPolylineDistance(distanceMeters: number | undefined) {
-  if (distanceMeters === undefined) {
-    return '경로 정보 없음';
-  }
-  if (distanceMeters < 1000) {
-    return `${Math.round(distanceMeters)} m`;
-  }
-  const kilometers = distanceMeters / 1000;
-  return `${kilometers < 10 ? kilometers.toFixed(1) : Math.round(kilometers)} km`;
-}

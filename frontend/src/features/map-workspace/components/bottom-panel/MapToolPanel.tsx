@@ -1,5 +1,6 @@
 import type { ReactNode, RefObject } from 'react';
 import '@/features/map-workspace/styles/bottom-context-panel.css';
+import { useL } from '@/shared/i18n';
 
 export type MapTool = 'pan';
 
@@ -75,17 +76,30 @@ export function MapToolPanel({
   routeToolsControlId,
   routeToolButtonRef,
 }: Props) {
+  const L = useL();
   return (
-    <div className="map-tool-panel" role="toolbar" aria-label="지도 도구">
-      <ToolButton label="실행 취소" disabled={!canUndo} onClick={onUndo}>
+    <div
+      className="map-tool-panel"
+      role="toolbar"
+      aria-label={L('map:mapToolPanel.ariaLabel.mapTool')}
+    >
+      <ToolButton
+        label={L('map:mapToolPanel.text.undo')}
+        disabled={!canUndo}
+        onClick={onUndo}
+      >
         <ToolIcon path="m9 4-5 5 5 5M4 9h10a6 6 0 0 1 0 12" />
       </ToolButton>
-      <ToolButton label="다시 실행" disabled={!canRedo} onClick={onRedo}>
+      <ToolButton
+        label={L('map:mapToolPanel.text.runAgain')}
+        disabled={!canRedo}
+        onClick={onRedo}
+      >
         <ToolIcon path="m15 4 5 5-5 5M20 9H10a6 6 0 0 0 0 12" />
       </ToolButton>
       <span className="map-tool-panel-separator" aria-hidden="true" />
       <ToolButton
-        label="지도 이동"
+        label={L('map:mapToolPanel.text.moveMap')}
         pressed={activeTool === 'pan'}
         onClick={() => onSelectTool('pan')}
       >
@@ -93,7 +107,7 @@ export function MapToolPanel({
       </ToolButton>
       <span className="map-tool-panel-separator" aria-hidden="true" />
       <ToolButton
-        label="경로 최적화"
+        label={L('map:mapToolPanel.text.routeOptimization')}
         disabled={!onOpenRouteTools}
         expanded={routeToolsOpen}
         controls={routeToolsOpen ? routeToolsControlId : undefined}

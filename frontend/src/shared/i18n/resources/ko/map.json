@@ -1,0 +1,465 @@
+{
+  "bottomContextPanel": {
+    "ariaLabel": {
+      "dayInformation": "{{title}} Day 정보"
+    },
+    "label": {
+      "day": "일차"
+    },
+    "text": {
+      "locations": "{{length}}개 장소"
+    }
+  },
+  "dayColorControl": {
+    "ariaLabel": {
+      "changeColor": "{{dayTitle}} 색상 변경",
+      "clickShowHidePressHoldChange": "{{dayTitle}} {{value}}. 클릭: 표시/숨김 · 길게 누르기: 색상 변경",
+      "hiddenStatus": "숨김 상태",
+      "message": "{{label}} {{value}}",
+      "showing": "표시 중"
+    },
+    "dAYCOLORLABELS": {
+      "text": {
+        "blue": "파랑",
+        "green": "초록",
+        "look": "보라",
+        "meeting": "회청",
+        "namhoe": "남회",
+        "orange": "주황",
+        "pink": "분홍",
+        "red": "빨강",
+        "teal": "청록",
+        "yellow": "노랑"
+      }
+    },
+    "text": {
+      "dayColor": "Day 색상"
+    },
+    "tooltip": {
+      "clickShowHidePressHoldChange": "클릭: 표시/숨김 · 길게 누르기: 색상 변경"
+    }
+  },
+  "dayLayerSection": {
+    "ariaLabel": {
+      "editName": "{{title}} 이름 수정"
+    },
+    "text": {
+      "expand": "펼치기",
+      "fold": "접기",
+      "message": "{{title}} {{value}}",
+      "putHere": "여기에 놓기",
+      "thereNoRegisteredItems": "등록된 항목이 없습니다."
+    }
+  },
+  "googleMap": {
+    "ariaLabel": {
+      "map": "지도"
+    },
+    "description": {
+      "mapCannotBeLoadedCheckConnection": "지도를 불러올 수 없습니다. 연결을 확인해 주세요.",
+      "setUpMapConnection": "지도 연결을 설정해 주세요."
+    },
+    "text": {
+      "googleMapsAuthenticationFailed": "Google Maps 인증에 실패했습니다."
+    }
+  },
+  "layer": {
+    "add": "레이어 추가"
+  },
+  "layerBulkActionBar": {
+    "action": {
+      "deleting": "삭제 중…"
+    },
+    "ariaLabel": {
+      "batchOperationsSelections": "선택 항목 일괄 작업",
+      "bulkChangeMeansTransportation": "이동수단 일괄 변경",
+      "changeSelectedRouteTransportationMethod": "선택한 경로 이동수단 변경",
+      "deleteSelectedLocations": "선택한 장소 {{length}}개 삭제"
+    },
+    "description": {
+      "connectionRoutesAutomaticallyReorganizedMatchOrder": "연결 경로는 장소 순서에 맞춰 자동으로 다시 구성됩니다."
+    },
+    "text": {
+      "failedChangeModeTransportation": "이동수단을 변경하지 못했습니다.",
+      "failedDeleteSelectedLocation": "선택한 장소를 삭제하지 못했습니다.",
+      "meansTransportation": "이동수단",
+      "paths": "· 경로 {{length}} 개",
+      "selected": "{{totalCount}} 개 선택됨",
+      "taskFailed": "작업 실패",
+      "transportationMixed": "이동수단 · 혼합",
+      "youSureYouWantDeleteSelected": "선택한 장소 {{length}} 개를 삭제하시겠습니까?"
+    }
+  },
+  "layerPanel": {
+    "ariaLabel": {
+      "travelItinerary": "여행 일정"
+    }
+  },
+  "layerPanelContent": {
+    "description": {
+      "thereNoTravelPlansYet": "아직 여행 일정이 없습니다."
+    }
+  },
+  "layerPanelHeader": {
+    "action": {
+      "changeTourName": "여행 이름 변경"
+    },
+    "ariaLabel": {
+      "editTravelPlanName": "여행 플랜 이름 수정",
+      "shareTrip": "여행 공유",
+      "travelOptions": "여행 옵션"
+    },
+    "formatSavedAt": {
+      "label": {
+        "lastSaved": "마지막 저장: {{value}}",
+        "message": "{{date}} {{time}}",
+        "saved": "저장됨"
+      },
+      "title": {
+        "koKr": "ko-KR"
+      }
+    },
+    "saveLabel": {
+      "text": {
+        "saveFailed": "저장 실패",
+        "saving": "저장 중…",
+        "waitingSave": "저장 대기 중"
+      }
+    },
+    "text": {
+      "dayPcsPlacePcs": "Day {{length}}개 · 장소 {{placeCount}}개",
+      "share": "공유"
+    },
+    "tooltip": {
+      "doubleClickEditTripName": "더블클릭하여 여행 이름 수정"
+    }
+  },
+  "layerValidationIndicator": {
+    "text": {
+      "caution": "주의",
+      "error": "오류"
+    }
+  },
+  "mapCanvas": {
+    "ariaLabel": {
+      "travelLocationMap": "여행 장소 지도"
+    },
+    "renderMapStatus": {
+      "description": {
+        "checkMapConnectionTryAgainYou": "지도 연결을 확인한 뒤 다시 시도해 주세요. 일정 목록은 계속 확인할 수 있습니다.",
+        "onceYouVeEstablishedMapConnection": "지도 연결을 설정하면 일정의 장소와 경로가 표시됩니다. 왼쪽에서 예시 일정을 둘러볼 수 있습니다.",
+        "waitMoment": "잠시만 기다려 주세요."
+      },
+      "title": {
+        "canTLoadMap": "지도를 불러올 수 없습니다",
+        "mapLoading": "지도를 불러오고 있습니다"
+      }
+    }
+  },
+  "mapToolPanel": {
+    "ariaLabel": {
+      "mapTool": "지도 도구"
+    },
+    "text": {
+      "moveMap": "지도 이동",
+      "routeOptimization": "경로 최적화",
+      "runAgain": "다시 실행",
+      "undo": "실행 취소"
+    }
+  },
+  "mapWorkspacePage": {
+    "render": {
+      "ariaLabel": {
+        "travelSelectionMapBackground": "여행 선택 지도 배경"
+      }
+    },
+    "runAction": {
+      "text": {
+        "travelRequestFailed": "여행 요청에 실패했습니다."
+      }
+    },
+    "text": {
+      "listCouldNotBeLoaded": "목록을 불러올 수 없습니다."
+    },
+    "title": {
+      "newTravel": "새 여행"
+    }
+  },
+  "place": {
+    "welcome": "{{name}}님, 여행지를 선택해 주세요"
+  },
+  "placeLayerItem": {
+    "content": {
+      "ariaLabel": {
+        "editName": "{{name}} 이름 수정"
+      },
+      "text": {
+        "arrivalLocation": "도착 장소",
+        "departureLocation": "출발 장소"
+      }
+    },
+    "text": {
+      "changeIconColor": "{{name}} 아이콘 및 색상 변경",
+      "details": "{{name}} 상세 {{value}}",
+      "open": "열기",
+      "stay": "체류 {{formatDurationMinutes}}"
+    }
+  },
+  "polylineLayerItem": {
+    "ariaLabel": {
+      "fromFrom": "{{fromName}}에서 {{toName}}까지 일정 구간 {{formatClockTime}}부터 {{formatClockTime}}까지"
+    },
+    "fromName": {
+      "text": {
+        "unknownPlace": "알 수 없는 장소"
+      }
+    },
+    "text": {
+      "betweenPlaces": "· 장소 사이 {{formatDurationMinutes}}",
+      "details": "{{connectionName}} 상세 {{value}}"
+    }
+  },
+  "polylineMetrics": {
+    "formatPolylineDistance": {
+      "text": {
+        "noRouteInformation": "경로 정보 없음"
+      }
+    }
+  },
+  "polylineMode": {
+    "pOLYLINEMODEOPTIONS": {
+      "label": {
+        "car": "자동차",
+        "publicTransportation": "대중교통",
+        "straightLine": "직선",
+        "walk": "도보"
+      }
+    }
+  },
+  "quickSearch": {
+    "ariaLabel": {
+      "closeQuickSearch": "빠른 검색 닫기",
+      "enter": "{{label}} 입력",
+      "searchMode": "검색 모드: {{label}}",
+      "searchMode2": "검색 모드"
+    },
+    "sEARCHMODES": {
+      "label": {
+        "askAi": "AI에게 질문",
+        "searchMySchedule": "내 일정 검색",
+        "searchPlace": "장소 검색"
+      },
+      "placeholder": {
+        "askQuestionAboutTravelPlans": "여행 계획에 대해 질문하세요",
+        "searchCurrentTravelItinerariesLocations": "현재 여행의 일정과 장소를 검색하세요"
+      },
+      "text": {
+        "aiResponse": "AI 응답",
+        "enterPlaceYouWantSearch": "검색할 장소를 입력하세요.",
+        "enterQuestionAboutTravelPlans": "여행 계획에 대한 질문을 입력하세요.",
+        "enterScheduleLocationYouWantSearch": "검색할 일정이나 장소를 입력하세요.",
+        "placeSearchResults": "장소 검색 결과",
+        "scheduleSearchResults": "일정 검색 결과"
+      }
+    },
+    "text": {
+      "functionNotYetConnected": "{{label}} 기능은 아직 연결되지 않았습니다.",
+      "modeSwitching": "모드 전환",
+      "move": "이동",
+      "willAppearHere": "{{resultsTitle}}가 여기에 표시됩니다."
+    },
+    "title": {
+      "quickSearch": "빠른 검색"
+    }
+  },
+  "route": {
+    "summary": "{{from}}에서 {{to}}까지 {{minutes}}분"
+  },
+  "routeSettingsCard": {
+    "ariaLabel": {
+      "chooseMethodTravel": "이동 방식 선택",
+      "message": "{{label}}, {{durationAriaLabel}}",
+      "routeSettings": "경로 설정"
+    },
+    "description": {
+      "weReSavingWayMoving": "이동 방식을 저장하고 있습니다."
+    },
+    "mODEDESCRIPTIONS": {
+      "text": {
+        "straightLineConnectsTwoPlaces": "두 장소를 직선으로 연결합니다.",
+        "useCarTravelRoutes": "자동차 이동 경로를 사용합니다.",
+        "usePublicTransportationRoutes": "대중교통 경로를 사용합니다.",
+        "useWalkingRoutes": "도보 이동 경로를 사용합니다."
+      }
+    },
+    "resolveDurationPresentation": {
+      "ariaLabel": {
+        "estimatedTime": "예상 시간 {{label}}",
+        "noEstimatedTime": "예상 시간 없음",
+        "viewingEstimatedTime": "예상 시간 조회 중"
+      }
+    }
+  },
+  "routes": {
+    "loadingLabel": {
+      "loadingTravelMap": "여행 지도를 불러오고 있습니다."
+    }
+  },
+  "search": {
+    "placeholder": "장소를 검색하세요",
+    "result_count": "검색 결과 {{count}}개"
+  },
+  "tripCommandDispatcher": {
+    "applyCommands": {
+      "error": {
+        "travelChangeValueIncorrect": "여행 변경 값이 올바르지 않습니다."
+      }
+    },
+    "applyHistoryOperation": {
+      "error": {
+        "tripChangeHistoryCannotBeRestored": "여행 변경 기록을 복원할 수 없습니다."
+      }
+    }
+  },
+  "tripCommandPlanAdapter": {
+    "error": {
+      "durationVisit": "방문 소요 시간",
+      "unsupportedTravelOrder": "지원하지 않는 여행 명령입니다.",
+      "visitStartTime": "방문 시작 시간"
+    },
+    "missingVisitField": {
+      "text": {
+        "placesWithoutRetainTheirExistingValues": "{{field}}이 없는 장소는 기존 값을 보존해 변경할 수 없습니다."
+      }
+    }
+  },
+  "tripCommandPlanError": {
+    "normalizeTripCommandPlanError": {
+      "message": {
+        "travelOrderPlanCannotBeSafely": "여행 명령 계획을 안전하게 준비할 수 없습니다."
+      }
+    }
+  },
+  "tripCommandPlanExecutor": {
+    "error": {
+      "someSelectedLocationsNotCurrentlyTrip": "선택된 장소 중 현재 여행에 없는 항목이 있습니다.",
+      "thereDuplicateIdsSelectedPlacesList": "선택된 장소 목록에 중복 ID가 있습니다.",
+      "thereDuplicateStepIdTravelCommand": "여행 명령 계획의 단계 ID가 중복되었습니다.",
+      "travelOrderPlansDoNotCurrently": "여행 명령 계획이 현재 여행을 대상으로 하지 않습니다.",
+      "tripHasChangedSinceCommandPlans": "여행이 명령 계획을 만든 이후 변경되었습니다."
+    },
+    "executePreparedTripCommandPlan": {
+      "message": {
+        "preparedTravelCommandCannotBeSafely": "준비된 여행 명령을 안전하게 실행할 수 없습니다.",
+        "tripHasChangedSinceItWas": "여행이 계획 준비 이후 변경되었습니다."
+      }
+    },
+    "prepareTripCommandPlan": {
+      "message": {
+        "containsUnsupportedTravelCommands": "지원하지 않는 여행 명령이 포함되어 있습니다.",
+        "travelCommandPlanFormatIncorrect": "여행 명령 계획 형식이 올바르지 않습니다."
+      }
+    }
+  },
+  "tripCommandPlanPlaceLookup": {
+    "error": {
+      "iCanTFindPlaceAdd": "추가할 장소를 찾을 수 없습니다.",
+      "privilegedLocationInformationCouldNotBe": "권한 있는 장소 정보를 불러올 수 없습니다.",
+      "thereWasNoSingleSearchResult": "추가할 장소 검색 결과가 하나로 결정되지 않았습니다."
+    }
+  },
+  "tripCommandPlanResolver": {
+    "error": {
+      "connectorDestinationDoesNotExistCurrent": "연결선 대상이 현재 여행에 존재하지 않습니다.",
+      "connectorTargetNotFound": "연결선 대상을 찾을 수 없습니다.",
+      "currentStepCannotReferLaterSteps": "현재 단계는 이후 단계나 자기 자신을 참조할 수 없습니다.",
+      "dateDestinationDoesNotExistCurrent": "날짜 대상이 현재 여행에 존재하지 않습니다.",
+      "dateTargetNotFound": "날짜 대상을 찾을 수 없습니다.",
+      "iCanTDecideWhichOrder": "이동할 장소 순서를 결정할 수 없습니다.",
+      "locationDestinationDoesNotCurrentlyExist": "장소 대상이 현재 여행에 존재하지 않습니다.",
+      "locationDestinationNotFound": "장소 대상을 찾을 수 없습니다.",
+      "noPlaceFoundMatchingName": "이름이 일치하는 장소를 찾을 수 없습니다.",
+      "previousStepReferencedDoesNotExist": "참조한 이전 단계가 존재하지 않습니다.",
+      "previousStepResultsNotAvailable": "이전 단계 결과를 사용할 수 없습니다.",
+      "requestedDateSequenceOutsideCurrentTravel": "요청한 날짜 순서가 현재 여행 범위를 벗어납니다.",
+      "requestedPlaceSequenceOutsideCurrentDate": "요청한 장소 순서가 현재 날짜 범위를 벗어납니다.",
+      "resultingFormatFromPreviousStepNot": "이전 단계의 결과 형식이 현재 대상과 호환되지 않습니다.",
+      "selectedLocationDestinationCannotBeFound": "선택된 장소 대상을 찾을 수 없습니다.",
+      "thereMultiplePlacesMatchingNames": "이름이 일치하는 장소가 여러 개입니다.",
+      "unableDetermineOrderDatesMove": "이동할 날짜 순서를 결정할 수 없습니다."
+    }
+  },
+  "tripCommands": {
+    "error": {
+      "canTFindPlaceMove": "이동할 장소를 찾을 수 없습니다.",
+      "confirmDateOrderMovement": "이동할 날짜와 순서를 확인해 주세요.",
+      "connectorNotFound": "연결선을 찾을 수 없습니다.",
+      "dateWhichScheduleAppliesCannotBe": "일정을 적용할 날짜를 찾을 수 없습니다.",
+      "iCanTFindDateChange": "이름을 변경할 날짜를 찾을 수 없습니다.",
+      "iCanTFindDateChange2": "색상을 변경할 날짜를 찾을 수 없습니다.",
+      "iCanTFindDateChange3": "순서를 변경할 날짜를 찾을 수 없습니다.",
+      "locationNotFound": "장소를 찾을 수 없습니다.",
+      "locationStartEndPointOptimizationSchedule": "최적화 일정의 장소 또는 시작·종점이 현재 Day와 일치하지 않습니다.",
+      "newTripItemIdIncorrect": "새 여행 항목 ID가 올바르지 않습니다.",
+      "orderPlacesOptimizationResultsDoesNot": "최적화 결과의 장소 순서가 현재 Day와 일치하지 않습니다.",
+      "selectDateYouWouldLikeAdd": "장소를 추가할 날짜를 선택해 주세요."
+    }
+  },
+  "tripEditController": {
+    "error": {
+      "savedTripDifferentFromCurrentSession": "저장된 여행이 현재 세션과 다릅니다."
+    },
+    "executeTripCommandString": {
+      "error": {
+        "youCannotRunCommandsClosedTrip": "종료된 여행 편집기에서는 명령을 실행할 수 없습니다."
+      }
+    },
+    "getCommandExecutionError": {
+      "text": {
+        "commandExecutionFailed": "명령 실행에 실패했습니다.",
+        "thereNoChangeHistoryRedo": "다시 실행할 변경 기록이 없습니다.",
+        "thereNoChangeHistoryRevert": "되돌릴 변경 기록이 없습니다."
+      }
+    },
+    "runSave": {
+      "error": {
+        "failedSaveTrip": "여행 저장에 실패했습니다."
+      }
+    }
+  },
+  "tripLayer": {
+    "toTripLayerModel": {
+      "title": {
+        "message": "{{title}} · {{order}}. {{name}}"
+      }
+    }
+  },
+  "tripPolylineCard": {
+    "ariaLabel": {
+      "changeModeTransportation": "이동수단 변경: {{formatPolylineMode}}"
+    },
+    "description": {
+      "movementSection": "· 이동 구간"
+    },
+    "label": {
+      "distance": "거리",
+      "estimatedTravelTime": "예상 이동시간",
+      "memo": "메모"
+    },
+    "text": {
+      "beforeRouteCalculation": "경로 계산 전",
+      "closeTravelMethodSettings": "이동 방식 설정 닫기",
+      "closeTripRouteCard": "Trip 경로 카드 닫기",
+      "movementSection": "{{title}} · 이동 구간",
+      "notSet": "설정 안 됨"
+    },
+    "tooltip": {
+      "wayMoving": "이동 방식"
+    }
+  },
+  "useTrip": {
+    "error": {
+      "tripproviderRequired": "TripProvider가 필요합니다."
+    }
+  }
+}

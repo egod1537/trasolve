@@ -18,6 +18,7 @@ import type { ReactElement } from 'react';
 import { TCACHE_ROUTE_API } from '@/features/tcache-route-testbed/api/tcacheRoute';
 import type { TcacheHealthState } from '@/features/tcache-route-testbed/model/types';
 import type { ThemeMode } from '@/shared/theme/theme';
+import { useL, L, NL } from '@/shared/i18n';
 
 interface AppHeaderProps {
   health: TcacheHealthState;
@@ -31,9 +32,27 @@ const THEME_OPTIONS: readonly {
   label: string;
   icon: IconName | ReactElement;
 }[] = [
-  { mode: 'system', label: '시스템', icon: 'desktop' },
-  { mode: 'light', label: '라이트', icon: <SunIcon size={16} /> },
-  { mode: 'dark', label: '다크', icon: 'moon' },
+  {
+    mode: 'system',
+    get label() {
+      return L('testbed:appHeader.tHEMEOPTIONS.label.system');
+    },
+    icon: 'desktop',
+  },
+  {
+    mode: 'light',
+    get label() {
+      return L('testbed:appHeader.tHEMEOPTIONS.label.light');
+    },
+    icon: <SunIcon size={16} />,
+  },
+  {
+    mode: 'dark',
+    get label() {
+      return L('testbed:appHeader.tHEMEOPTIONS.label.dark');
+    },
+    icon: 'moon',
+  },
 ];
 
 export function AppHeader({
@@ -42,33 +61,38 @@ export function AppHeader({
   onRefresh,
   onThemeChange,
 }: AppHeaderProps) {
+  const L = useL();
   const healthLabel =
     health === 'online'
-      ? '온라인'
+      ? L('testbed:appHeader.text.online')
       : health === 'offline'
-        ? '오프라인'
-        : '확인 중';
+        ? L('testbed:appHeader.text.offline')
+        : L('testbed:appHeader.text.checking');
 
   return (
     <Navbar className="tcache-testbed-navbar">
       <NavbarGroup align={Alignment.START}>
         <Button
-          aria-label="테스트베드 목록으로 돌아가기"
-          title="테스트베드 목록으로 돌아가기"
+          aria-label={L('testbed:appHeader.ariaLabel.returnTestbedList')}
+          title={L('testbed:appHeader.ariaLabel.returnTestbedList')}
           icon="arrow-left"
           variant="minimal"
           onClick={() => window.location.assign('/testbed')}
         />
-        <NavbarHeading>Trasolve · tcache Route Testbed</NavbarHeading>
+        <NavbarHeading>
+          {L('testbed:appHeader.text.trasolveTcacheRouteTestbed')}
+        </NavbarHeading>
         <NavbarDivider />
         <code className={`${Classes.MONOSPACE_TEXT} ${Classes.TEXT_MUTED}`}>
           {TCACHE_ROUTE_API.jobs}
         </code>
       </NavbarGroup>
       <NavbarGroup align={Alignment.END}>
-        <span className={Classes.TEXT_MUTED}>tcache</span>
+        <span className={Classes.TEXT_MUTED}>{NL('tcache')}</span>
         <Tag
-          aria-label={`tcache ${healthLabel}`}
+          aria-label={L('testbed:appHeader.ariaLabel.tcache', {
+            healthLabel: healthLabel,
+          })}
           icon={
             health === 'online'
               ? 'tick-circle'
@@ -88,8 +112,8 @@ export function AppHeader({
           {healthLabel}
         </Tag>
         <Button
-          aria-label="tcache 상태 새로고침"
-          title="tcache 상태 새로고침"
+          aria-label={L('testbed:appHeader.ariaLabel.refreshTcacheStatus')}
+          title={L('testbed:appHeader.ariaLabel.refreshTcacheStatus')}
           icon="refresh"
           loading={health === 'checking'}
           disabled={health === 'checking'}
@@ -109,6 +133,7 @@ function ThemeMenu({
   mode: ThemeMode;
   onChange: (mode: ThemeMode) => void;
 }) {
+  const L = useL();
   const selected =
     THEME_OPTIONS.find((option) => option.mode === mode) ?? THEME_OPTIONS[0];
   return (
@@ -116,7 +141,7 @@ function ThemeMenu({
       animation={PopoverAnimation.MINIMAL}
       arrow={false}
       content={
-        <Menu aria-label="테마">
+        <Menu aria-label={L('testbed:appHeader.themeMenu.ariaLabel.theme')}>
           {THEME_OPTIONS.map((option) => (
             <MenuItem
               active={mode === option.mode}
@@ -132,8 +157,12 @@ function ThemeMenu({
       placement="bottom-end"
     >
       <Button
-        aria-label={`테마: ${selected.label}`}
-        title={`테마: ${selected.label}`}
+        aria-label={L('testbed:appHeader.themeMenu.ariaLabel.theme2', {
+          label: selected.label,
+        })}
+        title={L('testbed:appHeader.themeMenu.ariaLabel.theme2', {
+          label: selected.label,
+        })}
         icon={selected.icon}
         variant="minimal"
       />

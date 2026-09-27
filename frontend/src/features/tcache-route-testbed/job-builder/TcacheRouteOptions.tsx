@@ -7,6 +7,7 @@ import {
 } from '@blueprintjs/core';
 import type { TcacheJobBuilderState } from '@/features/tcache-route-testbed/job-builder/tcacheJobBuilderModel';
 import type { TcacheRouteMode } from '@/features/tcache-route-testbed/model/types';
+import { useL, L, NL } from '@/shared/i18n';
 
 interface TcacheRouteOptionsProps {
   state: TcacheJobBuilderState;
@@ -14,23 +15,48 @@ interface TcacheRouteOptionsProps {
 }
 
 const MODES: { value: TcacheRouteMode; label: string }[] = [
-  { value: 'DRIVING', label: '자동차' },
-  { value: 'WALKING', label: '도보' },
-  { value: 'BICYCLING', label: '자전거' },
-  { value: 'TRANSIT', label: '대중교통' },
+  {
+    value: 'DRIVING',
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.car');
+    },
+  },
+  {
+    value: 'WALKING',
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.walk');
+    },
+  },
+  {
+    value: 'BICYCLING',
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.bicycle');
+    },
+  },
+  {
+    value: 'TRANSIT',
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.publicTransportation');
+    },
+  },
 ];
 
 export function TcacheRouteOptions({
   state,
   onChange,
 }: TcacheRouteOptionsProps) {
+  const L = useL();
   return (
     <section
       className="tcache-builder-options"
       aria-labelledby="tcache-options-title"
     >
-      <h2 id="tcache-options-title">요청 설정</h2>
-      <FormGroup label="이동 수단">
+      <h2 id="tcache-options-title">
+        {L('testbed:tcacheRouteOptions.title.requestSettings')}
+      </h2>
+      <FormGroup
+        label={L('testbed:tcacheRouteOptions.text.meansTransportation')}
+      >
         <ButtonGroup fill>
           {MODES.map((mode) => (
             <Button
@@ -43,7 +69,10 @@ export function TcacheRouteOptions({
           ))}
         </ButtonGroup>
       </FormGroup>
-      <FormGroup label="출발 시각" labelFor="tcache-departure-time">
+      <FormGroup
+        label={L('testbed:tcacheRouteOptions.text.departureTime')}
+        labelFor="tcache-departure-time"
+      >
         <InputGroup
           id="tcache-departure-time"
           type="datetime-local"
@@ -55,16 +84,18 @@ export function TcacheRouteOptions({
         />
       </FormGroup>
       <details className="tcache-builder-advanced">
-        <summary>고급 옵션</summary>
+        <summary>
+          {L('testbed:tcacheRouteOptions.text.advancedOptions')}
+        </summary>
         <Checkbox
           checked={state.computeAlternativeRoutes}
-          label="대체 경로 요청"
+          label={L('testbed:tcacheRouteOptions.text.alternateRouteRequest')}
           onChange={(event) =>
             onChange({ computeAlternativeRoutes: event.currentTarget.checked })
           }
         />
         <div className="tcache-builder-advanced-grid">
-          <FormGroup label="languageCode" labelFor="tcache-language-code">
+          <FormGroup label={NL('languageCode')} labelFor="tcache-language-code">
             <InputGroup
               id="tcache-language-code"
               value={state.languageCode}
@@ -73,7 +104,7 @@ export function TcacheRouteOptions({
               }
             />
           </FormGroup>
-          <FormGroup label="regionCode" labelFor="tcache-region-code">
+          <FormGroup label={NL('regionCode')} labelFor="tcache-region-code">
             <InputGroup
               id="tcache-region-code"
               value={state.regionCode}

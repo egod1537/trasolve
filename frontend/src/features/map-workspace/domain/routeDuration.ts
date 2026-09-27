@@ -1,5 +1,4 @@
 import type { RouteLocation, TravelMode } from '@trasolve/shared';
-import { formatDurationMinutes } from '@/entities/place';
 
 export type QueryRouteDuration = (
   request: {
@@ -9,8 +8,3 @@ export type QueryRouteDuration = (
   },
   signal: AbortSignal,
 ) => Promise<number | null>;
-
-export function formatRouteDuration(durationMillis: number): string {
-  const durationMinutes = Math.max(1, Math.round(durationMillis / 60_000));
-  return formatDurationMinutes(durationMinutes);
-}

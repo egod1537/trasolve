@@ -9,9 +9,20 @@ import { HttpTripRepository } from '@/entities/trip';
 import type { TripRepository } from '@/entities/trip';
 import { selectTripById } from '@/features/map-workspace/model/selectors';
 import '@/features/map-workspace/styles/trip-maps.css';
+import { useL, type Localize } from '@/shared/i18n';
+import {
+  useCurrentUser,
+  type CurrentUserState,
+} from '@/features/auth/model/useCurrentUser';
 
 type Action = 'opening' | 'creating' | 'deleting';
 type OperationErrors = Record<Action, string | null>;
+type Props = {
+  L: Localize;
+  authenticationStatus: CurrentUserState['status'];
+  authNotice: string | null;
+  onLogin: () => void;
+};
 
 type State = {
   selectedTripId: string | null;
@@ -25,11 +36,26 @@ type State = {
   operationErrors: OperationErrors;
 };
 
-export default class MapWorkspaceFeature extends Component<
-  Record<string, never>,
-  State
-> {
-  public constructor(props: Record<string, never>) {
+export default function MapWorkspaceFeature() {
+  const L = useL();
+  const { state, login, authNotice } = useCurrentUser();
+  return (
+    <MapWorkspaceFeatureView
+      key={
+        state.status === 'signed-in'
+          ? `signed-in:${state.user.id}`
+          : state.status
+      }
+      L={L}
+      authenticationStatus={state.status}
+      authNotice={authNotice}
+      onLogin={login}
+    />
+  );
+}
+
+class MapWorkspaceFeatureView extends Component<Props, State> {
+  public constructor(props: Props) {
     super(props);
     this.repository = new HttpTripRepository();
     this.state = {
@@ -37,7 +63,7 @@ export default class MapWorkspaceFeature extends Component<
       sessionRevision: 0,
       pickerOpen: true,
       trips: [],
-      catalogLoading: true,
+      catalogLoading: props.authenticationStatus !== 'signed-out',
       catalogError: null,
       action: null,
       lastAction: null,
@@ -50,7 +76,9 @@ export default class MapWorkspaceFeature extends Component<
   }
 
   public componentDidMount(): void {
-    this.refreshTrips();
+    if (this.props.authenticationStatus === 'signed-in') {
+      this.refreshTrips();
+    }
   }
 
   public componentWillUnmount(): void {
@@ -61,6 +89,7 @@ export default class MapWorkspaceFeature extends Component<
   }
 
   public render() {
+    const { L, authenticationStatus, authNotice, onLogin } = this.props;
     const {
       selectedTripId,
       sessionRevision,
@@ -87,7 +116,9 @@ export default class MapWorkspaceFeature extends Component<
           ) : (
             <main className="trip-map-empty-background">
               <GoogleMap
-                ariaLabel="여행 선택 지도 배경"
+                ariaLabel={L(
+                  'map:mapWorkspacePage.render.ariaLabel.travelSelectionMapBackground',
+                )}
                 style={{ position: 'absolute', inset: 0, height: '100%' }}
               />
             </main>
@@ -96,10 +127,17 @@ export default class MapWorkspaceFeature extends Component<
         {showPicker && (
           <TripPickerPopup
             trips={trips}
-            busy={catalogLoading || action !== null}
-            error={
-              (lastAction ? operationErrors[lastAction] : null) || catalogError
+            busy={
+              authenticationStatus === 'loading' ||
+              catalogLoading ||
+              action !== null
             }
+            error={
+              authNotice ||
+              (lastAction ? operationErrors[lastAction] : null) ||
+              catalogError
+            }
+            authenticationStatus={authenticationStatus}
             canClose={!!selectedTrip && action === null}
             onClose={this.closePicker}
             onRefresh={this.refreshTrips}
@@ -107,6 +145,7 @@ export default class MapWorkspaceFeature extends Component<
             onCreate={this.createTrip}
             onCreateExample={this.createExampleTrip}
             onDelete={this.deleteTrip}
+            onLogin={onLogin}
           />
         )}
       </div>
@@ -135,7 +174,9 @@ export default class MapWorkspaceFeature extends Component<
             catalogError:
               cause instanceof Error
                 ? cause.message
-                : '목록을 불러올 수 없습니다.',
+                : this.props.L(
+                    'map:mapWorkspacePage.text.listCouldNotBeLoaded',
+                  ),
           });
         }
       })
@@ -175,7 +216,13 @@ export default class MapWorkspaceFeature extends Component<
     void this.runAction(
       'creating',
       (signal) =>
-        this.repository.createTrip({ title: '새 여행', days: [] }, signal),
+        this.repository.createTrip(
+          {
+            title: this.props.L('map:mapWorkspacePage.title.newTravel'),
+            days: [],
+          },
+          signal,
+        ),
       this.selectTrip,
     );
   };
@@ -231,7 +278,9 @@ export default class MapWorkspaceFeature extends Component<
             [action]:
               cause instanceof Error
                 ? cause.message
-                : '여행 요청에 실패했습니다.',
+                : this.props.L(
+                    'map:mapWorkspacePage.runAction.text.travelRequestFailed',
+                  ),
           },
         }));
       }

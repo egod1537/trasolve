@@ -11,11 +11,11 @@ import {
 import type {
   PlaceDetails,
   PlaceStyle,
-  RouteOptimizationRequest,
   TripDay,
   TripPlace,
   TripPolyline,
   TripPolylineMode,
+  TripScheduleUpdate,
 } from '@trasolve/shared';
 import { AnchoredMapCard } from '@/map/components/AnchoredMapCard';
 import type { GoogleMapHandle } from '@/map/types/googleMapComponent';
@@ -80,7 +80,10 @@ type Props = Omit<ComponentProps<typeof MapCanvas>, 'mapRef' | 'overlay'> & {
   ) => Promise<boolean>;
   onRemoveSelectedPlaces: (placeIds: readonly string[]) => Promise<boolean>;
   onClearSelection: () => void;
-  onOptimizeRoute?: (request: RouteOptimizationRequest) => Promise<void> | void;
+  onApplyOptimizedSchedule: (
+    dayId: string,
+    schedule: TripScheduleUpdate,
+  ) => Promise<boolean>;
 };
 
 export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
@@ -108,7 +111,7 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
   onUpdateSelectedPolylineModes,
   onRemoveSelectedPlaces,
   onClearSelection,
-  onOptimizeRoute,
+  onApplyOptimizedSchedule,
   onSelectPlace,
   onSelectPolyline,
   onMapClick,
@@ -292,6 +295,7 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
       />
       <MapOverlayHost
         activeDay={activeDay}
+        days={mapProps.trip.days}
         activeMapTool={transient.activeMapTool}
         routeOptimizationOpen={transient.routeOptimizationOpen}
         routeOptimizationModalId={routeOptimizationModalId}
@@ -307,7 +311,7 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
         onUpdatePolylineModes={onUpdateSelectedPolylineModes}
         onDeletePlaces={onRemoveSelectedPlaces}
         onClearSelection={onClearSelection}
-        onOptimizeRoute={onOptimizeRoute}
+        onApplyOptimizedSchedule={onApplyOptimizedSchedule}
       />
       <MapToolbar
         dismissRevision={transient.searchDismissRevision}

@@ -35,8 +35,10 @@
 
 .trip-map-picker-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 }
 
 .trip-map-picker-header h2 {
@@ -48,6 +50,7 @@
 
 .trip-map-picker-header-actions {
   display: flex;
+  margin-left: auto;
   align-items: center;
   gap: 8px;
 }

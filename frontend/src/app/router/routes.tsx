@@ -1,5 +1,6 @@
 import { lazy, type ComponentType } from 'react';
 import { LandingPage } from '@/pages/landing/LandingPage';
+import { L } from '@/shared/i18n';
 
 const MapPage = lazy(() => import('@/pages/map/MapPage'));
 const TestbedPage = lazy(() => import('@/pages/testbed/TestbedPage'));
@@ -14,6 +15,9 @@ const TrouteTestPage = lazy(() => import('@/pages/testbed/TrouteTestPage'));
 const TcacheRouteTestPage = lazy(
   () => import('@/pages/testbed/TcacheRouteTestPage'),
 );
+const LocalizationTestPage = lazy(
+  () => import('@/pages/testbed/LocalizationTestPage'),
+);
 
 type RouteDefinition = {
   Component: ComponentType;
@@ -23,35 +27,57 @@ type RouteDefinition = {
 export const routes: Record<string, RouteDefinition> = {
   '/': {
     Component: LandingPage,
-    loadingLabel: '페이지를 불러오고 있습니다.',
+    get loadingLabel() {
+      return L('common:routes.loadingLabel.pageLoading');
+    },
   },
   '/map': {
     Component: MapPage,
-    loadingLabel: '여행 지도를 불러오고 있습니다.',
+    get loadingLabel() {
+      return L('map:routes.loadingLabel.loadingTravelMap');
+    },
   },
   '/testbed': {
     Component: TestbedPage,
-    loadingLabel: '테스트베드 목록을 불러오고 있습니다.',
+    get loadingLabel() {
+      return L('testbed:routes.loadingLabel.loadingTestbedList');
+    },
   },
   '/testbed/google-maps': {
     Component: GoogleMapsTestPage,
-    loadingLabel: 'Google Maps 테스트베드를 불러오고 있습니다.',
+    get loadingLabel() {
+      return L('testbed:routes.loadingLabel.loadingGoogleMapsTestbed');
+    },
   },
   '/testbed/ai-chat': {
     Component: AiChatTestPage,
-    loadingLabel: 'AI 채팅 테스트베드를 불러오고 있습니다.',
+    get loadingLabel() {
+      return L('testbed:routes.loadingLabel.loadingOurAiChatTestbed');
+    },
   },
   '/testbed/google-oauth': {
     Component: GoogleOAuthTestPage,
-    loadingLabel: 'Google OAuth 테스트 페이지를 불러오고 있습니다.',
+    get loadingLabel() {
+      return L('testbed:routes.loadingLabel.loadingGoogleOauthTestPage');
+    },
   },
   '/testbed/troute': {
     Component: TrouteTestPage,
-    loadingLabel: 'troute 연동 테스트 페이지를 불러오고 있습니다.',
+    get loadingLabel() {
+      return L('testbed:routes.loadingLabel.trouteIntegrationTestPageLoading');
+    },
   },
   '/testbed/tcache-route': {
     Component: TcacheRouteTestPage,
-    loadingLabel: 'tcache Route 테스트 페이지를 불러오고 있습니다.',
+    get loadingLabel() {
+      return L('testbed:routes.loadingLabel.loadingTcacheRouteTestPage');
+    },
+  },
+  '/testbed/localization': {
+    Component: LocalizationTestPage,
+    get loadingLabel() {
+      return L('testbed:routes.loadingLabel.loadingLocalizationTestbed');
+    },
   },
 };
 

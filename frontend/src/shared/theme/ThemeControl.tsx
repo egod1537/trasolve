@@ -1,18 +1,38 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useTheme } from '@/shared/theme/useTheme';
 import type { ThemeMode } from '@/shared/theme/theme';
+import { useL, L } from '@/shared/i18n';
 
 const themeOptions: readonly {
   mode: ThemeMode;
   label: string;
   icon: ReactNode;
 }[] = [
-  { mode: 'system', label: '시스템', icon: <DesktopIcon /> },
-  { mode: 'light', label: '라이트', icon: <SunIcon /> },
-  { mode: 'dark', label: '다크', icon: <MoonIcon /> },
+  {
+    mode: 'system',
+    get label() {
+      return L('common:themeControl.themeOptions.label.system');
+    },
+    icon: <DesktopIcon />,
+  },
+  {
+    mode: 'light',
+    get label() {
+      return L('common:themeControl.themeOptions.label.light');
+    },
+    icon: <SunIcon />,
+  },
+  {
+    mode: 'dark',
+    get label() {
+      return L('common:themeControl.themeOptions.label.dark');
+    },
+    icon: <MoonIcon />,
+  },
 ];
 
 export function ThemeControl({ className = '' }: { className?: string }) {
+  const L = useL();
   const { themeMode, setThemeMode } = useTheme();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -50,8 +70,12 @@ export function ThemeControl({ className = '' }: { className?: string }) {
       <button
         type="button"
         className="theme-control-trigger"
-        aria-label={`테마: ${selected.label}`}
-        title={`테마: ${selected.label}`}
+        aria-label={L('common:themeControl.ariaLabel.theme', {
+          label: selected.label,
+        })}
+        title={L('common:themeControl.ariaLabel.theme', {
+          label: selected.label,
+        })}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}

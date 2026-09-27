@@ -28,6 +28,7 @@ import {
 } from '@/features/tcache-route-testbed/job-builder/tcacheJobBuilderModel';
 import type { TcacheRouteRequest } from '@/features/tcache-route-testbed/model/types';
 import type { GeoPoint } from '@/shared/types/mapTypes';
+import { useL } from '@/shared/i18n';
 
 interface TcacheJobBuilderDialogProps {
   isOpen: boolean;
@@ -46,6 +47,7 @@ export function TcacheJobBuilderDialog({
   onClose,
   onCreate,
 }: TcacheJobBuilderDialogProps) {
+  const L = useL();
   const [builder, setBuilder] = useState(createTcacheJobBuilderDraft);
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(
     null,
@@ -175,7 +177,7 @@ export function TcacheJobBuilderDialog({
       className="tcache-builder-dialog"
       isOpen={isOpen}
       portalClassName={dark ? Classes.DARK : undefined}
-      title="새 tcache 경로 요청"
+      title={L('testbed:tcacheJobBuilderDialog.tooltip.requestNewTcachePath')}
       icon="route"
       canEscapeKeyClose={!submitting}
       canOutsideClickClose={!submitting}
@@ -236,12 +238,16 @@ export function TcacheJobBuilderDialog({
           aria-labelledby="tcache-preview-title"
         >
           <div className="tcache-section-heading">
-            <h2 id="tcache-preview-title">요청 미리보기</h2>
+            <h2 id="tcache-preview-title">
+              {L('testbed:tcacheJobBuilderDialog.title.requestPreview')}
+            </h2>
             <Tag
               minimal
               intent={validation.valid ? Intent.SUCCESS : Intent.DANGER}
             >
-              {validation.valid ? '유효함' : '수정 필요'}
+              {validation.valid
+                ? L('testbed:tcacheJobBuilderDialog.text.valid')
+                : L('testbed:tcacheJobBuilderDialog.text.needsModification')}
             </Tag>
           </div>
           <pre>{JSON.stringify(requestPreview, null, 2)}</pre>
@@ -250,7 +256,7 @@ export function TcacheJobBuilderDialog({
           <Callout
             compact
             intent={Intent.DANGER}
-            title="요청을 확인해 주세요."
+            title={L('testbed:tcacheJobBuilderDialog.tooltip.confirmRequest')}
             role="alert"
           >
             {validation.messages.join(' ')}
@@ -266,7 +272,7 @@ export function TcacheJobBuilderDialog({
         actions={
           <>
             <Button disabled={submitting} onClick={onClose}>
-              취소
+              {L('common:action.cancel')}
             </Button>
             <Button
               icon="send-message"
@@ -275,7 +281,7 @@ export function TcacheJobBuilderDialog({
               disabled={!validation.valid || !request || submitting}
               onClick={submit}
             >
-              요청 생성
+              {L('testbed:tcacheJobBuilderDialog.tooltip.requestNewTcachePath')}
             </Button>
           </>
         }

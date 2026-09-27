@@ -19,6 +19,7 @@ import { GoogleMap, useGoogleMap } from '@/map/components/GoogleMap';
 import type { MapMarkerHandle } from '@/map/adapters/MapObjectController';
 import type { GoogleMapHandle } from '@/map/types/googleMapComponent';
 import type { GeoPoint, MapClickEvent } from '@/shared/types/mapTypes';
+import { useL } from '@/shared/i18n';
 
 interface TcacheRouteMapProps {
   locations: TcacheRouteLocationDraft[];
@@ -43,6 +44,7 @@ export function TcacheRouteMap({
   onUsePlace,
   onUseCoordinate,
 }: TcacheRouteMapProps) {
+  const L = useL();
   const mapRef = useRef<GoogleMapHandle>(null);
   const googlePlace = useSelectedGooglePlace();
   const [coordinateCandidate, setCoordinateCandidate] =
@@ -86,7 +88,9 @@ export function TcacheRouteMap({
         ref={mapRef}
         center={{ lat: 37.5665, lng: 126.978 }}
         zoom={12}
-        ariaLabel="tcache 경로 요청 위치 지도"
+        ariaLabel={L(
+          'testbed:tcacheRouteMap.ariaLabel.tcacheRouteRequestLocationMap',
+        )}
         options={{
           clickableIcons: true,
           mapTypeControl: false,
@@ -114,21 +118,32 @@ export function TcacheRouteMap({
         <section className="tcache-place-candidate" aria-live="polite">
           <Button
             className="tcache-place-candidate-close"
-            aria-label="선택한 장소 닫기"
+            aria-label={L(
+              'testbed:tcacheRouteMap.ariaLabel.closeSelectedPlace',
+            )}
             icon="cross"
             size="small"
             variant="minimal"
             onClick={googlePlace.close}
           />
           {googlePlace.selection.status === 'loading' ? (
-            <p role="status">장소 정보를 불러오고 있습니다.</p>
+            <p role="status">
+              {L(
+                'testbed:tcacheRouteMap.description.loadingLocationInformation',
+              )}
+            </p>
           ) : googlePlace.selection.status === 'error' ? (
-            <p role="alert">장소 정보를 불러오지 못했습니다.</p>
+            <p role="alert">
+              {L(
+                'testbed:tcacheRouteMap.description.failedLoadLocationInformation',
+              )}
+            </p>
           ) : (
             <>
               <strong>{googlePlace.selection.place.name}</strong>
               <span>
-                {googlePlace.selection.place.address ?? '주소 정보 없음'}
+                {googlePlace.selection.place.address ??
+                  L('testbed:tcacheRouteMap.text.noAddressInformation')}
               </span>
               <ButtonGroup fill vertical>
                 <Button
@@ -140,7 +155,7 @@ export function TcacheRouteMap({
                     googlePlace.close();
                   }}
                 >
-                  출발지로 설정
+                  {L('testbed:tcacheRouteMap.action.setAsDeparturePoint')}
                 </Button>
                 <Button
                   icon="plus"
@@ -152,7 +167,7 @@ export function TcacheRouteMap({
                     googlePlace.close();
                   }}
                 >
-                  경유지로 추가
+                  {L('testbed:tcacheRouteMap.action.addAsStopover')}
                 </Button>
                 <Button
                   icon="flag"
@@ -163,7 +178,7 @@ export function TcacheRouteMap({
                     googlePlace.close();
                   }}
                 >
-                  도착지로 설정
+                  {L('testbed:tcacheRouteMap.action.setAsDestination')}
                 </Button>
               </ButtonGroup>
             </>
@@ -174,13 +189,15 @@ export function TcacheRouteMap({
         <section className="tcache-place-candidate" aria-live="polite">
           <Button
             className="tcache-place-candidate-close"
-            aria-label="선택한 좌표 닫기"
+            aria-label={L(
+              'testbed:tcacheRouteMap.ariaLabel.closeSelectedCoordinates',
+            )}
             icon="cross"
             size="small"
             variant="minimal"
             onClick={() => setCoordinateCandidate(null)}
           />
-          <strong>지도 좌표</strong>
+          <strong>{L('testbed:tcacheRouteMap.text.mapCoordinates')}</strong>
           <span>
             {coordinateCandidate.lat.toFixed(6)},{' '}
             {coordinateCandidate.lng.toFixed(6)}
@@ -199,10 +216,10 @@ export function TcacheRouteMap({
                 }}
               >
                 {action === 'start'
-                  ? '출발지로 설정'
+                  ? L('testbed:tcacheRouteMap.action.setAsDeparturePoint')
                   : action === 'end'
-                    ? '도착지로 설정'
-                    : '경유지로 추가'}
+                    ? L('testbed:tcacheRouteMap.action.setAsDestination')
+                    : L('testbed:tcacheRouteMap.action.addAsStopover')}
               </Button>
             ))}
           </ButtonGroup>

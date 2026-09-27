@@ -9,6 +9,7 @@ import { memo, useEffect, useMemo, useRef } from 'react';
 import { JobStatusBadge } from '@/features/tcache-route-testbed/components/JobStatusBadge';
 import type { TcacheRouteJob } from '@/features/tcache-route-testbed/model/types';
 import { Progress } from '@/shared/ui/Progress';
+import { getLanguage, useL } from '@/shared/i18n';
 
 interface JobSidebarProps {
   jobs: TcacheRouteJob[];
@@ -29,6 +30,7 @@ export const JobSidebar = memo(function JobSidebar({
   onRefresh,
   onSelect,
 }: JobSidebarProps) {
+  const L = useL();
   const listRef = useRef<HTMLDivElement>(null);
   const orderedJobs = useMemo(
     () => [...jobs].sort((left, right) => right.createdAt - left.createdAt),
@@ -48,13 +50,17 @@ export const JobSidebar = memo(function JobSidebar({
     <Card className="tcache-job-sidebar" elevation={1} compact>
       <div className="tcache-sidebar-heading">
         <div>
-          <h1 className={Classes.HEADING}>경로 작업</h1>
-          <span className={Classes.TEXT_MUTED}>tcache Route Jobs</span>
+          <h1 className={Classes.HEADING}>
+            {L('testbed:jobSidebar.title.pathOperation')}
+          </h1>
+          <span className={Classes.TEXT_MUTED}>
+            {L('testbed:jobSidebar.text.tcacheRouteJobs')}
+          </span>
         </div>
         <div className="tcache-sidebar-actions">
           <Button
-            aria-label="경로 작업 목록 새로고침"
-            title="경로 작업 목록 새로고침"
+            aria-label={L('testbed:jobSidebar.ariaLabel.refreshRouteTaskList')}
+            title={L('testbed:jobSidebar.ariaLabel.refreshRouteTaskList')}
             icon="refresh"
             loading={refreshing}
             disabled={refreshing}
@@ -62,7 +68,7 @@ export const JobSidebar = memo(function JobSidebar({
             onClick={onRefresh}
           />
           <Button icon="plus" intent="primary" onClick={onNewJob}>
-            새 요청
+            {L('testbed:jobSidebar.action.newRequest')}
           </Button>
         </div>
       </div>
@@ -76,15 +82,17 @@ export const JobSidebar = memo(function JobSidebar({
         <NonIdealState
           className="tcache-job-list-empty"
           icon="inbox"
-          title="생성된 tcache Route 작업이 없습니다."
-          description="새 요청을 만들어 Trasolve와 tcache 통신을 테스트하세요."
+          title={L('testbed:jobSidebar.tooltip.noTcacheRouteTaskWasCreated')}
+          description={L(
+            'testbed:jobSidebar.text.testTrasolveTcacheCommunicationByCreating',
+          )}
         />
       ) : (
         <div
           ref={listRef}
           className="tcache-job-list"
           role="listbox"
-          aria-label="tcache Route 작업 목록"
+          aria-label={L('testbed:jobSidebar.ariaLabel.tcacheRouteTaskList')}
         >
           {orderedJobs.map((job) => (
             <button
@@ -103,14 +111,18 @@ export const JobSidebar = memo(function JobSidebar({
               </span>
               <span className={`${Classes.TEXT_MUTED} tcache-job-meta`}>
                 {job.request.mode} · {formatTime(job.createdAt)}
-                {job.cacheStatus
-                  ? ` · Cache ${job.cacheStatus.toUpperCase()}`
-                  : ''}
+                {job.cacheStatus ? (
+                  <>
+                    {' · '}
+                    {L('testbed:jobDetail.overview.label.cache')}{' '}
+                    {job.cacheStatus.toUpperCase()}
+                  </>
+                ) : null}
               </span>
               <Progress
                 className="tcache-job-progress"
                 value={job.progress}
-                label={`${job.id} 진행률`}
+                label={L('testbed:jobSidebar.text.progress', { id: job.id })}
                 animated={job.status === 'running'}
                 tone={job.status === 'failed' ? 'danger' : 'accent'}
               />
@@ -123,7 +135,7 @@ export const JobSidebar = memo(function JobSidebar({
 });
 
 function formatTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleString('ko-KR', {
+  return new Date(timestamp).toLocaleString(getLanguage(), {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',

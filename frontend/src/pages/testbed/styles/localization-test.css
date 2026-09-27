@@ -1,0 +1,303 @@
+.localization-test-page {
+  max-width: 1440px;
+}
+
+.localization-title-row {
+  display: flex;
+  width: 100%;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.localization-title-row > div {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.localization-language-control,
+.localization-toolbar label,
+.localization-interpolation-fields label {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.localization-test-page select,
+.localization-test-page input {
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.localization-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.localization-summary .ui-panel {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+
+.localization-summary span {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.localization-summary strong {
+  font-size: 26px;
+}
+
+.localization-toolbar {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.35fr) minmax(260px, 1fr) auto;
+  align-items: end;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+}
+
+.localization-toolbar > span {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.localization-table-section {
+  min-width: 0;
+  margin-bottom: var(--space-6);
+}
+
+.localization-section-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.localization-section-heading h2,
+.localization-section-heading p {
+  margin: 0;
+}
+
+.localization-section-heading h2 {
+  font-size: 18px;
+}
+
+.localization-section-heading p {
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.localization-table-scroll {
+  max-height: min(62vh, 720px);
+  overflow: auto;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  overscroll-behavior: contain;
+}
+
+.localization-table-scroll table {
+  width: 100%;
+  min-width: 1180px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-size: 13px;
+}
+
+.localization-table-scroll th,
+.localization-table-scroll td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-default);
+  border-right: 1px solid var(--border-default);
+  vertical-align: top;
+  line-height: 1.5;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.localization-table-scroll th:last-child,
+.localization-table-scroll td:last-child {
+  border-right: 0;
+}
+
+.localization-table-scroll tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.localization-table-scroll thead th {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.localization-table-scroll thead th:first-child {
+  width: 210px;
+}
+
+.localization-table-scroll thead th:nth-child(5) {
+  width: 210px;
+}
+
+.localization-table-scroll thead th:last-child {
+  width: 190px;
+}
+
+.localization-table-scroll tbody tr[data-selected='true'] {
+  background: var(--color-surface-active);
+}
+
+.localization-table-scroll tbody th button {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.localization-table-scroll tbody th button span {
+  color: var(--text-secondary);
+}
+
+.localization-value-placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.localization-status-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.localization-empty-state {
+  margin: 0;
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.localization-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.localization-preview,
+.localization-raw {
+  min-width: 0;
+  padding: var(--space-4);
+}
+
+.localization-preview > p {
+  color: var(--text-secondary);
+}
+
+.localization-interpolation-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.localization-preview-output {
+  display: grid;
+  gap: var(--space-2);
+  max-height: 220px;
+  padding: var(--space-4);
+  overflow: auto;
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+}
+
+.localization-preview-output span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.localization-preview-output strong {
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.localization-raw-controls {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.localization-raw-controls select {
+  max-width: 180px;
+}
+
+.localization-raw pre {
+  max-height: 360px;
+  margin: 0;
+  padding: var(--space-4);
+  overflow: auto;
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+@media (max-width: 820px) {
+  .localization-toolbar,
+  .localization-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .localization-toolbar > span {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .localization-title-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .localization-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .localization-summary .ui-panel {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .localization-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

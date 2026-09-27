@@ -100,19 +100,6 @@ const PLACE_CATEGORY_DEFINITIONS: readonly PlaceCategoryDefinition[] = [
   ]),
 ] as const;
 
-const PLACE_CATEGORY_LABELS: Record<PlaceCategory, string> = {
-  food: '음식점',
-  cafe: '카페',
-  transit: '교통 시설',
-  lodging: '숙소',
-  shopping: '상점',
-  attraction: '관광 명소',
-  park: '공원',
-  medical: '의료 시설',
-  education: '교육 시설',
-  default: '장소',
-};
-
 export function resolvePlaceCategoryFromTypes(
   types: readonly (string | null | undefined)[],
 ): PlaceCategory {
@@ -127,8 +114,4 @@ export function resolvePlaceCategoryFromTypes(
     }
   }
   return 'default';
-}
-
-export function getPlaceCategoryLabel(category: PlaceCategory): string {
-  return PLACE_CATEGORY_LABELS[category];
 }

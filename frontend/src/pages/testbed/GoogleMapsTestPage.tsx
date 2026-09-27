@@ -18,8 +18,10 @@ import {
 } from '@/pages/testbed/components/google-maps/config';
 import { useDirectionsState } from '@/pages/testbed/hooks/useDirectionsState';
 import '@/pages/testbed/styles/google-maps-test.css';
+import { useL } from '@/shared/i18n';
 
 function GoogleMapsTestContent() {
+  const L = useL();
   const mapRef = useRef<GoogleMapHandle>(null);
   const [selectedPlace, setSelectedPlace] = useState<MapPlace | null>(null);
   const [clicked, setClicked] = useState<MapClickEvent | null>(null);
@@ -44,16 +46,23 @@ function GoogleMapsTestContent() {
       setSelectedPlace(place);
       mapRef.current?.setZoom(15);
       mapRef.current?.panTo(place.location);
-      appendLog(`장소 선택: ${place.name}`);
+      appendLog(
+        L(
+          'testbed:googleMapsTestPage.googleMapsTestContent.text.selectLocation',
+          { name: place.name },
+        ),
+      );
     },
-    [appendLog],
+    [appendLog, L],
   );
 
   const handleMapReady = useCallback(
     (map: GoogleMapHandle) => {
       setCamera(initialCenter);
       setZoom(initialZoom);
-      appendLog('지도 준비 완료');
+      appendLog(
+        L('testbed:googleMapsTestPage.googleMapsTestContent.text.mapReady'),
+      );
       if (route?.bounds) {
         map.fitBounds(route.bounds, routePadding);
       } else if (selectedPlace) {
@@ -61,17 +70,21 @@ function GoogleMapsTestContent() {
         map.panTo(selectedPlace.location);
       }
     },
-    [appendLog, route, selectedPlace],
+    [appendLog, L, route, selectedPlace],
   );
 
   const handleMapClick = useCallback(
     (event: MapClickEvent) => {
       setClicked(event);
       appendLog(
-        `지도 클릭: ${event.lat}, ${event.lng}${event.placeId ? ` · placeId: ${event.placeId}` : ''}`,
+        L('testbed:googleMapsTestPage.googleMapsTestContent.text.mapClick', {
+          lat: event.lat,
+          lng: event.lng,
+          value: event.placeId ? ` · placeId: ${event.placeId}` : '',
+        }),
       );
     },
-    [appendLog],
+    [appendLog, L],
   );
 
   const handleError = useCallback(
@@ -84,12 +97,27 @@ function GoogleMapsTestContent() {
   return (
     <main className="maps-test-page">
       <header>
-        <a href="/testbed">← 테스트베드 목록</a>
-        <h1>Google Maps Test Bed</h1>
-        <p>개발용 playground · 실제 Google API</p>
+        <a href="/testbed">
+          {L('testbed:aiChatTestPage.aiChatTestContent.text.testbedList')}
+        </a>
+        <h1>
+          {L(
+            'testbed:googleMapsTestPage.googleMapsTestContent.title.googleMapsTestBed',
+          )}
+        </h1>
+        <p>
+          {L(
+            'testbed:googleMapsTestPage.googleMapsTestContent.description.playgroundDevelopmentRealGoogleApi',
+          )}
+        </p>
       </header>
       <div className="maps-test-workspace">
-        <aside className="maps-test-controls" aria-label="지도 컨트롤">
+        <aside
+          className="maps-test-controls"
+          aria-label={L(
+            'testbed:googleMapsTestPage.googleMapsTestContent.ariaLabel.mapControl',
+          )}
+        >
           <GooglePlaceSearch
             onSelect={handlePlaceSelect}
             onError={handleError}

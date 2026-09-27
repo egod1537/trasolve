@@ -1,10 +1,10 @@
 import {
   API_ROUTES,
   authMeResponseSchema,
-  type GoogleOAuthUser,
+  type AuthUser,
 } from '@trasolve/shared';
 
-export async function fetchCurrentUser(): Promise<GoogleOAuthUser | null> {
+export async function fetchCurrentUser(): Promise<AuthUser | null> {
   const response = await fetch(API_ROUTES.authMe, {
     cache: 'no-store',
     credentials: 'same-origin',

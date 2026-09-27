@@ -1,4 +1,5 @@
 import { forwardRef, type MouseEventHandler } from 'react';
+import { useL } from '@/shared/i18n';
 
 type Props = {
   open: boolean;
@@ -8,8 +9,15 @@ type Props = {
 
 export const MapAiButton = forwardRef<HTMLButtonElement, Props>(
   function MapAiButton({ open, generating, onClick }, ref) {
-    const actionLabel = open ? 'AI 패널 닫기' : 'AI 패널 열기';
-    const label = generating ? `AI 응답 생성 중 · ${actionLabel}` : actionLabel;
+    const L = useL();
+    const actionLabel = open
+      ? L('ai:mapAiButton.actionLabel.text.closeAiPanel')
+      : L('ai:mapAiButton.actionLabel.text.openAiPanel');
+    const label = generating
+      ? L('ai:mapAiButton.label.text.generatingAiResponse', {
+          actionLabel: actionLabel,
+        })
+      : actionLabel;
 
     return (
       <button

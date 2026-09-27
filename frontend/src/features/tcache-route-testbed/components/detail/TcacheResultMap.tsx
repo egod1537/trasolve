@@ -8,6 +8,7 @@ import type {
   TcacheRouteLocation,
 } from '@/features/tcache-route-testbed/model/types';
 import type { GeoPoint } from '@/shared/types/mapTypes';
+import { useL, L, NL } from '@/shared/i18n';
 
 interface TcacheResultMapProps {
   routes: TcacheRouteAlternative[];
@@ -25,6 +26,7 @@ export function TcacheResultMap({
   selectedIndex,
   onSelect,
 }: TcacheResultMapProps) {
+  const L = useL();
   const selected = routes[selectedIndex] ?? routes[0];
   const points = selected?.path ?? EMPTY_POINTS;
   const bounds = selected?.bounds;
@@ -45,7 +47,8 @@ export function TcacheResultMap({
               active={index === selectedIndex}
               onClick={() => onSelect(index)}
             >
-              {route.label || `경로 ${index + 1}`}
+              {route.label ||
+                L('testbed:routeResultPanel.text.path', { value: index + 1 })}
             </Button>
           ))}
         </ButtonGroup>
@@ -63,7 +66,9 @@ export function TcacheResultMap({
               : undefined)
           }
           zoom={12}
-          ariaLabel={`${selected.label} 결과 지도`}
+          ariaLabel={L('testbed:tcacheResultMap.ariaLabel.resultMap', {
+            label: selected.label,
+          })}
           options={{
             clickableIcons: false,
             mapTypeControl: false,
@@ -93,7 +98,9 @@ export function TcacheResultMap({
         </GoogleMap>
       ) : (
         <p className={Classes.TEXT_MUTED}>
-          결과에 지도에 표시할 path/polyline 좌표가 없습니다.
+          {L(
+            'testbed:tcacheResultMap.description.resultsContainNoPathPolylineCoordinates',
+          )}
         </p>
       )}
     </div>
@@ -206,10 +213,10 @@ function createMarkerModels(
       id: `route-leg-${index}`,
       name:
         index === 0
-          ? '출발지'
+          ? L('testbed:jobResultMapComparison.locationSequence.label.departure')
           : index === legPoints.length - 1
-            ? '도착지'
-            : `경유지 ${index}`,
+            ? L('testbed:jobResultMapComparison.locationSequence.label.arrival')
+            : L('testbed:directionsPanel.text.waypoint', { value: index }),
       position: point,
       label: String(index + 1),
     }));
@@ -218,12 +225,19 @@ function createMarkerModels(
     return models;
   }
   return [
-    { id: 'route-start', name: '출발지', position: path[0]!, label: 'S' },
+    {
+      id: 'route-start',
+      name: L(
+        'testbed:jobResultMapComparison.locationSequence.label.departure',
+      ),
+      position: path[0]!,
+      label: NL('S'),
+    },
     {
       id: 'route-end',
-      name: '도착지',
+      name: L('testbed:jobResultMapComparison.locationSequence.label.arrival'),
       position: path.at(-1)!,
-      label: 'E',
+      label: NL('E'),
     },
   ];
 }

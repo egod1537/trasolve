@@ -28,6 +28,11 @@
   backdrop-filter: blur(4px);
 }
 
+.map-language-control select {
+  box-shadow: var(--shadow-map-overlay);
+  backdrop-filter: blur(4px);
+}
+
 .map-app-menu-button {
   width: 40px;
   height: 40px;
@@ -124,6 +129,7 @@
 }
 
 .map-app-menu-button:focus-visible,
+.map-language-control select:focus-visible,
 .map-theme-control .theme-control-trigger:focus-visible,
 .map-profile-button:focus-visible {
   outline: 2px solid var(--color-primary);

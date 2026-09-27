@@ -199,7 +199,7 @@ export class TrouteJobRepository {
     };
     const storedJob: StoredTrouteJob = {
       state,
-      request: structuredClone(remote.request),
+      request: structuredClone(existing?.request ?? remote.request),
       createdAt: remote.created_at,
       updatedAt: remote.updated_at,
       completedAt: remote.completed_at,

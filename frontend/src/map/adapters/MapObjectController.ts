@@ -5,6 +5,7 @@ import type {
 } from '@/shared/map/MapObjectHandle';
 import type {
   MapMarkerHandle,
+  MapMarkerContextMenuEvent,
   MapMarkerIcon,
   MapMarkerOptions,
 } from '@/shared/map/MapMarkerHandle';
@@ -19,6 +20,7 @@ export type {
   MapObjectBaseOptions,
   MapObjectHandle,
   MapMarkerHandle,
+  MapMarkerContextMenuEvent,
   MapMarkerIcon,
   MapMarkerOptions,
   MapPolylineHandle,
