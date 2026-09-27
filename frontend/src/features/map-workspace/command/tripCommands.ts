@@ -16,6 +16,7 @@ import {
   defineTripCommand,
   type TripCommand,
 } from '@/features/map-workspace/command/TripCommand';
+import { L } from '@/shared/i18n';
 
 export type PlaceInput = Omit<TripPlace, 'id' | 'order'>;
 
@@ -62,7 +63,7 @@ export function createRenameDayCommand(
   return defineTripCommand((trip) => {
     const day = trip.days.find((candidate) => candidate.id === dayId);
     if (!day) {
-      throw new Error('이름을 변경할 날짜를 찾을 수 없습니다.');
+      throw new Error(L('map:tripCommands.error.iCanTFindDateChange'));
     }
     day.title = title;
     return trip;
@@ -76,7 +77,7 @@ export function createUpdateDayColorCommand(
   return defineTripCommand((trip) => {
     const day = trip.days.find((candidate) => candidate.id === dayId);
     if (!day) {
-      throw new Error('색상을 변경할 날짜를 찾을 수 없습니다.');
+      throw new Error(L('map:tripCommands.error.iCanTFindDateChange2'));
     }
     day.color = color;
     return trip;
@@ -90,7 +91,7 @@ export function createMoveDayCommand(
   return defineTripCommand((trip) => {
     const sourceIndex = trip.days.findIndex((day) => day.id === dayId);
     if (sourceIndex < 0 || !Number.isInteger(targetIndex)) {
-      throw new Error('이동할 날짜와 순서를 확인해 주세요.');
+      throw new Error(L('map:tripCommands.error.confirmDateOrderMovement'));
     }
 
     const [day] = trip.days.splice(sourceIndex, 1);
@@ -136,7 +137,7 @@ function createAddPlaceCommandWithIdFactory(
   return defineTripCommand((trip) => {
     const day = trip.days.find((candidate) => candidate.id === dayId);
     if (!day) {
-      throw new Error('장소를 추가할 날짜를 선택해 주세요.');
+      throw new Error(L('map:tripCommands.error.selectDateYouWouldLikeAdd'));
     }
     const place: TripPlace = {
       ...placeInput,
@@ -179,13 +180,13 @@ export function createMovePlaceCommand(
   return defineTripCommand((trip) => {
     const target = trip.days.find((day) => day.id === targetDayId);
     if (!target || !Number.isInteger(targetIndex)) {
-      throw new Error('이동할 날짜와 순서를 확인해 주세요.');
+      throw new Error(L('map:tripCommands.error.confirmDateOrderMovement'));
     }
     const source = trip.days.find((day) =>
       day.places.some((place) => place.id === placeId),
     );
     if (!source) {
-      throw new Error('이동할 장소를 찾을 수 없습니다.');
+      throw new Error(L('map:tripCommands.error.canTFindPlaceMove'));
     }
     const sourceIndex = source.places.findIndex(
       (place) => place.id === placeId,
@@ -208,7 +209,7 @@ export function createReorderDayPlacesCommand(
   return defineTripCommand((trip) => {
     const day = trip.days.find((candidate) => candidate.id === dayId);
     if (!day) {
-      throw new Error('순서를 변경할 날짜를 찾을 수 없습니다.');
+      throw new Error(L('map:tripCommands.error.iCanTFindDateChange3'));
     }
     const uniqueIds = new Set(orderedIds);
     const currentIds = new Set(day.places.map((place) => place.id));
@@ -222,7 +223,7 @@ export function createReorderDayPlacesCommand(
       orderedIds.at(-1) !== currentDestinationId
     ) {
       throw new Error(
-        '최적화 결과의 장소 순서가 현재 Day와 일치하지 않습니다.',
+        L('map:tripCommands.error.orderPlacesOptimizationResultsDoesNot'),
       );
     }
     const placesById = new Map(day.places.map((place) => [place.id, place]));
@@ -239,7 +240,9 @@ export function createApplyOptimizedScheduleCommand(
   return defineTripCommand((trip) => {
     const day = trip.days.find((candidate) => candidate.id === dayId);
     if (!day) {
-      throw new Error('일정을 적용할 날짜를 찾을 수 없습니다.');
+      throw new Error(
+        L('map:tripCommands.error.dateWhichScheduleAppliesCannotBe'),
+      );
     }
     const currentIds = new Set(day.places.map((place) => place.id));
     const orderedIds = update.placeIds;
@@ -258,7 +261,7 @@ export function createApplyOptimizedScheduleCommand(
       !currentIds.has(update.expectedEndPlaceId)
     ) {
       throw new Error(
-        '최적화 일정의 장소 또는 시작·종점이 현재 Day와 일치하지 않습니다.',
+        L('map:tripCommands.error.locationStartEndPointOptimizationSchedule'),
       );
     }
 
@@ -375,7 +378,7 @@ function findPlace(trip: Trip, placeId: string): TripPlace {
     .flatMap((day) => day.places)
     .find((candidate) => candidate.id === placeId);
   if (!place) {
-    throw new Error('장소를 찾을 수 없습니다.');
+    throw new Error(L('map:tripCommands.error.locationNotFound'));
   }
   return place;
 }
@@ -385,7 +388,7 @@ function findPolyline(trip: Trip, polylineId: string): TripPolyline {
     .flatMap((day) => day.polylines)
     .find((item) => item.id === polylineId);
   if (!polyline) {
-    throw new Error('연결선을 찾을 수 없습니다.');
+    throw new Error(L('map:tripCommands.error.connectorNotFound'));
   }
   return polyline;
 }
@@ -393,7 +396,7 @@ function findPolyline(trip: Trip, polylineId: string): TripPolyline {
 function readPendingId(value: string): string {
   const parsed = tripIdSchema.safeParse(value);
   if (!parsed.success || !parsed.data.startsWith('pending-')) {
-    throw new Error('새 여행 항목 ID가 올바르지 않습니다.');
+    throw new Error(L('map:tripCommands.error.newTripItemIdIncorrect'));
   }
   return parsed.data;
 }

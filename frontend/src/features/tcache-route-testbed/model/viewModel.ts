@@ -1,12 +1,13 @@
+import { L } from '@/shared/i18n';
 export function getTcacheRouteLocationRole(
   index: number,
   total: number,
-): '출발지' | '경유지' | '도착지' {
+): string {
   if (index === 0) {
-    return '출발지';
+    return L('testbed:jobResultMapComparison.locationSequence.label.departure');
   }
   if (index === total - 1) {
-    return '도착지';
+    return L('testbed:jobResultMapComparison.locationSequence.label.arrival');
   }
-  return '경유지';
+  return L('testbed:viewModel.getTcacheRouteLocationRole.text.stopover');
 }

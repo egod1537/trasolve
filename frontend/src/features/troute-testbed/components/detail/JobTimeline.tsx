@@ -5,6 +5,7 @@ import {
   type TimelineEntry as Entry,
 } from '@/entities/route-job';
 import { TimelineEntry } from '@/features/troute-testbed/components/detail/TimelineEntry';
+import { useL } from '@/shared/i18n';
 
 const scrollPositions = new Map<string, number>();
 
@@ -17,6 +18,7 @@ export const JobTimeline = memo(function JobTimeline({
   jobId,
   timeline,
 }: JobTimelineProps) {
+  const L = useL();
   const viewportRef = useRef<HTMLDivElement>(null);
   const nearBottomRef = useRef(true);
   const orderedTimeline = useMemo(() => sortTimeline(timeline), [timeline]);
@@ -51,10 +53,12 @@ export const JobTimeline = memo(function JobTimeline({
     <section className="job-timeline" aria-labelledby="timeline-title">
       <div className="timeline-heading">
         <h2 id="timeline-title" className={Classes.HEADING}>
-          Timeline
+          {L('testbed:jobDetail.timelineSection.title.timeline')}
         </h2>
         <span className={Classes.TEXT_MUTED}>
-          브라우저에서 관찰한 HTTP/SSE {orderedTimeline.length}건
+          {L('testbed:jobTimeline.text.httpSseInstancesObservedBrowsers', {
+            length: orderedTimeline.length,
+          })}
         </span>
       </div>
       <div
@@ -68,7 +72,9 @@ export const JobTimeline = memo(function JobTimeline({
           <NonIdealState
             className="timeline-empty"
             icon="timeline-events"
-            title="아직 관찰된 요청이 없습니다."
+            title={L(
+              'testbed:jobTimeline.tooltip.noRequestsHaveBeenObservedYet',
+            )}
           />
         ) : (
           orderedTimeline.map((entry) => (

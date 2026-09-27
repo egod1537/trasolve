@@ -1,12 +1,23 @@
 import type { TcacheRouteJobStatus } from '@/features/tcache-route-testbed/model/types';
 import { StatusBadge, type StatusTone } from '@/shared/ui/StatusBadge';
+import { L } from '@/shared/i18n';
 
 const STATUS_LABELS: Record<TcacheRouteJobStatus, string> = {
-  queued: '대기',
-  running: '실행 중',
-  completed: '완료',
-  failed: '실패',
-  cancelled: '취소됨',
+  get queued() {
+    return L('testbed:jobDetail.formatStreamState.text.waiting');
+  },
+  get running() {
+    return L('testbed:jobStatusBadge.sTATUSLABELS.text.running');
+  },
+  get completed() {
+    return L('testbed:jobStatusBadge.sTATUSLABELS.text.done');
+  },
+  get failed() {
+    return L('testbed:jobStatusBadge.sTATUSLABELS.text.failure');
+  },
+  get cancelled() {
+    return L('testbed:jobStatusBadge.sTATUSLABELS.text.canceled');
+  },
 };
 
 const STATUS_TONES: Record<TcacheRouteJobStatus, StatusTone> = {

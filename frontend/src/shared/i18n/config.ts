@@ -1,5 +1,9 @@
 import { createInstance, type Resource } from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import {
+  preferenceRepository,
+  USER_PREFERENCE_KEYS,
+} from '@/shared/preferences/preferenceRepository';
 
 export const SUPPORTED_LANGUAGES = ['ko', 'ja', 'en'] as const;
 export const DEFAULT_LANGUAGE: Language = 'ko';
@@ -7,7 +11,6 @@ export const FALLBACK_LANGUAGE: Language = 'en';
 
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
-const LANGUAGE_STORAGE_KEY = 'trasolve.language';
 const RESOURCE_PATH_PATTERN =
   /^\.\/(?:resources|generated-local)\/(ko|ja|en)\/([^/]+)\.json$/u;
 
@@ -23,24 +26,16 @@ function readPersistedLanguage(): Language {
   if (typeof window === 'undefined') {
     return DEFAULT_LANGUAGE;
   }
-  try {
-    const language =
-      window.localStorage.getItem(LANGUAGE_STORAGE_KEY) ?? undefined;
-    return isLanguage(language) ? language : DEFAULT_LANGUAGE;
-  } catch {
-    return DEFAULT_LANGUAGE;
-  }
+  const language =
+    preferenceRepository.read(USER_PREFERENCE_KEYS.language) ?? undefined;
+  return isLanguage(language) ? language : DEFAULT_LANGUAGE;
 }
 
 function persistLanguage(language: Language): void {
   if (typeof window === 'undefined') {
     return;
   }
-  try {
-    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-  } catch {
-    // Localization still works when storage is unavailable or blocked.
-  }
+  preferenceRepository.write(USER_PREFERENCE_KEYS.language, language);
 }
 
 function applyDocumentLanguage(language: string): void {

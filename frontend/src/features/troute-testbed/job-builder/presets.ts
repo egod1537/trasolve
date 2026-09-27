@@ -8,6 +8,7 @@ import {
   type JobBuilderLocation,
   type JobBuilderState,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
+import { L } from '@/shared/i18n';
 
 export interface JobBuilderPreset {
   id: string;
@@ -111,43 +112,73 @@ export const JOB_BUILDER_PRESETS: readonly JobBuilderPreset[] = [
   createPreset({
     id: 'tokyo-3',
     name: 'Tokyo 3',
-    description: '실제 Place ID를 사용하는 가장 빠른 smoke test',
+    get description() {
+      return L(
+        'testbed:presets.jOBBUILDERPRESETS.description.fastestSmokeTestUsingRealPlace',
+      );
+    },
     locations: tokyo3Locations,
   }),
   createPreset({
     id: 'tokyo-5',
     name: 'Tokyo 5',
-    description: '입력 순서와 최적화 순서 차이를 확인하는 일반 TC',
+    get description() {
+      return L(
+        'testbed:presets.jOBBUILDERPRESETS.description.generalTcCheckDifferenceBetweenInput',
+      );
+    },
     locations: tokyo5Locations,
   }),
   createPreset({
     id: 'seoul-3',
     name: 'Seoul 3',
-    description: '서울 핵심 3개 장소로 빠르게 확인하는 smoke test',
+    get description() {
+      return L(
+        'testbed:presets.jOBBUILDERPRESETS.description.smokeTestQuicklyConfirmed3Key',
+      );
+    },
     locations: seoul3Locations,
   }),
   createPreset({
     id: 'seoul-5',
     name: 'Seoul 5',
-    description: '강북과 강남을 섞어 일반 최적화를 확인하는 TC',
+    get description() {
+      return L(
+        'testbed:presets.jOBBUILDERPRESETS.description.tcConfirmingGeneralOptimizationByMixing',
+      );
+    },
     locations: seoul5Locations,
   }),
   createPreset({
     id: 'seoul-8',
     name: 'Seoul 8',
-    description: '서울 여러 권역의 pair query와 최적화 결과를 확인하는 TC',
+    get description() {
+      return L(
+        'testbed:presets.jOBBUILDERPRESETS.description.tcCheckPairQueriesOptimizationResults',
+      );
+    },
     locations: seoul8Locations,
   }),
   createPreset({
     id: 'time-window',
     name: 'Time Window',
-    description: '서로 다른 운영시간과 체류시간 제약을 검증하는 TC',
+    get description() {
+      return L(
+        'testbed:presets.jOBBUILDERPRESETS.description.tcVerifyDifferentOperatingHoursResidence',
+      );
+    },
     locations: timeWindowLocations,
   }),
   createPreset({
     id: 'direct-matrix',
-    name: 'Direct Matrix',
-    description: '비대칭 directed matrix로 solver만 빠르게 검증하는 TC',
+    get name() {
+      return L('testbed:jobBuilderTravelTimeSource.text.directMatrix');
+    },
+    get description() {
+      return L(
+        'testbed:presets.jOBBUILDERPRESETS.description.tcThatQuicklyVerifiesOnlySolver',
+      );
+    },
     locations: directMatrixLocations,
     travelTimeSource: 'direct',
     travelTimeMatrix: directTravelTimeMatrix,

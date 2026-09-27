@@ -6,6 +6,7 @@ import {
 import type { TripStore } from '@/features/map-workspace/store/TripStore';
 import type { TripCommand } from '@/features/map-workspace/command/TripCommand';
 import { TripHistory } from '@/features/map-workspace/command/TripHistory';
+import { L } from '@/shared/i18n';
 
 type CommandOperation = {
   type: 'command';
@@ -82,7 +83,9 @@ export class TripCommandDispatcher {
       this.store.setState({
         ...current,
         status: 'error',
-        error: '여행 변경 값이 올바르지 않습니다.',
+        error: L(
+          'map:tripCommandDispatcher.applyCommands.error.travelChangeValueIncorrect',
+        ),
       });
       return false;
     }
@@ -111,7 +114,9 @@ export class TripCommandDispatcher {
       this.store.setState({
         ...current,
         status: 'error',
-        error: '여행 변경 기록을 복원할 수 없습니다.',
+        error: L(
+          'map:tripCommandDispatcher.applyHistoryOperation.error.tripChangeHistoryCannotBeRestored',
+        ),
       });
       return false;
     }

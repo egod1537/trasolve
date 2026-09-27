@@ -1,0 +1,1233 @@
+{
+  "aiChatTestPage": {
+    "aiChatTestContent": {
+      "action": {
+        "loading": "불러오는 중…",
+        "resetConversation": "대화 초기화",
+        "viewModelList": "모델 목록 조회"
+      },
+      "description": {
+        "checkConversationsWaitResponsesDisplayErrors": "실제 채팅 API로 대화, 응답 대기, 오류 표시를 확인합니다.",
+        "sendEnterBreakLineShiftEnter": "Enter로 전송 · Shift+Enter로 줄바꿈 · 초기화하면 진행 중인 요청도 취소됩니다.",
+        "thereNoModelsAvailable": "사용 가능한 모델이 없습니다."
+      },
+      "label": {
+        "requestModel": "요청 모델"
+      },
+      "text": {
+        "modelListCouldNotBeLoaded": "모델 목록을 불러올 수 없습니다.",
+        "serverDefaultModelOpenwebuiModel": "서버 기본 모델 (OPENWEBUI_MODEL)",
+        "testbedList": "← 테스트베드 목록"
+      },
+      "title": {
+        "aiChatTestBed": "AI채팅 테스트베드",
+        "openwebuiModels": "OpenWebUI 모델"
+      }
+    }
+  },
+  "appHeader": {
+    "ariaLabel": {
+      "api": "API {{healthLabel}}",
+      "refreshApiStatus": "API 상태 새로고침",
+      "refreshTcacheStatus": "tcache 상태 새로고침",
+      "returnTestbedList": "테스트베드 목록으로 돌아가기",
+      "tcache": "tcache {{healthLabel}}"
+    },
+    "tHEMEOPTIONS": {
+      "label": {
+        "dark": "다크",
+        "light": "라이트",
+        "system": "시스템"
+      }
+    },
+    "text": {
+      "apiPost": "/api · POST",
+      "checking": "확인 중",
+      "connectionFailed": "연결 실패",
+      "normal": "정상",
+      "offline": "오프라인",
+      "online": "온라인",
+      "trasolveTcacheRouteTestbed": "Trasolve · tcache 경로 테스트베드",
+      "trasolveTestbed": "trasolve 테스트베드"
+    },
+    "themeMenu": {
+      "ariaLabel": {
+        "theme": "테마",
+        "theme2": "테마: {{label}}"
+      }
+    }
+  },
+  "cancelJobDialog": {
+    "description": {
+      "calculationsRecordsThatHaveAlreadyBeen": "이미 수행된 계산과 기록은 유지되며, 종료 후 다시 실행하려면 새 Job을 생성해야 합니다.",
+      "finalStatusReflectedAfterCancellationResponse": "취소 응답 또는 SSE 상태가 확인된 뒤 최종 상태가 반영됩니다.",
+      "terminatesCurrentlyRunningJob": "현재 실행 중인 Job을 종료합니다.",
+      "youSureYouWantCancelOperation": "작업을 취소하시겠습니까?"
+    },
+    "tooltip": {
+      "cancelRouteOperation": "경로 작업 취소",
+      "forceQuitJob": "Job 강제 종료"
+    }
+  },
+  "debugPanel": {
+    "ariaLabel": {
+      "request": "요청"
+    },
+    "debugPanelContent": {
+      "ariaLabel": {
+        "eventLog": "이벤트 로그"
+      },
+      "title": {
+        "requestLastRequestValue": "Request · 마지막 요청값"
+      }
+    },
+    "logText": {
+      "text": {
+        "waitingEvent": "이벤트 대기"
+      }
+    },
+    "requestJson": {
+      "text": {
+        "waitingRequest": "요청 대기"
+      }
+    },
+    "text": {
+      "debugApiInformation": "Debug / API 정보",
+      "routePolylineCoordinates": "Route polyline ({{coordinateCount}}개 좌표)"
+    }
+  },
+  "directionsPanel": {
+    "action": {
+      "addWaypoint": "+ 경유지 추가",
+      "requesting": "요청 중…"
+    },
+    "ariaLabel": {
+      "deleteWaypoint": "경유지 {{value}} 삭제"
+    },
+    "describeEndpoint": {
+      "text": {
+        "addressString": "주소 문자열",
+        "coordinates": "좌표: {{lat}}, {{lng}}",
+        "selectedPlacePlaceid": "선택한 장소 · placeId: {{placeId}}"
+      }
+    },
+    "label": {
+      "directions": "길찾기"
+    },
+    "text": {
+      "description": "{{inputId}}-설명",
+      "mapsTestIntermediate": "지도-테스트-중급-{{id}}",
+      "waypoint": "경유지 {{value}}"
+    }
+  },
+  "gatewayResultModel": {
+    "describeCancelError": {
+      "text": {
+        "jobForceTerminationResponseFormatIncorrect": "Job 강제 종료 응답 형식이 올바르지 않습니다.",
+        "requestForceTerminateJobFailed": "Job 강제 종료 요청이 실패했습니다."
+      }
+    },
+    "describeGatewayError": {
+      "text": {
+        "responseValidationFailed": "응답 검증 실패: {{value}}",
+        "successResponseDoesNotMatchTroute": "성공 응답이 troute 계약과 일치하지 않습니다.",
+        "trasolveBackendRequestFailed": "Trasolve backend 요청이 실패했습니다."
+      }
+    }
+  },
+  "googleMapsTestPage": {
+    "googleMapsTestContent": {
+      "ariaLabel": {
+        "mapControl": "지도 컨트롤"
+      },
+      "description": {
+        "playgroundDevelopmentRealGoogleApi": "개발용 playground · 실제 Google API"
+      },
+      "text": {
+        "mapClick": "지도 클릭: {{lat}}, {{lng}}{{value}}",
+        "mapReady": "지도 준비 완료",
+        "selectLocation": "장소 선택: {{name}}"
+      },
+      "title": {
+        "googleMapsTestBed": "구글 지도 테스트베드"
+      }
+    }
+  },
+  "googleOAuthTestPage": {
+    "googleOAuthTestContent": {
+      "action": {
+        "loginGoogle": "구글로 로그인"
+      },
+      "description": {
+        "developmentOnlyBackendOauthFlowVerification": "개발 전용 백엔드 OAuth 흐름 확인."
+      },
+      "title": {
+        "googleOauthTest": "구글 OAuth 테스트"
+      }
+    },
+    "oAuthResultView": {
+      "description": {
+        "backendGoogleOauthConfigurationUnavailable": "백엔드 Google OAuth 구성을 사용할 수 없습니다.",
+        "idleNoOauthResultRequested": "유휴 — 요청된 OAuth 결과가 없습니다.",
+        "loadingOauthResult": "OAuth 결과 로드 중…",
+        "oneTimeOauthResultMissingHas": "일회성 OAuth 결과가 누락되었거나 만료되었습니다.",
+        "sanitizedOauthResultCouldNotBe": "정리된 OAuth 결과를 읽을 수 없습니다."
+      },
+      "label": {
+        "email": "이메일",
+        "emailVerified": "이메일이 확인되었습니다.",
+        "name": "이름",
+        "pictureUrl": "사진 URL"
+      },
+      "status": {
+        "success": "성공"
+      },
+      "text": {
+        "no": "아니요",
+        "yes": "예"
+      },
+      "title": {
+        "oauthFailed": "OAuth 실패",
+        "oauthUnavailable": "OAuth를 사용할 수 없습니다.",
+        "resultMissing": "결과가 누락됨",
+        "resultRequestFailed": "결과 요청 실패"
+      }
+    }
+  },
+  "googlePlaceSearch": {
+    "label": {
+      "searchPlace": "장소 검색"
+    },
+    "placeholder": {
+      "enterPlaceAddress": "장소 또는 주소 입력"
+    },
+    "selectSuggestion": {
+      "text": {
+        "selected": "{{name}} 선택 완료"
+      }
+    },
+    "text": {
+      "enterAtLeast2Characters": "2자 이상 입력해 주세요.",
+      "locationSearchFailed": "장소 조회에 실패했습니다.",
+      "noSearchResults": "검색 결과가 없습니다.",
+      "thereSearchResults": "{{length}}개의 검색 결과가 있습니다."
+    },
+    "updateInput": {
+      "text": {
+        "searchingLocation": "장소를 검색하고 있습니다."
+      }
+    }
+  },
+  "jobBuilderDialog": {
+    "addPlace": {
+      "message": {
+        "youHaveSelectedPlaceThatAlready": "이미 위치 목록에 있는 장소를 선택했습니다."
+      }
+    },
+    "applyRawToForm": {
+      "message": {
+        "rawJsonHasLocationsNotSelected": "Raw JSON에 지도에서 선택하지 않은 위치가 있어 visual mode로 변환할 수 없습니다. Raw JSON mode에서 Job을 생성하거나 visual builder를 새로 시작하세요.",
+        "rawJsonWasAppliedForm": "Raw JSON을 Form에 적용했습니다."
+      }
+    },
+    "parseRaw": {
+      "message": {
+        "jsonParsingFailed": "JSON 파싱 실패: {{value}}",
+        "makeSureItSValidJson": "올바른 JSON인지 확인하세요."
+      }
+    },
+    "rawJsonEditor": {
+      "action": {
+        "applyForm": "Form에 적용",
+        "format": "포맷",
+        "restoreFromForm": "Form에서 복원"
+      },
+      "ariaLabel": {
+        "requestJson": "요청 JSON"
+      },
+      "description": {
+        "displaysRequestLikeFormIfYou": "Form과 같은 요청을 표시합니다. JSON을 수정한 뒤 Form에 적용하면 양방향 변환됩니다."
+      },
+      "title": {
+        "rawJson": "원시 JSON"
+      }
+    },
+    "tooltip": {
+      "applyRawJsonChangesFormFirst": "Raw JSON 변경사항을 먼저 Form에 적용하세요."
+    },
+    "validateVisual": {
+      "message": {
+        "jobAlreadyExistsCurrentSession": "현재 세션에 \"{{job_id}}\" Job이 이미 있습니다.",
+        "requestValid": "요청이 유효합니다.",
+        "requestValidationFailed": "요청 검증 실패: {{formatSchemaIssues}}"
+      }
+    }
+  },
+  "jobBuilderLocationList": {
+    "action": {
+      "middleOrderShuffle": "중간 순서 섞기"
+    },
+    "ariaLabel": {
+      "shuffleIntermediatePositions": "중간 위치 순서 섞기"
+    },
+    "jobBuilderLocationItem": {
+      "ariaLabel": {
+        "businessClosingTime": "{{name}} 영업 종료 시각",
+        "businessStartTime": "{{name}} 영업 시작 시각",
+        "dwellTimeMinutes": "{{name}} 체류 시간(분)",
+        "id": "{{name}} ID",
+        "name": "{{name}} 이름",
+        "placeId": "{{name}} 장소 ID",
+        "remove": "{{name}} 제거"
+      },
+      "text": {
+        "businessHours": "영업 시간",
+        "id": "아이디",
+        "location": "{{name}} 위치",
+        "name": "이름",
+        "placeIdOptional": "Place ID (선택)",
+        "residenceTime": "체류 시간"
+      },
+      "tooltip": {
+        "remove": "제거"
+      }
+    },
+    "text": {
+      "dog": "개",
+      "firstPositionFixedStartLastPosition": "첫 위치는 fixed start, 마지막 위치는 fixed destination입니다. 중간 위치만 순서를 변경할 수 있으며 시간은 {{value}} {{VISIT_TIME_GRANULARITY_MINUTES}} 분 단위로 입력합니다.",
+      "message": "{{length}} 개",
+      "youNeedAtLeastTwoLocations": "출발지와 도착지를 포함해 장소가 2개 이상 필요합니다."
+    },
+    "tooltip": {
+      "noLocationsHaveBeenAdded": "추가된 장소가 없습니다."
+    }
+  },
+  "jobBuilderMap": {
+    "action": {
+      "addJob": "Job에 추가",
+      "selectAddedLocation": "추가된 장소 선택"
+    },
+    "ariaLabel": {
+      "jobLocationSelectionMap": "Job 위치 선택 지도"
+    }
+  },
+  "jobBuilderMatrixGenerator": {
+    "getTravelTimeMatrixGeneratorError": {
+      "text": {
+        "enterSeedAsIntegerGreaterThan": "Seed는 0 이상의 정수로 입력하세요.",
+        "enterTravelTimeRangeAsInteger": "이동시간 범위는 0 이상의 정수로 입력하세요.",
+        "matrixCreationPatternNotSupported": "지원하지 않는 Matrix 생성 패턴입니다.",
+        "minimumTravelTimeCannotBeGreater": "최소 이동시간은 최대 이동시간보다 클 수 없습니다.",
+        "numberPlacesMustBeIntegerGreater": "장소 수는 0 이상의 정수여야 합니다."
+      }
+    }
+  },
+  "jobBuilderPresetPicker": {
+    "action": {
+      "load": "불러오기"
+    },
+    "label": {
+      "testCase": "테스트 케이스"
+    },
+    "text": {
+      "locations": "{{locationCount}} 개 장소 · {{sourceLabel}} · {{value}} {{description}}"
+    }
+  },
+  "jobBuilderSettings": {
+    "description": {
+      "directMatrixValuesPreservedButNot": "Direct Matrix에서는 값은 유지되지만 실제 routing 조회에는 사용되지 않습니다.",
+      "solverSearchesLatestPossibleDepartureTime": "solver는 이 시각 이후에서 가능한 가장 늦은 출발시각을 탐색합니다.",
+      "thisTestbedOnlyOptionTestProgress": "Testbed 전용 옵션입니다. Job을 최소 지정 시간 동안 실행하여 progress와 SSE 표시를 테스트합니다. 경로 결과 섞기는 출발지와 도착지는 유지하고 중간 경유지 결과 순서를 임의로 섞습니다.",
+      "thisTransportationMethodUsedByTcache": "tcache가 실제 이동시간을 조회할 때 사용하는 이동수단입니다.",
+      "uniqueIdThatIdentifiesTrouteJob": "troute Job을 식별하는 고유 ID입니다."
+    },
+    "text": {
+      "debugMode": "디버그 모드",
+      "minimumDepartureTime": "최소 출발 시각"
+    },
+    "title": {
+      "advancedDebug": "고급 디버그",
+      "basicInformation": "기본 정보"
+    }
+  },
+  "jobBuilderTravelTimeSource": {
+    "description": {
+      "checkActualTravelTimeUsingPlace": "Place ID와 이동수단을 사용해 실제 이동시간을 조회합니다.",
+      "enteredMatrixUsedAsTcacheSearch": "입력한 Matrix를 그대로 사용하며 tcache 조회를 생략합니다.",
+      "placeIdRequiredAllLocationsRequest": "모든 위치에 Place ID가 필요하며 요청에는 travel_time_matrix를 포함하지 않습니다. troute가 Place ID와 이동수단으로 directed Matrix를 생성합니다.",
+      "searchTravelTimeUsingActualPlace": "이동시간을 실제 Place ID로 조회하거나 solver에 전달할 directed matrix를 직접 입력합니다."
+    },
+    "label": {
+      "seed": "시드",
+      "travelTimeSource": "이동시간 소스"
+    },
+    "mATRIXPATTERNOPTIONS": {
+      "label": {
+        "clustered": "군집형 (Clustered)",
+        "directedUniform": "방향별 균등 (Directed Uniform)",
+        "nearSymmetric": "근사 대칭 (Near Symmetric)",
+        "shortMovesLongOutliers": "짧은 이동 + 긴 이상치",
+        "symmetric": "대칭 (Symmetric)"
+      }
+    },
+    "text": {
+      "directMatrix": "다이렉트 매트릭스"
+    },
+    "title": {
+      "travelTimeSource": "이동시간 Source"
+    },
+    "travelTimeMatrixEditor": {
+      "action": {
+        "empty": "비우기",
+        "fullRegeneration": "전체 재생성",
+        "randomlyFillEmptyCells": "빈 셀 랜덤 채우기"
+      },
+      "ariaLabel": {
+        "matrixRandomGeneration": "Matrix 랜덤 생성",
+        "randomMatrixGenerationPattern": "랜덤 Matrix 생성 패턴",
+        "randomMatrixMaximumMovementTime": "랜덤 Matrix 최대 이동시간",
+        "randomMatrixMinimumTravelTime": "랜덤 Matrix 최소 이동시간",
+        "randomMatrixSeed": "랜덤 Matrix Seed",
+        "travelTimeFrom": "{{name}}에서 {{name}}까지 이동시간"
+      },
+      "description": {
+        "editMatrixAddLocation": "Matrix를 편집하려면 위치를 추가하세요.",
+        "itNNDirectedMatrixDiagonal": "N × N directed Matrix입니다. 대각선은 0으로 고정되며 A→B와 B→A는 서로 독립입니다. travel_mode 값은 유지되지만 실제 routing 조회에는 사용되지 않습니다."
+      },
+      "text": {
+        "pattern": "패턴",
+        "rangeMinutes": "범위 (분)",
+        "travelTimeMatrixByLocation": "위치별 이동시간 Matrix"
+      }
+    }
+  },
+  "jobBuilderValidation": {
+    "validateJobBuilderDraft": {
+      "text": {
+        "checkInputValuesEachLocation": "위치별 입력값을 확인하세요.",
+        "endTimeCannotBeEarlierThan": "종료 시각은 시작 시각보다 빠를 수 없습니다.",
+        "enterBusinessStartTimeMinutes": "영업 시작 시각을 {{VISIT_TIME_GRANULARITY_MINUTES}}분 단위로 입력하세요.",
+        "enterClosingTimeMinutes": "영업 종료 시각을 {{VISIT_TIME_GRANULARITY_MINUTES}}분 단위로 입력하세요.",
+        "enterIdThatDoesNotOverlap": "다른 위치와 중복되지 않는 ID를 입력하세요.",
+        "enterIntegerGreaterThanEqual0": "직접 Matrix의 모든 비대각선 셀에 0 이상의 정수를 입력하세요.",
+        "enterLocationId": "위치 ID를 입력하세요.",
+        "enterMinimumDepartureTimeMinutes": "최소 출발 시각을 {{VISIT_TIME_GRANULARITY_MINUTES}}분 단위로 입력하세요.",
+        "enterMinutesBetweenMinutes": "{{minimumStayMinutes}}~{{MAX_STAY_MINUTES}}분 사이에서 {{VISIT_TIME_GRANULARITY_MINUTES}}분 단위로 입력하세요.",
+        "enterPlaceIdThatDoesNot": "다른 위치와 중복되지 않는 Place ID를 입력하세요.",
+        "jobAlreadyExistsCurrentSession": "현재 세션에 \"{{jobId}}\" Job이 이미 있습니다.",
+        "locationIdsMustBeNonEmpty": "위치 ID는 비어 있지 않고 서로 달라야 합니다.",
+        "minimumExecutionTimeMustBeInteger": "최소 실행 시간은 0~{{TROUTE_MAX_DEBUG_JOB_DURATION_MS}}ms 사이의 정수여야 합니다.",
+        "placeIdEachLocationMustBe": "각 위치의 place_id는 서로 달라야 합니다.",
+        "placeIdRequired": "{{name}}: place_id가 필요합니다.",
+        "request": "요청 {{value}}: {{message}}",
+        "tcacheLookupRequiresPlaceId": "tcache 조회에는 Place ID가 필요합니다."
+      }
+    }
+  },
+  "jobBuilderValidationIndicator": {
+    "sTATUSDETAILS": {
+      "label": {
+        "requestValid": "요청이 유효합니다",
+        "thereItemsThatNeedCorrection": "수정이 필요한 항목이 있습니다",
+        "verifying": "검증 중",
+        "waitingVerification": "검증 대기"
+      }
+    },
+    "text": {
+      "message": "{{label}} ({{errorCount}}개)"
+    }
+  },
+  "jobDetail": {
+    "formatDuration": {
+      "text": {
+        "hoursMinutes": "{{floor}}시간 {{round}}분",
+        "minutes": "{{round}}분"
+      }
+    },
+    "formatStreamState": {
+      "text": {
+        "connected": "연결됨",
+        "connecting": "연결 중",
+        "connectionLost": "연결 끊김",
+        "reconnecting": "재연결 중",
+        "waiting": "대기"
+      }
+    },
+    "overview": {
+      "label": {
+        "cache": "캐시",
+        "provider": "제공자",
+        "status": "상태"
+      },
+      "text": {
+        "communicationMethod": "통신 방식",
+        "completionTime": "완료 시각",
+        "creationTime": "생성 시각",
+        "currentStage": "현재 단계",
+        "jobId": "작업 ID",
+        "progress": "진행률"
+      },
+      "title": {
+        "overview": "개요"
+      }
+    },
+    "progress": {
+      "label": {
+        "stage": "단계"
+      }
+    },
+    "progressSection": {
+      "text": {
+        "recentEvents": "최근 이벤트"
+      },
+      "title": {
+        "progress": "진행"
+      }
+    },
+    "rawSection": {
+      "text": {
+        "originalJson": "원본 JSON"
+      }
+    },
+    "requestSection": {
+      "description": {
+        "departureTime": "출발 시각:",
+        "notSpecified": "지정 안 함"
+      },
+      "text": {
+        "coordinatesAddress": "좌표/주소",
+        "location": "위치",
+        "order": "순서",
+        "placeId": "장소 ID",
+        "role": "역할"
+      },
+      "title": {
+        "request": "요청"
+      }
+    },
+    "result": {
+      "label": {
+        "distance": "거리",
+        "duration": "소요 시간",
+        "latency": "지연 시간"
+      }
+    },
+    "resultSection": {
+      "description": {
+        "noRouteResultsHaveBeenReceived": "아직 수신된 경로 결과가 없습니다."
+      },
+      "text": {
+        "rawResult": "원시 결과",
+        "routeCount": "경로 수"
+      },
+      "title": {
+        "result": "결과"
+      }
+    },
+    "text": {
+      "existingGatewayResultsTimelineMaintained": "{{inspectionError}} 기존 gateway 결과와 Timeline은 유지됩니다.",
+      "newJobsAppearListLeftAs": "새 Job은 생성 즉시 왼쪽 목록에 표시됩니다.",
+      "newTasksAutomaticallySelectedImmediatelyAfter": "새 작업은 생성 직후 자동으로 선택됩니다.",
+      "optimizationResultsJobQueryResultGateway": "Job 조회 결과와 gateway 응답의 최적화 결과가 다릅니다. Job 조회 결과를 우선 표시합니다.",
+      "retryingConnection": "연결 재시도 중",
+      "sse": "SSE {{formatStreamState}}",
+      "trasolveGatewayObservationInformation": "Trasolve gateway 관찰 정보",
+      "trasolveTcacheCommunicationObservationInformation": "Trasolve → tcache 통신 관찰 정보"
+    },
+    "timelineSection": {
+      "description": {
+        "noCommunicationEventsObserved": "관찰된 통신 이벤트가 없습니다."
+      },
+      "title": {
+        "timeline": "타임라인"
+      }
+    },
+    "title": {
+      "jobDetails": "Job 상세"
+    },
+    "tooltip": {
+      "forceTerminationJobFailed": "Job 강제 종료에 실패했습니다.",
+      "requestFailed": "요청 실패",
+      "resultDiscrepancy": "결과 불일치",
+      "selectJobCheckExecutionInformation": "실행 정보를 확인할 Job을 선택하세요.",
+      "selectRouteOperationYouWantCheck": "확인할 경로 작업을 선택하세요.",
+      "taskFailed": "작업 실패"
+    }
+  },
+  "jobList": {
+    "ariaLabel": {
+      "testbedJobs": "테스트베드 Jobs"
+    },
+    "text": {
+      "createNewJobRunOptimizationRequest": "새 Job을 만들어 최적화 요청을 실행하세요."
+    },
+    "tooltip": {
+      "thereNoJobsYet": "아직 Job이 없습니다."
+    }
+  },
+  "jobRequestLocationTable": {
+    "text": {
+      "businessHours": "영업시간",
+      "inputOrder": "입력 순서",
+      "locationId": "위치 ID",
+      "minutes": "분",
+      "minutes2": "{{stay_minutes}} 분",
+      "stay": "체류"
+    }
+  },
+  "jobRequestSummary": {
+    "action": {
+      "copied": "복사됨"
+    },
+    "ariaLabel": {
+      "copyRequestJson": "요청 JSON 복사",
+      "requestJsonCopied": "요청 JSON 복사됨",
+      "requestLocationInputOrder": "요청 위치 입력 순서"
+    },
+    "description": {
+      "jobDebugPathShufflingEnabledKeep": "디버그 경로 섞기가 활성화된 Job입니다. 출발지와 도착지는 유지하고 중간 경유지 결과 순서를 섞습니다."
+    },
+    "label": {
+      "meansTransportation": "이동수단",
+      "minimumExecutionTime": "최소 실행 시간",
+      "shufflePathResults": "경로 결과 섞기",
+      "shuffleSeed": "셔플 시드",
+      "startTime": "시작 시각",
+      "startupMethod": "시작 방식"
+    },
+    "sTARTPOLICYLABELS": {
+      "text": {
+        "asLateAsPossible": "최대한 늦게",
+        "asSoonAsPossible": "최대한 이르게",
+        "designatedTime": "지정 시각"
+      }
+    },
+    "text": {
+      "disabled": "사용 안 함",
+      "expand": "펼치기",
+      "fold": "접기",
+      "ms": "ms",
+      "ms2": "{{min_job_duration_ms}}ms",
+      "rawJsonView": "Raw JSON 보기",
+      "savedOriginalRequests": "저장된 원본 요청",
+      "shufflePaths": "경로 섞기",
+      "use": "사용"
+    },
+    "title": {
+      "inputPath": "입력 경로"
+    }
+  },
+  "jobResultMapComparison": {
+    "ariaLabel": {
+      "inputVisitOrderMap": "입력 방문 순서 지도",
+      "optimizedVisitOrderMap": "최적화 방문 순서 지도"
+    },
+    "comparisonPanel": {
+      "ariaLabel": {
+        "path": "{{title}} 경로"
+      }
+    },
+    "description": {
+      "linesComparisonVisitOrderNotActual": "선은 방문 순서 비교용이며 실제 도로/대중교통 경로가 아닙니다."
+    },
+    "locationSequence": {
+      "label": {
+        "arrival": "도착",
+        "departure": "출발"
+      }
+    },
+    "mapValidationError": {
+      "tooltip": {
+        "mapValidationError": "지도 검증 오류"
+      }
+    },
+    "title": {
+      "input": "입력",
+      "optimized": "최적화 결과"
+    },
+    "tooltip": {
+      "loadingLocationInformation": "장소 정보를 불러오는 중입니다."
+    },
+    "useRequestPlaces": {
+      "message": {
+        "failedLoadLocationCoordinates": "장소 좌표를 불러오지 못했습니다."
+      },
+      "text": {
+        "mapDisplayRequiresValidPlaceId": "지도 표시에는 유효한 Place ID가 필요합니다: {{value}}"
+      }
+    }
+  },
+  "jobResultMapModel": {
+    "createOptimizedMapContent": {
+      "message": {
+        "optimizationResultReferencesLocationIdThat": "최적화 결과가 요청에 없는 location_id를 참조합니다: {{value}}",
+        "thereNoOptimizationResultsCompletedJob": "완료된 Job에 최적화 결과가 없습니다."
+      }
+    },
+    "getStatusMessage": {
+      "text": {
+        "jobHasBeenCanceledResultingMap": "Job이 취소되어 결과 지도를 표시할 수 없습니다.",
+        "optimizationProgress": "최적화가 진행 중입니다.",
+        "resultingMapCannotBeDisplayedBecause": "최적화에 실패해 결과 지도를 표시할 수 없습니다.",
+        "waitingOptimizationRun": "최적화 실행을 기다리고 있습니다."
+      }
+    }
+  },
+  "jobResultSummary": {
+    "ariaLabel": {
+      "resultsVisitOrder": "결과 방문 순서"
+    },
+    "text": {
+      "compareInputSequenceOptimizationResults": "입력 순서와 최적화 결과를 비교합니다.",
+      "finalRoute": "최종 경로",
+      "minutes": "{{total_travel_minutes}} 분",
+      "totalTravelTime": "총 이동 시간"
+    },
+    "title": {
+      "inputVsOptimized": "입력과 최적화"
+    }
+  },
+  "jobSidebar": {
+    "action": {
+      "newRequest": "새 요청"
+    },
+    "ariaLabel": {
+      "refreshRouteTaskList": "경로 작업 목록 새로고침",
+      "refreshingJobList": "Job 목록 새로고침 중",
+      "tcacheRouteTaskList": "tcache Route 작업 목록"
+    },
+    "text": {
+      "cache": "· 캐시 {{toUpperCase}}",
+      "newJob": "새 Job",
+      "progress": "{{id}} 진행률",
+      "refreshJobList": "Job 목록 새로고침",
+      "tcacheRouteJobs": "tcache 경로 작업",
+      "testTrasolveTcacheCommunicationByCreating": "새 요청을 만들어 Trasolve와 tcache 통신을 테스트하세요."
+    },
+    "title": {
+      "jobs": "작업",
+      "pathOperation": "경로 작업"
+    },
+    "tooltip": {
+      "noTcacheRouteTaskWasCreated": "생성된 tcache Route 작업이 없습니다."
+    }
+  },
+  "jobStatusBadge": {
+    "sTATUSLABELS": {
+      "text": {
+        "canceled": "취소됨",
+        "done": "완료",
+        "failure": "실패",
+        "running": "실행 중"
+      }
+    }
+  },
+  "jobSummary": {
+    "formatElapsed": {
+      "text": {
+        "minutesSeconds": "{{minutes}}분 {{padStart}}초",
+        "seconds": "{{toFixed}}초"
+      }
+    },
+    "label": {
+      "elapsedTime": "경과 시간",
+      "message": "메시지",
+      "step": "단계"
+    },
+    "text": {
+      "jobIdFrontendObservationJob": "job_id · Frontend 관찰 Job",
+      "jobProgress": "Job 진행률 {{progress}}%"
+    }
+  },
+  "jobTimeline": {
+    "text": {
+      "httpSseInstancesObservedBrowsers": "브라우저에서 관찰한 HTTP/SSE {{length}} 건"
+    },
+    "tooltip": {
+      "noRequestsHaveBeenObservedYet": "아직 관찰된 요청이 없습니다."
+    }
+  },
+  "localizationTestPage": {
+    "ariaLabel": {
+      "resourceFilter": "리소스 필터",
+      "resourceSummary": "리소스 요약",
+      "selectCurrentLanguage": "현재 언어 선택"
+    },
+    "description": {
+      "comparesResourcesLoadedCurrentLocalizationRuntime": "현재 localization runtime에 로드된 리소스를 비교합니다.",
+      "ifYouSelectKeyYouCan": "Key를 선택하면 아래에서 interpolation을 확인할 수 있습니다.",
+      "noKeySelected": "선택된 key 없음",
+      "selectKeyFromTable": "테이블에서 key를 선택하세요.",
+      "thereNoInterpolationVariableThisKey": "이 key에는 interpolation 변수가 없습니다.",
+      "thereNoLocalizationKeyThatMatches": "조건에 맞는 localization key가 없습니다."
+    },
+    "label": {
+      "currentLanguage": "현재 언어",
+      "localizationKeyTranslationSearch": "Localization key 또는 번역 검색",
+      "namespace": "네임스페이스"
+    },
+    "placeholder": {
+      "searchKeyKoJaEn": "key, KO, JA, EN 검색",
+      "value": "{{variable}} 값"
+    },
+    "rowStatus": {
+      "label": {
+        "empty": "비어 있음 · {{localeList}}",
+        "fallbackEn": "대체 · {{language}} → EN",
+        "missing": "누락됨 · {{localeList}}"
+      }
+    },
+    "table": {
+      "column": {
+        "key": "키",
+        "status": "상태"
+      }
+    },
+    "text": {
+      "failedChangeLanguage": "언어를 변경하지 못했습니다.",
+      "fullNamespace": "전체 namespace",
+      "numberErrors": "오류 수",
+      "numberNamespaces": "namespace 수",
+      "rawJsonLanguage": "Raw JSON 언어",
+      "rawJsonNamespace": "원시 JSON 네임스페이스",
+      "resolved": "해결됨({{language}})",
+      "show": "{{count}}개 표시",
+      "totalNumberKeys": "전체 key 수"
+    },
+    "title": {
+      "interpolationPreview": "보간 미리보기",
+      "localeComparison": "Locale 비교",
+      "localizationTestBed": "Localization 테스트베드",
+      "rawNamespaceJson": "원시 네임스페이스 JSON"
+    },
+    "value": {
+      "empty": "비어 있음",
+      "missing": "누락됨"
+    }
+  },
+  "mapPanel": {
+    "ariaLabel": {
+      "mapsCameras": "지도 및 카메라"
+    },
+    "description": {
+      "waitingMapBeReady": "지도 준비 대기",
+      "zoom": "줌:"
+    },
+    "label": {
+      "camera": "카메라"
+    }
+  },
+  "presets": {
+    "jOBBUILDERPRESETS": {
+      "description": {
+        "fastestSmokeTestUsingRealPlace": "실제 Place ID를 사용하는 가장 빠른 smoke test",
+        "generalTcCheckDifferenceBetweenInput": "입력 순서와 최적화 순서 차이를 확인하는 일반 TC",
+        "smokeTestQuicklyConfirmed3Key": "서울 핵심 3개 장소로 빠르게 확인하는 smoke test",
+        "tcCheckPairQueriesOptimizationResults": "서울 여러 권역의 pair query와 최적화 결과를 확인하는 TC",
+        "tcConfirmingGeneralOptimizationByMixing": "강북과 강남을 섞어 일반 최적화를 확인하는 TC",
+        "tcThatQuicklyVerifiesOnlySolver": "비대칭 directed matrix로 solver만 빠르게 검증하는 TC",
+        "tcVerifyDifferentOperatingHoursResidence": "서로 다른 운영시간과 체류시간 제약을 검증하는 TC"
+      }
+    }
+  },
+  "routeResultModel": {
+    "buildRouteItinerary": {
+      "text": {
+        "arrival": "{{arrivalTime}} 도착",
+        "boardingStationUnknown": "승차역 미상",
+        "departure": "{{departureTime}} 출발",
+        "dropOffStationUnknown": "하차역 미상",
+        "stops": "{{stopCount}}정거장",
+        "towards": "{{headsign}} 방면"
+      }
+    },
+    "formatDuration": {
+      "text": {
+        "hours": "{{hours}}시간",
+        "hoursMinutes": "{{hours}}시간 {{remainingMinutes}}분",
+        "minutes": "{{minutes}}분"
+      }
+    },
+    "getTravelModeLabel": {
+      "text": {
+        "move": "이동",
+        "twoWheeler": "이륜차"
+      }
+    },
+    "nOTAVAILABLE": {
+      "text": {
+        "notProvided": "제공되지 않음"
+      }
+    },
+    "vehicleLabels": {
+      "text": {
+        "bus": "버스",
+        "cableCar": "케이블카",
+        "ferry": "페리",
+        "funicular": "푸니쿨라",
+        "gondola": "곤돌라",
+        "highSpeedRail": "고속철도",
+        "intercityBus": "시외버스",
+        "longDistanceTrain": "장거리 열차",
+        "monorail": "모노레일",
+        "railway": "철도",
+        "sharedTaxi": "합승 택시",
+        "subway": "지하철",
+        "train": "전철",
+        "tram": "트램",
+        "trolleybus": "트롤리버스"
+      }
+    }
+  },
+  "routeResultPanel": {
+    "action": {
+      "fitMapSelectedRoute": "선택 경로에 지도 맞추기"
+    },
+    "ariaLabel": {
+      "directionsResults": "길찾기 결과",
+      "section": "{{title}}에서 {{title}} 구간",
+      "selectRoute": "경로 선택"
+    },
+    "description": {
+      "noPathWasReturned": "· 반환된 경로가 없습니다.",
+      "path": "경로",
+      "routesApi": "경로 API"
+    },
+    "routeDebugDetails": {
+      "ariaLabel": {
+        "googleRequestDiagnostics": "Google 요청 진단",
+        "selectionPathSourceField": "선택 경로 원본 필드"
+      },
+      "label": {
+        "coordinates": "좌표",
+        "description": "설명"
+      },
+      "text": {
+        "debugDetails": "디버그 세부정보",
+        "none": "없음",
+        "rawApiResponse": "원시 API 응답",
+        "warnings": "· warning {{length}}개",
+        "yes": "있음"
+      }
+    },
+    "routeErrorDetails": {
+      "description": {
+        "ifRouteJapanYouMayBe": "일본 경로라면 Google Maps Platform Routes API가 일본의 Google Transit 파트너를 지원하지 않는 제한에 해당할 수 있습니다."
+      },
+      "label": {
+        "backendHttp": "백엔드 HTTP",
+        "destinationType": "목적지 유형",
+        "googleHttp": "구글 HTTP",
+        "googleMessage": "구글 메시지",
+        "googleStatus": "구글 상태",
+        "originType": "원산지 유형",
+        "travelMode": "여행 모드"
+      },
+      "text": {
+        "failureDebugDetails": "실패 Debug Details",
+        "googleRequestBody": "Google 요청 본문",
+        "googleSourceErrorEmptyResponse": "Google 원본 오류/빈 응답",
+        "noneResponse": "응답에 없음",
+        "unableConfirm": "확인 불가"
+      }
+    },
+    "routeSummary": {
+      "text": {
+        "estimatedCost": "예상 비용",
+        "totalDistance": "총 거리",
+        "totalTimeRequired": "총 소요시간"
+      }
+    },
+    "text": {
+      "path": "경로 {{value}}",
+      "pathFindingFailure": "길찾기 실패 · {{code}}",
+      "pathSummary": "경로 {{value}} 요약"
+    },
+    "title": {
+      "routeBySection": "구간별 경로",
+      "routeResult": "경로 결과"
+    }
+  },
+  "routes": {
+    "loadingLabel": {
+      "loadingGoogleMapsTestbed": "Google Maps 테스트베드를 불러오고 있습니다.",
+      "loadingGoogleOauthTestPage": "Google OAuth 테스트 페이지를 불러오고 있습니다.",
+      "loadingLocalizationTestbed": "Localization 테스트베드를 불러오고 있습니다.",
+      "loadingOurAiChatTestbed": "AI 채팅 테스트베드를 불러오고 있습니다.",
+      "loadingTcacheRouteTestPage": "tcache Route 테스트 페이지를 불러오고 있습니다.",
+      "loadingTestbedList": "테스트베드 목록을 불러오고 있습니다.",
+      "trouteIntegrationTestPageLoading": "troute 연동 테스트 페이지를 불러오고 있습니다."
+    }
+  },
+  "selectionPanel": {
+    "ariaLabel": {
+      "lastMapClick": "마지막 지도 클릭",
+      "selectedLocation": "선택한 장소"
+    },
+    "description": {
+      "clickMapUseCoordinatesDirections": "지도를 클릭하면 좌표를 길찾기에 사용할 수 있습니다.",
+      "selectLocationFromSearchResults": "검색 결과에서 장소를 선택해 주세요."
+    },
+    "label": {
+      "address": "주소",
+      "placeId": "장소 ID"
+    },
+    "text": {
+      "noneClickLocationIcon": "없음 · 장소 아이콘을 클릭해 주세요."
+    },
+    "title": {
+      "lastMapClickSelectCoordinates": "Last Map Click · 선택 좌표",
+      "placeChoice": "선택 장소"
+    }
+  },
+  "tcacheJobBuilderDialog": {
+    "text": {
+      "needsModification": "수정 필요",
+      "valid": "유효함"
+    },
+    "title": {
+      "requestPreview": "요청 미리보기"
+    },
+    "tooltip": {
+      "confirmRequest": "요청을 확인해 주세요.",
+      "requestNewTcachePath": "새 tcache 경로 요청"
+    }
+  },
+  "tcacheJobBuilderModel": {
+    "validateTcacheJobBuilder": {
+      "text": {
+        "checkInvalidLocation": "유효하지 않은 위치를 확인해 주세요.",
+        "enterLanguagecode": "languageCode를 입력해 주세요.",
+        "enterValidDepartureDateTime": "유효한 출발 날짜와 시각을 입력해 주세요.",
+        "samePlaceIdDuplicated": "같은 Place ID가 중복되었습니다.",
+        "selectLocationUsingLocationSearch": "장소 검색으로 위치를 선택해 주세요.",
+        "youCanAddUpLocations": "위치는 최대 {{MAX_TCACHE_LOCATIONS}}개까지 추가할 수 있습니다.",
+        "youNeedAtLeastTwoLocations": "출발지와 도착지를 포함해 위치가 2개 이상 필요합니다."
+      }
+    }
+  },
+  "tcacheLocationList": {
+    "action": {
+      "addLocation": "위치 추가"
+    },
+    "ariaLabel": {
+      "delete": "{{value}} 삭제",
+      "thLocationAddress": "{{value}}번째 위치 주소"
+    },
+    "description": {
+      "firstLocationOriginLastLocationDestination": "첫 위치는 출발지, 마지막 위치는 도착지입니다."
+    },
+    "placeholder": {
+      "enterAddressDirectlySelectFromMap": "주소 직접 입력 또는 지도에서 선택"
+    },
+    "text": {
+      "addMoreThanOneLocation": "장소를 두 개 이상 추가해 주세요.",
+      "changeOrderPositions": "{{value}} 위치 순서 변경",
+      "message2": "{{lat}}, {{lng}}",
+      "thPosition": "{{value}}번째 위치"
+    },
+    "title": {
+      "locationList": "위치 목록"
+    },
+    "tooltip": {
+      "thereNoLocation": "위치가 없습니다."
+    }
+  },
+  "tcacheResultMap": {
+    "ariaLabel": {
+      "resultMap": "{{label}} 결과 지도"
+    },
+    "createMarkerModels": {
+      "label": {
+        "e": "E",
+        "s": "S"
+      }
+    },
+    "description": {
+      "resultsContainNoPathPolylineCoordinates": "결과에 지도에 표시할 path/polyline 좌표가 없습니다."
+    }
+  },
+  "tcacheRoute": {
+    "cancelTcacheRouteJob": {
+      "label": {
+        "postCancel": "POST 취소"
+      }
+    },
+    "parseLeg": {
+      "text": {
+        "interval": "구간 {{value}}"
+      }
+    }
+  },
+  "tcacheRouteMap": {
+    "action": {
+      "addAsStopover": "경유지로 추가",
+      "setAsDeparturePoint": "출발지로 설정",
+      "setAsDestination": "도착지로 설정"
+    },
+    "ariaLabel": {
+      "closeSelectedCoordinates": "선택한 좌표 닫기",
+      "closeSelectedPlace": "선택한 장소 닫기",
+      "tcacheRouteRequestLocationMap": "tcache 경로 요청 위치 지도"
+    },
+    "description": {
+      "failedLoadLocationInformation": "장소 정보를 불러오지 못했습니다.",
+      "loadingLocationInformation": "장소 정보를 불러오고 있습니다."
+    },
+    "text": {
+      "mapCoordinates": "지도 좌표",
+      "noAddressInformation": "주소 정보 없음"
+    }
+  },
+  "tcacheRouteOptions": {
+    "mODES": {
+      "label": {
+        "bicycle": "자전거",
+        "car": "자동차",
+        "publicTransportation": "대중교통",
+        "walk": "도보"
+      }
+    },
+    "text": {
+      "advancedOptions": "고급 옵션",
+      "alternateRouteRequest": "대체 경로 요청",
+      "departureTime": "출발 시각",
+      "meansTransportation": "이동 수단"
+    },
+    "title": {
+      "requestSettings": "요청 설정"
+    }
+  },
+  "tcacheRouteTestbed": {
+    "applyStreamEvent": {
+      "error": {
+        "tcacheRouteJobFailed": "tcache Route Job이 실패했습니다."
+      }
+    },
+    "errorMessage": {
+      "text": {
+        "unknownErrorOccurred": "알 수 없는 오류가 발생했습니다."
+      }
+    },
+    "label": {
+      "resultError": "결과 오류",
+      "resultRequest": "결과요청",
+      "resultResponse": "결과 응답",
+      "sseDisconnect": "SSE 연결 해제",
+      "sseOpen": "SSE 오픈",
+      "sseReconnect": "SSE 다시 연결"
+    }
+  },
+  "testbedPage": {
+    "render": {
+      "ariaLabel": {
+        "testbedList": "테스트베드 목록"
+      },
+      "description": {
+        "thisDebugPageDevelopmentWhereYou": "기능을 직접 실행하고 확인할 수 있는 개발용 디버그 페이지입니다."
+      },
+      "text": {
+        "openTestbed": "테스트베드 열기 →",
+        "trasolveHome": "Trasolve 홈"
+      },
+      "title": {
+        "testBed": "테스트 베드"
+      }
+    },
+    "testbeds": {
+      "description": {
+        "checkLocaleSpecificResourcesFallbackInterpolation": "현재 runtime에 로드된 locale별 리소스, fallback, interpolation 및 namespace 원본 JSON을 확인합니다.",
+        "checkRequestProgressResultsCommunicationTimeline": "Trasolve backend를 경유하는 tcache Route Job의 요청, 진행 상태, 결과 및 통신 타임라인을 확인합니다.",
+        "runPlaceSearchesMapEventsRoute": "실제 Google API로 장소 검색, 지도 이벤트, 경로 탐색을 실행하고 결과와 디버그 로그를 확인합니다.",
+        "runRealGoogleOauthLoginFlow": "실제 Google OAuth 로그인 흐름을 실행하고 정제된 사용자 정보와 안전한 오류 상태를 확인합니다.",
+        "sendReceiveConversationsUsingRealChat": "실제 채팅 API로 대화를 주고받으며 응답 대기 애니메이션, 대화 이력, 오류 표시를 확인합니다.",
+        "trouteOptimizeRequestsThroughTrasolveBackend": "Trasolve backend를 통한 troute 최적화 요청과 원본 응답, HTTP 상태 및 왕복 시간을 확인합니다."
+      },
+      "title": {
+        "aiChat": "AI채팅",
+        "googleMaps": "구글 지도",
+        "googleOauth": "구글 OAuth",
+        "tcacheRoute": "tcache 경로",
+        "trouteIntegration": "송어 통합"
+      }
+    }
+  },
+  "timelineEntry": {
+    "ariaLabel": {
+      "copyTimelineItems": "Timeline 항목 복사"
+    },
+    "detail": {
+      "label": {
+        "body": "본문",
+        "headers": "헤더",
+        "query": "쿼리"
+      }
+    },
+    "detailValue": {
+      "text": {
+        "empty": "(비어 있음)"
+      }
+    },
+    "requestDetail": {
+      "tooltip": {
+        "rawPayload": "원시 페이로드"
+      }
+    },
+    "responseDetail": {
+      "tooltip": {
+        "httpStatus": "HTTP 상태",
+        "rawResponse": "원시 응답"
+      }
+    }
+  },
+  "troute": {
+    "optimizeRouteWithTroute": {
+      "text": {
+        "responseJobIdDoesNotMatch": "응답 job_id가 요청 job_id와 일치하지 않습니다."
+      }
+    }
+  },
+  "trouteTestbed": {
+    "message": {
+      "althoughGatewayConnectionLostRemoteJob": "Gateway 연결이 끊겼지만 원격 Job 상태 조회를 계속합니다.",
+      "gatewayResponseFailsButContinuesQuery": "Gateway 응답은 실패했지만 원격 Job 상태 조회를 계속합니다.",
+      "trasolveGatewayRequestCompleted": "Trasolve gateway 요청이 완료되었습니다.",
+      "trasolveGatewayRequestFailed": "Trasolve gateway 요청이 실패했습니다.",
+      "waitingTrasolveGatewayRequestBeExecuted": "Trasolve gateway 요청 실행을 기다리고 있습니다."
+    },
+    "text": {
+      "thisJobHasAlreadyEnded": "이미 종료된 Job입니다.",
+      "unknownErrorOccurredDuringTrasolveBackend": "Trasolve backend 요청 중 알 수 없는 오류가 발생했습니다.",
+      "unknownErrorOccurredWhileForcingJob": "Job 강제 종료 중 알 수 없는 오류가 발생했습니다."
+    }
+  },
+  "useDirectionsState": {
+    "text": {
+      "directionsResponseRoutes": "길찾기 응답: {{length}}개 경로",
+      "googleResponseHttpStatusMessage": "Google 응답: HTTP {{httpStatus}}; status={{value}}; message={{value}}",
+      "message": "도쿄, 일본",
+      "message2": "도쿄타워, 일본",
+      "pathfindingFailed": "길찾기 실패: {{code}}: {{message}}",
+      "requestDirectionsOriginDestinationIntermediatesAlternatives": "길찾기 요청: {{travelMode}}; origin={{type}}; destination={{type}}; intermediates={{length}}; alternatives={{alternatives}}"
+    }
+  },
+  "useTrouteJobEventStream": {
+    "text": {
+      "jobCannotProcessRealTimeEvents": "Job 실시간 event를 처리할 수 없습니다.",
+      "jobStatusCannotBeResynchronized": "Job 상태를 다시 동기화할 수 없습니다.",
+      "liveConnectionWasLostBeingReconnected": "실시간 연결이 끊겨 다시 연결하고 있습니다."
+    }
+  },
+  "useTrouteJobListPolling": {
+    "text": {
+      "trouteJobListCouldNotBe": "troute Job 목록을 불러올 수 없습니다."
+    }
+  },
+  "viewModel": {
+    "getTcacheRouteLocationRole": {
+      "text": {
+        "stopover": "경유지"
+      }
+    }
+  }
+}

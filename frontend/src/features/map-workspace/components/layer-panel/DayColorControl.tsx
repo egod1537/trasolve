@@ -10,28 +10,12 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { DAY_COLOR_PALETTE } from '@/entities/trip';
+import { useL } from '@/shared/i18n';
 
 const LONG_PRESS_DURATION_MS = 450;
 const LONG_PRESS_MOVE_TOLERANCE = 8;
 const POPOVER_GAP = 8;
 const VIEWPORT_GAP = 8;
-
-const DAY_COLOR_LABELS = [
-  '파랑',
-  '청록',
-  '초록',
-  '노랑',
-  '주황',
-  '빨강',
-  '분홍',
-  '보라',
-  '회청',
-  '남회',
-] as const;
-const DAY_COLOR_OPTIONS = DAY_COLOR_PALETTE.map((value, index) => ({
-  value,
-  label: DAY_COLOR_LABELS[index]!,
-}));
 
 type Props = {
   dayId: string;
@@ -56,6 +40,23 @@ export function DayColorControl({
   onToggleVisibility,
   onChangeColor,
 }: Props) {
+  const L = useL();
+  const dayColorLabels = [
+    L('map:dayColorControl.dAYCOLORLABELS.text.blue'),
+    L('map:dayColorControl.dAYCOLORLABELS.text.teal'),
+    L('map:dayColorControl.dAYCOLORLABELS.text.green'),
+    L('map:dayColorControl.dAYCOLORLABELS.text.yellow'),
+    L('map:dayColorControl.dAYCOLORLABELS.text.orange'),
+    L('map:dayColorControl.dAYCOLORLABELS.text.red'),
+    L('map:dayColorControl.dAYCOLORLABELS.text.pink'),
+    L('map:dayColorControl.dAYCOLORLABELS.text.look'),
+    L('map:dayColorControl.dAYCOLORLABELS.text.meeting'),
+    L('map:dayColorControl.dAYCOLORLABELS.text.namhoe'),
+  ] as const;
+  const dayColorOptions = DAY_COLOR_PALETTE.map((value, index) => ({
+    value,
+    label: dayColorLabels[index]!,
+  }));
   const pickerId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -226,16 +227,23 @@ export function DayColorControl({
       id={pickerId}
       className="trip-day-color-picker"
       role="dialog"
-      aria-label={`${dayTitle} 색상 변경`}
+      aria-label={L('map:dayColorControl.ariaLabel.changeColor', {
+        dayTitle: dayTitle,
+      })}
       style={pickerStyle}
     >
-      <span className="trip-day-color-picker-title">Day 색상</span>
+      <span className="trip-day-color-picker-title">
+        {L('map:dayColorControl.text.dayColor')}
+      </span>
       <div className="trip-day-color-palette">
-        {DAY_COLOR_OPTIONS.map((option) => (
+        {dayColorOptions.map((option) => (
           <button
             key={option.value}
             type="button"
-            aria-label={`${option.label} ${option.value}`}
+            aria-label={L('map:dayColorControl.ariaLabel.message', {
+              label: option.label,
+              value: option.value,
+            })}
             aria-pressed={color.toLowerCase() === option.value}
             style={{ '--palette-color': option.value } as CSSProperties}
             onClick={() => {
@@ -254,13 +262,21 @@ export function DayColorControl({
         ref={buttonRef}
         type="button"
         className="trip-day-color-control"
-        aria-label={`${dayTitle} ${visible ? '표시 중' : '숨김 상태'}. 클릭: 표시/숨김 · 길게 누르기: 색상 변경`}
+        aria-label={L(
+          'map:dayColorControl.ariaLabel.clickShowHidePressHoldChange',
+          {
+            dayTitle: dayTitle,
+            value: visible
+              ? L('map:dayColorControl.ariaLabel.showing')
+              : L('map:dayColorControl.ariaLabel.hiddenStatus'),
+          },
+        )}
         aria-pressed={visible}
         aria-haspopup="dialog"
         aria-keyshortcuts="Alt+ArrowDown"
         aria-expanded={pickerOpen}
         aria-controls={pickerOpen ? pickerId : undefined}
-        title="클릭: 표시/숨김 · 길게 누르기: 색상 변경"
+        title={L('map:dayColorControl.tooltip.clickShowHidePressHoldChange')}
         onClick={(event) => {
           if (longPressTriggeredRef.current) {
             event.preventDefault();

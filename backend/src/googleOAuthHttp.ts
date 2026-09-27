@@ -5,14 +5,16 @@ import {
   type ApiErrorResponse,
   type AuthMeResponse,
   type GoogleOAuthResult,
-  type GoogleOAuthUser,
 } from '@trasolve/shared';
+import type { AuthenticationService } from './auth/authenticationService.js';
+import { readOpaqueCookie } from './auth/cookies.js';
+import type { CurrentUserResolver } from './auth/currentUserResolver.js';
+import { readSessionSecret, sessionCookieName } from './auth/sessionCookie.js';
+import type { SessionService } from './auth/sessionService.js';
 import { GoogleOAuthClient, GoogleOAuthError } from './googleOAuth.js';
-import { SessionStore } from './auth/sessionStore.js';
 
 const transactionCookieName = 'trasolve_google_oauth_transaction';
 const resultCookieName = 'trasolve_google_oauth_result';
-const sessionCookieName = 'trasolve_session';
 const transactionCookiePath = API_ROUTES.googleOAuthCallback;
 const resultCookiePath = API_ROUTES.googleOAuthResult;
 const sessionCookiePath = '/';
@@ -22,7 +24,6 @@ const cookieMaxAgeSeconds = entryLifetimeMs / 1_000;
 const sessionLifetimeMs = 30 * 24 * 60 * 60 * 1_000;
 const sessionCookieMaxAgeSeconds = sessionLifetimeMs / 1_000;
 const maximumEntries = 500;
-const opaqueIdPattern = /^[A-Za-z0-9_-]{43}$/;
 
 interface OAuthTransaction {
   state: string;
@@ -36,8 +37,6 @@ interface StoredEntry<T> {
 }
 
 class ExpiringStore<T> {
-  private readonly entries = new Map<string, StoredEntry<T>>();
-
   public create(value: T): string {
     this.removeExpired();
 
@@ -73,6 +72,8 @@ class ExpiringStore<T> {
     return entry?.value;
   }
 
+  private readonly entries = new Map<string, StoredEntry<T>>();
+
   private removeExpired(): void {
     const now = Date.now();
 
@@ -85,9 +86,12 @@ class ExpiringStore<T> {
 }
 
 export class GoogleOAuthHttpFlow {
-  private readonly transactions = new ExpiringStore<OAuthTransaction>();
-  private readonly results = new ExpiringStore<GoogleOAuthResult>();
-  private readonly sessions = new SessionStore<GoogleOAuthUser>();
+  public constructor(
+    private readonly authentication: AuthenticationService,
+    private readonly sessions: SessionService,
+    private readonly currentUser: CurrentUserResolver,
+    private readonly localDevelopmentUserId?: string,
+  ) {}
 
   public async handle(
     request: IncomingMessage,
@@ -119,7 +123,7 @@ export class GoogleOAuthHttpFlow {
         return true;
       }
 
-      this.handleLogout(request, response);
+      await this.handleLogout(request, response);
       return true;
     }
 
@@ -142,11 +146,16 @@ export class GoogleOAuthHttpFlow {
     } else if (pathname === API_ROUTES.googleOAuthResult) {
       this.handleResult(request, response);
     } else {
-      this.handleMe(request, response);
+      await this.handleMe(request, response);
     }
 
     return true;
   }
+
+  // OAuth transactions/results are short-lived, one-time handoff records, not
+  // login sessions. TODO: move these to shared storage before multi-instance use.
+  private readonly transactions = new ExpiringStore<OAuthTransaction>();
+  private readonly results = new ExpiringStore<GoogleOAuthResult>();
 
   private handleStart(response: ServerResponse, requestUrl: URL): void {
     const client = createGoogleOAuthClient();
@@ -248,11 +257,15 @@ export class GoogleOAuthHttpFlow {
     }
 
     try {
-      const user = await client.completeAuthorization(
+      const googleProfile = await client.completeAuthorization(
         authorizationCode,
         transaction.codeVerifier,
       );
-      const sessionId = this.sessions.create(user, sessionLifetimeMs);
+      const user = await this.authentication.loginWithGoogle(googleProfile);
+      const sessionSecret = await this.sessions.create(
+        user.id,
+        sessionLifetimeMs,
+      );
       this.redirectWithResult(
         response,
         { status: 'success', user },
@@ -261,7 +274,7 @@ export class GoogleOAuthHttpFlow {
         [
           createCookie(
             sessionCookieName,
-            sessionId,
+            sessionSecret,
             sessionCookiePath,
             secure,
             sessionCookieMaxAgeSeconds,
@@ -269,12 +282,7 @@ export class GoogleOAuthHttpFlow {
         ],
       );
     } catch (error) {
-      this.redirectWithResult(
-        response,
-        mapOAuthError(error),
-        secure,
-        returnTo,
-      );
+      this.redirectWithResult(response, mapOAuthError(error), secure, returnTo);
     }
   }
 
@@ -293,20 +301,42 @@ export class GoogleOAuthHttpFlow {
     sendJson(response, 200, result);
   }
 
-  private handleMe(request: IncomingMessage, response: ServerResponse): void {
-    const sessionId = readOpaqueCookie(request, sessionCookieName);
-    const user = this.sessions.get(sessionId);
+  private async handleMe(
+    request: IncomingMessage,
+    response: ServerResponse,
+  ): Promise<void> {
+    let userId = await this.currentUser.resolve(request);
+    if (!userId && this.localDevelopmentUserId) {
+      userId = this.localDevelopmentUserId;
+      const sessionSecret = await this.sessions.create(
+        userId,
+        sessionLifetimeMs,
+      );
+      response.setHeader(
+        'Set-Cookie',
+        createCookie(
+          sessionCookieName,
+          sessionSecret,
+          sessionCookiePath,
+          usesSecureOAuthCookies(),
+          sessionCookieMaxAgeSeconds,
+        ),
+      );
+    }
+    const user = userId
+      ? await this.authentication.getUserById(userId)
+      : undefined;
     const body: AuthMeResponse = { user: user ?? null };
     sendJson(response, 200, body);
   }
 
-  private handleLogout(
+  private async handleLogout(
     request: IncomingMessage,
     response: ServerResponse,
-  ): void {
+  ): Promise<void> {
     const secure = usesSecureOAuthCookies();
-    const sessionId = readOpaqueCookie(request, sessionCookieName);
-    this.sessions.destroy(sessionId);
+    const sessionSecret = readSessionSecret(request);
+    await this.sessions.revoke(sessionSecret);
 
     response.setHeader(
       'Set-Cookie',
@@ -399,32 +429,6 @@ function readSafeReturnTo(requestUrl: URL): string {
   }
 
   return value;
-}
-
-function readOpaqueCookie(
-  request: IncomingMessage,
-  cookieName: string,
-): string | undefined {
-  const cookieHeader = request.headers.cookie;
-  if (!cookieHeader) {
-    return undefined;
-  }
-
-  for (const cookie of cookieHeader.split(';')) {
-    const separatorIndex = cookie.indexOf('=');
-    if (separatorIndex < 0) {
-      continue;
-    }
-
-    const name = cookie.slice(0, separatorIndex).trim();
-    const value = cookie.slice(separatorIndex + 1).trim();
-
-    if (name === cookieName && opaqueIdPattern.test(value)) {
-      return value;
-    }
-  }
-
-  return undefined;
 }
 
 function createCookie(

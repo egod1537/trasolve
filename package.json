@@ -19,15 +19,20 @@
   "scripts": {
     "predev": "npm run build -w @trasolve/shared",
     "dev": "concurrently -k -n shared,backend,frontend \"npm run dev -w @trasolve/shared\" \"npm run dev -w @trasolve/backend\" \"npm run dev -w @trasolve/frontend\"",
+    "db:migrate": "npm run db:migrate -w @trasolve/backend",
+    "pretrip:migrate": "npm run build -w @trasolve/shared",
+    "trip:migrate": "npm run trip:migrate -w @trasolve/backend --",
     "build": "npm run build -w @trasolve/shared && npm run build -w @trasolve/backend && npm run build -w @trasolve/frontend",
     "architecture:check": "node infra/architecture/check-frontend-dependencies.mjs",
     "typecheck": "npm run build -w @trasolve/shared && npm run typecheck --workspaces && npm run localization:typecheck",
     "test": "npm run build -w @trasolve/shared && npm test -w @trasolve/backend",
-    "lint": "oxlint . && eslint .",
+    "lint": "oxlint . && eslint . && npm run localization:lint",
     "lint:fix": "oxlint . --fix && eslint . --fix",
-    "format": "prettier --write \"frontend/**/*.{ts,tsx,css,html,json}\" \"backend/**/*.{ts,json}\" \"shared/**/*.{ts,json}\" \"infra/localization/**/*.{ts,json,md}\" \"eslint.config.mjs\" \".github/**/*.yml\"",
-    "format:check": "prettier --check \"frontend/**/*.{ts,tsx,css,html,json}\" \"backend/**/*.{ts,json}\" \"shared/**/*.{ts,json}\" \"infra/localization/**/*.{ts,json,md}\" \"eslint.config.mjs\" \".github/**/*.yml\"",
+    "format": "prettier --write \"frontend/**/*.{ts,tsx,css,html,json}\" \"backend/**/*.{ts,json}\" \"shared/**/*.{ts,json}\" \"infra/localization/**/*.{ts,mjs,json,md}\" \"eslint.config.mjs\" \".github/**/*.yml\"",
+    "format:check": "prettier --check \"frontend/**/*.{ts,tsx,css,html,json}\" \"backend/**/*.{ts,json}\" \"shared/**/*.{ts,json}\" \"infra/localization/**/*.{ts,mjs,json,md}\" \"eslint.config.mjs\" \".github/**/*.yml\"",
     "localization:sync": "tsx infra/localization/sync.ts",
+    "localization:audit": "node infra/localization/audit.mjs",
+    "localization:lint": "node infra/localization/lint.mjs",
     "localization:typecheck": "tsc -p infra/localization/tsconfig.json --noEmit"
   },
   "devDependencies": {

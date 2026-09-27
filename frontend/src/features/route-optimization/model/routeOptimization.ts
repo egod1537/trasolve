@@ -51,8 +51,35 @@ type LocationConstraint = {
   closeTime: string;
   stayMinutes: number;
   usedOpeningHoursFallback: boolean;
-  issue: string | null;
+  issue: RouteOptimizationIssue | null;
 };
+
+export type RouteOptimizationIssue = {
+  code:
+    | 'minimumPlaces'
+    | 'startOutsideDay'
+    | 'endOutsideDay'
+    | 'sameEndpoints'
+    | 'unsupportedStartPolicy'
+    | 'fixedStartRequired'
+    | 'fixedStartStep'
+    | 'unsupportedTravelMode'
+    | 'missingPlaceId'
+    | 'invalidRequest'
+    | 'stayStep'
+    | 'nextDayOpeningHours'
+    | 'noOpeningHours'
+    | 'openingTimeStep'
+    | 'closingTimeStep';
+  values?: Record<string, string | number>;
+};
+
+export class RouteOptimizationValidationError extends Error {
+  public constructor(public readonly issue: RouteOptimizationIssue) {
+    super(issue.code);
+    this.name = 'RouteOptimizationValidationError';
+  }
+}
 
 export type RouteOptimizationDiagnostics = {
   openingHoursFallback: boolean;
@@ -79,44 +106,48 @@ export type RouteOptimizationSchedule = {
 export function getRouteOptimizationIssue(
   activeDay: RouteOptimizationDay,
   options?: RouteOptimizationRequestOptions,
-): string | null {
+): RouteOptimizationIssue | null {
   const orderedPlaces = getOrderedPlaces(activeDay);
   if (orderedPlaces.length < 2) {
-    return '경로 최적화에는 2개 이상의 장소가 필요합니다.';
+    return { code: 'minimumPlaces' };
   }
   const resolved = resolveRequestOptions(activeDay, orderedPlaces, options);
   const placeIds = new Set(orderedPlaces.map((place) => place.id));
   if (!placeIds.has(resolved.selectedStartPlaceId)) {
-    return '시작점은 현재 Day에 포함된 장소여야 합니다.';
+    return { code: 'startOutsideDay' };
   }
   if (!placeIds.has(resolved.selectedEndPlaceId)) {
-    return '종점은 현재 Day에 포함된 장소여야 합니다.';
+    return { code: 'endOutsideDay' };
   }
   if (resolved.selectedStartPlaceId === resolved.selectedEndPlaceId) {
-    return '시작점과 종점은 서로 다른 장소여야 합니다.';
+    return { code: 'sameEndpoints' };
   }
   if (!trouteStartPolicySchema.safeParse(resolved.startPolicy).success) {
-    return '지원하지 않는 시작 방식입니다.';
+    return { code: 'unsupportedStartPolicy' };
   }
   if (resolved.startPolicy === 'FIXED') {
     if (!resolved.startTime || !isClockTime(resolved.startTime)) {
-      return '지정 시각 시작은 HH:mm 형식의 시작 시각이 필요합니다.';
+      return { code: 'fixedStartRequired' };
     }
     if (!isTenMinuteClock(resolved.startTime)) {
-      return '지정 시작 시각은 10분 단위여야 합니다.';
+      return { code: 'fixedStartStep' };
     }
   }
   const travelMode = resolved.travelMode;
   if (!trouteTravelModeSchema.safeParse(travelMode).success) {
-    return `지원하지 않는 이동수단입니다: ${String(travelMode)}`;
+    return {
+      code: 'unsupportedTravelMode',
+      values: { String: String(travelMode) },
+    };
   }
   const missingPlaceIds = orderedPlaces.filter(
     (place) => !place.placeId?.trim(),
   );
   if (missingPlaceIds.length > 0) {
-    return `실제 이동시간 조회에 Place ID가 필요합니다: ${missingPlaceIds
-      .map((place) => place.name)
-      .join(', ')}`;
+    return {
+      code: 'missingPlaceId',
+      values: { value: missingPlaceIds.map((place) => place.name).join(', ') },
+    };
   }
   for (const place of orderedPlaces) {
     const constraint = getLocationConstraint(activeDay, place);
@@ -133,7 +164,7 @@ export function createRouteOptimizationRequest(
 ): TrouteOptimizeRequest {
   const issue = getRouteOptimizationIssue(activeDay, options);
   if (issue) {
-    throw new Error(issue);
+    throw new RouteOptimizationValidationError(issue);
   }
   const orderedPlaces = getOrderedPlaces(activeDay);
   const resolved = resolveRequestOptions(activeDay, orderedPlaces, options);
@@ -162,7 +193,7 @@ export function createRouteOptimizationRequest(
   try {
     return trouteOptimizeRequestSchema.parse(request);
   } catch {
-    throw new Error('경로 최적화 요청 값이 올바르지 않습니다.');
+    throw new RouteOptimizationValidationError({ code: 'invalidRequest' });
   }
 }
 
@@ -203,6 +234,8 @@ export function getBestOptimizationCandidate(
     best: true,
     route: route.map((stop) => stop.location_id),
     feasible: true,
+    elapsed_ms: 0,
+    metadata: { timed_out: false },
   };
 }
 
@@ -309,7 +342,11 @@ export function isApplicableCandidate(
     'selectedStartPlaceId' | 'selectedEndPlaceId'
   >,
 ): candidate is TrouteSolverCandidate {
-  if (!candidate?.feasible || candidate.error || isTimedOut(candidate)) {
+  if (
+    !candidate?.feasible ||
+    candidate.metadata.error ||
+    isTimedOut(candidate)
+  ) {
     return false;
   }
   const currentIds = new Set(activeDay.places.map((place) => place.id));
@@ -368,9 +405,12 @@ function getLocationConstraint(
     getReferenceDate(activeDay, place),
   );
   const stayMinutes = getOptimizationStayMinutes(place);
-  const stayIssue = isTenMinuteStep(stayMinutes)
+  const stayIssue: RouteOptimizationIssue | null = isTenMinuteStep(stayMinutes)
     ? null
-    : `${place.name}의 체류시간은 10분 단위여야 합니다: ${stayMinutes}분`;
+    : {
+        code: 'stayStep',
+        values: { name: place.name, stayMinutes },
+      };
   return {
     ...openingWindow,
     stayMinutes,
@@ -413,9 +453,10 @@ function getOpeningWindow(
       (range) => range.start < 0 || range.end >= MINUTES_PER_DAY,
     )
   ) {
-    return invalidOpeningWindow(
-      `${place.name}의 익일 영업시간은 현재 경로 최적화에서 지원하지 않습니다.`,
-    );
+    return invalidOpeningWindow({
+      code: 'nextDayOpeningHours',
+      values: { name: place.name },
+    });
   }
 
   const ranges = status.timelineRanges.filter(
@@ -427,9 +468,10 @@ function getOpeningWindow(
       isClockTime(range.endText),
   );
   if (ranges.length === 0) {
-    return invalidOpeningWindow(
-      `${place.name}은 선택한 날짜에 유효한 영업시간이 없습니다.`,
-    );
+    return invalidOpeningWindow({
+      code: 'noOpeningHours',
+      values: { name: place.name },
+    });
   }
 
   const scheduledMinutes = place.time ? clockToMinutes(place.time) : undefined;
@@ -441,14 +483,16 @@ function getOpeningWindow(
         scheduledMinutes <= candidate.end,
     ) ?? ranges[0]!;
   if (!isTenMinuteClock(range.startText)) {
-    return invalidOpeningWindow(
-      `${place.name}의 영업 시작 시각은 10분 단위여야 합니다: ${range.startText}`,
-    );
+    return invalidOpeningWindow({
+      code: 'openingTimeStep',
+      values: { name: place.name, startText: range.startText },
+    });
   }
   if (!isTenMinuteClock(range.endText)) {
-    return invalidOpeningWindow(
-      `${place.name}의 영업 종료 시각은 10분 단위여야 합니다: ${range.endText}`,
-    );
+    return invalidOpeningWindow({
+      code: 'closingTimeStep',
+      values: { name: place.name, endText: range.endText },
+    });
   }
   return {
     openTime: range.startText,
@@ -459,7 +503,7 @@ function getOpeningWindow(
 }
 
 function invalidOpeningWindow(
-  issue: string,
+  issue: RouteOptimizationIssue,
 ): Omit<LocationConstraint, 'stayMinutes'> {
   return {
     openTime: FALLBACK_OPEN_TIME,

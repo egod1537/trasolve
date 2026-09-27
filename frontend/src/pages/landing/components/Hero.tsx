@@ -1,7 +1,9 @@
 import heroMap from '@/shared/assets/hero-map.png';
 import { HeroVisual } from '@/pages/landing/components/HeroVisual';
+import { useL } from '@/shared/i18n';
 
 export function Hero() {
+  const L = useL();
   return (
     <section className="hero" id="top" aria-labelledby="hero-title">
       <div className="hero-background" aria-hidden="true">
@@ -10,20 +12,24 @@ export function Hero() {
       </div>
       <div className="hero-copy">
         <h1 id="hero-title">
-          여행 일정과 경로를
-          <br />한 번에 정리하세요.
+          {L('common:hero.title.travelItineraryRoute')}
+          <br />
+          {L('common:hero.title.organizeItAllAtOnce')}
         </h1>
         <p className="hero-description">
-          장소와 일정을 하나의 플랜에 담고,
-          <br className="desktop-break" /> 이동 동선을 함께 보며 여행 계획을
-          구성하세요.
+          {L('common:hero.description.placeScheduleOnePlan')}
+          <br className="desktop-break" />
+          {L('common:hero.description.makeTravelPlanByLookingAt')}
         </p>
-        <div className="hero-actions" aria-label="시작 메뉴">
+        <div
+          className="hero-actions"
+          aria-label={L('common:hero.ariaLabel.startMenu')}
+        >
           <a className="button button-primary" href="/map">
-            시작하기
+            {L('common:hero.text.gettingStarted')}
           </a>
           <a className="button button-secondary" href="#features">
-            기능 보기
+            {L('common:hero.text.viewFeatures')}
           </a>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { createContext, useContext, useSyncExternalStore } from 'react';
 import type { TripEditController } from '@/features/map-workspace/controller/TripEditController';
 import type { TripStore } from '@/features/map-workspace/store/TripStore';
+import { L } from '@/shared/i18n';
 
 export type TripContextValue = {
   store: TripStore;
@@ -12,7 +13,7 @@ export const TripContext = createContext<TripContextValue | null>(null);
 function useApplication() {
   const value = useContext(TripContext);
   if (!value) {
-    throw new Error('TripProvider가 필요합니다.');
+    throw new Error(L('map:useTrip.error.tripproviderRequired'));
   }
   return value;
 }

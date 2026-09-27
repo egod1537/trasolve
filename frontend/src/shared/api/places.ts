@@ -1,6 +1,5 @@
 import {
   API_ROUTES,
-  apiErrorSchema,
   placeAutocompleteRequestSchema,
   placeAutocompleteResponseSchema,
   placeDetailsRequestSchema,
@@ -10,6 +9,7 @@ import {
   type PlaceDetails,
   type PlaceDetailsRequest,
 } from '@trasolve/shared';
+import { L } from '@/shared/i18n';
 
 type SearchOptions = Omit<PlaceAutocompleteRequest, 'input'> & {
   signal?: AbortSignal;
@@ -30,11 +30,10 @@ async function requestPlaces(
   });
   const body: unknown = await response.json();
   if (!response.ok) {
-    const parsed = apiErrorSchema.safeParse(body);
     throw new Error(
-      parsed.success
-        ? `${parsed.data.error.code}: ${parsed.data.error.message}`
-        : `장소 조회 실패 (HTTP ${response.status})`,
+      L('errors:places.error.placeLookupFailedHttp', {
+        status: response.status,
+      }),
     );
   }
   return body;
@@ -56,7 +55,9 @@ export async function searchPlaces(
   );
   const parsed = placeAutocompleteResponseSchema.safeParse(body);
   if (!parsed.success) {
-    throw new Error('장소 검색 응답 형식이 올바르지 않습니다.');
+    throw new Error(
+      L('errors:places.error.placeSearchResponseFormatIncorrect'),
+    );
   }
   return parsed.data;
 }
@@ -83,7 +84,9 @@ export async function getPlace(
   );
   const parsed = placeDetailsSchema.safeParse(body);
   if (!parsed.success) {
-    throw new Error('장소 상세 응답 형식이 올바르지 않습니다.');
+    throw new Error(
+      L('errors:places.error.venueDetailResponseFormatIncorrect'),
+    );
   }
   return parsed.data;
 }

@@ -5,6 +5,7 @@ import type {
 } from '@trasolve/shared';
 import { getPlace, searchPlaces } from '@/shared/api/places';
 import { TripCommandPlanError } from '@/features/map-workspace/ai-command/TripCommandPlanError';
+import { L } from '@/shared/i18n';
 
 export async function lookupTripCommandPlanPlace(
   source: TripCommandPlanAddPlaceSource,
@@ -20,14 +21,14 @@ export async function lookupTripCommandPlanPlace(
     if (response.suggestions.length === 0) {
       throw new TripCommandPlanError(
         'unresolved_target',
-        '추가할 장소를 찾을 수 없습니다.',
+        L('map:tripCommandPlanPlaceLookup.error.iCanTFindPlaceAdd'),
         stepId,
       );
     }
     if (response.suggestions.length !== 1) {
       throw new TripCommandPlanError(
         'ambiguous_target',
-        '추가할 장소 검색 결과가 하나로 결정되지 않았습니다.',
+        L('map:tripCommandPlanPlaceLookup.error.thereWasNoSingleSearchResult'),
         stepId,
       );
     }
@@ -38,7 +39,9 @@ export async function lookupTripCommandPlanPlace(
     }
     throw new TripCommandPlanError(
       'unresolved_target',
-      '권한 있는 장소 정보를 불러올 수 없습니다.',
+      L(
+        'map:tripCommandPlanPlaceLookup.error.privilegedLocationInformationCouldNotBe',
+      ),
       stepId,
     );
   }

@@ -11,6 +11,7 @@ import {
   TravelMode,
 } from '@trasolve/shared';
 import { DirectionsApiError, getDirections } from '@/shared/api/routes';
+import { L } from '@/shared/i18n';
 
 const MAX_INTERMEDIATES = 25;
 
@@ -27,10 +28,12 @@ export function useDirectionsState(appendLog: (message: string) => void) {
   const requestId = useRef(0);
   const intermediateId = useRef(0);
   const controllerRef = useRef<AbortController | null>(null);
-  const [origin, setOrigin] = useState<Endpoint>({ text: '東京駅、日本' });
+  const [origin, setOrigin] = useState<Endpoint>({
+    text: L('testbed:useDirectionsState.text.message'),
+  });
   const [intermediates, setIntermediates] = useState<IntermediateInput[]>([]);
   const [destination, setDestination] = useState<Endpoint>({
-    text: '東京タワー、日本',
+    text: L('testbed:useDirectionsState.text.message2'),
   });
   const [travelMode, setTravelMode] = useState<TravelMode>(TravelMode.DRIVING);
   const [alternatives, setAlternatives] = useState(false);
@@ -108,7 +111,15 @@ export function useDirectionsState(appendLog: (message: string) => void) {
     setResult(null);
     setRouteIndex(0);
     appendLog(
-      `길찾기 요청: ${travelMode}; origin=${nextRequest.origin.type}; destination=${nextRequest.destination.type}; intermediates=${intermediateLocations.length}; alternatives=${alternatives}`,
+      L(
+        'testbed:useDirectionsState.text.requestDirectionsOriginDestinationIntermediatesAlternatives',
+        {
+          travelMode: travelMode,
+          type: nextRequest.origin.type,
+          length: intermediateLocations.length,
+          alternatives: alternatives,
+        },
+      ),
     );
     try {
       const response = await getDirections(nextRequest, controller.signal);
@@ -117,7 +128,11 @@ export function useDirectionsState(appendLog: (message: string) => void) {
       }
       setResult(response);
       setApiStatus('success');
-      appendLog(`길찾기 응답: ${response.routes.length}개 경로`);
+      appendLog(
+        L('testbed:useDirectionsState.text.directionsResponseRoutes', {
+          length: response.routes.length,
+        }),
+      );
     } catch (cause) {
       if (id !== requestId.current) {
         return;
@@ -132,11 +147,21 @@ export function useDirectionsState(appendLog: (message: string) => void) {
             );
       setError(failure);
       setApiStatus('error');
-      appendLog(`길찾기 실패: ${failure.code}: ${failure.message}`);
+      appendLog(
+        L('testbed:useDirectionsState.text.pathfindingFailed', {
+          code: failure.code,
+          message: failure.message,
+        }),
+      );
       if (failure.details) {
         const upstream = failure.details.upstream;
         appendLog(
-          `Google 응답: HTTP ${upstream.httpStatus}; status=${upstream.status ?? '없음'}; message=${upstream.message ?? '없음'}`,
+          L('testbed:useDirectionsState.text.googleResponseHttpStatusMessage', {
+            httpStatus: upstream.httpStatus,
+            value:
+              upstream.status ??
+              L('testbed:routeResultPanel.routeDebugDetails.text.none'),
+          }),
         );
       }
     }

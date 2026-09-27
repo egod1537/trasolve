@@ -1,5 +1,5 @@
 import type { TestbedJobStatus } from '@/entities/route-job';
-import { JOB_STATUS_LABELS } from '@/entities/route-job';
+import { L, useL, type Localize } from '@/shared/i18n';
 import { StatusBadge, type StatusTone } from '@/shared/ui/StatusBadge';
 
 const STATUS_TONES: Record<TestbedJobStatus, StatusTone> = {
@@ -16,11 +16,26 @@ type Props = {
 };
 
 export function JobStatusBadge({ status, className }: Props) {
+  const localize = useL();
   return (
     <StatusBadge tone={getJobStatusTone(status)} className={className}>
-      {JOB_STATUS_LABELS[status]}
+      {formatJobStatus(status, localize)}
     </StatusBadge>
   );
+}
+
+export function formatJobStatus(
+  status: TestbedJobStatus,
+  localize: Localize = L,
+): string {
+  const keys: Record<TestbedJobStatus, string> = {
+    pending: 'common:jobs.jOBSTATUSLABELS.text.waiting',
+    running: 'common:jobs.jOBSTATUSLABELS.text.running',
+    completed: 'common:jobs.jOBSTATUSLABELS.text.done',
+    failed: 'common:status.error',
+    cancelled: 'common:jobs.jOBSTATUSLABELS.text.canceled',
+  };
+  return localize(keys[status]);
 }
 
 export function getJobStatusTone(status: TestbedJobStatus): StatusTone {

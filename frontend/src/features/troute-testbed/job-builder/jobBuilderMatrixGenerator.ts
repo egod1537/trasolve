@@ -2,6 +2,7 @@ import {
   createEmptyTravelTimeMatrix,
   type JobBuilderTravelTimeMatrixCell,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
+import { L } from '@/shared/i18n';
 
 export const DEFAULT_MATRIX_MIN_MINUTES = 5;
 export const DEFAULT_MATRIX_MAX_MINUTES = 60;
@@ -36,7 +37,9 @@ export function getTravelTimeMatrixGeneratorError(
   options: TravelTimeMatrixGeneratorOptions,
 ): string | null {
   if (!Number.isSafeInteger(options.size) || options.size < 0) {
-    return '장소 수는 0 이상의 정수여야 합니다.';
+    return L(
+      'testbed:jobBuilderMatrixGenerator.getTravelTimeMatrixGeneratorError.text.numberPlacesMustBeIntegerGreater',
+    );
   }
   if (
     !Number.isSafeInteger(options.minMinutes) ||
@@ -44,16 +47,24 @@ export function getTravelTimeMatrixGeneratorError(
     options.minMinutes < 0 ||
     options.maxMinutes < 0
   ) {
-    return '이동시간 범위는 0 이상의 정수로 입력하세요.';
+    return L(
+      'testbed:jobBuilderMatrixGenerator.getTravelTimeMatrixGeneratorError.text.enterTravelTimeRangeAsInteger',
+    );
   }
   if (options.minMinutes > options.maxMinutes) {
-    return '최소 이동시간은 최대 이동시간보다 클 수 없습니다.';
+    return L(
+      'testbed:jobBuilderMatrixGenerator.getTravelTimeMatrixGeneratorError.text.minimumTravelTimeCannotBeGreater',
+    );
   }
   if (!Number.isSafeInteger(options.seed) || options.seed < 0) {
-    return 'Seed는 0 이상의 정수로 입력하세요.';
+    return L(
+      'testbed:jobBuilderMatrixGenerator.getTravelTimeMatrixGeneratorError.text.enterSeedAsIntegerGreaterThan',
+    );
   }
   if (!MATRIX_GENERATION_PATTERNS.has(options.pattern)) {
-    return '지원하지 않는 Matrix 생성 패턴입니다.';
+    return L(
+      'testbed:jobBuilderMatrixGenerator.getTravelTimeMatrixGeneratorError.text.matrixCreationPatternNotSupported',
+    );
   }
   return null;
 }

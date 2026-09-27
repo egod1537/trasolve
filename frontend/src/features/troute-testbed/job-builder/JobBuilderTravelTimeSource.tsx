@@ -16,6 +16,7 @@ import type {
   JobBuilderTravelTimeMatrixCell,
   JobBuilderTravelTimeSource as TravelTimeSource,
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
+import { useL, L, NL } from '@/shared/i18n';
 
 interface JobBuilderTravelTimeSourceProps {
   source: TravelTimeSource;
@@ -34,13 +35,45 @@ const MATRIX_PATTERN_OPTIONS: readonly {
   value: JobBuilderMatrixGenerationPattern;
   label: string;
 }[] = [
-  { value: 'directed-uniform', label: '방향별 균등 (Directed Uniform)' },
-  { value: 'symmetric', label: '대칭 (Symmetric)' },
-  { value: 'near-symmetric', label: '근사 대칭 (Near Symmetric)' },
-  { value: 'clustered', label: '군집형 (Clustered)' },
+  {
+    value: 'directed-uniform',
+    get label() {
+      return L(
+        'testbed:jobBuilderTravelTimeSource.mATRIXPATTERNOPTIONS.label.directedUniform',
+      );
+    },
+  },
+  {
+    value: 'symmetric',
+    get label() {
+      return L(
+        'testbed:jobBuilderTravelTimeSource.mATRIXPATTERNOPTIONS.label.symmetric',
+      );
+    },
+  },
+  {
+    value: 'near-symmetric',
+    get label() {
+      return L(
+        'testbed:jobBuilderTravelTimeSource.mATRIXPATTERNOPTIONS.label.nearSymmetric',
+      );
+    },
+  },
+  {
+    value: 'clustered',
+    get label() {
+      return L(
+        'testbed:jobBuilderTravelTimeSource.mATRIXPATTERNOPTIONS.label.clustered',
+      );
+    },
+  },
   {
     value: 'short-with-outliers',
-    label: '짧은 이동 + 긴 이상치',
+    get label() {
+      return L(
+        'testbed:jobBuilderTravelTimeSource.mATRIXPATTERNOPTIONS.label.shortMovesLongOutliers',
+      );
+    },
   },
 ];
 
@@ -52,6 +85,7 @@ export function JobBuilderTravelTimeSource({
   onMatrixCellChange,
   onMatrixChange,
 }: JobBuilderTravelTimeSourceProps) {
+  const L = useL();
   return (
     <section
       className="job-builder-travel-time"
@@ -59,16 +93,19 @@ export function JobBuilderTravelTimeSource({
     >
       <div className="job-builder-travel-time-heading">
         <h2 id="job-builder-travel-time-title" className={Classes.HEADING}>
-          이동시간 Source
+          {L('testbed:jobBuilderTravelTimeSource.title.travelTimeSource')}
         </h2>
         <p>
-          이동시간을 실제 Place ID로 조회하거나 solver에 전달할 directed
-          matrix를 직접 입력합니다.
+          {L(
+            'testbed:jobBuilderTravelTimeSource.description.searchTravelTimeUsingActualPlace',
+          )}
         </p>
       </div>
 
       <fieldset className="job-builder-travel-time-options">
-        <legend className="sr-only">이동시간 소스</legend>
+        <legend className="sr-only">
+          {L('testbed:jobBuilderTravelTimeSource.label.travelTimeSource')}
+        </legend>
         <label
           className={`job-builder-travel-time-option${source === 'tcache' ? ' is-selected' : ''}`}
         >
@@ -80,9 +117,11 @@ export function JobBuilderTravelTimeSource({
             onChange={() => onSourceChange('tcache')}
           />
           <span>
-            <strong>tcache</strong>
+            <strong>{NL('tcache')}</strong>
             <small>
-              Place ID와 이동수단을 사용해 실제 이동시간을 조회합니다.
+              {L(
+                'testbed:jobBuilderTravelTimeSource.description.checkActualTravelTimeUsingPlace',
+              )}
             </small>
           </span>
         </label>
@@ -97,9 +136,13 @@ export function JobBuilderTravelTimeSource({
             onChange={() => onSourceChange('direct')}
           />
           <span>
-            <strong>Direct Matrix</strong>
+            <strong>
+              {L('testbed:jobBuilderTravelTimeSource.text.directMatrix')}
+            </strong>
             <small>
-              입력한 Matrix를 그대로 사용하며 tcache 조회를 생략합니다.
+              {L(
+                'testbed:jobBuilderTravelTimeSource.description.enteredMatrixUsedAsTcacheSearch',
+              )}
             </small>
           </span>
         </label>
@@ -114,9 +157,9 @@ export function JobBuilderTravelTimeSource({
         />
       ) : (
         <p className="job-builder-travel-time-note">
-          모든 위치에 Place ID가 필요하며 요청에는 travel_time_matrix를 포함하지
-          않습니다. troute가 Place ID와 이동수단으로 directed Matrix를
-          생성합니다.
+          {L(
+            'testbed:jobBuilderTravelTimeSource.description.placeIdRequiredAllLocationsRequest',
+          )}
         </p>
       )}
     </section>
@@ -138,6 +181,7 @@ function TravelTimeMatrixEditor({
   ) => void;
   onMatrixChange: (matrix: JobBuilderTravelTimeMatrixCell[][]) => void;
 }) {
+  const L = useL();
   const [minimumInput, setMinimumInput] = useState(
     String(DEFAULT_MATRIX_MIN_MINUTES),
   );
@@ -153,7 +197,9 @@ function TravelTimeMatrixEditor({
   if (locations.length === 0) {
     return (
       <p className="job-builder-travel-time-note">
-        Matrix를 편집하려면 위치를 추가하세요.
+        {L(
+          'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.description.editMatrixAddLocation',
+        )}
       </p>
     );
   }
@@ -171,7 +217,11 @@ function TravelTimeMatrixEditor({
     <div className="job-builder-matrix-editor">
       <div className="job-builder-matrix-scroll">
         <table>
-          <caption className="sr-only">위치별 이동시간 Matrix</caption>
+          <caption className="sr-only">
+            {L(
+              'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.text.travelTimeMatrixByLocation',
+            )}
+          </caption>
           <thead>
             <tr>
               <th aria-hidden="true" />
@@ -205,7 +255,10 @@ function TravelTimeMatrixEditor({
                         step={1}
                         disabled={diagonal}
                         required={!diagonal}
-                        aria-label={`${rowLocation.name}에서 ${columnLocation.name}까지 이동시간`}
+                        aria-label={L(
+                          'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.ariaLabel.travelTimeFrom',
+                          { name: rowLocation.name },
+                        )}
                         aria-invalid={invalid}
                         value={value ?? ''}
                         onChange={(event) => {
@@ -227,7 +280,9 @@ function TravelTimeMatrixEditor({
       </div>
       <div
         className="job-builder-matrix-generator"
-        aria-label="Matrix 랜덤 생성"
+        aria-label={L(
+          'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.ariaLabel.matrixRandomGeneration',
+        )}
       >
         <ButtonGroup size="small">
           <Button
@@ -239,7 +294,9 @@ function TravelTimeMatrixEditor({
               )
             }
           >
-            빈 셀 랜덤 채우기
+            {L(
+              'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.action.randomlyFillEmptyCells',
+            )}
           </Button>
           <Button
             icon="refresh"
@@ -248,7 +305,9 @@ function TravelTimeMatrixEditor({
               onMatrixChange(generateTravelTimeMatrix(generatorOptions))
             }
           >
-            전체 재생성
+            {L(
+              'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.action.fullRegeneration',
+            )}
           </Button>
           <Button
             icon="eraser"
@@ -256,19 +315,27 @@ function TravelTimeMatrixEditor({
               onMatrixChange(clearTravelTimeMatrix(locations.length))
             }
           >
-            비우기
+            {L(
+              'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.action.empty',
+            )}
           </Button>
         </ButtonGroup>
         <div className="job-builder-matrix-generator-settings">
           <label>
-            <span>범위 (분)</span>
+            <span>
+              {L(
+                'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.text.rangeMinutes',
+              )}
+            </span>
             <span className="job-builder-matrix-range-inputs">
               <input
                 className="bp6-input"
                 type="number"
                 min={0}
                 step={1}
-                aria-label="랜덤 Matrix 최소 이동시간"
+                aria-label={L(
+                  'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.ariaLabel.randomMatrixMinimumTravelTime',
+                )}
                 aria-invalid={generatorError !== null}
                 value={minimumInput}
                 onChange={(event) => setMinimumInput(event.currentTarget.value)}
@@ -279,7 +346,9 @@ function TravelTimeMatrixEditor({
                 type="number"
                 min={0}
                 step={1}
-                aria-label="랜덤 Matrix 최대 이동시간"
+                aria-label={L(
+                  'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.ariaLabel.randomMatrixMaximumMovementTime',
+                )}
                 aria-invalid={generatorError !== null}
                 value={maximumInput}
                 onChange={(event) => setMaximumInput(event.currentTarget.value)}
@@ -287,9 +356,15 @@ function TravelTimeMatrixEditor({
             </span>
           </label>
           <label>
-            <span>패턴</span>
+            <span>
+              {L(
+                'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.text.pattern',
+              )}
+            </span>
             <HTMLSelect
-              aria-label="랜덤 Matrix 생성 패턴"
+              aria-label={L(
+                'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.ariaLabel.randomMatrixGenerationPattern',
+              )}
               value={pattern}
               onChange={(event) =>
                 setPattern(
@@ -306,13 +381,15 @@ function TravelTimeMatrixEditor({
             </HTMLSelect>
           </label>
           <label>
-            <span>Seed</span>
+            <span>{L('testbed:jobBuilderTravelTimeSource.label.seed')}</span>
             <input
               className="bp6-input job-builder-matrix-seed-input"
               type="number"
               min={0}
               step={1}
-              aria-label="랜덤 Matrix Seed"
+              aria-label={L(
+                'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.ariaLabel.randomMatrixSeed',
+              )}
               aria-invalid={generatorError !== null}
               value={seedInput}
               onChange={(event) => setSeedInput(event.currentTarget.value)}
@@ -326,9 +403,9 @@ function TravelTimeMatrixEditor({
         ) : null}
       </div>
       <p className="job-builder-travel-time-note">
-        N × N directed Matrix입니다. 대각선은 0으로 고정되며 A→B와 B→A는 서로
-        독립입니다. travel_mode 값은 유지되지만 실제 routing 조회에는 사용되지
-        않습니다.
+        {L(
+          'testbed:jobBuilderTravelTimeSource.travelTimeMatrixEditor.description.itNNDirectedMatrixDiagonal',
+        )}
       </p>
     </div>
   );

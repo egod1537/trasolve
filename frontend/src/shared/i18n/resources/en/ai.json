@@ -1,0 +1,102 @@
+{
+  "chatMarkdown": {
+    "components": {
+      "ariaLabel": {
+        "table": "table"
+      }
+    }
+  },
+  "mapAiButton": {
+    "actionLabel": {
+      "text": {
+        "closeAiPanel": "Close AI panel",
+        "openAiPanel": "Open AI panel"
+      }
+    },
+    "label": {
+      "text": {
+        "generatingAiResponse": "Generating AI response · {{actionLabel}}"
+      }
+    }
+  },
+  "mapAiPanel": {
+    "action": {
+      "creating": "Creating",
+      "transfer": "Send"
+    },
+    "ariaLabel": {
+      "aiChatList": "AI chat list",
+      "closeAiAssistant": "Close AI assistant",
+      "closeChatList": "Close chat list",
+      "currentConversation": "current conversation",
+      "openChatList": "Open chat list",
+      "saveAsMarkdown": "Save as Markdown",
+      "trasolveAiTravelAssistant": "Trasolve AI Travel Assistant"
+    },
+    "createThread": {
+      "title": {
+        "newChat": "New chat"
+      }
+    },
+    "description": {
+      "thereNoDialogue": "There is no dialogue.",
+      "travelAssistant": "Travel assistant",
+      "weWillHelpYouPlanTrip": "We'll help you plan your trip while viewing the map and schedule."
+    },
+    "formatRelativeTime": {
+      "text": {
+        "daysAgo": "{{elapsedDays}} days ago",
+        "hoursAgo": "{{elapsedHours}} hours ago",
+        "justNow": "Just now",
+        "minutesAgo": "{{elapsedMinutes}} minutes ago"
+      }
+    },
+    "label": {
+      "sendMessageAiTravelAssistant": "Send a message to your AI travel assistant"
+    },
+    "placeholder": {
+      "askAboutTravel": "Ask about travel"
+    },
+    "renderThread": {
+      "action": {
+        "cancelCreation": "Cancel creation",
+        "changeName": "change name",
+        "storage": "Archive",
+        "unarchive": "unarchive"
+      },
+      "ariaLabel": {
+        "chatName": "chat name",
+        "generatingAiResponse": "Generating AI response",
+        "menu": "{{title}} menu"
+      },
+      "tooltip": {
+        "chatMenu": "Chat menu"
+      }
+    },
+    "submitMessage": {
+      "error": {
+        "answerCouldNotBeRetrievedTry": "The answer could not be retrieved. Please try again."
+      }
+    },
+    "text": {
+      "chatSearch": "Chat search",
+      "iMThinkingAnswer": "I'm thinking of an answer."
+    },
+    "title": {
+      "archived": "Archived",
+      "recentConversations": "Recent conversations",
+      "trasolveAi": "Trasolve AI"
+    }
+  },
+  "mapAiUnreadPreviews": {
+    "ariaLabel": {
+      "openUnconfirmedAiResponse": "Open unconfirmed AI response for {{threadTitle}}",
+      "unconfirmedAiResponse": "Unconfirmed AI response"
+    },
+    "toPreviewText": {
+      "text": {
+        "code": "code"
+      }
+    }
+  }
+}

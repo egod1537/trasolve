@@ -10,6 +10,7 @@ import type { PlaceAutocompleteSuggestion } from '@trasolve/shared';
 import { getPlace, searchPlaces } from '@/shared/api/places';
 import type { MapPlace } from '@/map/types/googleMapComponent';
 import '@/pages/testbed/styles/google-place-search.css';
+import { useL, L } from '@/shared/i18n';
 
 type Props = {
   label?: string;
@@ -20,12 +21,13 @@ type Props = {
 };
 
 export function GooglePlaceSearch({
-  label = '장소 검색',
-  placeholder = '장소 또는 주소 입력',
+  label = L('testbed:googlePlaceSearch.label.searchPlace'),
+  placeholder = L('testbed:googlePlaceSearch.placeholder.enterPlaceAddress'),
   className,
   onSelect,
   onError,
 }: Props) {
+  const L = useL();
   const inputId = useId();
   const listId = useId();
   const statusId = useId();
@@ -37,7 +39,9 @@ export function GooglePlaceSearch({
   );
   const [activeIndex, setActiveIndex] = useState(-1);
   const [open, setOpen] = useState(false);
-  const [status, setStatus] = useState('2자 이상 입력해 주세요.');
+  const [status, setStatus] = useState(
+    L('testbed:googlePlaceSearch.text.enterAtLeast2Characters'),
+  );
   const [error, setError] = useState<string | null>(null);
   const controller = useRef<AbortController | null>(null);
   const revision = useRef(0);
@@ -55,13 +59,18 @@ export function GooglePlaceSearch({
     controller.current = null;
   }, []);
 
-  const fail = useCallback((cause: unknown) => {
-    const failure =
-      cause instanceof Error ? cause : new Error('장소 조회에 실패했습니다.');
-    setStatus('');
-    setError(failure.message);
-    callbacks.current.onError?.(failure);
-  }, []);
+  const fail = useCallback(
+    (cause: unknown) => {
+      const failure =
+        cause instanceof Error
+          ? cause
+          : new Error(L('testbed:googlePlaceSearch.text.locationSearchFailed'));
+      setStatus('');
+      setError(failure.message);
+      callbacks.current.onError?.(failure);
+    },
+    [L],
+  );
 
   useEffect(() => cancelRequests, [cancelRequests]);
 
@@ -90,8 +99,10 @@ export function GooglePlaceSearch({
         setOpen(result.suggestions.length > 0);
         setStatus(
           result.suggestions.length
-            ? `${result.suggestions.length}개의 검색 결과가 있습니다.`
-            : '검색 결과가 없습니다.',
+            ? L('testbed:googlePlaceSearch.text.thereSearchResults', {
+                length: result.suggestions.length,
+              })
+            : L('testbed:googlePlaceSearch.text.noSearchResults'),
         );
       } catch (cause) {
         if (!current.signal.aborted && request === revision.current) {
@@ -103,7 +114,7 @@ export function GooglePlaceSearch({
       window.clearTimeout(timer);
       current.abort();
     };
-  }, [query, fail]);
+  }, [fail, L, query]);
 
   useEffect(() => {
     if (open && activeIndex >= 0) {
@@ -123,7 +134,11 @@ export function GooglePlaceSearch({
     setOpen(false);
     const ready = value.trim().length >= 2 && !composing.current;
     setQuery(ready ? { input: value.trim() } : null);
-    setStatus(ready ? '장소를 검색하고 있습니다.' : '2자 이상 입력해 주세요.');
+    setStatus(
+      ready
+        ? L('testbed:googlePlaceSearch.updateInput.text.searchingLocation')
+        : L('testbed:googlePlaceSearch.text.enterAtLeast2Characters'),
+    );
     if (!value.trim()) {
       sessionToken.current = undefined;
     }
@@ -146,7 +161,9 @@ export function GooglePlaceSearch({
     setSuggestions([]);
     setActiveIndex(-1);
     setError(null);
-    setStatus('장소 정보를 불러오고 있습니다.');
+    setStatus(
+      L('testbed:tcacheRouteMap.description.loadingLocationInformation'),
+    );
     const request = revision.current;
     const current = new AbortController();
     controller.current = current;
@@ -162,7 +179,11 @@ export function GooglePlaceSearch({
         return;
       }
       setInput(place.name);
-      setStatus(`${place.name} 선택 완료`);
+      setStatus(
+        L('testbed:googlePlaceSearch.selectSuggestion.text.selected', {
+          name: place.name,
+        }),
+      );
       callbacks.current.onSelect({
         id: place.id,
         name: place.name,

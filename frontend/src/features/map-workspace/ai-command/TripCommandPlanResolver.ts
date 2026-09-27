@@ -9,6 +9,7 @@ import type {
   TripPlace,
 } from '@trasolve/shared';
 import { TripCommandPlanError } from '@/features/map-workspace/ai-command/TripCommandPlanError';
+import { L } from '@/shared/i18n';
 
 export type TripCommandPlanResultKind = 'day' | 'place';
 
@@ -46,7 +47,10 @@ export function resolveTripCommandPlanDay(
         )
       : context.initialTrip.days[reference.ordinal - 1];
   if (!day) {
-    throw unresolved(context.stepId, '날짜 대상을 찾을 수 없습니다.');
+    throw unresolved(
+      context.stepId,
+      L('map:tripCommandPlanResolver.error.dateTargetNotFound'),
+    );
   }
   return day.id;
 }
@@ -62,14 +66,22 @@ export function resolveTripCommandPlanPlace(
   if (reference.kind === 'selection') {
     const selectedId = context.selectedPlaceIds[reference.ordinal - 1];
     if (!selectedId || !findPlace(context.initialTrip, selectedId)) {
-      throw unresolved(context.stepId, '선택된 장소 대상을 찾을 수 없습니다.');
+      throw unresolved(
+        context.stepId,
+        L(
+          'map:tripCommandPlanResolver.error.selectedLocationDestinationCannotBeFound',
+        ),
+      );
     }
     return selectedId;
   }
 
   if (reference.kind === 'id') {
     if (!findPlace(context.initialTrip, reference.id)) {
-      throw unresolved(context.stepId, '장소 대상을 찾을 수 없습니다.');
+      throw unresolved(
+        context.stepId,
+        L('map:tripCommandPlanResolver.error.locationDestinationNotFound'),
+      );
     }
     return reference.id;
   }
@@ -88,13 +100,13 @@ export function resolveTripCommandPlanPlace(
   if (matches.length === 0) {
     throw unresolved(
       context.stepId,
-      '이름이 일치하는 장소를 찾을 수 없습니다.',
+      L('map:tripCommandPlanResolver.error.noPlaceFoundMatchingName'),
     );
   }
   if (matches.length > 1) {
     throw new TripCommandPlanError(
       'ambiguous_target',
-      '이름이 일치하는 장소가 여러 개입니다.',
+      L('map:tripCommandPlanResolver.error.thereMultiplePlacesMatchingNames'),
       context.stepId,
     );
   }
@@ -109,7 +121,10 @@ export function resolveTripCommandPlanPolyline(
     day.polylines.some((polyline) => polyline.id === reference.id),
   );
   if (!exists) {
-    throw unresolved(context.stepId, '연결선 대상을 찾을 수 없습니다.');
+    throw unresolved(
+      context.stepId,
+      L('map:tripCommandPlanResolver.error.connectorTargetNotFound'),
+    );
   }
   return reference.id;
 }
@@ -120,7 +135,10 @@ export function resolveTripCommandPlanDayPosition(
   stepId: TripCommandPlanStepId,
 ): number {
   if (trip.days.length === 0) {
-    throw unresolved(stepId, '이동할 날짜 순서를 결정할 수 없습니다.');
+    throw unresolved(
+      stepId,
+      L('map:tripCommandPlanResolver.error.unableDetermineOrderDatesMove'),
+    );
   }
   if (position.kind === 'start') {
     return 0;
@@ -129,7 +147,12 @@ export function resolveTripCommandPlanDayPosition(
     return trip.days.length - 1;
   }
   if (position.ordinal > trip.days.length) {
-    throw unresolved(stepId, '요청한 날짜 순서가 현재 여행 범위를 벗어납니다.');
+    throw unresolved(
+      stepId,
+      L(
+        'map:tripCommandPlanResolver.error.requestedDateSequenceOutsideCurrentTravel',
+      ),
+    );
   }
   return position.ordinal - 1;
 }
@@ -140,7 +163,10 @@ export function resolveTripCommandPlanPlacePosition(
   stepId: TripCommandPlanStepId,
 ): number {
   if (finalPlaceCount < 1) {
-    throw unresolved(stepId, '이동할 장소 순서를 결정할 수 없습니다.');
+    throw unresolved(
+      stepId,
+      L('map:tripCommandPlanResolver.error.iCanTDecideWhichOrder'),
+    );
   }
   if (position.kind === 'start') {
     return 0;
@@ -149,7 +175,12 @@ export function resolveTripCommandPlanPlacePosition(
     return finalPlaceCount - 1;
   }
   if (position.ordinal > finalPlaceCount) {
-    throw unresolved(stepId, '요청한 장소 순서가 현재 날짜 범위를 벗어납니다.');
+    throw unresolved(
+      stepId,
+      L(
+        'map:tripCommandPlanResolver.error.requestedPlaceSequenceOutsideCurrentDate',
+      ),
+    );
   }
   return position.ordinal - 1;
 }
@@ -161,7 +192,10 @@ export function requireWorkingDay(
 ) {
   const day = trip.days.find((candidate) => candidate.id === dayId);
   if (!day) {
-    throw unresolved(stepId, '날짜 대상이 현재 여행에 존재하지 않습니다.');
+    throw unresolved(
+      stepId,
+      L('map:tripCommandPlanResolver.error.dateDestinationDoesNotExistCurrent'),
+    );
   }
   return day;
 }
@@ -173,7 +207,12 @@ export function requireWorkingPlace(
 ): TripPlace {
   const place = findPlace(trip, placeId);
   if (!place) {
-    throw unresolved(stepId, '장소 대상이 현재 여행에 존재하지 않습니다.');
+    throw unresolved(
+      stepId,
+      L(
+        'map:tripCommandPlanResolver.error.locationDestinationDoesNotCurrentlyExist',
+      ),
+    );
   }
   return place;
 }
@@ -187,7 +226,12 @@ export function requireWorkingPolyline(
     day.polylines.some((polyline) => polyline.id === polylineId),
   );
   if (!exists) {
-    throw unresolved(stepId, '연결선 대상이 현재 여행에 존재하지 않습니다.');
+    throw unresolved(
+      stepId,
+      L(
+        'map:tripCommandPlanResolver.error.connectorDestinationDoesNotExistCurrent',
+      ),
+    );
   }
 }
 
@@ -198,26 +242,32 @@ function resolveResult(
 ): string {
   const resultStepIndex = context.stepIndexes.get(resultStepId);
   if (resultStepIndex === undefined) {
-    throw unresolved(context.stepId, '참조한 이전 단계가 존재하지 않습니다.');
+    throw unresolved(
+      context.stepId,
+      L('map:tripCommandPlanResolver.error.previousStepReferencedDoesNotExist'),
+    );
   }
   if (resultStepIndex >= context.stepIndex) {
     throw new TripCommandPlanError(
       'unsafe_operation',
-      '현재 단계는 이후 단계나 자기 자신을 참조할 수 없습니다.',
+      L('map:tripCommandPlanResolver.error.currentStepCannotReferLaterSteps'),
       context.stepId,
     );
   }
   if (context.stepResultKinds.get(resultStepId) !== expectedKind) {
     throw new TripCommandPlanError(
       'unsafe_operation',
-      '이전 단계의 결과 형식이 현재 대상과 호환되지 않습니다.',
+      L('map:tripCommandPlanResolver.error.resultingFormatFromPreviousStepNot'),
       context.stepId,
     );
   }
 
   const result = context.results.get(resultStepId);
   if (!result || result.kind !== expectedKind) {
-    throw unresolved(context.stepId, '이전 단계 결과를 사용할 수 없습니다.');
+    throw unresolved(
+      context.stepId,
+      L('map:tripCommandPlanResolver.error.previousStepResultsNotAvailable'),
+    );
   }
   return result.id;
 }

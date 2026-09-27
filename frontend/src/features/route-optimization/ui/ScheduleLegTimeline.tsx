@@ -2,6 +2,7 @@ import {
   TimeRangeTimeline,
   type TimeRangeTimelineRange,
 } from '@/features/place-editor';
+import { useL } from '@/shared/i18n';
 
 type ScheduleLegKind = 'travel' | 'wait';
 
@@ -22,11 +23,16 @@ export function ScheduleLegTimeline({
   endTime,
   kind,
 }: Props) {
+  const L = useL();
   const range = createTimelineRange(startTime, endTime, durationMinutes);
   if (!range || !startTime || !endTime || durationMinutes === null) {
     return (
       <span className="route-optimization-schedule-leg-fallback">
-        {kind === 'travel' ? '이동 시간 정보 없음' : '시간 정보 없음'}
+        {kind === 'travel'
+          ? L(
+              'routeOptimization:scheduleLegTimeline.text.noTravelTimeInformation',
+            )
+          : L('routeOptimization:scheduleLegTimeline.text.noTimeInformation')}
       </span>
     );
   }
@@ -34,7 +40,12 @@ export function ScheduleLegTimeline({
   return (
     <TimeRangeTimeline
       ranges={[range]}
-      ariaLabel={`${label} ${startTime}부터 ${endTime}까지, ${durationMinutes}분`}
+      ariaLabel={L('routeOptimization:scheduleLegTimeline.ariaLabel.minutes', {
+        label: label,
+        startTime: startTime,
+        endTime: endTime,
+        durationMinutes: durationMinutes,
+      })}
       tone={kind === 'travel' ? 'travel' : 'muted'}
       variant="compact"
     />

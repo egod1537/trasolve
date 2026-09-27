@@ -17,6 +17,7 @@ import type {
   TcacheStreamState,
 } from '@/features/tcache-route-testbed/model/types';
 import { getTcacheRouteLocationRole } from '@/features/tcache-route-testbed/model/viewModel';
+import { getLanguage, useL, L, NL } from '@/shared/i18n';
 
 interface JobDetailProps {
   job: TcacheRouteJob | null;
@@ -31,6 +32,7 @@ export const JobDetail = memo(function JobDetail({
   cancelling,
   onRequestCancel,
 }: JobDetailProps) {
+  const L = useL();
   if (!job) {
     return (
       <Card
@@ -40,8 +42,12 @@ export const JobDetail = memo(function JobDetail({
       >
         <NonIdealState
           icon="route"
-          title="확인할 경로 작업을 선택하세요."
-          description="새 작업은 생성 직후 자동으로 선택됩니다."
+          title={L(
+            'testbed:jobDetail.tooltip.selectRouteOperationYouWantCheck',
+          )}
+          description={L(
+            'testbed:jobDetail.text.newTasksAutomaticallySelectedImmediatelyAfter',
+          )}
         />
       </Card>
     );
@@ -52,9 +58,13 @@ export const JobDetail = memo(function JobDetail({
     <Card className="tcache-job-detail" elevation={1} compact>
       <div className="tcache-detail-heading">
         <div>
-          <h1 className={Classes.HEADING}>Job 상세</h1>
+          <h1 className={Classes.HEADING}>
+            {L('testbed:jobDetail.title.jobDetails')}
+          </h1>
           <span className={Classes.TEXT_MUTED}>
-            Trasolve → tcache 통신 관찰 정보
+            {L(
+              'testbed:jobDetail.text.trasolveTcacheCommunicationObservationInformation',
+            )}
           </span>
         </div>
         {active ? (
@@ -65,7 +75,7 @@ export const JobDetail = memo(function JobDetail({
             disabled={cancelling}
             onClick={() => onRequestCancel(job.id)}
           >
-            작업 취소
+            {L('testbed:cancelJobDialog.tooltip.cancelRouteOperation')}
           </Button>
         ) : null}
       </div>
@@ -77,7 +87,11 @@ export const JobDetail = memo(function JobDetail({
         <Divider />
         <ProgressSection job={job} streamState={streamState} />
         {job.error ? (
-          <Callout intent="danger" title="작업 실패" role="alert">
+          <Callout
+            intent="danger"
+            title={L('testbed:jobDetail.tooltip.taskFailed')}
+            role="alert"
+          >
             {job.error}
           </Callout>
         ) : null}
@@ -93,28 +107,50 @@ export const JobDetail = memo(function JobDetail({
 });
 
 function Overview({ job }: { job: TcacheRouteJob }) {
+  const L = useL();
   return (
     <section aria-labelledby="tcache-overview-title">
-      <h2 id="tcache-overview-title">개요</h2>
+      <h2 id="tcache-overview-title">
+        {L('testbed:jobDetail.overview.title.overview')}
+      </h2>
       <dl className="tcache-metadata-grid">
-        <Metadata label="Job ID" value={job.id} mono />
+        <Metadata
+          label={L('testbed:jobDetail.overview.text.jobId')}
+          value={job.id}
+          mono
+        />
         <div>
-          <dt>상태</dt>
+          <dt>{L('testbed:jobDetail.overview.label.status')}</dt>
           <dd>
             <JobStatusBadge status={job.status} />
           </dd>
         </div>
-        <Metadata label="현재 단계" value={job.stage ?? '-'} />
-        <Metadata label="진행률" value={`${job.progress}%`} />
-        <Metadata label="생성 시각" value={formatDate(job.createdAt)} />
         <Metadata
-          label="완료 시각"
+          label={L('testbed:jobDetail.overview.text.currentStage')}
+          value={job.stage ?? '-'}
+        />
+        <Metadata
+          label={L('testbed:jobDetail.overview.text.progress')}
+          value={`${job.progress}%`}
+        />
+        <Metadata
+          label={L('testbed:jobDetail.overview.text.creationTime')}
+          value={formatDate(job.createdAt)}
+        />
+        <Metadata
+          label={L('testbed:jobDetail.overview.text.completionTime')}
           value={job.completedAt ? formatDate(job.completedAt) : '-'}
         />
-        <Metadata label="통신 방식" value="HTTP + SSE" />
-        <Metadata label="Cache" value={formatCache(job.cacheStatus)} />
         <Metadata
-          label="Provider"
+          label={L('testbed:jobDetail.overview.text.communicationMethod')}
+          value={NL('HTTP + SSE')}
+        />
+        <Metadata
+          label={L('testbed:jobDetail.overview.label.cache')}
+          value={formatCache(job.cacheStatus)}
+        />
+        <Metadata
+          label={L('testbed:jobDetail.overview.label.provider')}
           value={job.provider ?? job.result?.provider ?? '-'}
         />
       </dl>
@@ -123,24 +159,31 @@ function Overview({ job }: { job: TcacheRouteJob }) {
 }
 
 function RequestSection({ job }: { job: TcacheRouteJob }) {
+  const L = useL();
   return (
     <section aria-labelledby="tcache-request-title">
       <div className="tcache-section-heading">
-        <h2 id="tcache-request-title">요청</h2>
+        <h2 id="tcache-request-title">
+          {L('testbed:jobDetail.requestSection.title.request')}
+        </h2>
         <Tag minimal>{job.request.mode}</Tag>
       </div>
       <p className={Classes.TEXT_MUTED}>
-        출발 시각: {job.request.departureTime ?? '지정 안 함'}
+        {L('testbed:jobDetail.requestSection.description.departureTime')}
+        {job.request.departureTime ??
+          L('testbed:jobDetail.requestSection.description.notSpecified')}
       </p>
       <div className="tcache-table-scroll">
         <HTMLTable compact striped>
           <thead>
             <tr>
-              <th>순서</th>
-              <th>역할</th>
-              <th>위치</th>
-              <th>Place ID</th>
-              <th>좌표/주소</th>
+              <th>{L('testbed:jobDetail.requestSection.text.order')}</th>
+              <th>{L('testbed:jobDetail.requestSection.text.role')}</th>
+              <th>{L('testbed:jobDetail.requestSection.text.location')}</th>
+              <th>{L('testbed:jobDetail.requestSection.text.placeId')}</th>
+              <th>
+                {L('testbed:jobDetail.requestSection.text.coordinatesAddress')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -174,11 +217,14 @@ function ProgressSection({
   job: TcacheRouteJob;
   streamState: TcacheStreamState;
 }) {
+  const L = useL();
   const event = job.progressEvent;
   return (
     <section aria-labelledby="tcache-progress-title">
       <div className="tcache-section-heading">
-        <h2 id="tcache-progress-title">진행</h2>
+        <h2 id="tcache-progress-title">
+          {L('testbed:jobDetail.progressSection.title.progress')}
+        </h2>
         <Tag
           minimal
           intent={
@@ -189,7 +235,9 @@ function ProgressSection({
                 : 'none'
           }
         >
-          SSE {formatStreamState(streamState)}
+          {L('testbed:jobDetail.text.sse', {
+            formatStreamState: formatStreamState(streamState),
+          })}
         </Tag>
       </div>
       <ProgressBar
@@ -199,10 +247,16 @@ function ProgressSection({
         intent={job.status === 'failed' ? 'danger' : 'primary'}
       />
       <dl className="tcache-metadata-grid tcache-progress-metadata">
-        <Metadata label="Stage" value={event?.stage ?? job.stage ?? '-'} />
-        <Metadata label="Message" value={event?.message ?? '-'} />
         <Metadata
-          label="최근 이벤트"
+          label={L('testbed:jobDetail.progress.label.stage')}
+          value={event?.stage ?? job.stage ?? '-'}
+        />
+        <Metadata
+          label={L('testbed:jobSummary.label.message')}
+          value={event?.message ?? '-'}
+        />
+        <Metadata
+          label={L('testbed:jobDetail.progressSection.text.recentEvents')}
           value={event ? formatDate(event.timestamp) : '-'}
         />
       </dl>
@@ -211,13 +265,20 @@ function ProgressSection({
 }
 
 function ResultSection({ job }: { job: TcacheRouteJob }) {
+  const L = useL();
   const result = job.result;
   const [selection, setSelection] = useState({ jobId: job.id, index: 0 });
   if (!result) {
     return (
       <section aria-labelledby="tcache-result-title">
-        <h2 id="tcache-result-title">결과</h2>
-        <p className={Classes.TEXT_MUTED}>아직 수신된 경로 결과가 없습니다.</p>
+        <h2 id="tcache-result-title">
+          {L('testbed:jobDetail.resultSection.title.result')}
+        </h2>
+        <p className={Classes.TEXT_MUTED}>
+          {L(
+            'testbed:jobDetail.resultSection.description.noRouteResultsHaveBeenReceived',
+          )}
+        </p>
       </section>
     );
   }
@@ -226,7 +287,9 @@ function ResultSection({ job }: { job: TcacheRouteJob }) {
   const legs = selectedRoute?.legs ?? result.legs;
   return (
     <section aria-labelledby="tcache-result-title">
-      <h2 id="tcache-result-title">결과</h2>
+      <h2 id="tcache-result-title">
+        {L('testbed:jobDetail.resultSection.title.result')}
+      </h2>
       <TcacheResultMap
         routes={result.routes}
         locations={job.request.locations}
@@ -234,27 +297,37 @@ function ResultSection({ job }: { job: TcacheRouteJob }) {
         onSelect={(index) => setSelection({ jobId: job.id, index })}
       />
       <dl className="tcache-metadata-grid">
-        <Metadata label="Route count" value={String(result.routeCount)} />
         <Metadata
-          label="Distance"
+          label={L('testbed:jobDetail.resultSection.text.routeCount')}
+          value={String(result.routeCount)}
+        />
+        <Metadata
+          label={L('testbed:jobDetail.result.label.distance')}
           value={formatDistance(
             selectedRoute?.distanceMeters ?? result.distanceMeters,
           )}
         />
         <Metadata
-          label="Duration"
+          label={L('testbed:jobDetail.result.label.duration')}
           value={formatDuration(
             selectedRoute?.durationSeconds ?? result.durationSeconds,
           )}
         />
         <Metadata
-          label="Provider"
+          label={L('testbed:jobDetail.overview.label.provider')}
           value={selectedRoute?.provider ?? result.provider ?? '-'}
         />
-        <Metadata label="Cache" value={formatCache(result.cacheStatus)} />
         <Metadata
-          label="Latency"
-          value={result.latencyMs === undefined ? '-' : `${result.latencyMs}ms`}
+          label={L('testbed:jobDetail.overview.label.cache')}
+          value={formatCache(result.cacheStatus)}
+        />
+        <Metadata
+          label={L('testbed:jobDetail.result.label.latency')}
+          value={
+            result.latencyMs === undefined
+              ? '-'
+              : `${result.latencyMs}${NL('ms')}`
+          }
         />
       </dl>
       {legs.length ? (
@@ -273,7 +346,7 @@ function ResultSection({ job }: { job: TcacheRouteJob }) {
         </ol>
       ) : null}
       <details>
-        <summary>Raw Result</summary>
+        <summary>{L('testbed:jobDetail.resultSection.text.rawResult')}</summary>
         <pre className="tcache-raw-json">{formatJson(result.raw)}</pre>
       </details>
     </section>
@@ -281,11 +354,18 @@ function ResultSection({ job }: { job: TcacheRouteJob }) {
 }
 
 function TimelineSection({ job }: { job: TcacheRouteJob }) {
+  const L = useL();
   return (
     <section aria-labelledby="tcache-timeline-title">
-      <h2 id="tcache-timeline-title">타임라인</h2>
+      <h2 id="tcache-timeline-title">
+        {L('testbed:jobDetail.timelineSection.title.timeline')}
+      </h2>
       {job.timeline.length === 0 ? (
-        <p className={Classes.TEXT_MUTED}>관찰된 통신 이벤트가 없습니다.</p>
+        <p className={Classes.TEXT_MUTED}>
+          {L(
+            'testbed:jobDetail.timelineSection.description.noCommunicationEventsObserved',
+          )}
+        </p>
       ) : (
         <ol className="tcache-timeline">
           {job.timeline.map((entry) => (
@@ -315,9 +395,10 @@ function TimelineSection({ job }: { job: TcacheRouteJob }) {
 }
 
 function RawSection({ job }: { job: TcacheRouteJob }) {
+  const L = useL();
   return (
     <details>
-      <summary>원본 JSON</summary>
+      <summary>{L('testbed:jobDetail.rawSection.text.originalJson')}</summary>
       <pre className="tcache-raw-json">{formatJson(job)}</pre>
     </details>
   );
@@ -342,18 +423,18 @@ function Metadata({
 
 function formatStreamState(state: TcacheStreamState): string {
   if (state === 'connected') {
-    return '연결됨';
+    return L('testbed:jobDetail.formatStreamState.text.connected');
   }
   if (state === 'connecting') {
-    return '연결 중';
+    return L('testbed:jobDetail.formatStreamState.text.connecting');
   }
   if (state === 'retrying') {
-    return '재연결 중';
+    return L('testbed:jobDetail.formatStreamState.text.reconnecting');
   }
   if (state === 'disconnected') {
-    return '연결 끊김';
+    return L('testbed:jobDetail.formatStreamState.text.connectionLost');
   }
-  return '대기';
+  return L('testbed:jobDetail.formatStreamState.text.waiting');
 }
 
 function formatCache(value: TcacheRouteJob['cacheStatus']): string {
@@ -361,14 +442,16 @@ function formatCache(value: TcacheRouteJob['cacheStatus']): string {
 }
 
 function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleString('ko-KR');
+  return new Date(timestamp).toLocaleString(getLanguage());
 }
 
 function formatDistance(value?: number): string {
   if (value === undefined) {
     return '-';
   }
-  return value >= 1_000 ? `${(value / 1_000).toFixed(1)}km` : `${value}m`;
+  return value >= 1_000
+    ? `${(value / 1_000).toFixed(1)}${NL('km')}`
+    : `${value}${NL('m')}`;
 }
 
 function formatDuration(value?: number): string {
@@ -376,8 +459,13 @@ function formatDuration(value?: number): string {
     return '-';
   }
   return value >= 3_600
-    ? `${Math.floor(value / 3_600)}시간 ${Math.round((value % 3_600) / 60)}분`
-    : `${Math.round(value / 60)}분`;
+    ? L('testbed:jobDetail.formatDuration.text.hoursMinutes', {
+        floor: Math.floor(value / 3_600),
+        round: Math.round((value % 3_600) / 60),
+      })
+    : L('testbed:jobDetail.formatDuration.text.minutes', {
+        round: Math.round(value / 60),
+      });
 }
 
 function formatLocation(

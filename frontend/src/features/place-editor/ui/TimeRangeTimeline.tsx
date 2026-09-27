@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { formatClockTime } from '@/entities/place';
 import '@/features/place-editor/ui/time-range-timeline.css';
+import { useL } from '@/shared/i18n';
 
 export type TimeRangeTimelineRange = {
   start: number;
@@ -358,6 +359,7 @@ export function TimeRangeTimeline({
   onRangeChangeEnd,
   onCreateRange,
 }: Props) {
+  const L = useL();
   const axisRef = useRef<HTMLSpanElement>(null);
   const pointerEditRef = useRef<PointerRangeEdit | null>(null);
   const keyboardEditRef = useRef<RangeEdit | null>(null);
@@ -610,7 +612,11 @@ export function TimeRangeTimeline({
         aria-hidden={interactive ? undefined : true}
         role={rangeCreatable ? 'slider' : undefined}
         tabIndex={rangeCreatable && !disabled ? 0 : undefined}
-        aria-label={rangeCreatable ? '방문 시작시간 선택' : undefined}
+        aria-label={
+          rangeCreatable
+            ? L('place:timeRangeTimeline.ariaLabel.selectVisitStartTime')
+            : undefined
+        }
         aria-valuemin={rangeCreatable ? 0 : undefined}
         aria-valuemax={rangeCreatable ? MINUTES_PER_DAY : undefined}
         aria-valuenow={rangeCreatable ? creationMinute : undefined}
@@ -622,7 +628,9 @@ export function TimeRangeTimeline({
         aria-disabled={rangeCreatable ? disabled : undefined}
         title={
           rangeCreatable
-            ? '클릭하거나 방향키와 Enter로 방문 시작시간 선택'
+            ? L(
+                'place:timeRangeTimeline.tooltip.selectVisitStartTimeByClicking',
+              )
             : undefined
         }
         onClick={createRangeFromClick}
@@ -743,8 +751,12 @@ export function TimeRangeTimeline({
                 className={`time-range-timeline-handle${activeEdge === event.edge ? ' is-dragging' : ''}`}
                 aria-label={
                   event.edge === 'start'
-                    ? '방문 시작시간 조정'
-                    : '체류 종료시간 조정'
+                    ? L(
+                        'place:timeRangeTimeline.ariaLabel.adjustVisitStartTime',
+                      )
+                    : L(
+                        'place:timeRangeTimeline.ariaLabel.adjustmentStayEndTime',
+                      )
                 }
                 aria-orientation="horizontal"
                 aria-valuemin={
@@ -763,7 +775,9 @@ export function TimeRangeTimeline({
                     : editableRange.end
                 }
                 aria-valuetext={event.text}
-                title="드래그하거나 좌우 방향키로 조정"
+                title={L(
+                  'place:timeRangeTimeline.tooltip.adjustByDraggingUsingLeftRight',
+                )}
                 disabled={disabled}
                 onPointerDown={(pointerEvent) =>
                   startPointerEdit(pointerEvent, event.edge)

@@ -13,6 +13,7 @@ import {
   MIN_VISIT_DURATION_MINUTES,
   VISIT_TIME_GRANULARITY_MINUTES,
 } from '@/entities/place';
+import { useL, L } from '@/shared/i18n';
 
 const PLACE_DURATION_OPTIONS = [30, 60, 90, 120, 180] as const;
 const POPUP_GAP = 10;
@@ -28,7 +29,9 @@ type Props = {
 };
 
 function formatDurationOption(durationMinutes: number): string {
-  return `${durationMinutes}분`;
+  return L('place:placeDurationControl.formatDurationOption.text.minutes', {
+    durationMinutes: durationMinutes,
+  });
 }
 
 function normalizeDuration(durationMinutes: number): number {
@@ -52,6 +55,7 @@ export function PlaceDurationControl({
   disabled,
   onChange,
 }: Props) {
+  const L = useL();
   const popupId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
@@ -245,7 +249,7 @@ export function PlaceDurationControl({
       <span className="trip-place-duration-value">
         {hasDuration
           ? formatDurationOption(preferredDurationMinutes)
-          : '시간을 선택해 주세요'}
+          : L('place:placeDurationControl.text.selectTime')}
         {interactive && (
           <svg
             className={popupOpen ? 'is-open' : undefined}
@@ -259,7 +263,9 @@ export function PlaceDurationControl({
       <span
         className={`trip-place-duration-badge${hasDuration ? ' is-set' : ''}`}
       >
-        {hasDuration ? '설정됨' : '설정 안 됨'}
+        {hasDuration
+          ? L('place:placeDurationControl.text.set2')
+          : L('place:placeDurationControl.text.notSet')}
       </span>
     </>
   );
@@ -272,7 +278,9 @@ export function PlaceDurationControl({
       data-layer-interactive-popover=""
       data-placement={popupPlacement}
       role="dialog"
-      aria-label="희망 체류 시간 선택"
+      aria-label={L(
+        'place:placeDurationControl.ariaLabel.selectDesiredStayTime',
+      )}
       style={popupStyle}
     >
       <div className="trip-place-duration-options">
@@ -297,7 +305,9 @@ export function PlaceDurationControl({
           }}
         >
           <label>
-            <span className="sr-only">직접 입력할 체류 시간</span>
+            <span className="sr-only">
+              {L('place:placeDurationControl.text.dwellTimeEnterManually')}
+            </span>
             <input
               ref={customInputRef}
               type="number"
@@ -308,10 +318,10 @@ export function PlaceDurationControl({
               disabled={controlDisabled}
               onChange={(event) => setCustomDraft(event.target.value)}
             />
-            <span>분</span>
+            <span>{L('place:placeDurationControl.text.minutes')}</span>
           </label>
           <button type="submit" disabled={controlDisabled}>
-            적용
+            {L('common:action.apply')}
           </button>
         </form>
       ) : (
@@ -321,7 +331,9 @@ export function PlaceDurationControl({
           disabled={controlDisabled}
           onClick={openCustomInput}
         >
-          직접 입력 ({VISIT_TIME_GRANULARITY_MINUTES}분 단위)
+          {L('place:placeDurationControl.text.enterDirectlyMinutes', {
+            stepMinutes: VISIT_TIME_GRANULARITY_MINUTES,
+          })}
         </button>
       )}
     </div>
@@ -334,7 +346,14 @@ export function PlaceDurationControl({
           ref={triggerRef}
           type="button"
           className="trip-place-duration-trigger"
-          aria-label={`희망 체류 시간: ${hasDuration ? formatDurationOption(preferredDurationMinutes) : '설정 안 됨'}`}
+          aria-label={L(
+            'place:placeDurationControl.ariaLabel.desiredLengthStay',
+            {
+              value: hasDuration
+                ? formatDurationOption(preferredDurationMinutes)
+                : L('place:placeDurationControl.text.notSet'),
+            },
+          )}
           aria-haspopup="dialog"
           aria-expanded={popupOpen}
           aria-controls={popupOpen ? popupId : undefined}

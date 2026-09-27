@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useL } from '@/shared/i18n';
 
 type Props = {
   placeName: string;
@@ -23,6 +24,7 @@ export function RouteEndpointContextMenu({
   onSetEnd,
   onClose,
 }: Props) {
+  const L = useL();
   const menuRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({
     left: anchor.x + ANCHOR_OFFSET,
@@ -85,7 +87,10 @@ export function RouteEndpointContextMenu({
       ref={menuRef}
       className="route-endpoint-context-menu"
       role="menu"
-      aria-label={`${placeName} 시작점 및 도착점 설정`}
+      aria-label={L(
+        'routeOptimization:routeEndpointContextMenu.ariaLabel.setStartingEndingPoints',
+        { placeName: placeName },
+      )}
       style={{
         left: position.left,
         top: position.top,
@@ -104,7 +109,13 @@ export function RouteEndpointContextMenu({
             onClose();
           }}
         >
-          {isStart ? '✓ 시작점' : '시작점으로 설정'}
+          {isStart
+            ? L(
+                'routeOptimization:routeEndpointContextMenu.action.startingPoint',
+              )
+            : L(
+                'routeOptimization:routeEndpointContextMenu.action.setAsStartingPoint',
+              )}
         </button>
         <button
           type="button"
@@ -116,7 +127,13 @@ export function RouteEndpointContextMenu({
             onClose();
           }}
         >
-          {isEnd ? '✓ 도착점' : '도착점으로 설정'}
+          {isEnd
+            ? L(
+                'routeOptimization:routeEndpointContextMenu.action.destinationPoint',
+              )
+            : L(
+                'routeOptimization:routeEndpointContextMenu.action.setAsDestination',
+              )}
         </button>
       </div>
     </div>,

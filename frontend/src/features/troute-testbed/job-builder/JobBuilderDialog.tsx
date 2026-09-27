@@ -45,6 +45,7 @@ import {
 } from '@/features/troute-testbed/job-builder/presets';
 import { useJobBuilderValidation } from '@/features/troute-testbed/job-builder/useJobBuilderValidation';
 import '@/features/troute-testbed/job-builder/job-builder.css';
+import { useL } from '@/shared/i18n';
 
 interface JobBuilderDialogProps {
   isOpen: boolean;
@@ -66,6 +67,7 @@ export function JobBuilderDialog({
   onClose,
   onCreate,
 }: JobBuilderDialogProps) {
+  const L = useL();
   const [jobId, setJobId] = useState(createVisualJobId);
   const [builder, setBuilder] = useState(createDefaultJobBuilderDraft);
   const [presetId, setPresetId] = useState(DEFAULT_JOB_BUILDER_PRESET_ID);
@@ -96,7 +98,9 @@ export function JobBuilderDialog({
     if (existing) {
       setFeedback({
         intent: Intent.PRIMARY,
-        message: '이미 위치 목록에 있는 장소를 선택했습니다.',
+        message: L(
+          'testbed:jobBuilderDialog.addPlace.message.youHaveSelectedPlaceThatAlready',
+        ),
       });
       return existing.id;
     }
@@ -218,18 +222,29 @@ export function JobBuilderDialog({
     if (!parsed.success) {
       setFeedback({
         intent: Intent.DANGER,
-        message: `요청 검증 실패: ${formatSchemaIssues(parsed.error.issues)}`,
+        message: L(
+          'testbed:jobBuilderDialog.validateVisual.message.requestValidationFailed',
+          { formatSchemaIssues: formatSchemaIssues(parsed.error.issues) },
+        ),
       });
       return null;
     }
     if (existingJobIds.has(parsed.data.job_id)) {
       setFeedback({
         intent: Intent.DANGER,
-        message: `현재 세션에 "${parsed.data.job_id}" Job이 이미 있습니다.`,
+        message: L(
+          'testbed:jobBuilderDialog.validateVisual.message.jobAlreadyExistsCurrentSession',
+          { job_id: parsed.data.job_id },
+        ),
       });
       return null;
     }
-    setFeedback({ intent: Intent.SUCCESS, message: '요청이 유효합니다.' });
+    setFeedback({
+      intent: Intent.SUCCESS,
+      message: L(
+        'testbed:jobBuilderDialog.validateVisual.message.requestValid',
+      ),
+    });
     return parsed.data;
   }
 
@@ -240,7 +255,17 @@ export function JobBuilderDialog({
     } catch (cause) {
       setFeedback({
         intent: Intent.DANGER,
-        message: `JSON 파싱 실패: ${cause instanceof Error ? cause.message : '올바른 JSON인지 확인하세요.'}`,
+        message: L(
+          'testbed:jobBuilderDialog.parseRaw.message.jsonParsingFailed',
+          {
+            value:
+              cause instanceof Error
+                ? cause.message
+                : L(
+                    'testbed:jobBuilderDialog.parseRaw.message.makeSureItSValidJson',
+                  ),
+          },
+        ),
       });
       return null;
     }
@@ -248,18 +273,29 @@ export function JobBuilderDialog({
     if (!parsed.success) {
       setFeedback({
         intent: Intent.DANGER,
-        message: `요청 검증 실패: ${formatSchemaIssues(parsed.error.issues)}`,
+        message: L(
+          'testbed:jobBuilderDialog.validateVisual.message.requestValidationFailed',
+          { formatSchemaIssues: formatSchemaIssues(parsed.error.issues) },
+        ),
       });
       return null;
     }
     if (existingJobIds.has(parsed.data.job_id)) {
       setFeedback({
         intent: Intent.DANGER,
-        message: `현재 세션에 "${parsed.data.job_id}" Job이 이미 있습니다.`,
+        message: L(
+          'testbed:jobBuilderDialog.validateVisual.message.jobAlreadyExistsCurrentSession',
+          { job_id: parsed.data.job_id },
+        ),
       });
       return null;
     }
-    setFeedback({ intent: Intent.SUCCESS, message: '요청이 유효합니다.' });
+    setFeedback({
+      intent: Intent.SUCCESS,
+      message: L(
+        'testbed:jobBuilderDialog.validateVisual.message.requestValid',
+      ),
+    });
     return parsed.data;
   }
 
@@ -272,8 +308,9 @@ export function JobBuilderDialog({
     if (!nextBuilder) {
       setFeedback({
         intent: Intent.WARNING,
-        message:
-          'Raw JSON에 지도에서 선택하지 않은 위치가 있어 visual mode로 변환할 수 없습니다. Raw JSON mode에서 Job을 생성하거나 visual builder를 새로 시작하세요.',
+        message: L(
+          'testbed:jobBuilderDialog.applyRawToForm.message.rawJsonHasLocationsNotSelected',
+        ),
       });
       return;
     }
@@ -283,7 +320,9 @@ export function JobBuilderDialog({
     setRawDraft(null);
     setFeedback({
       intent: Intent.SUCCESS,
-      message: 'Raw JSON을 Form에 적용했습니다.',
+      message: L(
+        'testbed:jobBuilderDialog.applyRawToForm.message.rawJsonWasAppliedForm',
+      ),
     });
   }
 
@@ -300,7 +339,7 @@ export function JobBuilderDialog({
       isOpen={isOpen}
       onClose={onClose}
       portalClassName={dark ? Classes.DARK : undefined}
-      title="새 Job"
+      title={L('testbed:jobSidebar.text.newJob')}
       icon="new-object"
       canEscapeKeyClose
       canOutsideClickClose={false}
@@ -385,12 +424,14 @@ export function JobBuilderDialog({
       <DialogFooter
         actions={
           <>
-            <Button onClick={onClose}>취소</Button>
+            <Button onClick={onClose}>{L('common:action.cancel')}</Button>
             <Button
               icon="tick"
               onClick={rawDirty ? applyRawToForm : validateVisual}
             >
-              검증
+              {L(
+                'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.label.inputValidation',
+              )}
             </Button>
             <Button
               icon="play"
@@ -398,12 +439,14 @@ export function JobBuilderDialog({
               disabled={!validation.isValid || rawDirty}
               title={
                 rawDirty
-                  ? 'Raw JSON 변경사항을 먼저 Form에 적용하세요.'
+                  ? L(
+                      'testbed:jobBuilderDialog.tooltip.applyRawJsonChangesFormFirst',
+                    )
                   : undefined
               }
               onClick={createJob}
             >
-              Job 생성
+              {L('testbed:jobSidebar.text.newJob')}
             </Button>
           </>
         }
@@ -427,22 +470,26 @@ function RawJsonEditor({
   onFormat: () => void;
   onReset: () => void;
 }) {
+  const L = useL();
   return (
     <section className="job-builder-raw-editor">
       <header>
         <div>
-          <h2 className={Classes.HEADING}>Raw JSON</h2>
+          <h2 className={Classes.HEADING}>
+            {L('testbed:jobBuilderDialog.rawJsonEditor.title.rawJson')}
+          </h2>
           <p>
-            Form과 같은 요청을 표시합니다. JSON을 수정한 뒤 Form에 적용하면
-            양방향 변환됩니다.
+            {L(
+              'testbed:jobBuilderDialog.rawJsonEditor.description.displaysRequestLikeFormIfYou',
+            )}
           </p>
         </div>
         <ButtonGroup size="small" variant="minimal">
           <Button icon="code" onClick={onFormat}>
-            포맷
+            {L('testbed:jobBuilderDialog.rawJsonEditor.action.format')}
           </Button>
           <Button icon="reset" onClick={onReset}>
-            Form에서 복원
+            {L('testbed:jobBuilderDialog.rawJsonEditor.action.restoreFromForm')}
           </Button>
           <Button
             icon="import"
@@ -450,12 +497,14 @@ function RawJsonEditor({
             disabled={!dirty}
             onClick={onApply}
           >
-            Form에 적용
+            {L('testbed:jobBuilderDialog.rawJsonEditor.action.applyForm')}
           </Button>
         </ButtonGroup>
       </header>
       <TextArea
-        aria-label="요청 JSON"
+        aria-label={L(
+          'testbed:jobBuilderDialog.rawJsonEditor.ariaLabel.requestJson',
+        )}
         className="job-builder-raw-textarea"
         fill
         spellCheck={false}

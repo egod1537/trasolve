@@ -1,5 +1,8 @@
 export { HttpTripRepository } from './api/HttpTripRepository';
-export type { TripRepository } from './api/TripRepository';
+export {
+  TripRevisionConflictError,
+  type TripRepository,
+} from './api/TripRepository';
 export {
   selectTripPlace,
   selectTripPolyline,

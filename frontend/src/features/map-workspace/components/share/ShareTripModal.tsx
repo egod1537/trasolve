@@ -4,6 +4,7 @@ import { Dialog } from '@/shared/ui/Dialog';
 import { IconButton } from '@/shared/ui/IconButton';
 import { CloseIcon } from '@/shared/ui/icons';
 import '@/features/map-workspace/components/share/share-trip-modal.css';
+import { useL } from '@/shared/i18n';
 
 type Props = {
   onClose: () => void;
@@ -17,6 +18,7 @@ const SHARE_PROFILE = {
 } as const;
 
 export function ShareTripModal({ onClose }: Props) {
+  const L = useL();
   const [anyoneWithLink, setAnyoneWithLink] = useState(false);
   const [searchable, setSearchable] = useState(false);
   const [copyStatus, setCopyStatus] = useState<CopyStatus>('idle');
@@ -59,11 +61,11 @@ export function ShareTripModal({ onClose }: Props) {
       onClose={onClose}
     >
       <header className="share-trip-modal-header">
-        <h2 id={titleId}>지도 공유</h2>
+        <h2 id={titleId}>{L('trip:shareTripModal.title.shareMap')}</h2>
         <IconButton
           ref={closeButtonRef}
           className="share-trip-modal-close"
-          aria-label="지도 공유 닫기"
+          aria-label={L('trip:shareTripModal.ariaLabel.shareMapClose')}
           icon={<CloseIcon />}
           variant="ghost"
           size="sm"
@@ -82,7 +84,7 @@ export function ShareTripModal({ onClose }: Props) {
               }
             />
             <span className="share-trip-switch" aria-hidden="true" />
-            <span>링크가 있는 사용자는 누구나 볼 수 있음</span>
+            <span>{L('trip:shareTripModal.text.anyoneLinkCanViewIt')}</span>
           </label>
           <label
             className={`share-trip-option${anyoneWithLink ? '' : ' is-disabled'}`}
@@ -94,13 +96,14 @@ export function ShareTripModal({ onClose }: Props) {
               onChange={(event) => setSearchable(event.currentTarget.checked)}
             />
             <span className="share-trip-switch" aria-hidden="true" />
-            <span>다른 사람이 인터넷에서 이 지도를 검색하고 찾도록 허용</span>
+            <span>
+              {L('trip:shareTripModal.text.allowOthersSearchFindThisMap')}
+            </span>
           </label>
         </div>
 
         <p id={descriptionId} className="share-trip-description">
-          액세스 권한이 있는 모든 사용자는 내 지도 및 Drive에서 내 이름과 프로필
-          사진을 볼 수 있습니다.
+          {L('trip:shareTripModal.description.anyoneAccessCanSeeNameProfile')}
         </p>
 
         <div className="share-trip-profile">
@@ -111,7 +114,9 @@ export function ShareTripModal({ onClose }: Props) {
         </div>
 
         <div className="share-trip-link-group">
-          <label htmlFor={`${titleId}-url`}>공유 링크</label>
+          <label htmlFor={`${titleId}-url`}>
+            {L('trip:shareTripModal.label.shareLink')}
+          </label>
           <div className="share-trip-link-row">
             <input
               id={`${titleId}-url`}
@@ -122,7 +127,7 @@ export function ShareTripModal({ onClose }: Props) {
             />
             <Button
               className="share-trip-copy-button"
-              aria-label="공유 링크 복사"
+              aria-label={L('trip:shareTripModal.ariaLabel.copyShareLink')}
               onClick={() => void copyShareUrl()}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -131,10 +136,10 @@ export function ShareTripModal({ onClose }: Props) {
               </svg>
               <span aria-live="polite">
                 {copyStatus === 'copied'
-                  ? '복사됨'
+                  ? L('trip:shareTripModal.text.copied')
                   : copyStatus === 'failed'
-                    ? '복사 실패'
-                    : '복사'}
+                    ? L('trip:shareTripModal.text.copyFailed')
+                    : L('common:action.copy')}
               </span>
             </Button>
           </div>
@@ -144,13 +149,17 @@ export function ShareTripModal({ onClose }: Props) {
       <footer className="share-trip-modal-actions">
         <Button
           disabled
-          title="Drive 공유 기능 준비 중"
-          aria-label="Drive에서 공유, 기능 준비 중"
+          title={L(
+            'trip:shareTripModal.tooltip.driveSharingFeaturePreparation',
+          )}
+          aria-label={L(
+            'trip:shareTripModal.ariaLabel.shareDriveFeaturePreparation',
+          )}
         >
-          Drive에서 공유
+          {L('trip:shareTripModal.action.shareDrive')}
         </Button>
         <Button variant="primary" onClick={onClose}>
-          닫기
+          {L('common:action.close')}
         </Button>
       </footer>
     </Dialog>

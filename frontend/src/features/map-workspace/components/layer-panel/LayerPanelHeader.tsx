@@ -10,6 +10,7 @@ import {
 import { LoadingSpinner } from '@/shared/ui/LoadingSpinner';
 import type { Trip } from '@/entities/trip';
 import { InlineRename } from '@/shared/ui/InlineRename';
+import { getLanguage, useL, L } from '@/shared/i18n';
 
 type SaveStatus = 'ready' | 'dirty' | 'saving' | 'error';
 
@@ -26,7 +27,10 @@ type Props = {
 function formatSavedAt(value: string): { label: string; title: string } {
   const savedAt = new Date(value);
   if (Number.isNaN(savedAt.getTime())) {
-    return { label: '저장됨', title: value };
+    return {
+      label: L('map:layerPanelHeader.formatSavedAt.label.saved'),
+      title: value,
+    };
   }
 
   const now = new Date();
@@ -40,8 +44,15 @@ function formatSavedAt(value: string): { label: string; title: string } {
   const date = `${savedAt.getMonth() + 1}/${savedAt.getDate()}`;
 
   return {
-    label: `마지막 저장 ${sameDay ? time : `${date} ${time}`}`,
-    title: new Intl.DateTimeFormat('ko-KR', {
+    label: L('map:layerPanelHeader.formatSavedAt.label.lastSaved', {
+      value: sameDay
+        ? time
+        : L('map:layerPanelHeader.formatSavedAt.label.message', {
+            date: date,
+            time: time,
+          }),
+    }),
+    title: new Intl.DateTimeFormat(getLanguage(), {
       dateStyle: 'medium',
       timeStyle: 'medium',
     }).format(savedAt),
@@ -65,6 +76,7 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
   shareButtonRef,
   onRenameTrip,
 }: Props) {
+  const L = useL();
   const [titleEditing, setTitleEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const rootRef = useRef<HTMLElement>(null);
@@ -76,11 +88,11 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
   );
   const saveLabel =
     saveStatus === 'saving'
-      ? '저장 중…'
+      ? L('map:layerPanelHeader.saveLabel.text.saving')
       : saveStatus === 'error'
-        ? '저장 실패'
+        ? L('map:layerPanelHeader.saveLabel.text.saveFailed')
         : saveStatus === 'dirty'
-          ? '저장 대기 중'
+          ? L('map:layerPanelHeader.saveLabel.text.waitingSave')
           : saved.label;
 
   useEffect(() => {
@@ -130,7 +142,9 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
             {titleEditing ? (
               <InlineRename
                 value={trip.title}
-                ariaLabel="여행 플랜 이름 수정"
+                ariaLabel={L(
+                  'map:layerPanelHeader.ariaLabel.editTravelPlanName',
+                )}
                 className="trip-plan-title-input"
                 onCommit={commitTitle}
                 onCancel={() => setTitleEditing(false)}
@@ -138,7 +152,9 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
             ) : (
               <span
                 className="trip-plan-title-text"
-                title="더블클릭하여 여행 이름 수정"
+                title={L(
+                  'map:layerPanelHeader.tooltip.doubleClickEditTripName',
+                )}
                 onDoubleClick={startTitleEditing}
               >
                 {trip.title}
@@ -146,7 +162,10 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
             )}
           </h1>
           <p className="trip-panel-header-meta">
-            Day {trip.days.length}개 · 장소 {placeCount}개
+            {L('map:layerPanelHeader.text.dayPcsPlacePcs', {
+              length: trip.days.length,
+              placeCount: placeCount,
+            })}
           </p>
           <p
             className={`trip-last-saved is-${saveStatus}`}
@@ -177,8 +196,8 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
           <button
             type="button"
             className="trip-panel-header-menu-trigger"
-            aria-label="여행 옵션"
-            title="여행 옵션"
+            aria-label={L('map:layerPanelHeader.ariaLabel.travelOptions')}
+            title={L('map:layerPanelHeader.ariaLabel.travelOptions')}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             aria-controls={menuOpen ? menuId : undefined}
@@ -193,7 +212,7 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
           {menuOpen && (
             <div id={menuId} className="trip-panel-header-menu" role="menu">
               <button type="button" role="menuitem" onClick={startTitleEditing}>
-                여행 이름 변경
+                {L('map:layerPanelHeader.action.changeTourName')}
               </button>
             </div>
           )}
@@ -204,20 +223,20 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
         <button
           type="button"
           className="trip-panel-header-action"
-          aria-label="레이어 추가"
+          aria-label={L('map:layer.add')}
           onClick={onAddLayer}
         >
           <ActionIcon>
             <path d="M12 5v14M5 12h14" />
           </ActionIcon>
-          <span>레이어 추가</span>
+          <span>{L('map:layer.add')}</span>
         </button>
         <button
           ref={shareButtonRef}
           type="button"
           className="trip-panel-header-action"
-          aria-label="여행 공유"
-          title="여행 공유"
+          aria-label={L('map:layerPanelHeader.ariaLabel.shareTrip')}
+          title={L('map:layerPanelHeader.ariaLabel.shareTrip')}
           onClick={onShareTrip}
         >
           <ActionIcon>
@@ -226,7 +245,7 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
             <circle cx="18" cy="19" r="2.5" />
             <path d="m8.2 10.8 7.6-4.5m-7.6 6.9 7.6 4.5" />
           </ActionIcon>
-          <span>공유</span>
+          <span>{L('map:layerPanelHeader.text.share')}</span>
         </button>
       </div>
     </header>

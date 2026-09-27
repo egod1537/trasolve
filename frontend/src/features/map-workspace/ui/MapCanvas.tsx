@@ -14,6 +14,7 @@ import {
 } from '@/features/map-workspace/domain/cameraPolicy';
 import type { MapFocusTarget } from '@/features/map-workspace/domain/mapUiTypes';
 import { TripLayer } from '@/features/map-workspace/ui/TripLayer';
+import { useL, L } from '@/shared/i18n';
 
 type TripObjectsProps = {
   trip: Trip;
@@ -119,19 +120,23 @@ function renderMapStatus(status: Exclude<GoogleMapStatus, 'ready'>) {
     >
       <h2>
         {status === 'loading'
-          ? '지도를 불러오고 있습니다'
-          : '지도를 불러올 수 없습니다'}
+          ? L('map:mapCanvas.renderMapStatus.title.mapLoading')
+          : L('map:mapCanvas.renderMapStatus.title.canTLoadMap')}
       </h2>
       <p>
         {status === 'missing-key'
-          ? '지도 연결을 설정하면 일정의 장소와 경로가 표시됩니다. 왼쪽에서 예시 일정을 둘러볼 수 있습니다.'
+          ? L(
+              'map:mapCanvas.renderMapStatus.description.onceYouVeEstablishedMapConnection',
+            )
           : status === 'error'
-            ? '지도 연결을 확인한 뒤 다시 시도해 주세요. 일정 목록은 계속 확인할 수 있습니다.'
-            : '잠시만 기다려 주세요.'}
+            ? L(
+                'map:mapCanvas.renderMapStatus.description.checkMapConnectionTryAgainYou',
+              )
+            : L('map:mapCanvas.renderMapStatus.description.waitMoment')}
       </p>
       {status === 'error' && (
         <button type="button" onClick={() => window.location.reload()}>
-          다시 시도
+          {L('common:action.retry')}
         </button>
       )}
     </div>
@@ -139,13 +144,14 @@ function renderMapStatus(status: Exclude<GoogleMapStatus, 'ready'>) {
 }
 
 export const MapCanvas = memo(function MapCanvas(props: Props) {
+  const L = useL();
   const { mapRef, onMapClick, overlay, ...tripObjectProps } = props;
   return (
     <GoogleMap
       ref={mapRef}
       className="trip-map-root"
       style={{ position: 'absolute', inset: 0, height: '100%' }}
-      ariaLabel="여행 장소 지도"
+      ariaLabel={L('map:mapCanvas.ariaLabel.travelLocationMap')}
       renderStatus={renderMapStatus}
       onMapClick={onMapClick}
       options={mapOptions}

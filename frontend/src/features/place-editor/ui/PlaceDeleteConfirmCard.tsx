@@ -7,6 +7,7 @@ import {
   type CSSProperties,
   type RefObject,
 } from 'react';
+import { useL } from '@/shared/i18n';
 
 type Props = {
   id: string;
@@ -54,6 +55,7 @@ export function PlaceDeleteConfirmCard({
   onCancel,
   onConfirm,
 }: Props) {
+  const L = useL();
   const titleId = useId();
   const descriptionId = useId();
   const cardRef = useRef<HTMLElement>(null);
@@ -203,11 +205,20 @@ export function PlaceDeleteConfirmCard({
       role="alertdialog"
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
-      aria-label={`${placeName} 삭제 확인`}
+      aria-label={L('place:placeDeleteConfirmCard.ariaLabel.confirmDeletion', {
+        placeName: placeName,
+      })}
     >
       <div className="place-delete-confirm-copy">
-        <strong id={titleId}>정말로 일정에서 삭제하시겠습니까?</strong>
-        <p id={descriptionId}>“{placeName}”이 현재 일정에서 제거됩니다.</p>
+        <strong id={titleId}>
+          {L('place:placeDeleteConfirmCard.text.youSureYouWantDeleteIt')}
+        </strong>
+        <p id={descriptionId}>
+          {L(
+            'place:placeDeleteConfirmCard.text.willBeRemovedFromCurrentSchedule',
+            { placeName: placeName },
+          )}
+        </p>
       </div>
       <div className="place-delete-confirm-actions">
         <button
@@ -216,17 +227,22 @@ export function PlaceDeleteConfirmCard({
           disabled={busy}
           onClick={() => onCancel(true)}
         >
-          취소
+          {L('common:action.cancel')}
         </button>
         <button
           type="button"
           className="is-destructive"
-          aria-label={`${placeName} 일정에서 삭제`}
+          aria-label={L(
+            'place:placeDeleteConfirmCard.ariaLabel.removeFromCalendar',
+            { placeName: placeName },
+          )}
           aria-busy={busy}
           disabled={confirmDisabled}
           onClick={onConfirm}
         >
-          {busy ? '삭제 중…' : '삭제'}
+          {busy
+            ? L('place:placeDeleteConfirmCard.action.deleting')
+            : L('common:action.delete')}
         </button>
       </div>
     </section>

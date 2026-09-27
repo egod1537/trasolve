@@ -34,6 +34,7 @@ import {
   type TripCommandPlanResultBinding,
   type TripCommandPlanResultKind,
 } from '@/features/map-workspace/ai-command/TripCommandPlanResolver';
+import { L } from '@/shared/i18n';
 
 export type AdaptedTripCommandPlanOperation = {
   commands: readonly TripCommand[];
@@ -162,7 +163,10 @@ export async function adaptTripCommandPlanOperation(
         operation.stepId,
       );
       if (place.visitDurationMinutes === undefined) {
-        throw missingVisitField(operation.stepId, '방문 소요 시간');
+        throw missingVisitField(
+          operation.stepId,
+          L('map:tripCommandPlanAdapter.error.durationVisit'),
+        );
       }
       return {
         commands: [
@@ -182,7 +186,10 @@ export async function adaptTripCommandPlanOperation(
         operation.stepId,
       );
       if (place.time === undefined) {
-        throw missingVisitField(operation.stepId, '방문 시작 시간');
+        throw missingVisitField(
+          operation.stepId,
+          L('map:tripCommandPlanAdapter.error.visitStartTime'),
+        );
       }
       return {
         commands: [
@@ -237,7 +244,10 @@ function missingVisitField(
 ): TripCommandPlanError {
   return new TripCommandPlanError(
     'unsafe_operation',
-    `${field}이 없는 장소는 기존 값을 보존해 변경할 수 없습니다.`,
+    L(
+      'map:tripCommandPlanAdapter.missingVisitField.text.placesWithoutRetainTheirExistingValues',
+      { field: field },
+    ),
     stepId,
   );
 }
@@ -246,7 +256,7 @@ function unsupportedOperation(operation: never): never {
   const value = operation as { stepId?: string };
   throw new TripCommandPlanError(
     'unsupported_operation',
-    '지원하지 않는 여행 명령입니다.',
+    L('map:tripCommandPlanAdapter.error.unsupportedTravelOrder'),
     value.stepId,
   );
 }

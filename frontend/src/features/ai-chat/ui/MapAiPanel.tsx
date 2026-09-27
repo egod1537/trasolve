@@ -25,6 +25,7 @@ import {
 import { useThreadRequests } from '@/features/ai-chat/ui/useThreadRequests';
 import { CloseIcon } from '@/shared/ui/icons';
 import '@/features/ai-chat/ui/chat-panel.css';
+import { getLanguage, useL, L, type Localize } from '@/shared/i18n';
 
 type Props = {
   open: boolean;
@@ -57,6 +58,7 @@ export type MapAiPanelHandle = {
 type ChatThread = {
   id: string;
   title: string;
+  titleIsDefault: boolean;
   messages: UiChatMessage[];
   updatedAt: number;
   archived: boolean;
@@ -66,12 +68,19 @@ type ChatThread = {
 function createThread(id: string): ChatThread {
   return {
     id,
-    title: '새 채팅',
+    title: L('ai:mapAiPanel.createThread.title.newChat'),
+    titleIsDefault: true,
     messages: [],
     updatedAt: Date.now(),
     archived: false,
     error: null,
   };
+}
+
+function getThreadTitle(thread: ChatThread, localize: Localize): string {
+  return thread.titleIsDefault
+    ? localize('ai:mapAiPanel.createThread.title.newChat')
+    : thread.title;
 }
 
 function formatRelativeTime(timestamp: number): string {
@@ -80,25 +89,34 @@ function formatRelativeTime(timestamp: number): string {
     Math.floor((Date.now() - timestamp) / 60000),
   );
   if (elapsedMinutes < 1) {
-    return '방금 전';
+    return L('ai:mapAiPanel.formatRelativeTime.text.justNow');
   }
   if (elapsedMinutes < 60) {
-    return `${elapsedMinutes}분 전`;
+    return L('ai:mapAiPanel.formatRelativeTime.text.minutesAgo', {
+      elapsedMinutes: elapsedMinutes,
+    });
   }
   const elapsedHours = Math.floor(elapsedMinutes / 60);
   if (elapsedHours < 24) {
-    return `${elapsedHours}시간 전`;
+    return L('ai:mapAiPanel.formatRelativeTime.text.hoursAgo', {
+      elapsedHours: elapsedHours,
+    });
   }
   const elapsedDays = Math.floor(elapsedHours / 24);
   return elapsedDays < 7
-    ? `${elapsedDays}일 전`
-    : new Intl.DateTimeFormat('ko-KR', {
+    ? L('ai:mapAiPanel.formatRelativeTime.text.daysAgo', {
+        elapsedDays: elapsedDays,
+      })
+    : new Intl.DateTimeFormat(getLanguage(), {
         month: 'short',
         day: 'numeric',
       }).format(timestamp);
 }
 
-function getUnreadPreviews(threads: ChatThread[]): MapAiUnreadPreview[] {
+function getUnreadPreviews(
+  threads: ChatThread[],
+  localize: Localize,
+): MapAiUnreadPreview[] {
   return threads
     .flatMap((thread) =>
       thread.messages.flatMap((message) =>
@@ -107,7 +125,7 @@ function getUnreadPreviews(threads: ChatThread[]): MapAiUnreadPreview[] {
               {
                 messageId: message.id,
                 threadId: thread.id,
-                threadTitle: thread.title,
+                threadTitle: getThreadTitle(thread, localize),
                 content: message.content,
                 createdAt: message.createdAt,
               },
@@ -171,6 +189,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
     { open, model, onClose, onGeneratingChange, onUnreadPreviewsChange },
     ref,
   ) {
+    const L = useL();
     const [threads, setThreads] = useState<ChatThread[]>(() => [
       createThread('chat-1'),
     ]);
@@ -216,7 +235,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
     );
     const draft = drafts[selectedThread.id] ?? '';
     const normalizedQuery = useMemo(
-      () => searchQuery.trim().toLocaleLowerCase('ko-KR'),
+      () => searchQuery.trim().toLocaleLowerCase(getLanguage()),
       [searchQuery],
     );
     const visibleThreads = useMemo(
@@ -225,10 +244,12 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
           .filter(
             (thread) =>
               !normalizedQuery ||
-              thread.title.toLocaleLowerCase('ko-KR').includes(normalizedQuery),
+              getThreadTitle(thread, L)
+                .toLocaleLowerCase(getLanguage())
+                .includes(normalizedQuery),
           )
           .sort((left, right) => right.updatedAt - left.updatedAt),
-      [normalizedQuery, threads],
+      [L, normalizedQuery, threads],
     );
     const [recentThreads, archivedThreads] = useMemo(
       () => [
@@ -239,7 +260,10 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
     );
     const selectedThreadSending = sendingThreadIds.has(selectedThread.id);
     const generating = sendingThreadIds.size > 0;
-    const unreadPreviews = useMemo(() => getUnreadPreviews(threads), [threads]);
+    const unreadPreviews = useMemo(
+      () => getUnreadPreviews(threads, L),
+      [L, threads],
+    );
 
     useLayoutEffect(() => {
       openRef.current = open;
@@ -370,7 +394,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
 
     const beginRename = (thread: ChatThread) => {
       setRenamingThreadId(thread.id);
-      setRenameDraft(thread.title);
+      setRenameDraft(getThreadTitle(thread, L));
       setOpenMenuThreadId(null);
     };
 
@@ -382,7 +406,12 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
       setThreads((current) =>
         current.map((thread) =>
           thread.id === threadId
-            ? { ...thread, title, updatedAt: Date.now() }
+            ? {
+                ...thread,
+                title,
+                titleIsDefault: false,
+                updatedAt: Date.now(),
+              }
             : thread,
         ),
       );
@@ -609,7 +638,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                   error:
                     cause instanceof Error
                       ? cause.message
-                      : '답변을 불러올 수 없습니다. 다시 시도해 주세요.',
+                      : L(
+                          'ai:mapAiPanel.submitMessage.error.answerCouldNotBeRetrievedTry',
+                        ),
                 }
               : thread,
           ),
@@ -655,7 +686,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
             <input
               autoFocus
               value={renameDraft}
-              aria-label="채팅 이름"
+              aria-label={L('ai:mapAiPanel.renderThread.ariaLabel.chatName')}
               maxLength={80}
               onChange={(event) => setRenameDraft(event.target.value)}
               onKeyDown={(event) => {
@@ -667,7 +698,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
               }}
             />
             <button type="submit" disabled={!renameDraft.trim()}>
-              저장
+              {L('common:action.save')}
             </button>
             <button
               type="button"
@@ -676,7 +707,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                 setRenameDraft('');
               }}
             >
-              취소
+              {L('common:action.cancel')}
             </button>
           </form>
         ) : (
@@ -688,12 +719,16 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
               onClick={() => selectThread(thread.id)}
             >
               <span className="trip-ai-chat-title">
-                <span className="trip-ai-chat-title-text">{thread.title}</span>
+                <span className="trip-ai-chat-title-text">
+                  {getThreadTitle(thread, L)}
+                </span>
                 {sendingThreadIds.has(thread.id) && (
                   <span
                     className="trip-ai-chat-generating"
                     role="status"
-                    aria-label="AI 응답 생성 중"
+                    aria-label={L(
+                      'ai:mapAiPanel.renderThread.ariaLabel.generatingAiResponse',
+                    )}
                   />
                 )}
               </span>
@@ -705,8 +740,10 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
               <button
                 type="button"
                 className="trip-ai-chat-more-button"
-                aria-label={`${thread.title} 메뉴`}
-                title="채팅 메뉴"
+                aria-label={L('ai:mapAiPanel.renderThread.ariaLabel.menu', {
+                  title: getThreadTitle(thread, L),
+                })}
+                title={L('ai:mapAiPanel.renderThread.tooltip.chatMenu')}
                 aria-haspopup="menu"
                 aria-expanded={openMenuThreadId === thread.id}
                 onClick={() =>
@@ -732,7 +769,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                         setOpenMenuThreadId(null);
                       }}
                     >
-                      생성 취소
+                      {L('ai:mapAiPanel.renderThread.action.cancelCreation')}
                     </button>
                   )}
                   <button
@@ -740,14 +777,16 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                     role="menuitem"
                     onClick={() => beginRename(thread)}
                   >
-                    이름 변경
+                    {L('ai:mapAiPanel.renderThread.action.changeName')}
                   </button>
                   <button
                     type="button"
                     role="menuitem"
                     onClick={() => setArchived(thread.id, !thread.archived)}
                   >
-                    {thread.archived ? '보관 해제' : '보관'}
+                    {thread.archived
+                      ? L('ai:mapAiPanel.renderThread.action.unarchive')
+                      : L('ai:mapAiPanel.renderThread.action.storage')}
                   </button>
                   <button
                     type="button"
@@ -755,7 +794,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                     role="menuitem"
                     onClick={() => deleteThread(thread.id)}
                   >
-                    삭제
+                    {L('common:action.delete')}
                   </button>
                 </div>
               )}
@@ -769,7 +808,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
       <aside
         id="trip-map-ai-panel"
         className={`trip-map-ai-panel${open ? ' is-open' : ''}`}
-        aria-label="Trasolve AI 여행 도우미"
+        aria-label={L('ai:mapAiPanel.ariaLabel.trasolveAiTravelAssistant')}
         aria-hidden={!open}
         inert={!open}
       >
@@ -778,23 +817,26 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
             <button
               type="button"
               className="trip-ai-chat-list-backdrop"
-              aria-label="채팅 목록 닫기"
+              aria-label={L('ai:mapAiPanel.ariaLabel.closeChatList')}
               onClick={() => setListDrawerOpen(false)}
             />
           )}
           <aside
             id="trip-ai-chat-list"
             className={`trip-ai-chat-list${listDrawerOpen ? ' is-mobile-open' : ''}`}
-            aria-label="AI 채팅 목록"
+            aria-label={L('ai:mapAiPanel.ariaLabel.aiChatList')}
           >
             <header className="trip-ai-chat-list-header">
-              <h2>Trasolve AI</h2>
+              <h2>{L('ai:mapAiPanel.title.trasolveAi')}</h2>
               <button type="button" onClick={createNewThread}>
-                <span aria-hidden="true">＋</span> 새 채팅
+                <span aria-hidden="true">＋</span>
+                {L('ai:mapAiPanel.createThread.title.newChat')}
               </button>
             </header>
             <label className="trip-ai-chat-search">
-              <span className="sr-only">채팅 검색</span>
+              <span className="sr-only">
+                {L('ai:mapAiPanel.text.chatSearch')}
+              </span>
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="10.5" cy="10.5" r="6.5" />
                 <path d="m15.5 15.5 5 5" />
@@ -802,34 +844,43 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
               <input
                 type="search"
                 value={searchQuery}
-                placeholder="채팅 검색"
+                placeholder={L('ai:mapAiPanel.text.chatSearch')}
                 onChange={(event) => setSearchQuery(event.target.value)}
               />
             </label>
             <div className="trip-ai-chat-list-content">
               <section aria-labelledby="trip-ai-recent-chats-title">
-                <h3 id="trip-ai-recent-chats-title">최근 대화</h3>
+                <h3 id="trip-ai-recent-chats-title">
+                  {L('ai:mapAiPanel.title.recentConversations')}
+                </h3>
                 {recentThreads.length ? (
                   <ul>{recentThreads.map(renderThread)}</ul>
                 ) : (
-                  <p className="trip-ai-chat-list-empty">대화가 없습니다.</p>
+                  <p className="trip-ai-chat-list-empty">
+                    {L('ai:mapAiPanel.description.thereNoDialogue')}
+                  </p>
                 )}
               </section>
               {!!archivedThreads.length && (
                 <section aria-labelledby="trip-ai-archived-chats-title">
-                  <h3 id="trip-ai-archived-chats-title">보관됨</h3>
+                  <h3 id="trip-ai-archived-chats-title">
+                    {L('ai:mapAiPanel.title.archived')}
+                  </h3>
                   <ul>{archivedThreads.map(renderThread)}</ul>
                 </section>
               )}
             </div>
           </aside>
 
-          <section className="trip-ai-conversation" aria-label="현재 대화">
+          <section
+            className="trip-ai-conversation"
+            aria-label={L('ai:mapAiPanel.ariaLabel.currentConversation')}
+          >
             <header className="trip-map-ai-panel-header">
               <button
                 type="button"
                 className="trip-ai-chat-list-toggle"
-                aria-label="채팅 목록 열기"
+                aria-label={L('ai:mapAiPanel.ariaLabel.openChatList')}
                 aria-controls="trip-ai-chat-list"
                 aria-expanded={listDrawerOpen}
                 onClick={() => setListDrawerOpen(true)}
@@ -839,16 +890,16 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                 </svg>
               </button>
               <div>
-                <h2>{selectedThread.title}</h2>
-                <p>여행 도우미</p>
+                <h2>{getThreadTitle(selectedThread, L)}</h2>
+                <p>{L('ai:mapAiPanel.description.travelAssistant')}</p>
               </div>
               {onClose && (
                 <div className="trip-map-ai-panel-actions">
                   <button
                     type="button"
                     className="trip-map-ai-panel-export"
-                    aria-label="Markdown으로 저장"
-                    title="Markdown으로 저장"
+                    aria-label={L('ai:mapAiPanel.ariaLabel.saveAsMarkdown')}
+                    title={L('ai:mapAiPanel.ariaLabel.saveAsMarkdown')}
                     disabled={!selectedThread.messages.length}
                     onClick={() =>
                       downloadChatMarkdown(selectedThread.messages)
@@ -861,7 +912,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                   <button
                     type="button"
                     className="trip-map-ai-panel-close"
-                    aria-label="Close AI assistant"
+                    aria-label={L('ai:mapAiPanel.ariaLabel.closeAiAssistant')}
                     onClick={onClose}
                   >
                     <CloseIcon />
@@ -879,7 +930,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
             >
               {!selectedThread.messages.length && (
                 <p className="trip-map-ai-message is-assistant">
-                  지도와 일정을 보면서 여행 계획을 도와드릴게요.
+                  {L('ai:mapAiPanel.description.weWillHelpYouPlanTrip')}
                 </p>
               )}
               {selectedThread.messages.map((message) =>
@@ -898,7 +949,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
               )}
               {selectedThreadSending && (
                 <p className="trip-map-ai-message is-assistant" role="status">
-                  <span className="sr-only">답변을 생각하고 있어요.</span>
+                  <span className="sr-only">
+                    {L('ai:mapAiPanel.text.iMThinkingAnswer')}
+                  </span>
                   <span className="trip-map-ai-typing-dots" aria-hidden="true">
                     <span />
                     <span />
@@ -919,7 +972,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
               onSubmit={handleSubmit}
             >
               <label className="sr-only" htmlFor="trip-map-ai-input">
-                AI 여행 도우미에게 메시지 보내기
+                {L('ai:mapAiPanel.label.sendMessageAiTravelAssistant')}
               </label>
               <textarea
                 ref={textareaRef}
@@ -927,7 +980,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                 rows={1}
                 maxLength={CHAT_LIMITS.messageLength}
                 value={draft}
-                placeholder="여행에 대해 물어보세요"
+                placeholder={L('ai:mapAiPanel.placeholder.askAboutTravel')}
                 onChange={(event) => {
                   const threadId = selectedThreadIdRef.current;
                   draftsRef.current = {
@@ -942,7 +995,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                 type="submit"
                 disabled={selectedThreadSending || !draft.trim()}
               >
-                {selectedThreadSending ? '생성 중' : '전송'}
+                {selectedThreadSending
+                  ? L('ai:mapAiPanel.action.creating')
+                  : L('ai:mapAiPanel.action.transfer')}
               </button>
             </form>
           </section>

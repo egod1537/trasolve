@@ -22,8 +22,7 @@ export function pickRandomDayColor(
   const unusedColors = DAY_COLOR_PALETTE.filter(
     (color) => !usedColors.has(normalizeColor(color)!),
   );
-  const candidates =
-    unusedColors.length > 0 ? unusedColors : DAY_COLOR_PALETTE;
+  const candidates = unusedColors.length > 0 ? unusedColors : DAY_COLOR_PALETTE;
   return candidates[Math.floor(Math.random() * candidates.length)]!;
 }
 

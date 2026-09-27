@@ -1,0 +1,465 @@
+{
+  "bottomContextPanel": {
+    "ariaLabel": {
+      "dayInformation": "{{title}} Day Information"
+    },
+    "label": {
+      "day": "Day"
+    },
+    "text": {
+      "locations": "{{length}} locations"
+    }
+  },
+  "dayColorControl": {
+    "ariaLabel": {
+      "changeColor": "{{dayTitle}} change color",
+      "clickShowHidePressHoldChange": "{{dayTitle}} {{value}}. Click: Show/Hide · Press and hold: Change color",
+      "hiddenStatus": "hidden status",
+      "message": "{{label}} {{value}}",
+      "showing": "Showing"
+    },
+    "dAYCOLORLABELS": {
+      "text": {
+        "blue": "blue",
+        "green": "green",
+        "look": "Look",
+        "meeting": "meeting",
+        "namhoe": "Namhoe",
+        "orange": "orange",
+        "pink": "pink",
+        "red": "red",
+        "teal": "teal",
+        "yellow": "yellow"
+      }
+    },
+    "text": {
+      "dayColor": "Day color"
+    },
+    "tooltip": {
+      "clickShowHidePressHoldChange": "Click: Show/Hide · Press and hold: Change color"
+    }
+  },
+  "dayLayerSection": {
+    "ariaLabel": {
+      "editName": "{{title}} Edit name"
+    },
+    "text": {
+      "expand": "Expand",
+      "fold": "fold",
+      "message": "{{title}} {{value}}",
+      "putHere": "put here",
+      "thereNoRegisteredItems": "There are no registered items."
+    }
+  },
+  "googleMap": {
+    "ariaLabel": {
+      "map": "map"
+    },
+    "description": {
+      "mapCannotBeLoadedCheckConnection": "The map cannot be loaded. Please check your connection.",
+      "setUpMapConnection": "Please set up a map connection."
+    },
+    "text": {
+      "googleMapsAuthenticationFailed": "Google Maps authentication failed."
+    }
+  },
+  "layer": {
+    "add": "Add layer"
+  },
+  "layerBulkActionBar": {
+    "action": {
+      "deleting": "Deleting…"
+    },
+    "ariaLabel": {
+      "batchOperationsSelections": "Batch operations on selections",
+      "bulkChangeMeansTransportation": "Bulk change of means of transportation",
+      "changeSelectedRouteTransportationMethod": "Change selected route transportation method",
+      "deleteSelectedLocations": "Delete {{length}} selected locations"
+    },
+    "description": {
+      "connectionRoutesAutomaticallyReorganizedMatchOrder": "Connection routes are automatically reorganized to match the order of places."
+    },
+    "text": {
+      "failedChangeModeTransportation": "Failed to change mode of transportation.",
+      "failedDeleteSelectedLocation": "Failed to delete selected location.",
+      "meansTransportation": "means of transportation",
+      "paths": "· {{length}} paths",
+      "selected": "{{totalCount}} selected",
+      "taskFailed": "task failed",
+      "transportationMixed": "Transportation · Mixed",
+      "youSureYouWantDeleteSelected": "Are you sure you want to delete {{length}} selected locations?"
+    }
+  },
+  "layerPanel": {
+    "ariaLabel": {
+      "travelItinerary": "travel itinerary"
+    }
+  },
+  "layerPanelContent": {
+    "description": {
+      "thereNoTravelPlansYet": "There are no travel plans yet."
+    }
+  },
+  "layerPanelHeader": {
+    "action": {
+      "changeTourName": "Change tour name"
+    },
+    "ariaLabel": {
+      "editTravelPlanName": "Edit travel plan name",
+      "shareTrip": "Share your trip",
+      "travelOptions": "Travel options"
+    },
+    "formatSavedAt": {
+      "label": {
+        "lastSaved": "Last saved {{value}}",
+        "message": "{{date}} {{time}}",
+        "saved": "saved"
+      },
+      "title": {
+        "koKr": "ko-KR"
+      }
+    },
+    "saveLabel": {
+      "text": {
+        "saveFailed": "save failed",
+        "saving": "Saving…",
+        "waitingSave": "Waiting to save"
+      }
+    },
+    "text": {
+      "dayPcsPlacePcs": "{{length}} days · {{placeCount}} places",
+      "share": "Share"
+    },
+    "tooltip": {
+      "doubleClickEditTripName": "Double click to edit trip name"
+    }
+  },
+  "layerValidationIndicator": {
+    "text": {
+      "caution": "caution",
+      "error": "Error"
+    }
+  },
+  "mapCanvas": {
+    "ariaLabel": {
+      "travelLocationMap": "travel location map"
+    },
+    "renderMapStatus": {
+      "description": {
+        "checkMapConnectionTryAgainYou": "Please check your map connection and try again. You can still check the schedule list.",
+        "onceYouVeEstablishedMapConnection": "Once you've established a map connection, the locations and routes on your itinerary will be displayed. You can browse an example itinerary on the left.",
+        "waitMoment": "Please wait a moment."
+      },
+      "title": {
+        "canTLoadMap": "Can't load map",
+        "mapLoading": "The map is loading"
+      }
+    }
+  },
+  "mapToolPanel": {
+    "ariaLabel": {
+      "mapTool": "map tool"
+    },
+    "text": {
+      "moveMap": "Pan map",
+      "routeOptimization": "Route optimization",
+      "runAgain": "Redo",
+      "undo": "Undo"
+    }
+  },
+  "mapWorkspacePage": {
+    "render": {
+      "ariaLabel": {
+        "travelSelectionMapBackground": "travel selection map background"
+      }
+    },
+    "runAction": {
+      "text": {
+        "travelRequestFailed": "Your travel request failed."
+      }
+    },
+    "text": {
+      "listCouldNotBeLoaded": "The list could not be loaded."
+    },
+    "title": {
+      "newTravel": "new travel"
+    }
+  },
+  "place": {
+    "welcome": "{{name}}, please choose a destination"
+  },
+  "placeLayerItem": {
+    "content": {
+      "ariaLabel": {
+        "editName": "Edit name {{name}}"
+      },
+      "text": {
+        "arrivalLocation": "Arrival location",
+        "departureLocation": "Departure location"
+      }
+    },
+    "text": {
+      "changeIconColor": "Change {{name}} icon and color",
+      "details": "{{name}} Details {{value}}",
+      "open": "open",
+      "stay": "Stay {{formatDurationMinutes}}"
+    }
+  },
+  "polylineLayerItem": {
+    "ariaLabel": {
+      "fromFrom": "From {{fromName}} to {{toName}} and from {{formatClockTime}} to {{formatClockTime}}"
+    },
+    "fromName": {
+      "text": {
+        "unknownPlace": "unknown place"
+      }
+    },
+    "text": {
+      "betweenPlaces": "· Between places {{formatDurationMinutes}}",
+      "details": "{{connectionName}} Details {{value}}"
+    }
+  },
+  "polylineMetrics": {
+    "formatPolylineDistance": {
+      "text": {
+        "noRouteInformation": "No route information"
+      }
+    }
+  },
+  "polylineMode": {
+    "pOLYLINEMODEOPTIONS": {
+      "label": {
+        "car": "car",
+        "publicTransportation": "public transportation",
+        "straightLine": "straight line",
+        "walk": "walk"
+      }
+    }
+  },
+  "quickSearch": {
+    "ariaLabel": {
+      "closeQuickSearch": "Close quick search",
+      "enter": "Enter {{label}}",
+      "searchMode": "Search mode: {{label}}",
+      "searchMode2": "search mode"
+    },
+    "sEARCHMODES": {
+      "label": {
+        "askAi": "Ask AI",
+        "searchMySchedule": "Search my schedule",
+        "searchPlace": "Search for a place"
+      },
+      "placeholder": {
+        "askQuestionAboutTravelPlans": "Ask a question about your travel plans",
+        "searchCurrentTravelItinerariesLocations": "Search for current travel itineraries and locations"
+      },
+      "text": {
+        "aiResponse": "AI response",
+        "enterPlaceYouWantSearch": "Enter the place you want to search.",
+        "enterQuestionAboutTravelPlans": "Please enter a question about your travel plans.",
+        "enterScheduleLocationYouWantSearch": "Enter the schedule or location you want to search for.",
+        "placeSearchResults": "Place search results",
+        "scheduleSearchResults": "Schedule Search Results"
+      }
+    },
+    "text": {
+      "functionNotYetConnected": "The {{label}} function is not yet connected.",
+      "modeSwitching": "mode switching",
+      "move": "move",
+      "willAppearHere": "{{resultsTitle}} will appear here."
+    },
+    "title": {
+      "quickSearch": "Quick search"
+    }
+  },
+  "route": {
+    "summary": "{{minutes}} min from {{from}} to {{to}}"
+  },
+  "routeSettingsCard": {
+    "ariaLabel": {
+      "chooseMethodTravel": "Choose your method of travel",
+      "message": "{{label}}, {{durationAriaLabel}}",
+      "routeSettings": "route settings"
+    },
+    "description": {
+      "weReSavingWayMoving": "We're saving your way of moving."
+    },
+    "mODEDESCRIPTIONS": {
+      "text": {
+        "straightLineConnectsTwoPlaces": "A straight line connects the two places.",
+        "useCarTravelRoutes": "Use car travel routes.",
+        "usePublicTransportationRoutes": "Use public transportation routes.",
+        "useWalkingRoutes": "Use walking routes."
+      }
+    },
+    "resolveDurationPresentation": {
+      "ariaLabel": {
+        "estimatedTime": "Estimated Time {{label}}",
+        "noEstimatedTime": "No estimated time",
+        "viewingEstimatedTime": "Viewing estimated time"
+      }
+    }
+  },
+  "routes": {
+    "loadingLabel": {
+      "loadingTravelMap": "Loading travel map."
+    }
+  },
+  "search": {
+    "placeholder": "Search for a place",
+    "result_count": "{{count}} search results"
+  },
+  "tripCommandDispatcher": {
+    "applyCommands": {
+      "error": {
+        "travelChangeValueIncorrect": "The travel change value is incorrect."
+      }
+    },
+    "applyHistoryOperation": {
+      "error": {
+        "tripChangeHistoryCannotBeRestored": "Trip change history cannot be restored."
+      }
+    }
+  },
+  "tripCommandPlanAdapter": {
+    "error": {
+      "durationVisit": "Duration of visit",
+      "unsupportedTravelOrder": "Unsupported travel order.",
+      "visitStartTime": "Visit start time"
+    },
+    "missingVisitField": {
+      "text": {
+        "placesWithoutRetainTheirExistingValues": "Places without {{field}} retain their existing values and cannot be changed."
+      }
+    }
+  },
+  "tripCommandPlanError": {
+    "normalizeTripCommandPlanError": {
+      "message": {
+        "travelOrderPlanCannotBeSafely": "A travel order plan cannot be safely prepared."
+      }
+    }
+  },
+  "tripCommandPlanExecutor": {
+    "error": {
+      "someSelectedLocationsNotCurrentlyTrip": "Some of the selected locations are not currently on your trip.",
+      "thereDuplicateIdsSelectedPlacesList": "There are duplicate IDs in the selected places list.",
+      "thereDuplicateStepIdTravelCommand": "There is a duplicate step ID in the travel command plan.",
+      "travelOrderPlansDoNotCurrently": "Travel Order Plans do not currently cover travel.",
+      "tripHasChangedSinceCommandPlans": "The trip has changed since the command plans were made."
+    },
+    "executePreparedTripCommandPlan": {
+      "message": {
+        "preparedTravelCommandCannotBeSafely": "A prepared travel command cannot be safely executed.",
+        "tripHasChangedSinceItWas": "The trip has changed since it was planned."
+      }
+    },
+    "prepareTripCommandPlan": {
+      "message": {
+        "containsUnsupportedTravelCommands": "Contains unsupported travel commands.",
+        "travelCommandPlanFormatIncorrect": "The travel command plan format is incorrect."
+      }
+    }
+  },
+  "tripCommandPlanPlaceLookup": {
+    "error": {
+      "iCanTFindPlaceAdd": "I can't find a place to add it.",
+      "privilegedLocationInformationCouldNotBe": "Privileged location information could not be retrieved.",
+      "thereWasNoSingleSearchResult": "There was no single search result for a place to add."
+    }
+  },
+  "tripCommandPlanResolver": {
+    "error": {
+      "connectorDestinationDoesNotExistCurrent": "The connector destination does not exist for the current trip.",
+      "connectorTargetNotFound": "Connector target not found.",
+      "currentStepCannotReferLaterSteps": "The current step cannot refer to later steps or to itself.",
+      "dateDestinationDoesNotExistCurrent": "The date destination does not exist for the current trip.",
+      "dateTargetNotFound": "Date target not found.",
+      "iCanTDecideWhichOrder": "I can't decide which order of places to go to.",
+      "locationDestinationDoesNotCurrentlyExist": "The location destination does not currently exist in the trip.",
+      "locationDestinationNotFound": "Location destination not found.",
+      "noPlaceFoundMatchingName": "No place found with matching name.",
+      "previousStepReferencedDoesNotExist": "The previous step referenced does not exist.",
+      "previousStepResultsNotAvailable": "Previous step results are not available.",
+      "requestedDateSequenceOutsideCurrentTravel": "The requested date sequence is outside the current travel range.",
+      "requestedPlaceSequenceOutsideCurrentDate": "The requested place sequence is outside the current date range.",
+      "resultingFormatFromPreviousStepNot": "The resulting format from the previous step is not compatible with the current target.",
+      "selectedLocationDestinationCannotBeFound": "The selected location destination cannot be found.",
+      "thereMultiplePlacesMatchingNames": "There are multiple places with matching names.",
+      "unableDetermineOrderDatesMove": "Unable to determine order of dates to move."
+    }
+  },
+  "tripCommands": {
+    "error": {
+      "canTFindPlaceMove": "Can't find a place to move to.",
+      "confirmDateOrderMovement": "Please confirm the date and order of movement.",
+      "connectorNotFound": "Connector not found.",
+      "dateWhichScheduleAppliesCannotBe": "The date to which the schedule applies cannot be found.",
+      "iCanTFindDateChange": "I can't find the date to change my name.",
+      "iCanTFindDateChange2": "I can't find the date to change the color.",
+      "iCanTFindDateChange3": "I can't find the date to change the order to.",
+      "locationNotFound": "Location not found.",
+      "locationStartEndPointOptimizationSchedule": "The location or start/end point of the optimization schedule does not match the current day.",
+      "newTripItemIdIncorrect": "The new trip item ID is incorrect.",
+      "orderPlacesOptimizationResultsDoesNot": "The order of places in the optimization results does not match the current Day.",
+      "selectDateYouWouldLikeAdd": "Please select the date you would like to add a location."
+    }
+  },
+  "tripEditController": {
+    "error": {
+      "savedTripDifferentFromCurrentSession": "The saved trip is different from the current session."
+    },
+    "executeTripCommandString": {
+      "error": {
+        "youCannotRunCommandsClosedTrip": "You cannot run commands in a closed trip editor."
+      }
+    },
+    "getCommandExecutionError": {
+      "text": {
+        "commandExecutionFailed": "Command execution failed.",
+        "thereNoChangeHistoryRedo": "There is no change history to redo.",
+        "thereNoChangeHistoryRevert": "There is no change history to revert."
+      }
+    },
+    "runSave": {
+      "error": {
+        "failedSaveTrip": "Failed to save trip."
+      }
+    }
+  },
+  "tripLayer": {
+    "toTripLayerModel": {
+      "title": {
+        "message": "{{title}} · {{order}}. {{name}}"
+      }
+    }
+  },
+  "tripPolylineCard": {
+    "ariaLabel": {
+      "changeModeTransportation": "Change mode of transportation: {{formatPolylineMode}}"
+    },
+    "description": {
+      "movementSection": "· Movement section"
+    },
+    "label": {
+      "distance": "distance",
+      "estimatedTravelTime": "Estimated travel time",
+      "memo": "memo"
+    },
+    "text": {
+      "beforeRouteCalculation": "Before route calculation",
+      "closeTravelMethodSettings": "Close travel method settings",
+      "closeTripRouteCard": "Close Trip route card",
+      "movementSection": "{{title}} · Movement section",
+      "notSet": "Not set"
+    },
+    "tooltip": {
+      "wayMoving": "way of moving"
+    }
+  },
+  "useTrip": {
+    "error": {
+      "tripproviderRequired": "A TripProvider is required."
+    }
+  }
+}

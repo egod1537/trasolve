@@ -5,14 +5,17 @@ services:
       context: ${JJS_WORKTREE:?set JJS_WORKTREE}
       dockerfile: infra/docker/backend.Dockerfile
       labels:
-        net.mangagaki.jjs.deployment-image: "true"
+        net.mangagaki.jjs.deployment-image: 'true'
         net.mangagaki.jjs.branch-slug: ${JJS_BRANCH_SLUG:?set JJS_BRANCH_SLUG}
         net.mangagaki.jjs.commit: ${JJS_COMMIT_SHA:?set JJS_COMMIT_SHA}
     container_name: jjs-${JJS_BRANCH_SLUG}-backend
     environment:
       HOST: 0.0.0.0
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL:-}
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
+      GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI:-}
       GOOGLE_ROUTES_API_KEY: ${GOOGLE_ROUTES_API_KEY:-}
       GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
       AI_PROVIDER: ${AI_PROVIDER:-}
@@ -22,12 +25,17 @@ services:
       TROUTE_BASE_URL: ${TROUTE_BASE_URL:-https://troute.mangagaki.net/api/}
       TCACHE_BASE_URL: ${TCACHE_BASE_URL:-https://tcache.mangagaki.net}
       TRASOLVE_DATA_DIR: /data
-      TRASOLVE_LOCAL_USER_ID: ${TRASOLVE_LOCAL_USER_ID:-local-user}
     volumes:
       - ./runtime/trasolve:/data
     networks: [jjs-edge]
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
       interval: 5s
       timeout: 3s
       retries: 24
@@ -38,7 +46,7 @@ services:
       net.mangagaki.jjs.commit: ${JJS_COMMIT_SHA}
     logging:
       driver: json-file
-      options: {max-size: "10m", max-file: "5"}
+      options: { max-size: '10m', max-file: '5' }
     restart: unless-stopped
 
   frontend:
@@ -54,13 +62,13 @@ services:
         VITE_GIT_SHA: ${VITE_GIT_SHA:-}
         VITE_GIT_REPOSITORY_URL: ${VITE_GIT_REPOSITORY_URL:-}
       labels:
-        net.mangagaki.jjs.deployment-image: "true"
+        net.mangagaki.jjs.deployment-image: 'true'
         net.mangagaki.jjs.branch-slug: ${JJS_BRANCH_SLUG}
         net.mangagaki.jjs.commit: ${JJS_COMMIT_SHA}
     container_name: jjs-${JJS_BRANCH_SLUG}-frontend
     networks: [jjs-edge]
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/"]
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']
       interval: 5s
       timeout: 3s
       retries: 12
@@ -71,7 +79,7 @@ services:
       net.mangagaki.jjs.commit: ${JJS_COMMIT_SHA}
     logging:
       driver: json-file
-      options: {max-size: "10m", max-file: "5"}
+      options: { max-size: '10m', max-file: '5' }
     restart: unless-stopped
 
 networks:

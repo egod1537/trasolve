@@ -6,27 +6,47 @@ import type {
 } from '@trasolve/shared';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { JobRequestLocationTable } from '@/features/troute-testbed/components/detail/JobRequestLocationTable';
+import { useL, L, NL } from '@/shared/i18n';
 
 interface JobRequestSummaryProps {
   request: TrouteOptimizeRequest;
 }
 
 const TRAVEL_MODE_LABELS: Record<TrouteTravelMode, string> = {
-  TRANSIT: '대중교통',
-  DRIVING: '자동차',
-  WALKING: '도보',
-  BICYCLING: '자전거',
+  get TRANSIT() {
+    return L('testbed:tcacheRouteOptions.mODES.label.publicTransportation');
+  },
+  get DRIVING() {
+    return L('testbed:tcacheRouteOptions.mODES.label.car');
+  },
+  get WALKING() {
+    return L('testbed:tcacheRouteOptions.mODES.label.walk');
+  },
+  get BICYCLING() {
+    return L('testbed:tcacheRouteOptions.mODES.label.bicycle');
+  },
 };
 
 const START_POLICY_LABELS: Record<TrouteStartPolicy, string> = {
-  FIXED: '지정 시각',
-  EARLIEST: '최대한 이르게',
-  LATEST: '최대한 늦게',
+  get FIXED() {
+    return L('testbed:jobRequestSummary.sTARTPOLICYLABELS.text.designatedTime');
+  },
+  get EARLIEST() {
+    return L(
+      'testbed:jobRequestSummary.sTARTPOLICYLABELS.text.asSoonAsPossible',
+    );
+  },
+  get LATEST() {
+    return L(
+      'testbed:jobRequestSummary.sTARTPOLICYLABELS.text.asLateAsPossible',
+    );
+  },
 };
 
 export const JobRequestSummary = memo(function JobRequestSummary({
   request,
 }: JobRequestSummaryProps) {
+  const L = useL();
   const [expanded, setExpanded] = useState(true);
   const [copied, setCopied] = useState(false);
   const travelMode = request.travel_mode ?? 'TRANSIT';
@@ -56,48 +76,56 @@ export const JobRequestSummary = memo(function JobRequestSummary({
     >
       <summary>
         <span className="job-request-summary-title">
-          <span className={Classes.HEADING}>요청</span>
+          <span className={Classes.HEADING}>
+            {L('testbed:jobDetail.requestSection.title.request')}
+          </span>
           {debugEnabled ? (
             <Tag intent={Intent.PRIMARY} minimal>
-              DEBUG
+              {NL('DEBUG')}
             </Tag>
           ) : null}
           {shuffleEnabled ? (
             <Tag icon="random" intent={Intent.PRIMARY} minimal>
-              경로 섞기
+              {L('testbed:jobRequestSummary.text.shufflePaths')}
             </Tag>
           ) : null}
         </span>
         <span className={Classes.TEXT_MUTED}>
-          {expanded ? '접기' : '펼치기'}
+          {expanded
+            ? L('testbed:jobRequestSummary.text.fold')
+            : L('testbed:jobRequestSummary.text.expand')}
         </span>
       </summary>
 
       <div className="job-request-summary-content">
         <dl className="job-request-facts">
           <div>
-            <dt>Job ID</dt>
+            <dt>{L('testbed:jobDetail.overview.text.jobId')}</dt>
             <dd className={Classes.MONOSPACE_TEXT}>{request.job_id}</dd>
           </div>
           <div>
-            <dt>시작 방식</dt>
+            <dt>{L('testbed:jobRequestSummary.label.startupMethod')}</dt>
             <dd>
               {START_POLICY_LABELS[startPolicy]} ({startPolicy})
             </dd>
           </div>
           <div>
-            <dt>시작 시각</dt>
+            <dt>{L('testbed:jobRequestSummary.label.startTime')}</dt>
             <dd>{request.start_time ?? '—'}</dd>
           </div>
           <div>
-            <dt>이동수단</dt>
+            <dt>{L('testbed:jobRequestSummary.label.meansTransportation')}</dt>
             <dd>
               {TRAVEL_MODE_LABELS[travelMode]} ({travelMode})
             </dd>
           </div>
           <div>
-            <dt>Debug</dt>
-            <dd>{debugEnabled ? '사용' : '사용 안 함'}</dd>
+            <dt>{NL('Debug')}</dt>
+            <dd>
+              {debugEnabled
+                ? L('testbed:jobRequestSummary.text.use')
+                : L('testbed:jobRequestSummary.text.disabled')}
+            </dd>
           </div>
         </dl>
 
@@ -105,21 +133,31 @@ export const JobRequestSummary = memo(function JobRequestSummary({
           <dl className="job-request-debug-options">
             {request.debug.min_job_duration_ms !== undefined ? (
               <div>
-                <dt>최소 실행 시간</dt>
-                <dd>{request.debug.min_job_duration_ms}ms</dd>
+                <dt>
+                  {L('testbed:jobRequestSummary.label.minimumExecutionTime')}
+                </dt>
+                <dd>
+                  {L('testbed:jobRequestSummary.text.ms2', {
+                    min_job_duration_ms: request.debug.min_job_duration_ms,
+                  })}
+                </dd>
               </div>
             ) : null}
             {request.debug.shuffle_result_route !== undefined ? (
               <div>
-                <dt>경로 결과 섞기</dt>
+                <dt>
+                  {L('testbed:jobRequestSummary.label.shufflePathResults')}
+                </dt>
                 <dd>
-                  {request.debug.shuffle_result_route ? '사용' : '사용 안 함'}
+                  {request.debug.shuffle_result_route
+                    ? L('testbed:jobRequestSummary.text.use')
+                    : L('testbed:jobRequestSummary.text.disabled')}
                 </dd>
               </div>
             ) : null}
             {shuffleSeed !== undefined ? (
               <div>
-                <dt>Shuffle seed</dt>
+                <dt>{L('testbed:jobRequestSummary.label.shuffleSeed')}</dt>
                 <dd>{shuffleSeed}</dd>
               </div>
             ) : null}
@@ -128,8 +166,9 @@ export const JobRequestSummary = memo(function JobRequestSummary({
 
         {shuffleEnabled ? (
           <p className="job-request-shuffle-note">
-            디버그 경로 섞기가 활성화된 Job입니다. 출발지와 도착지는 유지하고
-            중간 경유지 결과 순서를 섞습니다.
+            {L(
+              'testbed:jobRequestSummary.description.jobDebugPathShufflingEnabledKeep',
+            )}
           </p>
         ) : null}
 
@@ -138,9 +177,13 @@ export const JobRequestSummary = memo(function JobRequestSummary({
           aria-labelledby="job-request-route-title"
         >
           <h3 id="job-request-route-title" className={Classes.HEADING}>
-            입력 경로
+            {L('testbed:jobRequestSummary.title.inputPath')}
           </h3>
-          <div aria-label="요청 위치 입력 순서">
+          <div
+            aria-label={L(
+              'testbed:jobRequestSummary.ariaLabel.requestLocationInputOrder',
+            )}
+          >
             {request.locations.map((location) => location.id).join(' → ')}
           </div>
         </section>
@@ -148,12 +191,18 @@ export const JobRequestSummary = memo(function JobRequestSummary({
         <JobRequestLocationTable locations={request.locations} />
 
         <details className="job-request-raw-json">
-          <summary>Raw JSON 보기</summary>
+          <summary>{L('testbed:jobRequestSummary.text.rawJsonView')}</summary>
           <div>
             <header>
-              <span className={Classes.TEXT_MUTED}>저장된 원본 요청</span>
+              <span className={Classes.TEXT_MUTED}>
+                {L('testbed:jobRequestSummary.text.savedOriginalRequests')}
+              </span>
               <Button
-                aria-label={copied ? '요청 JSON 복사됨' : '요청 JSON 복사'}
+                aria-label={
+                  copied
+                    ? L('testbed:jobRequestSummary.ariaLabel.requestJsonCopied')
+                    : L('testbed:jobRequestSummary.ariaLabel.copyRequestJson')
+                }
                 icon={copied ? 'tick' : 'clipboard'}
                 intent={copied ? Intent.SUCCESS : Intent.NONE}
                 size="small"
@@ -165,7 +214,9 @@ export const JobRequestSummary = memo(function JobRequestSummary({
                     .catch(() => setCopied(false));
                 }}
               >
-                {copied ? '복사됨' : '복사'}
+                {copied
+                  ? L('testbed:jobRequestSummary.action.copied')
+                  : L('common:action.copy')}
               </Button>
             </header>
             <pre className={`${Classes.CODE_BLOCK} job-request-json-code`}>

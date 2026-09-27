@@ -1,11 +1,5 @@
-import { existsSync } from 'node:fs';
-import { loadEnvFile } from 'node:process';
-import { fileURLToPath } from 'node:url';
-import { resolve } from 'node:path';
-import { tripIdSchema } from '@trasolve/shared';
-import { LocalFileTripRepository } from './trip/repositories/localFileTripRepository.js';
-import { TripController } from './trip/tripController.js';
-import { TripHttpService } from './trip/tripHttpService.js';
+import { loadBackendEnvironment } from './configuration/environment.js';
+import { resolveBackendDataRoot } from './configuration/persistence.js';
 import { Places } from './google/maps/places.js';
 import { GoogleRoutesProvider } from './routes/providers/googleRoutesProvider.js';
 import { RouteHttpService } from './routes/routeHttpService.js';
@@ -29,13 +23,12 @@ import { JobEventSubscriptionManager } from './internal/troute/jobEventSubscript
 import { TcacheClient } from './internal/tcache/tcacheClient.js';
 import { TcacheClientError } from './internal/tcache/types.js';
 import { TcacheJobHttpService } from './internal/tcache/tcacheJobHttpService.js';
+import { LocalFileTripRepository } from './trip/repositories/localFileTripRepository.js';
+import type { TripRepository } from './trip/tripRepository.js';
 
-// Load configuration before constructing the shared instances, regardless of
-// which backend module imports them first.
-const localEnvPath = fileURLToPath(new URL('../.env.local', import.meta.url));
-if (existsSync(localEnvPath)) {
-  loadEnvFile(localEnvPath);
-}
+// Preserve direct module use while the normal bootstrap loads configuration
+// before running database migrations and importing these instances.
+loadBackendEnvironment();
 
 // Construct shared services and providers only here. Implementation modules must
 // not import this module, which would create a circular dependency.
@@ -77,19 +70,7 @@ const conversation = new ConversationService(
   new ConversationContextComposer(),
 );
 const openWebUIModels = new OpenWebUIModelHttpService(openWebUIClient);
-const repositoryRoot = fileURLToPath(new URL('../../', import.meta.url));
-const dataRoot = resolve(
-  repositoryRoot,
-  process.env.TRASOLVE_DATA_DIR?.trim() || '.local/trasolve',
-);
-const tripRepository = new LocalFileTripRepository({
-  rootDir: dataRoot,
-});
-const trip = new TripController(tripRepository);
-const localUserId = tripIdSchema.parse(
-  process.env.TRASOLVE_LOCAL_USER_ID?.trim() || 'local-user',
-);
-const tripHttp = new TripHttpService(trip, () => localUserId);
+const dataRoot = resolveBackendDataRoot();
 let troute: TrouteClient | null = null;
 try {
   troute = new TrouteClient({
@@ -126,14 +107,16 @@ try {
 }
 const tcacheJobHttp = new TcacheJobHttpService(tcache);
 
+export function createLocalTripRepository(rootDir: string): TripRepository {
+  return new LocalFileTripRepository({ rootDir });
+}
+
 export const API = {
   Route: routes,
   Place: places,
   Chat: chat,
   Conversation: conversation,
   OpenWebUIModels: openWebUIModels,
-  Trip: trip,
-  TripHttp: tripHttp,
   Troute: troute,
   TrouteHttp: trouteHttp,
   TrouteJobHttp: trouteJobHttp,

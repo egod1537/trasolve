@@ -14,6 +14,7 @@ import type {
 import { getPlace, searchPlaces } from '@/shared/api/places';
 import { PlaceTypeIcon } from '@/features/place-editor/ui/PlaceTypeIcon';
 import '@/features/place-editor/ui/map-toolbar.css';
+import { useL } from '@/shared/i18n';
 
 type SearchStatus = 'idle' | 'loading' | 'ready' | 'selecting' | 'error';
 type SearchBias = PlaceAutocompleteRequest['locationBias'];
@@ -45,6 +46,7 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
   onSelectPlace,
   showQuickSearch = true,
 }: Props) {
+  const L = useL();
   const [query, setQuery] = useState('');
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle');
   const [searchError, setSearchError] = useState('');
@@ -112,10 +114,14 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
         }
         searchRequestRef.current = null;
         setSearchStatus('error');
-        setSearchError('장소 검색에 실패했습니다. 다시 시도해 주세요.');
+        setSearchError(
+          L(
+            'place:mapSearchToolbar.searchAutocomplete.text.locationSearchFailedTryAgain',
+          ),
+        );
       }
     },
-    [clearSearchDebounce, getSearchBias],
+    [clearSearchDebounce, getSearchBias, L],
   );
 
   useEffect(() => {
@@ -174,7 +180,9 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
       sessionTokenRef.current = null;
       setSuggestions([]);
       setSearchStatus('error');
-      setSearchError('검색어를 두 글자 이상 입력해 주세요.');
+      setSearchError(
+        L('place:mapSearchToolbar.runSearch.text.enterAtLeastTwoCharactersAs'),
+      );
       return;
     }
     void searchAutocomplete(input);
@@ -213,13 +221,21 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
       }
       detailsRequestRef.current = null;
       setSearchStatus('error');
-      setSearchError('장소 정보를 불러오지 못했습니다. 다시 선택해 주세요.');
+      setSearchError(
+        L(
+          'place:mapSearchToolbar.selectSuggestion.text.failedLoadLocationInformationSelectAgain',
+        ),
+      );
     }
   };
 
   return (
     <div className="map-toolbar-positioner" data-ai-open={aiOpen}>
-      <div className="map-toolbar" role="search" aria-label="지도 장소 검색">
+      <div
+        className="map-toolbar"
+        role="search"
+        aria-label={L('place:mapSearchToolbar.ariaLabel.mapPlaceSearch')}
+      >
         <div className="map-toolbar-search-line">
           <div
             ref={searchRootRef}
@@ -246,8 +262,8 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
                 aria-autocomplete="list"
                 aria-controls="map-place-search-results"
                 aria-expanded={dropdownOpen}
-                aria-label="장소 검색"
-                placeholder="장소 검색"
+                aria-label={L('place:mapSearchToolbar.ariaLabel.searchPlace')}
+                placeholder={L('place:mapSearchToolbar.ariaLabel.searchPlace')}
                 value={query}
                 onChange={(event) => {
                   const nextQuery = event.target.value;
@@ -267,8 +283,8 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
               />
               <button
                 type="submit"
-                aria-label="검색"
-                title="장소 검색"
+                aria-label={L('place:mapSearchToolbar.ariaLabel.search')}
+                title={L('place:mapSearchToolbar.ariaLabel.searchPlace')}
                 disabled={
                   searchStatus === 'loading' || searchStatus === 'selecting'
                 }
@@ -281,17 +297,27 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
                 id="map-place-search-results"
                 className="map-place-search-results"
                 role="listbox"
-                aria-label="장소 검색 결과"
+                aria-label={L(
+                  'place:mapSearchToolbar.ariaLabel.placeSearchResults',
+                )}
               >
                 {searchStatus === 'loading' && (
-                  <p role="status">장소를 검색하고 있습니다.</p>
+                  <p role="status">
+                    {L('place:mapSearchToolbar.description.searchingLocation')}
+                  </p>
                 )}
                 {searchStatus === 'selecting' && (
-                  <p role="status">장소 정보를 불러오고 있습니다.</p>
+                  <p role="status">
+                    {L(
+                      'place:googlePlaceCard.description.loadingLocationInformation',
+                    )}
+                  </p>
                 )}
                 {searchError && <p role="alert">{searchError}</p>}
                 {searchStatus === 'ready' && !suggestions.length && (
-                  <p role="status">검색 결과가 없습니다</p>
+                  <p role="status">
+                    {L('place:mapSearchToolbar.description.noSearchResults')}
+                  </p>
                 )}
                 {!!suggestions.length && (
                   <ul>
@@ -309,7 +335,10 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
                             <strong>{suggestion.text}</strong>
                           </span>
                           <span className="map-place-search-result-address">
-                            {suggestion.secondaryText || '주소 정보 없음'}
+                            {suggestion.secondaryText ||
+                              L(
+                                'place:mapSearchToolbar.text.noAddressInformation',
+                              )}
                           </span>
                         </button>
                       </li>
@@ -323,8 +352,13 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
             <button
               type="button"
               className="map-toolbar-quick-search-trigger"
-              aria-label={`빠른 검색 열기 (${quickSearchShortcutLabel})`}
-              title={`빠른 검색 (${quickSearchShortcutLabel})`}
+              aria-label={L(
+                'place:mapSearchToolbar.ariaLabel.openQuickSearch',
+                { quickSearchShortcutLabel: quickSearchShortcutLabel },
+              )}
+              title={L('place:mapSearchToolbar.tooltip.quickSearch', {
+                quickSearchShortcutLabel: quickSearchShortcutLabel,
+              })}
               onClick={onOpenQuickSearch}
             >
               <Icon path="M5 6h14M5 12h9M5 18h6" />

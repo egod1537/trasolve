@@ -25,6 +25,7 @@ import { LayerDragHandle } from '@/features/map-workspace/components/layer-panel
 import { LayerItemChevron } from '@/features/map-workspace/components/layer-panel/LayerItemChevron';
 import { PlaceLayerItem } from '@/features/map-workspace/components/layer-panel/PlaceLayerItem';
 import { PolylineLayerItem } from '@/features/map-workspace/components/layer-panel/PolylineLayerItem';
+import { useL } from '@/shared/i18n';
 
 type ReorderControls = ReturnType<typeof usePlaceReorder>;
 type DayReorderControls = ReturnType<typeof useDayReorder>;
@@ -177,6 +178,7 @@ export const DayLayerSection = memo(function DayLayerSection({
   onActivateDay: (dayId: string) => void;
   onToggleExpanded: (dayId: string) => void;
 }) {
+  const L = useL();
   const [titleEditing, setTitleEditing] = useState(false);
   const dragState = reorder.dragState;
   const dropIndicator = getDropIndicator(day, dragState);
@@ -293,7 +295,9 @@ export const DayLayerSection = memo(function DayLayerSection({
             <span className="trip-day-title-editor">
               <InlineRename
                 value={day.title}
-                ariaLabel={`${day.title} 이름 수정`}
+                ariaLabel={L('map:dayLayerSection.ariaLabel.editName', {
+                  title: day.title,
+                })}
                 onCommit={commitTitle}
                 onCancel={() => setTitleEditing(false)}
               />
@@ -305,7 +309,12 @@ export const DayLayerSection = memo(function DayLayerSection({
           variant="day"
           expanded={expanded}
           controls={`layers-${day.id}`}
-          label={`${day.title} ${expanded ? '접기' : '펼치기'}`}
+          label={L('map:dayLayerSection.text.message', {
+            title: day.title,
+            value: expanded
+              ? L('map:dayLayerSection.text.fold')
+              : L('map:dayLayerSection.text.expand'),
+          })}
           onClick={() => onToggleExpanded(day.id)}
         />
       </div>
@@ -397,7 +406,9 @@ export const DayLayerSection = memo(function DayLayerSection({
         })}
         {!day.layerItems.length && (
           <li className="trip-empty-day">
-            {layerDropAtEmpty ? '여기에 놓기' : '등록된 항목이 없습니다.'}
+            {layerDropAtEmpty
+              ? L('map:dayLayerSection.text.putHere')
+              : L('map:dayLayerSection.text.thereNoRegisteredItems')}
           </li>
         )}
       </ol>

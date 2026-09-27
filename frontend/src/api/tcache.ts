@@ -1,4 +1,5 @@
 import { API_ROUTES } from '@trasolve/shared';
+import { L } from '@/shared/i18n';
 
 const HEALTH_TIMEOUT_MS = 5_000;
 const REQUEST_TIMEOUT_MS = 10_000;
@@ -153,7 +154,7 @@ export async function subscribeTcacheRouteJobEvents(
     throw new TcacheApiError(
       0,
       'TCACHE_UNREACHABLE',
-      'tcache SSE gateway에 연결할 수 없습니다.',
+      L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
     );
   }
   if (!response.ok) {
@@ -176,7 +177,7 @@ export async function subscribeTcacheRouteJobEvents(
     throw new TcacheApiError(
       502,
       'TCACHE_INVALID_SSE_RESPONSE',
-      'tcache SSE 응답 형식이 올바르지 않습니다.',
+      L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
     );
   }
 
@@ -214,8 +215,10 @@ async function requestJson(
       0,
       timeoutSignal.aborted ? 'TCACHE_TIMEOUT' : 'TCACHE_UNREACHABLE',
       timeoutSignal.aborted
-        ? 'tcache 요청 제한 시간을 초과했습니다.'
-        : 'Trasolve tcache gateway에 연결할 수 없습니다.',
+        ? L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred')
+        : L(
+            'testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred',
+          ),
     );
   }
   const body = await readBody(response);
@@ -269,7 +272,9 @@ function parseError(body: unknown): {
   }
   return {
     code: 'TCACHE_REQUEST_FAILED',
-    message: 'tcache gateway 요청이 실패했습니다.',
+    message: L(
+      'testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred',
+    ),
   };
 }
 

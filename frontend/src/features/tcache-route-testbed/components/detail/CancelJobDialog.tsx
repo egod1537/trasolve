@@ -5,6 +5,7 @@ import {
   DialogBody,
   DialogFooter,
 } from '@blueprintjs/core';
+import { useL } from '@/shared/i18n';
 
 interface CancelJobDialogProps {
   jobId: string | null;
@@ -21,11 +22,12 @@ export function CancelJobDialog({
   onClose,
   onConfirm,
 }: CancelJobDialogProps) {
+  const L = useL();
   return (
     <Dialog
       className={dark ? Classes.DARK : ''}
       isOpen={jobId !== null}
-      title="경로 작업 취소"
+      title={L('testbed:cancelJobDialog.tooltip.cancelRouteOperation')}
       icon="warning-sign"
       canEscapeKeyClose={!loading}
       canOutsideClickClose={!loading}
@@ -33,17 +35,22 @@ export function CancelJobDialog({
     >
       <DialogBody>
         <p>
-          <code>{jobId}</code> 작업을 취소하시겠습니까?
+          <code>{jobId}</code>
+          {L(
+            'testbed:cancelJobDialog.description.youSureYouWantCancelOperation',
+          )}
         </p>
         <p className={Classes.TEXT_MUTED}>
-          취소 응답 또는 SSE 상태가 확인된 뒤 최종 상태가 반영됩니다.
+          {L(
+            'testbed:cancelJobDialog.description.finalStatusReflectedAfterCancellationResponse',
+          )}
         </p>
       </DialogBody>
       <DialogFooter
         actions={
           <>
             <Button disabled={loading} onClick={onClose}>
-              닫기
+              {L('common:action.close')}
             </Button>
             <Button
               intent="danger"
@@ -51,7 +58,7 @@ export function CancelJobDialog({
               disabled={loading}
               onClick={onConfirm}
             >
-              작업 취소
+              {L('testbed:cancelJobDialog.tooltip.cancelRouteOperation')}
             </Button>
           </>
         }

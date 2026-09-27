@@ -1,5 +1,6 @@
 import { Classes } from '@blueprintjs/core';
 import type { TrouteOptimizeRequest } from '@trasolve/shared';
+import { useL, L } from '@/shared/i18n';
 
 interface JobRequestLocationTableProps {
   locations: TrouteOptimizeRequest['locations'];
@@ -8,6 +9,7 @@ interface JobRequestLocationTableProps {
 export function JobRequestLocationTable({
   locations,
 }: JobRequestLocationTableProps) {
+  const L = useL();
   return (
     <div className="table-scroll job-request-location-table-scroll">
       <table
@@ -15,12 +17,12 @@ export function JobRequestLocationTable({
       >
         <thead>
           <tr>
-            <th>입력 순서</th>
-            <th>위치 ID</th>
-            <th>Place ID</th>
-            <th>역할</th>
-            <th>영업시간</th>
-            <th>체류</th>
+            <th>{L('testbed:jobRequestLocationTable.text.inputOrder')}</th>
+            <th>{L('testbed:jobRequestLocationTable.text.locationId')}</th>
+            <th>{L('testbed:jobDetail.requestSection.text.placeId')}</th>
+            <th>{L('testbed:jobDetail.requestSection.text.role')}</th>
+            <th>{L('testbed:jobRequestLocationTable.text.businessHours')}</th>
+            <th>{L('testbed:jobRequestLocationTable.text.stay')}</th>
           </tr>
         </thead>
         <tbody>
@@ -39,7 +41,11 @@ export function JobRequestLocationTable({
               <td>
                 {location.open_time}~{location.close_time}
               </td>
-              <td>{location.stay_minutes}분</td>
+              <td>
+                {L('testbed:jobRequestLocationTable.text.minutes2', {
+                  stay_minutes: location.stay_minutes,
+                })}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -50,10 +56,10 @@ export function JobRequestLocationTable({
 
 function getLocationRoleLabel(index: number, total: number): string {
   if (index === 0) {
-    return '출발지';
+    return L('testbed:jobResultMapComparison.locationSequence.label.departure');
   }
   if (index === total - 1) {
-    return '도착지';
+    return L('testbed:jobResultMapComparison.locationSequence.label.arrival');
   }
-  return '경유지';
+  return L('testbed:viewModel.getTcacheRouteLocationRole.text.stopover');
 }

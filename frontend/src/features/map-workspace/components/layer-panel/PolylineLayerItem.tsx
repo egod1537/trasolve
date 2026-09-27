@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { formatClockTime, formatDurationMinutes } from '@/entities/place';
+import { formatClockTime } from '@/entities/place';
 import type {
   LayerValidationState,
   TripPlace,
@@ -10,11 +10,13 @@ import {
   type TimeRangeTimelineRange,
 } from '@/features/place-editor';
 import type { LayerSelectionModifiers } from '@/features/map-workspace/model/useMapWorkspace';
-import { formatPolylineMode } from '@/features/map-workspace/domain/polylineMode';
+import { formatPolylineMode } from '@/features/map-workspace/lib/mapFormatters';
 import { LayerItemChevron } from '@/features/map-workspace/components/layer-panel/LayerItemChevron';
 import { LayerItemShell } from '@/features/map-workspace/components/layer-panel/LayerItemShell';
 import { LayerTypeIcon } from '@/features/map-workspace/components/layer-panel/LayerTypeIcon';
 import { LayerValidationIndicator } from '@/features/map-workspace/components/layer-panel/LayerValidationIndicator';
+import { useL } from '@/shared/i18n';
+import { formatDurationMinutes } from '@/shared/i18n/formatters';
 
 const MINUTES_PER_DAY = 24 * 60;
 
@@ -86,8 +88,11 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
   onSelect,
   onOpenDetails,
 }: Props) {
-  const fromName = fromPlace?.name ?? '알 수 없는 장소';
-  const toName = toPlace?.name ?? '알 수 없는 장소';
+  const L = useL();
+  const fromName =
+    fromPlace?.name ?? L('map:polylineLayerItem.fromName.text.unknownPlace');
+  const toName =
+    toPlace?.name ?? L('map:polylineLayerItem.fromName.text.unknownPlace');
   const connectionName = `${fromName} → ${toName}`;
   const scheduleRange = getPolylineScheduleRange(fromPlace, toPlace);
   const openDetails = () => onOpenDetails(polyline.id);
@@ -106,7 +111,12 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
           variant="item"
           expanded={detailsOpen}
           controls={detailsOpen ? 'layer-polyline-detail-card' : undefined}
-          label={`${connectionName} 상세 ${detailsOpen ? '닫기' : '열기'}`}
+          label={L('map:polylineLayerItem.text.details', {
+            connectionName: connectionName,
+            value: detailsOpen
+              ? L('common:action.close')
+              : L('map:placeLayerItem.text.open'),
+          })}
           detailControl
           onClick={(event) => {
             event.stopPropagation();
@@ -130,9 +140,14 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
         <span className="trip-polyline-content">
           <span className="trip-polyline-name">{connectionName}</span>
           <span className="trip-polyline-mode">
-            {formatPolylineMode(polyline.mode)}
+            {formatPolylineMode(polyline.mode, L)}
             {scheduleRange
-              ? ` · 장소 사이 ${formatDurationMinutes(scheduleRange.durationMinutes)}`
+              ? L('map:polylineLayerItem.text.betweenPlaces', {
+                  formatDurationMinutes: formatDurationMinutes(
+                    scheduleRange.durationMinutes,
+                    L,
+                  ),
+                })
               : null}
           </span>
           {scheduleRange && (
@@ -141,7 +156,11 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
                 ranges={[scheduleRange.range]}
                 tone="travel"
                 variant="compact"
-                ariaLabel={`${fromName}에서 ${toName}까지 일정 구간 ${formatClockTime(scheduleRange.range.start)}부터 ${formatClockTime(scheduleRange.range.end)}까지`}
+                ariaLabel={L('map:polylineLayerItem.ariaLabel.fromFrom', {
+                  fromName: fromName,
+                  toName: toName,
+                  formatClockTime: formatClockTime(scheduleRange.range.start),
+                })}
               />
             </span>
           )}

@@ -3,6 +3,7 @@ import { checkApiHealth } from '@/shared/api/health';
 import { FeatureSection } from '@/pages/landing/components/FeatureSection';
 import { Header } from '@/pages/landing/components/Header';
 import { Hero } from '@/pages/landing/components/Hero';
+import { NL, useL, type Localize } from '@/shared/i18n';
 
 type ApiHealth = 'checking' | 'available' | 'unavailable';
 
@@ -10,16 +11,14 @@ interface LandingPageState {
   apiHealth: ApiHealth;
 }
 
-const healthLabels: Record<ApiHealth, string> = {
-  checking: '서비스 연결 상태 확인 중',
-  available: '서비스 API 연결 가능',
-  unavailable: '서비스 API 연결 불가',
-};
+type LandingPageProps = { L: Localize };
 
-export class LandingPage extends Component<
-  Record<string, never>,
-  LandingPageState
-> {
+export function LandingPage() {
+  const L = useL();
+  return <LandingPageView L={L} />;
+}
+
+class LandingPageView extends Component<LandingPageProps, LandingPageState> {
   public componentDidMount(): void {
     const request = new AbortController();
     this.request = request;
@@ -42,7 +41,19 @@ export class LandingPage extends Component<
   }
 
   public render() {
+    const { L } = this.props;
     const { apiHealth } = this.state;
+    const healthLabel = {
+      checking: L(
+        'common:landingPage.healthLabels.text.checkingServiceConnectionStatus',
+      ),
+      available: L(
+        'common:landingPage.healthLabels.text.serviceApiConnectionPossible',
+      ),
+      unavailable: L(
+        'common:landingPage.healthLabels.text.serviceApiConnectionNotPossible',
+      ),
+    }[apiHealth];
     return (
       <div className="landing-page" data-api-health={apiHealth}>
         <Header />
@@ -51,11 +62,17 @@ export class LandingPage extends Component<
           <FeatureSection />
         </main>
         <footer className="site-footer">
-          <p>© {new Date().getFullYear()} Trasolve</p>
-          <p>여행 계획 서비스는 현재 준비 중입니다.</p>
+          <p>
+            {NL('©')} {new Date().getFullYear()} {NL('Trasolve')}
+          </p>
+          <p>
+            {L(
+              'common:landingPage.render.description.travelPlanningServiceCurrentlyPreparation',
+            )}
+          </p>
         </footer>
         <span className="sr-only" role="status" aria-live="polite">
-          {healthLabels[apiHealth]}
+          {healthLabel}
         </span>
       </div>
     );

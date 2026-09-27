@@ -27,6 +27,8 @@ import {
   getRouteOptimizationIssue,
   getRouteOptimizationTravelMode,
   isApplicableCandidate,
+  RouteOptimizationValidationError,
+  type RouteOptimizationIssue,
   type RouteOptimizationRequestOptions,
   type RouteOptimizationStartPolicy,
 } from '@/features/route-optimization/model/routeOptimization';
@@ -46,6 +48,7 @@ import { Button } from '@/shared/ui/Button';
 import { Dialog } from '@/shared/ui/Dialog';
 import { IconButton } from '@/shared/ui/IconButton';
 import { CloseIcon } from '@/shared/ui/icons';
+import { useL, L, type Localize } from '@/shared/i18n';
 
 type Props = {
   id: string;
@@ -75,19 +78,68 @@ const TRAVEL_MODE_OPTIONS: readonly {
   value: TrouteTravelMode;
   label: string;
 }[] = [
-  { value: 'TRANSIT', label: '대중교통' },
-  { value: 'DRIVING', label: '자동차' },
-  { value: 'WALKING', label: '도보' },
-  { value: 'BICYCLING', label: '자전거' },
+  {
+    value: 'TRANSIT',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationModal.tRAVELMODEOPTIONS.label.publicTransportation',
+      );
+    },
+  },
+  {
+    value: 'DRIVING',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationModal.tRAVELMODEOPTIONS.label.car',
+      );
+    },
+  },
+  {
+    value: 'WALKING',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationModal.tRAVELMODEOPTIONS.label.walk',
+      );
+    },
+  },
+  {
+    value: 'BICYCLING',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationModal.tRAVELMODEOPTIONS.label.bicycle',
+      );
+    },
+  },
 ];
 
 const START_POLICY_OPTIONS: readonly {
   value: RouteOptimizationStartPolicy;
   label: string;
 }[] = [
-  { value: 'fixed', label: '지정 시각' },
-  { value: 'earliest', label: '최대한 이르게' },
-  { value: 'latest', label: '최대한 늦게' },
+  {
+    value: 'fixed',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationApi.formatStartPolicy.text.designatedTime',
+      );
+    },
+  },
+  {
+    value: 'earliest',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationApi.formatStartPolicy.text.asSoonAsPossible',
+      );
+    },
+  },
+  {
+    value: 'latest',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationApi.formatStartPolicy.text.asLateAsPossible',
+      );
+    },
+  },
 ];
 
 const resultCache = new Map<string, TrouteOptimizeResponse>();
@@ -99,6 +151,7 @@ export function RouteOptimizationModal({
   onClose,
   onApply,
 }: Props) {
+  const L = useL();
   const titleId = useId();
   const descriptionId = useId();
   const validationId = useId();
@@ -132,6 +185,9 @@ export function RouteOptimizationModal({
     : null;
   const displayCandidate = candidate;
   const inputIssue = getRouteOptimizationIssue(selectedDay, selectedSettings);
+  const inputIssueText = inputIssue
+    ? formatRouteOptimizationIssue(inputIssue, L)
+    : null;
   const diagnostics = getRouteOptimizationDiagnostics(selectedDay);
   const travelMode = selectedSettings.travelMode;
   const beforePlaces = useMemo(
@@ -317,9 +373,13 @@ export function RouteOptimizationModal({
           return;
         }
         const message =
-          cause instanceof Error
-            ? cause.message
-            : '경로 최적화 요청에 실패했습니다.';
+          cause instanceof RouteOptimizationValidationError
+            ? formatRouteOptimizationIssue(cause.issue, L)
+            : cause instanceof Error
+              ? cause.message
+              : L(
+                  'routeOptimization:routeOptimizationModal.text.routeOptimizationRequestFailed',
+                );
         setDayStates((states) => ({
           ...states,
           [day.id]: {
@@ -338,7 +398,7 @@ export function RouteOptimizationModal({
         }
       }
     },
-    [dayStates],
+    [dayStates, L],
   );
 
   useEffect(
@@ -415,12 +475,22 @@ export function RouteOptimizationModal({
         ),
       );
       if (!applied) {
-        setDayError(selectedDay.id, '최적화 결과를 Day에 적용하지 못했습니다.');
+        setDayError(
+          selectedDay.id,
+          L(
+            'routeOptimization:routeOptimizationModal.text.failedApplyOptimizationResultsDay',
+          ),
+        );
         return;
       }
       onClose();
     } catch {
-      setDayError(selectedDay.id, '최적화 결과를 Day에 적용하지 못했습니다.');
+      setDayError(
+        selectedDay.id,
+        L(
+          'routeOptimization:routeOptimizationModal.text.failedApplyOptimizationResultsDay',
+        ),
+      );
     } finally {
       setApplying(false);
     }
@@ -454,12 +524,22 @@ export function RouteOptimizationModal({
     >
       <header className="route-optimization-modal-header">
         <div>
-          <h2 id={titleId}>경로 최적화</h2>
-          <p id={descriptionId}>Day별 현재 경로와 최적화 경로를 비교합니다.</p>
+          <h2 id={titleId}>
+            {L(
+              'routeOptimization:routeOptimizationModal.title.routeOptimization',
+            )}
+          </h2>
+          <p id={descriptionId}>
+            {L(
+              'routeOptimization:routeOptimizationModal.description.compareCurrentRouteOptimizedRouteBy',
+            )}
+          </p>
         </div>
         <IconButton
           className="route-optimization-modal-close"
-          aria-label="경로 최적화 닫기"
+          aria-label={L(
+            'routeOptimization:routeOptimizationModal.ariaLabel.closeRouteOptimization',
+          )}
           icon={<CloseIcon />}
           variant="ghost"
           size="sm"
@@ -483,8 +563,15 @@ export function RouteOptimizationModal({
         <main className="route-optimization-result">
           <div className="route-optimization-day-title">
             <div>
-              <span>선택 Day</span>
-              <h3>{selectedDay.title} 경로 최적화</h3>
+              <span>
+                {L('routeOptimization:routeOptimizationModal.text.selectDay')}
+              </span>
+              <h3>
+                {L(
+                  'routeOptimization:routeOptimizationModal.text.pathOptimization',
+                  { title: selectedDay.title },
+                )}
+              </h3>
             </div>
             <DayStatus state={selectedState} inputIssue={inputIssue} />
           </div>
@@ -503,8 +590,16 @@ export function RouteOptimizationModal({
           <section className="route-optimization-map-section">
             <div className="route-optimization-section-heading">
               <div>
-                <h3>경로 비교</h3>
-                <p>현재 방문 순서와 최적화된 방문 순서를 비교합니다.</p>
+                <h3>
+                  {L(
+                    'routeOptimization:routeOptimizationModal.title.pathComparison',
+                  )}
+                </h3>
+                <p>
+                  {L(
+                    'routeOptimization:routeOptimizationModal.description.compareCurrentVisitSequenceOptimizedVisit',
+                  )}
+                </p>
               </div>
               <span>
                 {
@@ -518,15 +613,24 @@ export function RouteOptimizationModal({
               <article className="route-optimization-comparison-card">
                 <header className="route-optimization-comparison-card-header">
                   <div>
-                    <strong>Before</strong>
-                    <span>현재 방문 순서 · 현재 일정</span>
+                    <strong>
+                      {L('routeOptimization:comparison.label.before')}
+                    </strong>
+                    <span>
+                      {L(
+                        'routeOptimization:routeOptimizationModal.text.currentVisitOrderCurrentSchedule',
+                      )}
+                    </span>
                   </div>
                 </header>
                 <div className="route-optimization-comparison-card-body">
                   <RouteComparisonMap
                     key={`before-${selectedDay.id}`}
-                    title="Before"
-                    ariaLabel={`${selectedDay.title} 현재 방문 순서 지도`}
+                    phase="before"
+                    ariaLabel={L(
+                      'routeOptimization:routeOptimizationModal.ariaLabel.currentVisitOrderMap',
+                      { title: selectedDay.title },
+                    )}
                     layer={`route-optimization-before-${selectedDay.id}`}
                     places={beforePlaces}
                     selectedStartPlaceId={selectedSettings.selectedStartPlaceId}
@@ -551,15 +655,24 @@ export function RouteOptimizationModal({
               <article className="route-optimization-comparison-card">
                 <header className="route-optimization-comparison-card-header">
                   <div>
-                    <strong>After</strong>
-                    <span>최적화 방문 순서 · 최적화 일정</span>
+                    <strong>
+                      {L('routeOptimization:comparison.label.after')}
+                    </strong>
+                    <span>
+                      {L(
+                        'routeOptimization:routeOptimizationModal.text.optimizationVisitOrderOptimizationSchedule',
+                      )}
+                    </span>
                   </div>
                 </header>
                 <div className="route-optimization-comparison-card-body">
                   {displayCandidate ? (
                     <RouteComparisonMap
-                      title="After"
-                      ariaLabel={`${selectedDay.title} 최적화 방문 순서 지도`}
+                      phase="after"
+                      ariaLabel={L(
+                        'routeOptimization:routeOptimizationModal.ariaLabel.optimizedVisitOrderMap',
+                        { title: selectedDay.title },
+                      )}
                       layer={`route-optimization-after-${selectedDay.id}`}
                       places={afterPlaces}
                       selectedStartPlaceId={
@@ -572,8 +685,12 @@ export function RouteOptimizationModal({
                     <RouteComparisonPlaceholder
                       message={
                         selectedState.status === 'running'
-                          ? '최적화 결과를 기다리고 있습니다.'
-                          : '아직 최적화를 실행하지 않았습니다.'
+                          ? L(
+                              'routeOptimization:routeOptimizationModal.text.awaitingOptimizationResults',
+                            )
+                          : L(
+                              'routeOptimization:routeMapComparisonDialog.text.noOptimizationHasBeenRunYet',
+                            )
                       }
                     />
                   )}
@@ -606,16 +723,22 @@ export function RouteOptimizationModal({
 
           {diagnostics.openingHoursFallback ? (
             <p className="route-optimization-modal-notice" role="status">
-              영업시간 정보 없음:{' '}
-              {diagnostics.openingHoursFallbackPlaceNames.join(', ')}. 최적화
-              요청에는 00:00~23:50 임시 범위를 사용합니다.
+              {L(
+                'routeOptimization:routeOptimizationModal.text.noBusinessHoursInformationOptimizationRequests',
+                {
+                  placeNames:
+                    diagnostics.openingHoursFallbackPlaceNames.join(', '),
+                },
+              )}
             </p>
           ) : null}
           {selectedState.error ? (
             <p className="route-optimization-modal-error" role="alert">
               {selectedState.error}
               {selectedState.result
-                ? ' 기존 성공 결과는 그대로 유지됩니다.'
+                ? ` ${L(
+                    'routeOptimization:routeOptimizationModal.description.anyExistingSuccessResultsWillRemain',
+                  )}`
                 : ''}
             </p>
           ) : null}
@@ -625,16 +748,20 @@ export function RouteOptimizationModal({
       <footer className="route-optimization-modal-actions">
         <span
           className={`route-optimization-progress${inputIssue ? ' is-blocked' : ''}`}
-          title={inputIssue ?? undefined}
+          title={inputIssueText ?? undefined}
           aria-live="polite"
         >
-          {inputIssue ? `실행 불가 · ${inputIssue}` : ''}
+          {inputIssue
+            ? L('routeOptimization:routeOptimizationModal.text.notExecutable', {
+                inputIssue: inputIssueText,
+              })
+            : ''}
         </span>
         <Button
           disabled={applying || progressDialog !== null}
           onClick={onClose}
         >
-          취소
+          {L('common:action.cancel')}
         </Button>
         <Button
           loading={selectedState.status === 'running'}
@@ -645,10 +772,14 @@ export function RouteOptimizationModal({
             progressDialog !== null
           }
           aria-describedby={inputIssue ? validationId : undefined}
-          title={inputIssue ?? undefined}
+          title={inputIssueText ?? undefined}
           onClick={() => void runOptimization(selectedDay, selectedSettings)}
         >
-          {selectedState.result ? '다시 실행' : '최적화 실행'}
+          {selectedState.result
+            ? L('routeOptimization:routeOptimizationModal.action.runAgain')
+            : L(
+                'routeOptimization:routeOptimizationModal.action.optimizationRun',
+              )}
         </Button>
         <Button
           variant="primary"
@@ -661,12 +792,14 @@ export function RouteOptimizationModal({
           }
           title={
             candidate && !optimizedSchedule
-              ? '최적화 결과의 일정 정보를 확인할 수 없어 적용할 수 없습니다.'
+              ? L(
+                  'routeOptimization:routeOptimizationModal.tooltip.itCannotBeAppliedBecauseSchedule',
+                )
               : undefined
           }
           onClick={() => void applyCandidate()}
         >
-          이 결과 적용
+          {L('routeOptimization:routeOptimizationModal.action.applyThisResult')}
         </Button>
       </footer>
 
@@ -710,30 +843,51 @@ function DayList({
   selectedDayId: string;
   onSelect: (dayId: string) => void;
 }) {
+  const L = useL();
   return (
-    <aside className="route-optimization-days" aria-label="Day 선택">
-      <h3>Day 선택</h3>
+    <aside
+      className="route-optimization-days"
+      aria-label={L(
+        'routeOptimization:routeOptimizationModal.dayList.ariaLabel.selectDay',
+      )}
+    >
+      <h3>
+        {L(
+          'routeOptimization:routeOptimizationModal.dayList.ariaLabel.selectDay',
+        )}
+      </h3>
       <div className="route-optimization-day-list">
         {days.map((day) => {
           const state = dayStates[day.id] ?? createIdleDayState();
           const settings =
             daySettings[day.id] ?? createDayOptimizationSettings(day);
           const inputIssue = getRouteOptimizationIssue(day, settings);
+          const inputIssueText = inputIssue
+            ? formatRouteOptimizationIssue(inputIssue, L)
+            : null;
           return (
             <button
               key={day.id}
               type="button"
               className={`${selectedDayId === day.id ? 'is-selected' : ''} is-${state.status}${inputIssue ? ' has-input-issue' : ''}`}
               aria-pressed={selectedDayId === day.id}
-              title={inputIssue ?? undefined}
+              title={inputIssueText ?? undefined}
               onClick={() => onSelect(day.id)}
             >
               <span className="route-optimization-day-name">
                 <strong>{day.title}</strong>
-                <span>{day.places.length}곳</span>
+                <span>
+                  {L('routeOptimization:routeOptimizationModal.text.where', {
+                    length: day.places.length,
+                  })}
+                </span>
               </span>
               <span className="route-optimization-day-status">
-                {inputIssue ? '입력 확인 필요' : formatDayStatus(state)}
+                {inputIssue
+                  ? L(
+                      'routeOptimization:routeOptimizationModal.dayList.text.inputConfirmationRequired',
+                    )
+                  : formatDayStatus(state)}
               </span>
             </button>
           );
@@ -754,6 +908,7 @@ function OptimizationSettings({
   disabled: boolean;
   onChange: (patch: Partial<DayOptimizationSettings>) => void;
 }) {
+  const L = useL();
   const orderedPlaces = [...day.places].sort(
     (left, right) => left.order - right.order,
   );
@@ -775,31 +930,54 @@ function OptimizationSettings({
   };
   const startPolicyHelper =
     settings.startPolicy === 'fixed'
-      ? '입력한 시각에 첫 장소 일정을 시작합니다.'
+      ? L(
+          'routeOptimization:routeOptimizationModal.optimizationSettings.text.firstLocationScheduleStartsAtTime',
+        )
       : settings.startPolicy === 'earliest'
-        ? '가능한 가장 빠른 일정 시작 시각을 탐색합니다.'
-        : '가능한 가장 늦은 일정 시작 시각을 탐색합니다.';
+        ? L(
+            'routeOptimization:routeOptimizationModal.optimizationSettings.text.exploreEarliestPossibleScheduleStartTime',
+          )
+        : L(
+            'routeOptimization:routeOptimizationModal.optimizationSettings.text.exploreLatestPossibleEventStartTime',
+          );
 
   return (
     <section className="route-optimization-settings">
       <div className="route-optimization-section-heading">
         <div>
-          <h3>최적화 설정</h3>
+          <h3>
+            {L(
+              'routeOptimization:routeOptimizationModal.optimizationSettings.title.optimizationSettings',
+            )}
+          </h3>
           <p>
-            시작점과 도착점은 아래 경로 비교의 지도 또는 일정에서 지정할 수
-            있습니다.
+            {L(
+              'routeOptimization:routeOptimizationModal.optimizationSettings.description.startingEndingPointsCanBeSpecified',
+            )}
           </p>
         </div>
       </div>
       <div className="route-optimization-settings-groups">
         <section className="route-optimization-settings-group">
           <div className="route-optimization-settings-group-heading">
-            <h4>출발 조건</h4>
-            <p>출발 시각을 찾는 방식과 이동수단을 설정합니다.</p>
+            <h4>
+              {L(
+                'routeOptimization:routeOptimizationModal.optimizationSettings.title.departureConditions',
+              )}
+            </h4>
+            <p>
+              {L(
+                'routeOptimization:routeOptimizationModal.optimizationSettings.description.setMethodFindingDepartureTimeMeans',
+              )}
+            </p>
           </div>
           <div className="route-optimization-departure-fields">
             <fieldset className="route-optimization-setting-field route-optimization-start-policy">
-              <legend>시작 방식</legend>
+              <legend>
+                {L(
+                  'routeOptimization:routeOptimizationModal.optimizationSettings.label.startupMethod',
+                )}
+              </legend>
               <div className="route-optimization-policy-options">
                 {START_POLICY_OPTIONS.map((option) => (
                   <label key={option.value}>
@@ -818,11 +996,17 @@ function OptimizationSettings({
               <small>{startPolicyHelper}</small>
             </fieldset>
             <label className="route-optimization-setting-field">
-              <span>이동수단</span>
+              <span>
+                {L(
+                  'routeOptimization:routeOptimizationModal.optimizationSettings.text.meansTransportation',
+                )}
+              </span>
               <select
                 value={settings.travelMode}
                 disabled={disabled}
-                aria-label="경로 최적화 이동수단"
+                aria-label={L(
+                  'routeOptimization:routeOptimizationModal.optimizationSettings.ariaLabel.routeOptimizationTransportation',
+                )}
                 onChange={(event) =>
                   onChange({
                     travelMode: event.target.value as TrouteTravelMode,
@@ -835,23 +1019,37 @@ function OptimizationSettings({
                   </option>
                 ))}
               </select>
-              <small>최적화 요청과 비교 지도에 동일하게 적용</small>
+              <small>
+                {L(
+                  'routeOptimization:routeOptimizationModal.optimizationSettings.description.sameAppliesOptimizationRequestsComparisonMaps',
+                )}
+              </small>
             </label>
           </div>
           {settings.startPolicy === 'fixed' ? (
             <label className="route-optimization-setting-field route-optimization-time-setting">
-              <span>시작 시각</span>
+              <span>
+                {L(
+                  'routeOptimization:routeOptimizationModal.optimizationSettings.text.startTime',
+                )}
+              </span>
               <input
                 type="time"
                 step={600}
                 value={settings.startTime ?? ''}
                 disabled={disabled}
-                aria-label="고정 시작 시각"
+                aria-label={L(
+                  'routeOptimization:routeOptimizationModal.optimizationSettings.ariaLabel.fixedStartTime',
+                )}
                 onChange={(event) =>
                   onChange({ startTime: event.target.value || null })
                 }
               />
-              <small>10분 단위로 입력</small>
+              <small>
+                {L(
+                  'routeOptimization:routeOptimizationModal.optimizationSettings.description.enter10MinuteIncrements',
+                )}
+              </small>
             </label>
           ) : null}
         </section>
@@ -865,13 +1063,18 @@ function DayStatus({
   inputIssue,
 }: {
   state: DayOptimizationState;
-  inputIssue: string | null;
+  inputIssue: RouteOptimizationIssue | null;
 }) {
+  const L = useL();
   return (
     <span
       className={`route-optimization-status ${inputIssue ? 'is-blocked' : `is-${state.status}`}`}
     >
-      {inputIssue ? '입력 확인 필요' : formatDayStatus(state)}
+      {inputIssue
+        ? L(
+            'routeOptimization:routeOptimizationModal.dayList.text.inputConfirmationRequired',
+          )
+        : formatDayStatus(state)}
     </span>
   );
 }
@@ -881,39 +1084,146 @@ function OptimizationValidationPanel({
   issue,
 }: {
   id: string;
-  issue: string;
+  issue: RouteOptimizationIssue;
 }) {
+  const L = useL();
   return (
     <section id={id} className="route-optimization-validation" role="alert">
       <span className="route-optimization-validation-icon" aria-hidden="true">
         !
       </span>
       <div>
-        <strong>최적화를 실행할 수 없습니다</strong>
-        <p>{issue}</p>
-        <span>{getValidationResolution(issue)}</span>
+        <strong>
+          {L(
+            'routeOptimization:routeOptimizationModal.optimizationValidationPanel.text.unableRunOptimization',
+          )}
+        </strong>
+        <p>{formatRouteOptimizationIssue(issue, L)}</p>
+        <span>{getValidationResolution(issue, L)}</span>
       </div>
     </section>
   );
 }
 
-function getValidationResolution(issue: string): string {
-  if (issue.includes('시작점') || issue.includes('종점')) {
-    return '현재 Day의 서로 다른 장소를 시작점과 종점으로 선택해 주세요.';
+function getValidationResolution(
+  issue: RouteOptimizationIssue,
+  L: Localize,
+): string {
+  if (
+    issue.code === 'startOutsideDay' ||
+    issue.code === 'endOutsideDay' ||
+    issue.code === 'sameEndpoints'
+  ) {
+    return L(
+      'routeOptimization:routeOptimizationModal.getValidationResolution.text.selectDifferentLocationsCurrentDayAs',
+    );
   }
-  if (issue.includes('지정 시작 시각') || issue.includes('지정 시각 시작')) {
-    return '시작 시각을 09:00과 같은 형식의 10분 단위로 입력해 주세요.';
+  if (issue.code === 'fixedStartRequired' || issue.code === 'fixedStartStep') {
+    return L(
+      'routeOptimization:routeOptimizationModal.getValidationResolution.text.enterStartTime10MinuteIncrements',
+    );
   }
-  if (issue.includes('Place ID')) {
-    return '장소 검색에서 표시된 장소를 다시 선택해 Google Place ID를 저장해 주세요.';
+  if (issue.code === 'missingPlaceId') {
+    return L(
+      'routeOptimization:routeOptimizationModal.getValidationResolution.text.selectPlaceDisplayedPlaceSearchAgain',
+    );
   }
-  if (issue.includes('2개 이상의 장소')) {
-    return '이 Day에 출발 장소와 도착 장소를 포함해 장소를 2개 이상 추가해 주세요.';
+  if (issue.code === 'minimumPlaces') {
+    return L(
+      'routeOptimization:routeOptimizationModal.getValidationResolution.text.addAtLeastTwoLocationsThis',
+    );
   }
-  if (issue.includes('이동수단')) {
-    return 'Day의 이동수단을 대중교통, 자동차, 도보 또는 자전거로 설정해 주세요.';
+  if (issue.code === 'unsupportedTravelMode') {
+    return L(
+      'routeOptimization:routeOptimizationModal.getValidationResolution.text.setDaySModeTransportationAs',
+    );
   }
-  return '장소의 영업시간과 체류시간 입력을 확인한 뒤 다시 시도해 주세요.';
+  return L(
+    'routeOptimization:routeOptimizationModal.getValidationResolution.text.checkLocationSBusinessHoursStay',
+  );
+}
+
+function formatRouteOptimizationIssue(
+  issue: RouteOptimizationIssue,
+  L: Localize,
+): string {
+  switch (issue.code) {
+    case 'minimumPlaces':
+      return L(
+        'routeOptimization:routeOptimization.getRouteOptimizationIssue.text.routeOptimizationRequiresTwoMoreLocations',
+        issue.values,
+      );
+    case 'startOutsideDay':
+      return L(
+        'routeOptimization:routeOptimization.getRouteOptimizationIssue.text.startingPointMustBeLocationIncluded',
+        issue.values,
+      );
+    case 'endOutsideDay':
+      return L(
+        'routeOptimization:routeOptimization.getRouteOptimizationIssue.text.endpointMustBeLocationIncludedCurrent',
+        issue.values,
+      );
+    case 'sameEndpoints':
+      return L(
+        'routeOptimization:routeOptimization.getRouteOptimizationIssue.text.startingEndingPointsMustBeDifferent',
+        issue.values,
+      );
+    case 'unsupportedStartPolicy':
+      return L(
+        'routeOptimization:routeOptimization.getRouteOptimizationIssue.text.thisStartupMethodNotSupported',
+        issue.values,
+      );
+    case 'fixedStartRequired':
+      return L(
+        'routeOptimization:routeOptimization.getRouteOptimizationIssue.text.specifiedTimeStartRequiresStartTime',
+        issue.values,
+      );
+    case 'fixedStartStep':
+      return L(
+        'routeOptimization:routeOptimization.getRouteOptimizationIssue.text.specifiedStartTimeMustBe10',
+        issue.values,
+      );
+    case 'unsupportedTravelMode':
+      return L(
+        'routeOptimization:routeOptimization.getRouteOptimizationIssue.text.thisTransportationMethodNotSupported',
+        issue.values,
+      );
+    case 'missingPlaceId':
+      return L(
+        'routeOptimization:routeOptimization.getRouteOptimizationIssue.text.placeIdRequiredCheckActualTravel',
+        issue.values,
+      );
+    case 'invalidRequest':
+      return L(
+        'routeOptimization:routeOptimization.error.routeOptimizationRequestValueIncorrect',
+        issue.values,
+      );
+    case 'stayStep':
+      return L(
+        'routeOptimization:routeOptimization.getLocationConstraint.text.stayTimeMustBe10Minute',
+        issue.values,
+      );
+    case 'nextDayOpeningHours':
+      return L(
+        'routeOptimization:routeOptimization.getOpeningWindow.text.nextBusinessHoursNotCurrentlySupported',
+        issue.values,
+      );
+    case 'noOpeningHours':
+      return L(
+        'routeOptimization:routeOptimization.getOpeningWindow.text.hasNoValidBusinessHoursSelected',
+        issue.values,
+      );
+    case 'openingTimeStep':
+      return L(
+        'routeOptimization:routeOptimization.getOpeningWindow.text.openingTimeMustBe10Minute',
+        issue.values,
+      );
+    case 'closingTimeStep':
+      return L(
+        'routeOptimization:routeOptimization.getOpeningWindow.text.closingTimeMustBe10Minute',
+        issue.values,
+      );
+  }
 }
 
 function orderPlaces(
@@ -931,16 +1241,31 @@ function orderPlaces(
 function formatDayStatus(state: DayOptimizationState): string {
   if (state.status === 'running') {
     return state.progress
-      ? `${state.progress.progress}% 실행 중`
-      : '실행 준비 중';
+      ? L(
+          'routeOptimization:routeOptimizationModal.formatDayStatus.text.running',
+          { progress: state.progress.progress },
+        )
+      : L(
+          'routeOptimization:routeOptimizationModal.formatDayStatus.text.preparingRun',
+        );
   }
   if (state.status === 'failed') {
-    return state.result ? '결과 유지 · 재실행 실패' : '실패';
+    return state.result
+      ? L(
+          'routeOptimization:routeOptimizationModal.formatDayStatus.text.resultMaintenanceRerunFailure',
+        )
+      : L(
+          'routeOptimization:routeOptimizationModal.formatDayStatus.text.failure',
+        );
   }
   if (state.result) {
-    return '최적화 완료';
+    return L(
+      'routeOptimization:routeOptimizationModal.formatDayStatus.text.optimized',
+    );
   }
-  return '실행 전';
+  return L(
+    'routeOptimization:routeOptimizationModal.formatDayStatus.text.beforeRunning',
+  );
 }
 
 function createIdleDayState(): DayOptimizationState {

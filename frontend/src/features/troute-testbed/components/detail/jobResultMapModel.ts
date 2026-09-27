@@ -5,6 +5,7 @@ import type {
 } from '@trasolve/shared';
 import type { TestbedJobStatus } from '@/entities/route-job';
 import type { GeoPoint } from '@/shared/types/mapTypes';
+import { L } from '@/shared/i18n';
 
 type RequestLocation = TrouteOptimizeRequest['locations'][number];
 type RouteStop = TrouteOptimizeResponse['route'][number];
@@ -42,7 +43,12 @@ export function createOptimizedMapContent(
     return { kind: 'placeholder', message: getStatusMessage(status) };
   }
   if (!optimization) {
-    return { kind: 'error', message: '완료된 Job에 최적화 결과가 없습니다.' };
+    return {
+      kind: 'error',
+      message: L(
+        'testbed:jobResultMapModel.createOptimizedMapContent.message.thereNoOptimizationResultsCompletedJob',
+      ),
+    };
   }
 
   const requestById = new Map(
@@ -58,7 +64,10 @@ export function createOptimizedMapContent(
   if (unknownLocationIds.length > 0) {
     return {
       kind: 'error',
-      message: `최적화 결과가 요청에 없는 location_id를 참조합니다: ${unknownLocationIds.join(', ')}`,
+      message: L(
+        'testbed:jobResultMapModel.createOptimizedMapContent.message.optimizationResultReferencesLocationIdThat',
+        { value: unknownLocationIds.join(', ') },
+      ),
     };
   }
   if (!places) {
@@ -88,7 +97,12 @@ function createComparisonLocation(
 ): JobComparisonLocation {
   const place = places.get(request.place_id);
   if (!place) {
-    throw new Error(`지도 장소 정보를 찾을 수 없습니다: ${request.id}`);
+    throw new Error(
+      L(
+        'testbed:jobResultMapModel.createOptimizedMapContent.message.optimizationResultReferencesLocationIdThat',
+        { value: request.id },
+      ),
+    );
   }
   return {
     key,
@@ -101,12 +115,20 @@ function createComparisonLocation(
 function getStatusMessage(status: Exclude<TestbedJobStatus, 'completed'>) {
   switch (status) {
     case 'pending':
-      return '최적화 실행을 기다리고 있습니다.';
+      return L(
+        'testbed:jobResultMapModel.getStatusMessage.text.waitingOptimizationRun',
+      );
     case 'running':
-      return '최적화가 진행 중입니다.';
+      return L(
+        'testbed:jobResultMapModel.getStatusMessage.text.optimizationProgress',
+      );
     case 'failed':
-      return '최적화에 실패해 결과 지도를 표시할 수 없습니다.';
+      return L(
+        'testbed:jobResultMapModel.getStatusMessage.text.resultingMapCannotBeDisplayedBecause',
+      );
     case 'cancelled':
-      return 'Job이 취소되어 결과 지도를 표시할 수 없습니다.';
+      return L(
+        'testbed:jobResultMapModel.getStatusMessage.text.jobHasBeenCanceledResultingMap',
+      );
   }
 }

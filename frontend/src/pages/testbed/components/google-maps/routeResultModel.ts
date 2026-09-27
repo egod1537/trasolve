@@ -4,27 +4,63 @@ import {
   type MapRoute,
   type RouteLocation,
 } from '@trasolve/shared';
+import { getLanguage, L, NL } from '@/shared/i18n';
 
-const NOT_AVAILABLE = '제공되지 않음';
+const notAvailable = (): string =>
+  L('testbed:routeResultModel.nOTAVAILABLE.text.notProvided');
 
 const vehicleLabels: Readonly<Record<string, string>> = {
-  BUS: '버스',
-  CABLE_CAR: '케이블카',
-  COMMUTER_TRAIN: '전철',
-  FERRY: '페리',
-  FUNICULAR: '푸니쿨라',
-  GONDOLA_LIFT: '곤돌라',
-  HEAVY_RAIL: '철도',
-  HIGH_SPEED_TRAIN: '고속철도',
-  INTERCITY_BUS: '시외버스',
-  LONG_DISTANCE_TRAIN: '장거리 열차',
-  METRO_RAIL: '지하철',
-  MONORAIL: '모노레일',
-  RAIL: '철도',
-  SHARE_TAXI: '합승 택시',
-  SUBWAY: '지하철',
-  TRAM: '트램',
-  TROLLEYBUS: '트롤리버스',
+  get BUS() {
+    return L('testbed:routeResultModel.vehicleLabels.text.bus');
+  },
+  get CABLE_CAR() {
+    return L('testbed:routeResultModel.vehicleLabels.text.cableCar');
+  },
+  get COMMUTER_TRAIN() {
+    return L('testbed:routeResultModel.vehicleLabels.text.train');
+  },
+  get FERRY() {
+    return L('testbed:routeResultModel.vehicleLabels.text.ferry');
+  },
+  get FUNICULAR() {
+    return L('testbed:routeResultModel.vehicleLabels.text.funicular');
+  },
+  get GONDOLA_LIFT() {
+    return L('testbed:routeResultModel.vehicleLabels.text.gondola');
+  },
+  get HEAVY_RAIL() {
+    return L('testbed:routeResultModel.vehicleLabels.text.railway');
+  },
+  get HIGH_SPEED_TRAIN() {
+    return L('testbed:routeResultModel.vehicleLabels.text.highSpeedRail');
+  },
+  get INTERCITY_BUS() {
+    return L('testbed:routeResultModel.vehicleLabels.text.intercityBus');
+  },
+  get LONG_DISTANCE_TRAIN() {
+    return L('testbed:routeResultModel.vehicleLabels.text.longDistanceTrain');
+  },
+  get METRO_RAIL() {
+    return L('testbed:routeResultModel.vehicleLabels.text.subway');
+  },
+  get MONORAIL() {
+    return L('testbed:routeResultModel.vehicleLabels.text.monorail');
+  },
+  get RAIL() {
+    return L('testbed:routeResultModel.vehicleLabels.text.railway');
+  },
+  get SHARE_TAXI() {
+    return L('testbed:routeResultModel.vehicleLabels.text.sharedTaxi');
+  },
+  get SUBWAY() {
+    return L('testbed:routeResultModel.vehicleLabels.text.subway');
+  },
+  get TRAM() {
+    return L('testbed:routeResultModel.vehicleLabels.text.tram');
+  },
+  get TROLLEYBUS() {
+    return L('testbed:routeResultModel.vehicleLabels.text.trolleybus');
+  },
 };
 
 export type RouteSummaryModel = {
@@ -58,44 +94,49 @@ export type ItineraryLegModel = {
 
 export function formatDistance(meters: number | null): string {
   if (meters === null) {
-    return NOT_AVAILABLE;
+    return notAvailable();
   }
   if (meters < 1000) {
-    return `${Math.round(meters).toLocaleString('ko-KR')} m`;
+    return `${Math.round(meters).toLocaleString(getLanguage())} ${NL('m')}`;
   }
-  return `${new Intl.NumberFormat('ko-KR', {
+  return `${new Intl.NumberFormat(getLanguage(), {
     maximumFractionDigits: 1,
-  }).format(meters / 1000)} km`;
+  }).format(meters / 1000)} ${NL('km')}`;
 }
 
 export function formatDuration(milliseconds: number | null): string {
   if (milliseconds === null) {
-    return NOT_AVAILABLE;
+    return notAvailable();
   }
   const minutes = Math.round(milliseconds / 60_000);
   if (minutes < 60) {
-    return `${minutes}분`;
+    return L('testbed:routeResultModel.formatDuration.text.minutes', {
+      minutes: minutes,
+    });
   }
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   return remainingMinutes
-    ? `${hours}시간 ${remainingMinutes}분`
-    : `${hours}시간`;
+    ? L('testbed:routeResultModel.formatDuration.text.hoursMinutes', {
+        hours: hours,
+        remainingMinutes: remainingMinutes,
+      })
+    : L('testbed:routeResultModel.formatDuration.text.hours', { hours: hours });
 }
 
 export function formatFare(fare: MapRoute['fare']): string {
   if (!fare) {
-    return NOT_AVAILABLE;
+    return notAvailable();
   }
   try {
-    return new Intl.NumberFormat('ko-KR', {
+    return new Intl.NumberFormat(getLanguage(), {
       style: 'currency',
       currency: fare.currencyCode,
       currencyDisplay: 'narrowSymbol',
       maximumFractionDigits: fare.amount % 1 === 0 ? 0 : 2,
     }).format(fare.amount);
   } catch {
-    return `${fare.amount.toLocaleString('ko-KR')} ${fare.currencyCode}`;
+    return `${fare.amount.toLocaleString(getLanguage())} ${fare.currencyCode}`;
   }
 }
 
@@ -104,24 +145,27 @@ export function getTravelModeLabel(
   vehicleType?: string | null,
 ): string {
   if (travelMode === 'TRANSIT' && vehicleType) {
-    return vehicleLabels[vehicleType] ?? '대중교통';
+    return (
+      vehicleLabels[vehicleType] ??
+      L('testbed:tcacheRouteOptions.mODES.label.publicTransportation')
+    );
   }
   switch (travelMode) {
     case 'DRIVE':
     case TravelMode.DRIVING:
-      return '자동차';
+      return L('testbed:tcacheRouteOptions.mODES.label.car');
     case 'WALK':
     case TravelMode.WALKING:
-      return '도보';
+      return L('testbed:tcacheRouteOptions.mODES.label.walk');
     case 'BICYCLE':
     case TravelMode.BICYCLING:
-      return '자전거';
+      return L('testbed:tcacheRouteOptions.mODES.label.bicycle');
     case 'TWO_WHEELER':
-      return '이륜차';
+      return L('testbed:routeResultModel.getTravelModeLabel.text.twoWheeler');
     case 'TRANSIT':
-      return '대중교통';
+      return L('testbed:tcacheRouteOptions.mODES.label.publicTransportation');
     default:
-      return '이동';
+      return L('testbed:routeResultModel.getTravelModeLabel.text.move');
   }
 }
 
@@ -212,9 +256,11 @@ export function buildRouteItinerary(
           formatDistance(step.distanceMeters),
           transit?.stopCount === null || transit?.stopCount === undefined
             ? null
-            : `${transit.stopCount}정거장`,
+            : L('testbed:routeResultModel.buildRouteItinerary.text.stops', {
+                stopCount: transit.stopCount,
+              }),
           departureTime || arrivalTime
-            ? `${departureTime ? `${departureTime} 출발` : ''}${departureTime && arrivalTime ? ' · ' : ''}${arrivalTime ? `${arrivalTime} 도착` : ''}`
+            ? `${departureTime ? L('testbed:routeResultModel.buildRouteItinerary.text.departure', { departureTime: departureTime }) : ''}${departureTime && arrivalTime ? ' · ' : ''}${arrivalTime ? L('testbed:routeResultModel.buildRouteItinerary.text.arrival', { arrivalTime: arrivalTime }) : ''}`
             : null,
         ].filter((value): value is string => value !== null);
         return {
@@ -224,9 +270,13 @@ export function buildRouteItinerary(
           details,
           stopLabel:
             transit?.departureStop || transit?.arrivalStop
-              ? `${transit.departureStop ?? '승차역 미상'} → ${transit.arrivalStop ?? '하차역 미상'}`
+              ? `${transit.departureStop ?? L('testbed:routeResultModel.buildRouteItinerary.text.boardingStationUnknown')} → ${transit.arrivalStop ?? L('testbed:routeResultModel.buildRouteItinerary.text.dropOffStationUnknown')}`
               : null,
-          headsign: transit?.headsign ? `${transit.headsign} 방면` : null,
+          headsign: transit?.headsign
+            ? L('testbed:routeResultModel.buildRouteItinerary.text.towards', {
+                headsign: transit.headsign,
+              })
+            : null,
           instruction: step.instruction,
         };
       }),
@@ -249,23 +299,23 @@ function buildEndpoint(
   return {
     title:
       index === 0
-        ? '출발'
+        ? L('testbed:jobResultMapComparison.locationSequence.label.departure')
         : index === locationCount - 1
-          ? '도착'
-          : `경유지 ${index}`,
+          ? L('testbed:jobResultMapComparison.locationSequence.label.arrival')
+          : L('testbed:directionsPanel.text.waypoint', { value: index }),
     location: formatRouteLocation(location),
   };
 }
 
 function formatRouteLocation(location: RouteLocation | undefined): string {
   if (!location) {
-    return NOT_AVAILABLE;
+    return notAvailable();
   }
   switch (location.type) {
     case 'address':
       return location.address;
     case 'place':
-      return `Place ID · ${location.placeId}`;
+      return `${NL('Place ID')} · ${location.placeId}`;
     case 'coordinates':
       return `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
   }

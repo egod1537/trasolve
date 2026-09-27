@@ -31,8 +31,12 @@ import {
   createUpdateVisitTimeRangeCommand,
   type PlaceInput,
 } from '@/features/map-workspace/command/tripCommands';
-import type { TripRepository } from '@/entities/trip';
+import {
+  TripRevisionConflictError,
+  type TripRepository,
+} from '@/entities/trip';
 import type { TripStore } from '@/features/map-workspace/store/TripStore';
+import { L } from '@/shared/i18n';
 
 export type { PlaceInput } from '@/features/map-workspace/command/tripCommands';
 
@@ -139,7 +143,9 @@ export class TripEditController {
       return {
         success: false,
         commandName: null,
-        error: '종료된 여행 편집기에서는 명령을 실행할 수 없습니다.',
+        error: L(
+          'map:tripEditController.executeTripCommandString.error.youCannotRunCommandsClosedTrip',
+        ),
       };
     }
 
@@ -300,7 +306,7 @@ export class TripEditController {
 
   private readonly debouncedAutosave: boolean;
 
-  private readonly commandDispatcher: TripCommandDispatcher;
+  private commandDispatcher: TripCommandDispatcher;
 
   private autosaveTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -336,12 +342,21 @@ export class TripEditController {
 
   private getCommandExecutionError(commandName: string): string {
     if (commandName === 'undo' && !this.commandDispatcher.canUndo) {
-      return '되돌릴 변경 기록이 없습니다.';
+      return L(
+        'map:tripEditController.getCommandExecutionError.text.thereNoChangeHistoryRevert',
+      );
     }
     if (commandName === 'redo' && !this.commandDispatcher.canRedo) {
-      return '다시 실행할 변경 기록이 없습니다.';
+      return L(
+        'map:tripEditController.getCommandExecutionError.text.thereNoChangeHistoryRedo',
+      );
     }
-    return this.store.getState().error ?? '명령 실행에 실패했습니다.';
+    return (
+      this.store.getState().error ??
+      L(
+        'map:tripEditController.getCommandExecutionError.text.commandExecutionFailed',
+      )
+    );
   }
 
   private completeLocalChange(execution: Promise<boolean>): Promise<boolean> {
@@ -449,7 +464,11 @@ export class TripEditController {
         return false;
       }
       if (saved.id !== this.tripId) {
-        throw new Error('저장된 여행이 현재 세션과 다릅니다.');
+        throw new Error(
+          L(
+            'map:tripEditController.error.savedTripDifferentFromCurrentSession',
+          ),
+        );
       }
       this.lastSavedRevision = Math.max(
         this.lastSavedRevision,
@@ -474,12 +493,25 @@ export class TripEditController {
       ) {
         return false;
       }
+      if (cause instanceof TripRevisionConflictError) {
+        this.flushAfterPending = false;
+        this.lastSavedRevision = this.revision;
+        this.store.setState({
+          trip: cause.latestTrip,
+          status: 'error',
+          error: cause.message,
+        });
+        this.commandDispatcher = new TripCommandDispatcher(this.store);
+        return false;
+      }
       const current = this.store.getState();
       this.store.setState({
         ...current,
         status: 'error',
         error:
-          cause instanceof Error ? cause.message : '여행 저장에 실패했습니다.',
+          cause instanceof Error
+            ? cause.message
+            : L('map:tripEditController.runSave.error.failedSaveTrip'),
       });
       return false;
     } finally {

@@ -13,12 +13,13 @@ import {
   getTripPolylineStyle,
   TRIP_POLYLINE_MODE_STYLES,
 } from '@/entities/trip';
+import { useL, L } from '@/shared/i18n';
 
 const COMPARISON_LINE_STYLE = getTripPolylineStyle('straight', false, true);
 const COMPARISON_COLOR = TRIP_POLYLINE_MODE_STYLES.straight.color;
 
 type Props = {
-  title: 'Before' | 'After';
+  phase: 'before' | 'after';
   ariaLabel: string;
   layer: string;
   places: readonly TripPlace[];
@@ -34,12 +35,12 @@ type Props = {
 };
 
 export function RouteComparisonMap({
-  title,
+  phase,
   ariaLabel,
   layer,
   places,
   viewportPlaces = places,
-  heading = '지도',
+  heading = L('routeOptimization:routeComparisonMap.text.map'),
   onExpand,
   selectedStartPlaceId = places[0]?.id,
   selectedEndPlaceId = places.at(-1)?.id,
@@ -48,6 +49,11 @@ export function RouteComparisonMap({
   onSetEndPlace,
   onEndpointMenuOpenChange,
 }: Props) {
+  const L = useL();
+  const localizedTitle =
+    phase === 'before'
+      ? L('routeOptimization:comparison.label.before')
+      : L('routeOptimization:comparison.label.after');
   const [endpointMenu, setEndpointMenu] = useState<{
     layer: string;
     placeId: string;
@@ -70,12 +76,18 @@ export function RouteComparisonMap({
         <div>
           <strong>{heading}</strong>
           <span>
-            {title === 'Before' ? '현재 방문 순서' : '최적화 방문 순서'}
+            {phase === 'before'
+              ? L('routeOptimization:routeComparisonMap.text.currentVisitOrder')
+              : L(
+                  'routeOptimization:routeComparisonMap.text.optimizedVisitOrder',
+                )}
           </span>
         </div>
         <span className="route-optimization-marker-legend">
-          <i className="is-start" /> 시작점
-          <i className="is-destination" /> 도착점
+          <i className="is-start" />
+          {L('routeOptimization:routeComparisonMap.text.startingPoint')}
+          <i className="is-destination" />
+          {L('routeOptimization:routeComparisonMap.text.destination')}
         </span>
       </header>
       <div className="route-optimization-map-canvas">
@@ -120,7 +132,10 @@ export function RouteComparisonMap({
         {onExpand ? (
           <IconButton
             className="route-optimization-map-expand"
-            aria-label={`${title} 경로 지도 확대`}
+            aria-label={L(
+              'routeOptimization:routeComparisonMap.ariaLabel.enlargeRouteMap',
+              { title: localizedTitle },
+            )}
             icon={<ExpandIcon />}
             variant="secondary"
             size="sm"
@@ -148,17 +163,20 @@ export function RouteComparisonMap({
 
 export function RouteComparisonPlaceholder({
   message,
-  heading = '지도',
+  heading = L('routeOptimization:routeComparisonMap.text.map'),
 }: {
   message: string;
   heading?: string;
 }) {
+  const L = useL();
   return (
     <section className="route-optimization-map-panel">
       <header>
         <div>
           <strong>{heading}</strong>
-          <span>최적화 방문 순서</span>
+          <span>
+            {L('routeOptimization:routeComparisonMap.text.optimizedVisitOrder')}
+          </span>
         </div>
       </header>
       <div className="route-optimization-map-placeholder" role="status">
@@ -276,7 +294,11 @@ function ComparisonMarkers({
       marker.setPosition(place.location);
       marker.setTitle(
         `${index + 1}. ${place.name}${
-          isStart ? ' · 시작점' : isEnd ? ' · 도착점' : ''
+          isStart
+            ? ` ${L('routeOptimization:routeComparisonMap.comparisonMarkers.text.startingPoint')}`
+            : isEnd
+              ? ` ${L('routeOptimization:routeComparisonMap.comparisonMarkers.text.arrivalPoint')}`
+              : ''
         }`,
       );
       marker.setLabel(String(index + 1));

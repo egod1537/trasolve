@@ -4,7 +4,6 @@ export {
   type GoogleTripPlaceInput,
 } from './model/googlePlaceMapping';
 export {
-  getPlaceCategoryLabel,
   resolvePlaceCategoryFromTypes,
   type PlaceCategory,
 } from './model/placeCategory';
@@ -13,11 +12,11 @@ export {
   DEFAULT_PLACE_START_TIME,
   DEFAULT_PLACE_VISIT_DURATION_MINUTES,
 } from './model/placeDefaults';
-export { formatDurationMinutes } from './model/placeDuration';
 export {
   CLOSING_SOON_THRESHOLD_MINUTES,
   getPlaceOpeningStatus,
   type PlaceOpeningStatus,
+  type PlaceOpeningHoursMessages,
   type PlaceOpeningTimeline,
   type PlaceOpeningTimelineRange,
 } from './model/placeOpeningHours';

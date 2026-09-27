@@ -1,4 +1,5 @@
 import babelParser from '@babel/eslint-parser';
+import { localizationPlugin } from './infra/localization/eslint-user-facing-literal.mjs';
 
 export default [
   {
@@ -27,6 +28,15 @@ export default [
     },
     rules: {
       curly: ['error', 'all'],
+    },
+  },
+  {
+    files: ['frontend/src/**/*.{ts,tsx}'],
+    plugins: {
+      localization: localizationPlugin,
+    },
+    rules: {
+      'localization/no-unclassified-user-facing-literal': 'error',
     },
   },
 ];

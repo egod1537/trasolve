@@ -13,6 +13,7 @@ import {
   type ItineraryStepModel,
   type RouteSummaryModel,
 } from '@/pages/testbed/components/google-maps/routeResultModel';
+import { NL, useL } from '@/shared/i18n';
 
 type Props = {
   apiStatus: ApiStatus;
@@ -35,6 +36,7 @@ export function RouteResultPanel({
   onSelectRoute,
   onFitBounds,
 }: Props) {
+  const L = useL();
   const summary = route
     ? buildRouteSummary(route, result?.request.travelMode)
     : null;
@@ -42,11 +44,14 @@ export function RouteResultPanel({
     route && result ? buildRouteItinerary(route, result.request) : [];
 
   return (
-    <section className="maps-test-results" aria-label="길찾기 결과">
+    <section
+      className="maps-test-results"
+      aria-label={L('testbed:routeResultPanel.ariaLabel.directionsResults')}
+    >
       <div className="maps-test-result-heading">
-        <h2>경로 결과</h2>
+        <h2>{L('testbed:routeResultPanel.title.routeResult')}</h2>
         <p role="status">
-          Routes API{' '}
+          {L('testbed:routeResultPanel.description.routesApi')}{' '}
           <strong className="maps-test-api-status" data-status={apiStatus}>
             {apiStatus.toUpperCase()}
           </strong>
@@ -55,12 +60,18 @@ export function RouteResultPanel({
       {error && <RouteErrorDetails error={error} request={request} />}
       {result && (
         <p className="maps-test-route-count">
-          경로 {result.routes.length}개
-          {!result.routes.length && ' · 반환된 경로가 없습니다.'}
+          {L('testbed:routeResultPanel.description.path')}
+          {result.routes.length}
+          {L('testbed:jobBuilderLocationList.text.dog')}
+          {!result.routes.length &&
+            L('testbed:routeResultPanel.description.noPathWasReturned')}
         </p>
       )}
       {result && result.routes.length > 0 && (
-        <div className="maps-test-route-selector" aria-label="경로 선택">
+        <div
+          className="maps-test-route-selector"
+          aria-label={L('testbed:routeResultPanel.ariaLabel.selectRoute')}
+        >
           {result.routes.map((item, index) => {
             const itemSummary = buildRouteSummary(
               item,
@@ -73,9 +84,16 @@ export function RouteResultPanel({
                 key={getRouteKey(item)}
                 aria-pressed={routeIndex === index}
                 onClick={() => onSelectRoute(index)}
-                title={item.description || `경로 ${index + 1}`}
+                title={
+                  item.description ||
+                  L('testbed:routeResultPanel.text.path', { value: index + 1 })
+                }
               >
-                <strong>경로 {index + 1}</strong>
+                <strong>
+                  {L('testbed:routeResultPanel.text.path', {
+                    value: index + 1,
+                  })}
+                </strong>
                 <span>{itemSummary.duration}</span>
                 <small>
                   {itemSummary.distance} · {itemSummary.fare}
@@ -92,13 +110,18 @@ export function RouteResultPanel({
             className="maps-test-itinerary-section"
             aria-labelledby="maps-test-itinerary-title"
           >
-            <h3 id="maps-test-itinerary-title">구간별 경로</h3>
+            <h3 id="maps-test-itinerary-title">
+              {L('testbed:routeResultPanel.title.routeBySection')}
+            </h3>
             <ol className="maps-test-itinerary">
               {itinerary.map((leg, legIndex) => (
                 <li className="maps-test-itinerary-leg" key={leg.key}>
                   {legIndex === 0 && <ItineraryEndpoint endpoint={leg.start} />}
                   <ol
-                    aria-label={`${leg.start.title}에서 ${leg.end.title} 구간`}
+                    aria-label={L(
+                      'testbed:routeResultPanel.ariaLabel.section',
+                      { title: leg.start.title },
+                    )}
                   >
                     {leg.steps.map((step) => (
                       <ItineraryStep key={step.key} step={step} />
@@ -115,7 +138,7 @@ export function RouteResultPanel({
               disabled={!route.bounds}
               onClick={onFitBounds}
             >
-              선택 경로에 지도 맞추기
+              {L('testbed:routeResultPanel.action.fitMapSelectedRoute')}
             </button>
           </div>
         </>
@@ -132,6 +155,7 @@ function RouteErrorDetails({
   error: DirectionsApiError;
   request: DirectionsRequest | null;
 }) {
+  const L = useL();
   const [expanded, setExpanded] = useState(false);
   const details = error.details;
   const requestDetails =
@@ -151,53 +175,140 @@ function RouteErrorDetails({
 
   return (
     <section className="maps-test-route-error" role="alert">
-      <h3>길찾기 실패 · {error.code}</h3>
+      <h3>
+        {L('testbed:routeResultPanel.text.pathFindingFailure', {
+          code: error.code,
+        })}
+      </h3>
       <p>{error.message}</p>
       {transitUnavailable && (
         <p className="maps-test-route-error-note">
-          일본 경로라면 Google Maps Platform Routes API가 일본의 Google Transit
-          파트너를 지원하지 않는 제한에 해당할 수 있습니다.
+          {L(
+            'testbed:routeResultPanel.routeErrorDetails.description.ifRouteJapanYouMayBe',
+          )}
         </p>
       )}
       <details onToggle={(event) => setExpanded(event.currentTarget.open)}>
-        <summary>실패 Debug Details</summary>
+        <summary>
+          {L(
+            'testbed:routeResultPanel.routeErrorDetails.text.failureDebugDetails',
+          )}
+        </summary>
         {expanded ? (
           <div className="maps-test-route-debug-content">
             <dl className="maps-test-data">
-              <dt>Backend HTTP</dt>
-              <dd>{error.httpStatus || '확인 불가'}</dd>
-              <dt>Google HTTP</dt>
-              <dd>{details?.upstream.httpStatus ?? '확인 불가'}</dd>
-              <dt>Google status</dt>
-              <dd>{details?.upstream.status ?? '응답에 없음'}</dd>
-              <dt>Google message</dt>
-              <dd>{details?.upstream.message ?? '응답에 없음'}</dd>
-              <dt>Travel mode</dt>
-              <dd>{requestDetails?.travelMode ?? '확인 불가'}</dd>
-              <dt>Origin type</dt>
-              <dd>{requestDetails?.originType ?? '확인 불가'}</dd>
-              <dt>Destination type</dt>
-              <dd>{requestDetails?.destinationType ?? '확인 불가'}</dd>
-              <dt>Alternatives</dt>
+              <dt>
+                {L(
+                  'testbed:routeResultPanel.routeErrorDetails.label.backendHttp',
+                )}
+              </dt>
+              <dd>
+                {error.httpStatus ||
+                  L(
+                    'testbed:routeResultPanel.routeErrorDetails.text.unableConfirm',
+                  )}
+              </dd>
+              <dt>
+                {L(
+                  'testbed:routeResultPanel.routeErrorDetails.label.googleHttp',
+                )}
+              </dt>
+              <dd>
+                {details?.upstream.httpStatus ??
+                  L(
+                    'testbed:routeResultPanel.routeErrorDetails.text.unableConfirm',
+                  )}
+              </dd>
+              <dt>
+                {L(
+                  'testbed:routeResultPanel.routeErrorDetails.label.googleStatus',
+                )}
+              </dt>
+              <dd>
+                {details?.upstream.status ??
+                  L(
+                    'testbed:routeResultPanel.routeErrorDetails.text.noneResponse',
+                  )}
+              </dd>
+              <dt>
+                {L(
+                  'testbed:routeResultPanel.routeErrorDetails.label.googleMessage',
+                )}
+              </dt>
+              <dd>
+                {details?.upstream.message ??
+                  L(
+                    'testbed:routeResultPanel.routeErrorDetails.text.noneResponse',
+                  )}
+              </dd>
+              <dt>
+                {L(
+                  'testbed:routeResultPanel.routeErrorDetails.label.travelMode',
+                )}
+              </dt>
+              <dd>
+                {requestDetails?.travelMode ??
+                  L(
+                    'testbed:routeResultPanel.routeErrorDetails.text.unableConfirm',
+                  )}
+              </dd>
+              <dt>
+                {L(
+                  'testbed:routeResultPanel.routeErrorDetails.label.originType',
+                )}
+              </dt>
+              <dd>
+                {requestDetails?.originType ??
+                  L(
+                    'testbed:routeResultPanel.routeErrorDetails.text.unableConfirm',
+                  )}
+              </dd>
+              <dt>
+                {L(
+                  'testbed:routeResultPanel.routeErrorDetails.label.destinationType',
+                )}
+              </dt>
+              <dd>
+                {requestDetails?.destinationType ??
+                  L(
+                    'testbed:routeResultPanel.routeErrorDetails.text.unableConfirm',
+                  )}
+              </dd>
+              <dt>{NL('Alternatives')}</dt>
               <dd>
                 {requestDetails
                   ? String(requestDetails.computeAlternativeRoutes)
-                  : '확인 불가'}
+                  : L(
+                      'testbed:routeResultPanel.routeErrorDetails.text.unableConfirm',
+                    )}
               </dd>
-              <dt>Intermediates</dt>
-              <dd>{requestDetails?.intermediatesCount ?? '확인 불가'}</dd>
+              <dt>{NL('Intermediates')}</dt>
+              <dd>
+                {requestDetails?.intermediatesCount ??
+                  L(
+                    'testbed:routeResultPanel.routeErrorDetails.text.unableConfirm',
+                  )}
+              </dd>
             </dl>
             {details && (
               <>
                 <details>
-                  <summary>Google 요청 본문</summary>
+                  <summary>
+                    {L(
+                      'testbed:routeResultPanel.routeErrorDetails.text.googleRequestBody',
+                    )}
+                  </summary>
                   <pre>
                     {JSON.stringify(details.upstream.requestBody, null, 2)}
                   </pre>
                 </details>
                 {details.upstream.rawErrorBody !== undefined && (
                   <details>
-                    <summary>Google 원본 오류/빈 응답</summary>
+                    <summary>
+                      {L(
+                        'testbed:routeResultPanel.routeErrorDetails.text.googleSourceErrorEmptyResponse',
+                      )}
+                    </summary>
                     <pre>
                       {JSON.stringify(details.upstream.rawErrorBody, null, 2)}
                     </pre>
@@ -219,18 +330,35 @@ function RouteSummary({
   routeIndex: number;
   summary: RouteSummaryModel;
 }) {
+  const L = useL();
   const items = [
-    ['총 소요시간', summary.duration],
-    ['총 거리', summary.distance],
-    ['예상 비용', summary.fare],
-    ['이동수단', summary.travelModes],
+    [
+      L('testbed:routeResultPanel.routeSummary.text.totalTimeRequired'),
+      summary.duration,
+    ],
+    [
+      L('testbed:routeResultPanel.routeSummary.text.totalDistance'),
+      summary.distance,
+    ],
+    [
+      L('testbed:routeResultPanel.routeSummary.text.estimatedCost'),
+      summary.fare,
+    ],
+    [
+      L('testbed:jobRequestSummary.label.meansTransportation'),
+      summary.travelModes,
+    ],
   ];
   return (
     <section
       className="maps-test-route-summary"
       aria-labelledby="maps-test-route-summary-title"
     >
-      <h3 id="maps-test-route-summary-title">경로 {routeIndex + 1} 요약</h3>
+      <h3 id="maps-test-route-summary-title">
+        {L('testbed:routeResultPanel.text.pathSummary', {
+          value: routeIndex + 1,
+        })}
+      </h3>
       <dl>
         {items.map(([label, value]) => (
           <div key={label}>
@@ -277,6 +405,7 @@ function RouteDebugDetails({
   route: MapRoute | undefined;
   result: DirectionsResult;
 }) {
+  const L = useL();
   const [expanded, setExpanded] = useState(false);
   return (
     <details
@@ -284,32 +413,58 @@ function RouteDebugDetails({
       onToggle={(event) => setExpanded(event.currentTarget.open)}
     >
       <summary>
-        Debug Details
+        {L('testbed:routeResultPanel.routeDebugDetails.text.debugDetails')}
         {route &&
           route.warnings.length > 0 &&
-          ` · warning ${route.warnings.length}개`}
+          L('testbed:routeResultPanel.routeDebugDetails.text.warnings', {
+            length: route.warnings.length,
+          })}
       </summary>
       {expanded ? (
         <div className="maps-test-route-debug-content">
           {result.debug && (
-            <section aria-label="Google 요청 진단">
-              <h3>Google 요청 진단</h3>
+            <section
+              aria-label={L(
+                'testbed:routeResultPanel.routeDebugDetails.ariaLabel.googleRequestDiagnostics',
+              )}
+            >
+              <h3>
+                {L(
+                  'testbed:routeResultPanel.routeDebugDetails.ariaLabel.googleRequestDiagnostics',
+                )}
+              </h3>
               <dl className="maps-test-data">
-                <dt>HTTP</dt>
+                <dt>{NL('HTTP')}</dt>
                 <dd>{result.debug.upstream.httpStatus}</dd>
-                <dt>Travel mode</dt>
+                <dt>
+                  {L(
+                    'testbed:routeResultPanel.routeErrorDetails.label.travelMode',
+                  )}
+                </dt>
                 <dd>{result.debug.request.travelMode}</dd>
-                <dt>Origin type</dt>
+                <dt>
+                  {L(
+                    'testbed:routeResultPanel.routeErrorDetails.label.originType',
+                  )}
+                </dt>
                 <dd>{result.debug.request.originType}</dd>
-                <dt>Destination type</dt>
+                <dt>
+                  {L(
+                    'testbed:routeResultPanel.routeErrorDetails.label.destinationType',
+                  )}
+                </dt>
                 <dd>{result.debug.request.destinationType}</dd>
-                <dt>Alternatives</dt>
+                <dt>{NL('Alternatives')}</dt>
                 <dd>{String(result.debug.request.computeAlternativeRoutes)}</dd>
-                <dt>Intermediates</dt>
+                <dt>{NL('Intermediates')}</dt>
                 <dd>{result.debug.request.intermediatesCount}</dd>
               </dl>
               <details>
-                <summary>Google 요청 본문</summary>
+                <summary>
+                  {L(
+                    'testbed:routeResultPanel.routeErrorDetails.text.googleRequestBody',
+                  )}
+                </summary>
                 <pre>
                   {JSON.stringify(result.debug.upstream.requestBody, null, 2)}
                 </pre>
@@ -318,19 +473,50 @@ function RouteDebugDetails({
           )}
           {route && (
             <>
-              <section aria-label="선택 경로 원본 필드">
-                <h3>선택 경로 원본 필드</h3>
+              <section
+                aria-label={L(
+                  'testbed:routeResultPanel.routeDebugDetails.ariaLabel.selectionPathSourceField',
+                )}
+              >
+                <h3>
+                  {L(
+                    'testbed:routeResultPanel.routeDebugDetails.ariaLabel.selectionPathSourceField',
+                  )}
+                </h3>
                 <dl className="maps-test-data">
-                  <dt>설명</dt>
-                  <dd>{route.description || '제공되지 않음'}</dd>
-                  <dt>좌표</dt>
-                  <dd>{route.path.length}개</dd>
-                  <dt>bounds</dt>
-                  <dd>{route.bounds ? '있음' : '없음'}</dd>
+                  <dt>
+                    {L(
+                      'testbed:routeResultPanel.routeDebugDetails.label.description',
+                    )}
+                  </dt>
+                  <dd>
+                    {route.description ||
+                      L(
+                        'testbed:routeResultModel.nOTAVAILABLE.text.notProvided',
+                      )}
+                  </dd>
+                  <dt>
+                    {L(
+                      'testbed:routeResultPanel.routeDebugDetails.label.coordinates',
+                    )}
+                  </dt>
+                  <dd>
+                    {L('testbed:jobBuilderLocationList.text.message', {
+                      length: route.path.length,
+                    })}
+                  </dd>
+                  <dt>{NL('bounds')}</dt>
+                  <dd>
+                    {route.bounds
+                      ? L('testbed:routeResultPanel.routeDebugDetails.text.yes')
+                      : L(
+                          'testbed:routeResultPanel.routeDebugDetails.text.none',
+                        )}
+                  </dd>
                 </dl>
               </section>
-              <section aria-label="Warnings">
-                <h3>Warnings</h3>
+              <section aria-label={NL('Warnings')}>
+                <h3>{NL('Warnings')}</h3>
                 {route.warnings.length ? (
                   <ul>
                     {route.warnings.map((warning) => (
@@ -338,13 +524,19 @@ function RouteDebugDetails({
                     ))}
                   </ul>
                 ) : (
-                  <p>없음</p>
+                  <p>
+                    {L('testbed:routeResultPanel.routeDebugDetails.text.none')}
+                  </p>
                 )}
               </section>
             </>
           )}
           <details>
-            <summary>Raw API Response</summary>
+            <summary>
+              {L(
+                'testbed:routeResultPanel.routeDebugDetails.text.rawApiResponse',
+              )}
+            </summary>
             <pre>{JSON.stringify(result.rawResponse, null, 2)}</pre>
           </details>
         </div>

@@ -3,6 +3,7 @@ import {
   trouteJobCompletedEventSchema,
   trouteJobFailedEventSchema,
   trouteJobIdSchema,
+  trouteLegacyFlatJobEventSchema,
   trouteJobProgressEventSchema,
   trouteJobSnapshotEventSchema,
   trouteJobSubmissionResponseSchema,
@@ -37,6 +38,13 @@ export type TrouteJobEvent = {
   id?: string;
   sequence?: number;
   updatedAt?: number;
+};
+
+type ParsedTrouteJobEvent = {
+  format: 'canonical' | 'legacy-flat';
+  state: TrouteJobState;
+  sequence?: number;
+  updated_at?: number;
 };
 
 export type OpenTrouteJobEventStreamOptions = {
@@ -197,15 +205,18 @@ export class TrouteClient {
         if (parsed.state.job_id !== normalizedJobId) {
           throw this.invalidResponseError();
         }
+        const sequence =
+          parsed.sequence ??
+          (parsed.format === 'legacy-flat'
+            ? parseSseEventSequence(event.id)
+            : undefined);
         yield {
           type: event.event,
           state: parsed.state,
           rawData: event.data,
           lastEventId: event.lastEventId,
           ...(event.id === undefined ? {} : { id: event.id }),
-          ...(parsed.sequence === undefined
-            ? {}
-            : { sequence: parsed.sequence }),
+          ...(sequence === undefined ? {} : { sequence }),
           ...(parsed.updated_at === undefined
             ? {}
             : { updatedAt: parsed.updated_at }),
@@ -353,7 +364,10 @@ export class TrouteClient {
     }
   }
 
-  private parseJobEvent(type: TrouteJobEventType, data: string) {
+  private parseJobEvent(
+    type: TrouteJobEventType,
+    data: string,
+  ): ParsedTrouteJobEvent {
     let body: unknown;
     try {
       body = JSON.parse(data) as unknown;
@@ -374,11 +388,40 @@ export class TrouteClient {
           return trouteJobCancelledEventSchema;
       }
     })();
-    const parsed = schema.safeParse(body);
-    if (!parsed.success) {
+    const envelope = schema.safeParse(body);
+    if (envelope.success) {
+      return { format: 'canonical', ...envelope.data };
+    }
+
+    const legacy = trouteLegacyFlatJobEventSchema.safeParse(body);
+    const state = legacy.success
+      ? {
+          job_id: legacy.data.job_id,
+          status: legacy.data.status,
+          stage: legacy.data.stage,
+          progress: legacy.data.progress,
+          last_message: legacy.data.last_message,
+          error: legacy.data.error ?? null,
+          result: legacy.data.result ?? null,
+        }
+      : null;
+    if (
+      !legacy.success ||
+      state === null ||
+      !eventMatchesState(type, state.status, state)
+    ) {
       throw this.invalidResponseError();
     }
-    return parsed.data;
+    return {
+      format: 'legacy-flat',
+      state,
+      ...(legacy.data.sequence === undefined
+        ? {}
+        : { sequence: legacy.data.sequence }),
+      ...(legacy.data.updated_at === undefined
+        ? {}
+        : { updated_at: legacy.data.updated_at }),
+    };
   }
 
   private normalizeBaseUrl(value: string): URL {
@@ -445,6 +488,33 @@ function isTrouteJobEventType(value: string): value is TrouteJobEventType {
     value === 'failed' ||
     value === 'cancelled'
   );
+}
+
+function eventMatchesState(
+  type: TrouteJobEventType,
+  status: TrouteJobState['status'],
+  state: Pick<TrouteJobState, 'error' | 'result'>,
+): boolean {
+  switch (type) {
+    case 'snapshot':
+      return true;
+    case 'progress':
+      return status === 'pending' || status === 'running';
+    case 'completed':
+      return status === 'completed' && state.result !== null;
+    case 'failed':
+      return status === 'failed' && state.error !== null;
+    case 'cancelled':
+      return status === 'cancelled';
+  }
+}
+
+function parseSseEventSequence(value: string | undefined): number | undefined {
+  if (!value || !/^(0|[1-9]\d*)$/.test(value)) {
+    return undefined;
+  }
+  const sequence = Number(value);
+  return Number.isSafeInteger(sequence) ? sequence : undefined;
 }
 
 function isInvalidUpstreamRequest(body: unknown): boolean {

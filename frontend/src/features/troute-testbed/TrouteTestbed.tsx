@@ -56,6 +56,7 @@ import {
 } from '@/features/troute-testbed/model/useTrouteJobEventStream';
 import '@blueprintjs/core/lib/css/blueprint.css';
 import '@/features/troute-testbed/troute-test.css';
+import { L } from '@/shared/i18n';
 
 type JobUpdate = Partial<TestbedJob> | ((current: TestbedJob) => TestbedJob);
 
@@ -228,15 +229,18 @@ export default function TrouteTestbed() {
                 status: 'failed' as const,
                 completedAt: Date.now(),
                 stage: 'failed',
-                message: 'Trasolve gateway 요청이 실패했습니다.',
+                message: L(
+                  'testbed:trouteTestbed.message.trasolveGatewayRequestFailed',
+                ),
                 error: gatewayError,
               }
             : gatewayError
               ? {
                   ...observed,
                   inspectionError: gatewayError,
-                  message:
-                    'Gateway 응답은 실패했지만 원격 Job 상태 조회를 계속합니다.',
+                  message: L(
+                    'testbed:trouteTestbed.message.gatewayResponseFailsButContinuesQuery',
+                  ),
                 }
               : {
                   ...observed,
@@ -246,7 +250,9 @@ export default function TrouteTestbed() {
                   stage: job.jobState?.stage ?? 'completed',
                   message:
                     job.jobState?.last_message ??
-                    'Trasolve gateway 요청이 완료되었습니다.',
+                    L(
+                      'testbed:trouteTestbed.message.trasolveGatewayRequestCompleted',
+                    ),
                 };
         });
       } catch (cause) {
@@ -259,7 +265,9 @@ export default function TrouteTestbed() {
         const message =
           cause instanceof Error
             ? cause.message
-            : 'Trasolve backend 요청 중 알 수 없는 오류가 발생했습니다.';
+            : L(
+                'testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend',
+              );
         setHealth('offline');
         updateJob(request.job_id, (job) => ({
           ...job,
@@ -267,8 +275,9 @@ export default function TrouteTestbed() {
             ? {}
             : {
                 inspectionError: message,
-                message:
-                  'Gateway 연결이 끊겼지만 원격 Job 상태 조회를 계속합니다.',
+                message: L(
+                  'testbed:trouteTestbed.message.althoughGatewayConnectionLostRemoteJob',
+                ),
               }),
           timeline: [
             ...job.timeline,
@@ -429,7 +438,7 @@ export default function TrouteTestbed() {
               cancelOutcome === 'conflict' &&
               latestState !== null &&
               isTrouteJobTerminalStatus(latestState.status)
-                ? '이미 종료된 Job입니다.'
+                ? L('testbed:trouteTestbed.text.thisJobHasAlreadyEnded')
                 : error,
             timeline: [...current.timeline, responseEntry],
           };
@@ -442,7 +451,9 @@ export default function TrouteTestbed() {
         const message =
           cause instanceof Error
             ? cause.message
-            : 'Job 강제 종료 중 알 수 없는 오류가 발생했습니다.';
+            : L(
+                'testbed:trouteTestbed.text.unknownErrorOccurredWhileForcingJob',
+              );
         const latencyMs =
           cause instanceof TrouteCancelNetworkError
             ? cause.durationMs
@@ -491,7 +502,9 @@ export default function TrouteTestbed() {
         createdAt: Date.now(),
         progress: 0,
         stage: 'queued',
-        message: 'Trasolve gateway 요청 실행을 기다리고 있습니다.',
+        message: L(
+          'testbed:trouteTestbed.message.waitingTrasolveGatewayRequestBeExecuted',
+        ),
         request,
         timeline: [
           {

@@ -1,12 +1,14 @@
 import { Button, Classes, Intent, Tag } from '@blueprintjs/core';
 import { memo, useEffect, useMemo, useState } from 'react';
 import type { TimelineEntry as Entry } from '@/entities/route-job';
+import { useL, L } from '@/shared/i18n';
 
 export const TimelineEntry = memo(function TimelineEntry({
   entry,
 }: {
   entry: Entry;
 }) {
+  const L = useL();
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const formattedTime = useMemo(
@@ -59,8 +61,16 @@ export const TimelineEntry = memo(function TimelineEntry({
           {operationSummary}
         </span>
         <Button
-          aria-label={copied ? '복사됨' : 'Timeline 항목 복사'}
-          title={copied ? '복사됨' : '복사'}
+          aria-label={
+            copied
+              ? L('testbed:jobRequestSummary.action.copied')
+              : L('testbed:timelineEntry.ariaLabel.copyTimelineItems')
+          }
+          title={
+            copied
+              ? L('testbed:jobRequestSummary.action.copied')
+              : L('common:action.copy')
+          }
           icon={copied ? 'tick' : 'clipboard'}
           intent={copied ? Intent.SUCCESS : Intent.NONE}
           size="small"
@@ -71,7 +81,9 @@ export const TimelineEntry = memo(function TimelineEntry({
             void copyEntry(entry).then(setCopied);
           }}
         >
-          {copied ? '복사됨' : '복사'}
+          {copied
+            ? L('testbed:jobRequestSummary.action.copied')
+            : L('common:action.copy')}
         </Button>
       </summary>
       {expanded ? (
@@ -88,28 +100,62 @@ export const TimelineEntry = memo(function TimelineEntry({
 });
 
 function RequestDetail({ entry }: { entry: Entry }) {
+  const L = useL();
   return (
     <>
-      <DetailValue title="Headers" value={entry.headers ?? '관찰 정보 없음'} />
-      <DetailValue title="Query" value={entry.query ?? {}} />
-      <DetailValue title="Body" value={entry.body ?? null} />
-      <DetailValue title="Raw payload" value={entry.raw ?? ''} raw />
+      <DetailValue
+        title={L('testbed:timelineEntry.detail.label.headers')}
+        value={
+          entry.headers ??
+          L('testbed:routeResultPanel.routeDebugDetails.text.none')
+        }
+      />
+      <DetailValue
+        title={L('testbed:timelineEntry.detail.label.query')}
+        value={entry.query ?? {}}
+      />
+      <DetailValue
+        title={L('testbed:timelineEntry.detail.label.body')}
+        value={entry.body ?? null}
+      />
+      <DetailValue
+        title={L('testbed:timelineEntry.requestDetail.tooltip.rawPayload')}
+        value={entry.raw ?? ''}
+        raw
+      />
     </>
   );
 }
 
 function ResponseDetail({ entry }: { entry: Entry }) {
+  const L = useL();
   return (
     <>
       <DetailValue
-        title="HTTP status"
-        value={entry.status ?? '관찰 정보 없음'}
+        title={L('testbed:timelineEntry.responseDetail.tooltip.httpStatus')}
+        value={
+          entry.status ??
+          L('testbed:routeResultPanel.routeDebugDetails.text.none')
+        }
       />
-      <DetailValue title="Headers" value={entry.headers ?? '관찰 정보 없음'} />
-      <DetailValue title="Body" value={entry.body ?? null} />
-      <DetailValue title="Raw response" value={entry.raw ?? ''} raw />
+      <DetailValue
+        title={L('testbed:timelineEntry.detail.label.headers')}
+        value={
+          entry.headers ??
+          L('testbed:routeResultPanel.routeDebugDetails.text.none')
+        }
+      />
+      <DetailValue
+        title={L('testbed:timelineEntry.detail.label.body')}
+        value={entry.body ?? null}
+      />
+      <DetailValue
+        title={L('testbed:timelineEntry.responseDetail.tooltip.rawResponse')}
+        value={entry.raw ?? ''}
+        raw
+      />
       {entry.error ? (
-        <DetailValue title="Error" value={entry.error} raw />
+        <DetailValue title={L('common:status.error')} value={entry.error} raw />
       ) : null}
     </>
   );
@@ -127,7 +173,7 @@ function DetailValue({
   const formatted = useMemo(
     () =>
       raw && typeof value === 'string'
-        ? value || '(비어 있음)'
+        ? value || L('testbed:timelineEntry.detailValue.text.empty')
         : formatValue(value),
     [raw, value],
   );
@@ -157,7 +203,7 @@ function formatTimelineTime(timestamp: number): string {
 
 function formatValue(value: unknown): string {
   if (typeof value === 'string') {
-    return value || '(비어 있음)';
+    return value || L('testbed:timelineEntry.detailValue.text.empty');
   }
   return JSON.stringify(value, null, 2) ?? String(value);
 }

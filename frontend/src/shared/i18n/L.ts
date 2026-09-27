@@ -3,7 +3,7 @@ import { type TOptions } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { localizationInstance } from '@/shared/i18n/config';
 
-export type LocalizationOptions = TOptions;
+export type LocalizationOptions = Record<string, unknown>;
 export type Localize = (
   locKey: string,
   options?: LocalizationOptions,
@@ -14,12 +14,12 @@ function localizedValue(value: unknown, locKey: string): string {
 }
 
 export const L: Localize = (locKey, options) =>
-  localizedValue(localizationInstance.t(locKey, options), locKey);
+  localizedValue(localizationInstance.t(locKey, options as TOptions), locKey);
 
 export function useL(): Localize {
   const { t } = useTranslation();
   return useCallback(
-    (locKey, options) => localizedValue(t(locKey, options), locKey),
+    (locKey, options) => localizedValue(t(locKey, options as TOptions), locKey),
     [t],
   );
 }

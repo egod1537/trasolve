@@ -1,0 +1,61 @@
+{
+  "shareTripModal": {
+    "action": {
+      "shareDrive": "Driveで共有"
+    },
+    "ariaLabel": {
+      "copyShareLink": "共有リンクのコピー",
+      "shareDriveFeaturePreparation": "Driveで共有、機能準備中",
+      "shareMapClose": "地図共有を閉じる"
+    },
+    "description": {
+      "anyoneAccessCanSeeNameProfile": "アクセス権を持つすべてのユーザーは、自分のマップとドライブに自分の名前とプロフィール写真を表示できます。"
+    },
+    "label": {
+      "shareLink": "共有リンク"
+    },
+    "text": {
+      "allowOthersSearchFindThisMap": "他の人がインターネット上でこの地図を検索して検索できるようにする",
+      "anyoneLinkCanViewIt": "リンクを持つユーザーは誰でも見ることができます",
+      "copied": "コピー済み",
+      "copyFailed": "コピー失敗"
+    },
+    "title": {
+      "shareMap": "地図を共有"
+    },
+    "tooltip": {
+      "driveSharingFeaturePreparation": "ドライブ共有機能の準備中"
+    }
+  },
+  "tripMapping": {
+    "tripToView": {
+      "text": {
+        "dateBeDetermined": "日付未定"
+      }
+    }
+  },
+  "tripPickerPopup": {
+    "action": {
+      "open": "開く"
+    },
+    "ariaLabel": {
+      "closeTravelSelection": "旅行の選択を閉じる",
+      "delete": "{{title}}を削除"
+    },
+    "description": {
+      "itSBringingYouTravel": "旅行を読み込んでいます。"
+    },
+    "text": {
+      "createExampleTripTokyo": "東京例旅行の作成",
+      "createNewTrip": "新しい旅行を作る",
+      "daysLocations": "日{{dayCount}}個・{{placeCount}}個所",
+      "makeFirstTrip": "最初の旅行を作成してください。"
+    },
+    "title": {
+      "myTrip": "私の旅"
+    },
+    "tooltip": {
+      "thereNoSavedTrips": "保存した旅行はありません。"
+    }
+  }
+}

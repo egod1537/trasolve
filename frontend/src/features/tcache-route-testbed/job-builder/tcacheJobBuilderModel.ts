@@ -5,6 +5,7 @@ import type {
   TcacheRouteRequest,
 } from '@/features/tcache-route-testbed/model/types';
 import type { GeoPoint } from '@/shared/types/mapTypes';
+import { L } from '@/shared/i18n';
 
 export const MAX_TCACHE_LOCATIONS = 27;
 
@@ -114,11 +115,18 @@ export function validateTcacheJobBuilder(
   const messages: string[] = [];
   const locationErrors: Record<string, string> = {};
   if (state.locations.length < 2) {
-    messages.push('출발지와 도착지를 포함해 위치가 2개 이상 필요합니다.');
+    messages.push(
+      L(
+        'testbed:tcacheJobBuilderModel.validateTcacheJobBuilder.text.youNeedAtLeastTwoLocations',
+      ),
+    );
   }
   if (state.locations.length > MAX_TCACHE_LOCATIONS) {
     messages.push(
-      `위치는 최대 ${MAX_TCACHE_LOCATIONS}개까지 추가할 수 있습니다.`,
+      L(
+        'testbed:tcacheJobBuilderModel.validateTcacheJobBuilder.text.youCanAddUpLocations',
+        { MAX_TCACHE_LOCATIONS: MAX_TCACHE_LOCATIONS },
+      ),
     );
   }
   const placeIds = new Set<string>();
@@ -126,23 +134,39 @@ export function validateTcacheJobBuilder(
     const hasCoordinates =
       Number.isFinite(location.lat) && Number.isFinite(location.lng);
     if (!location.placeId && !location.address?.trim() && !hasCoordinates) {
-      locationErrors[location.id] = '장소 검색으로 위치를 선택해 주세요.';
+      locationErrors[location.id] = L(
+        'testbed:tcacheJobBuilderModel.validateTcacheJobBuilder.text.selectLocationUsingLocationSearch',
+      );
     }
     if (location.placeId) {
       if (placeIds.has(location.placeId)) {
-        locationErrors[location.id] = '같은 Place ID가 중복되었습니다.';
+        locationErrors[location.id] = L(
+          'testbed:tcacheJobBuilderModel.validateTcacheJobBuilder.text.samePlaceIdDuplicated',
+        );
       }
       placeIds.add(location.placeId);
     }
   });
   if (Object.keys(locationErrors).length > 0) {
-    messages.push('유효하지 않은 위치를 확인해 주세요.');
+    messages.push(
+      L(
+        'testbed:tcacheJobBuilderModel.validateTcacheJobBuilder.text.checkInvalidLocation',
+      ),
+    );
   }
   if (!toOffsetIsoString(state.departureTimeLocal)) {
-    messages.push('유효한 출발 날짜와 시각을 입력해 주세요.');
+    messages.push(
+      L(
+        'testbed:tcacheJobBuilderModel.validateTcacheJobBuilder.text.enterValidDepartureDateTime',
+      ),
+    );
   }
   if (!state.languageCode.trim()) {
-    messages.push('languageCode를 입력해 주세요.');
+    messages.push(
+      L(
+        'testbed:tcacheJobBuilderModel.validateTcacheJobBuilder.text.enterLanguagecode',
+      ),
+    );
   }
   return { valid: messages.length === 0, messages, locationErrors };
 }

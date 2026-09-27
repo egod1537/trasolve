@@ -18,6 +18,7 @@ import type {
   TcacheRouteRequest,
   TcacheRouteResult,
 } from '@/features/tcache-route-testbed/model/types';
+import { L } from '@/shared/i18n';
 
 export const TCACHE_ROUTE_API = {
   health: API_ROUTES.tcacheInternalHealth,
@@ -40,7 +41,9 @@ export async function listTcacheRouteJobs(
       ? body.jobs
       : null;
   if (!source) {
-    throw new Error('tcache Route Job 목록 응답 형식이 올바르지 않습니다.');
+    throw new Error(
+      L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
+    );
   }
   return source.map(parseJob);
 }
@@ -72,7 +75,9 @@ export async function createTcacheRouteJob(
       ? readString(value, ['job_id', 'jobId', 'id'])
       : '';
     if (!jobId) {
-      throw new Error('tcache Route Job 생성 응답에 Job ID가 없습니다.');
+      throw new Error(
+        L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
+      );
     }
     job = {
       id: jobId,
@@ -176,7 +181,7 @@ export async function cancelTcacheRouteJob(
         source: 'testbed',
         target: 'trasolve',
         method: 'POST',
-        label: 'POST cancel',
+        label: L('testbed:tcacheRoute.cancelTcacheRouteJob.label.postCancel'),
         path,
       },
       {
@@ -187,7 +192,7 @@ export async function cancelTcacheRouteJob(
         source: 'trasolve',
         target: 'testbed',
         method: 'POST',
-        label: 'POST cancel',
+        label: L('testbed:tcacheRoute.cancelTcacheRouteJob.label.postCancel'),
         path,
         status: response.httpStatus,
         latencyMs: response.durationMs,
@@ -251,7 +256,9 @@ function toCreateLocation(
     return { latitude: location.lat, longitude: location.lng };
   }
   throw new Error(
-    `${location.name} 위치에 Place ID, 주소 또는 좌표가 없습니다.`,
+    L(
+      'testbed:tcacheJobBuilderModel.validateTcacheJobBuilder.text.selectLocationUsingLocationSearch',
+    ),
   );
 }
 
@@ -261,7 +268,9 @@ function unwrapJob(value: unknown): unknown {
 
 function parseJob(value: unknown): TcacheRouteJob {
   if (!isRecord(value)) {
-    throw new Error('tcache Route Job 응답 형식이 올바르지 않습니다.');
+    throw new Error(
+      L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
+    );
   }
   const id = readString(value, ['job_id', 'jobId', 'id']);
   const status = readStatus(value.status ?? 'queued');
@@ -340,7 +349,9 @@ function parseRequest(value: unknown): TcacheRouteRequest {
     return { locations: [], mode: 'TRANSIT', departureTime: '' };
   }
   if (!isRecord(value) || !Array.isArray(value.locations)) {
-    throw new Error('tcache Route Job request 형식이 올바르지 않습니다.');
+    throw new Error(
+      L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
+    );
   }
   const departureTime = readOptionalString(value, [
     'departure_time',
@@ -400,7 +411,9 @@ function readRequestStringOption(
 
 function parseLocation(value: unknown, index: number) {
   if (!isRecord(value)) {
-    throw new Error('tcache Route location 형식이 올바르지 않습니다.');
+    throw new Error(
+      L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
+    );
   }
   const id = readOptionalString(value, ['id']) ?? `location-${index + 1}`;
   const name = readOptionalString(value, ['name', 'label', 'address']) ?? id;
@@ -503,7 +516,8 @@ function parseRouteAlternative(
         readOptionalString(value, ['id', 'route_id', 'routeId']) ??
         `route-${index + 1}`,
       label:
-        readOptionalString(value, ['label', 'summary']) ?? `경로 ${index + 1}`,
+        readOptionalString(value, ['label', 'summary']) ??
+        L('testbed:routeResultPanel.text.path', { value: index + 1 }),
       path,
       legs,
       ...(bounds ? { bounds } : {}),
@@ -566,9 +580,11 @@ function parseLeg(value: unknown, index: number) {
   return [
     {
       from:
-        readOptionalString(value, ['from', 'origin']) ?? `구간 ${index + 1}`,
+        readOptionalString(value, ['from', 'origin']) ??
+        L('testbed:tcacheRoute.parseLeg.text.interval', { value: index + 1 }),
       to:
-        readOptionalString(value, ['to', 'destination']) ?? `구간 ${index + 2}`,
+        readOptionalString(value, ['to', 'destination']) ??
+        L('testbed:tcacheRoute.parseLeg.text.interval', { value: index + 2 }),
       ...(distanceMeters === undefined ? {} : { distanceMeters }),
       ...(durationSeconds === undefined ? {} : { durationSeconds }),
       ...(start ? { start } : {}),
@@ -711,7 +727,9 @@ function readStatus(value: unknown): TcacheRouteJob['status'] {
   if (value === 'pending' || value === 'accepted') {
     return 'queued';
   }
-  throw new Error('알 수 없는 tcache Route Job 상태입니다.');
+  throw new Error(
+    L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
+  );
 }
 
 function readCacheStatus(value: unknown): TcacheRouteJob['cacheStatus'] {
@@ -730,7 +748,9 @@ function readCacheStatus(value: unknown): TcacheRouteJob['cacheStatus'] {
 function readString(value: Record<string, unknown>, keys: string[]): string {
   const result = readOptionalString(value, keys);
   if (result === undefined) {
-    throw new Error(`${keys[0]} 값이 없습니다.`);
+    throw new Error(
+      L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
+    );
   }
   return result;
 }

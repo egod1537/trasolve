@@ -3,6 +3,7 @@ import type {
   RouteOptimizationSchedule,
   RouteOptimizationStartPolicy,
 } from '@/features/route-optimization/model/routeOptimization';
+import { useL, L } from '@/shared/i18n';
 
 type Props = {
   before: readonly TripPlace[];
@@ -38,6 +39,7 @@ export function RouteOptimizationMetrics({
   requestedStartTime,
   running,
 }: Props) {
+  const L = useL();
   const metrics = createMetrics(
     before,
     beforeTravelMinutes,
@@ -49,8 +51,16 @@ export function RouteOptimizationMetrics({
   return (
     <section className="route-optimization-metrics">
       <header>
-        <h3>지표 변화</h3>
-        <p>현재 일정과 최적화 결과의 핵심 수치를 비교합니다.</p>
+        <h3>
+          {L(
+            'routeOptimization:routeOptimizationMetrics.title.indicatorChange',
+          )}
+        </h3>
+        <p>
+          {L(
+            'routeOptimization:routeOptimizationMetrics.description.compareKeyFiguresFromCurrentSchedule',
+          )}
+        </p>
       </header>
       {candidate ? (
         <div className="route-optimization-metric-grid">
@@ -68,14 +78,18 @@ export function RouteOptimizationMetrics({
                 <h4>{metric.label}</h4>
                 <div className="route-optimization-metric-values">
                   <span>
-                    <small>Before</small>
+                    <small>
+                      {L('routeOptimization:comparison.label.before')}
+                    </small>
                     <strong>
                       {formatMetricValue(metric.before, metric.kind)}
                     </strong>
                   </span>
                   <i aria-hidden="true">→</i>
                   <span>
-                    <small>After</small>
+                    <small>
+                      {L('routeOptimization:comparison.label.after')}
+                    </small>
                     <strong>
                       {formatMetricValue(metric.after, metric.kind)}
                     </strong>
@@ -95,8 +109,12 @@ export function RouteOptimizationMetrics({
           role="status"
         >
           {running
-            ? '경로 지표를 계산하고 있습니다.'
-            : '최적화를 실행하면 Before/After 지표를 비교할 수 있습니다.'}
+            ? L(
+                'routeOptimization:routeOptimizationMetrics.description.calculatingRouteMetrics',
+              )
+            : L(
+                'routeOptimization:routeOptimizationMetrics.description.whenYouRunOptimizationYouCan',
+              )}
         </p>
       )}
     </section>
@@ -125,7 +143,9 @@ function createMetrics(
   return [
     {
       key: 'travel',
-      label: '총 이동 시간',
+      label: L(
+        'routeOptimization:routeOptimizationMetrics.createMetrics.label.totalTravelTime',
+      ),
       kind: 'duration',
       before: beforeTravelMinutes,
       after:
@@ -135,7 +155,9 @@ function createMetrics(
     },
     {
       key: 'wait',
-      label: '총 대기 시간',
+      label: L(
+        'routeOptimization:routeOptimizationMetrics.createMetrics.label.totalWaitingTime',
+      ),
       kind: 'duration',
       before: beforeWait,
       after:
@@ -146,7 +168,9 @@ function createMetrics(
     },
     {
       key: 'start',
-      label: '일정 시작 시각',
+      label: L(
+        'routeOptimization:routeOptimizationMetrics.createMetrics.label.scheduleStartTime',
+      ),
       kind: 'time',
       before: beforeStart,
       after:
@@ -154,7 +178,9 @@ function createMetrics(
     },
     {
       key: 'finish',
-      label: '일정 종료 시각',
+      label: L(
+        'routeOptimization:routeOptimizationMetrics.createMetrics.label.scheduleEndTime',
+      ),
       kind: 'time',
       before: beforeFinish,
       after:
@@ -174,7 +200,13 @@ function describeMetricDelta(
     metric.kind,
   );
   if (difference === null) {
-    return { label: '비교 데이터 없음', symbol: '·', tone: 'neutral' };
+    return {
+      label: L(
+        'routeOptimization:routeOptimizationMetrics.describeMetricDelta.label.noComparativeData',
+      ),
+      symbol: '·',
+      tone: 'neutral',
+    };
   }
   if (difference === 0) {
     const fixedStartMatches =
@@ -182,7 +214,13 @@ function describeMetricDelta(
       startPolicy === 'fixed' &&
       metric.after === requestedStartTime;
     return {
-      label: fixedStartMatches ? '지정 시각과 일치' : '변화 없음',
+      label: fixedStartMatches
+        ? L(
+            'routeOptimization:routeOptimizationMetrics.describeMetricDelta.label.matchesSpecifiedTime',
+          )
+        : L(
+            'routeOptimization:routeOptimizationMetrics.describeMetricDelta.label.noChange',
+          ),
       symbol: '→',
       tone: 'neutral',
     };
@@ -192,7 +230,19 @@ function describeMetricDelta(
   if (metric.kind === 'time') {
     const earlier = difference < 0;
     return {
-      label: `${absolute}분 ${earlier ? '빨라짐' : '늦어짐'}`,
+      label: L(
+        'routeOptimization:routeOptimizationMetrics.describeMetricDelta.label.minutes',
+        {
+          absolute: absolute,
+          value: earlier
+            ? L(
+                'routeOptimization:routeOptimizationMetrics.describeMetricDelta.label.faster',
+              )
+            : L(
+                'routeOptimization:routeOptimizationMetrics.describeMetricDelta.label.late',
+              ),
+        },
+      ),
       symbol: earlier ? '↓' : '↑',
       tone: assessTimeTone(
         metric.key,
@@ -204,7 +254,20 @@ function describeMetricDelta(
     };
   }
   return {
-    label: `${absolute}분 ${difference < 0 ? '감소' : '증가'}`,
+    label: L(
+      'routeOptimization:routeOptimizationMetrics.describeMetricDelta.label.minutes',
+      {
+        absolute: absolute,
+        value:
+          difference < 0
+            ? L(
+                'routeOptimization:routeOptimizationMetrics.describeMetricDelta.label.decrease',
+              )
+            : L(
+                'routeOptimization:routeOptimizationMetrics.describeMetricDelta.label.increase',
+              ),
+      },
+    ),
     symbol: difference < 0 ? '↓' : '↑',
     tone: difference < 0 ? 'improvement' : 'warning',
   };
@@ -268,7 +331,12 @@ function formatMetricValue(value: MetricValue, kind: MetricKind): string {
   if (value === null) {
     return '—';
   }
-  return kind === 'duration' ? `${value}분` : String(value);
+  return kind === 'duration'
+    ? L(
+        'routeOptimization:routeOptimizationMetrics.formatMetricValue.text.minutes',
+        { value: value },
+      )
+    : String(value);
 }
 
 function calculateMetricDelta(

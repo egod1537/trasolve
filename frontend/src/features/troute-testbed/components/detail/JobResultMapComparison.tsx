@@ -16,6 +16,7 @@ import type { MapMarkerHandle } from '@/map/adapters/MapObjectController';
 import { GoogleMap, useGoogleMap } from '@/map/components/GoogleMap';
 import { useMapPolyline } from '@/map/hooks/useMapPolyline';
 import { getPlace } from '@/shared/api/places';
+import { useL, L } from '@/shared/i18n';
 
 type RequestLocation = TrouteOptimizeRequest['locations'][number];
 type PlaceLoadState =
@@ -30,6 +31,7 @@ export function JobResultMapComparison({
   job: TestbedJob;
   optimization: TrouteOptimizeResponse | null;
 }) {
+  const L = useL();
   const places = useRequestPlaces(job.request.locations);
   const inputLocations =
     places.status === 'loaded'
@@ -45,18 +47,28 @@ export function JobResultMapComparison({
   return (
     <>
       <p className="job-result-ordering-line-note">
-        선은 방문 순서 비교용이며 실제 도로/대중교통 경로가 아닙니다.
+        {L(
+          'testbed:jobResultMapComparison.description.linesComparisonVisitOrderNotActual',
+        )}
       </p>
       <div className="job-result-map-comparison">
-        <ComparisonPanel title="Input">
+        <ComparisonPanel
+          title={L('testbed:jobResultMapComparison.title.input')}
+        >
           {places.status === 'loading' ? (
-            <MapPlaceholder title="장소 정보를 불러오는 중입니다." />
+            <MapPlaceholder
+              title={L(
+                'testbed:jobResultMapComparison.tooltip.loadingLocationInformation',
+              )}
+            />
           ) : places.status === 'error' ? (
             <MapValidationError message={places.message} />
           ) : (
             <>
               <JobComparisonMap
-                ariaLabel="입력 방문 순서 지도"
+                ariaLabel={L(
+                  'testbed:jobResultMapComparison.ariaLabel.inputVisitOrderMap',
+                )}
                 layer="troute-result-input"
                 locations={inputLocations ?? []}
               />
@@ -65,19 +77,27 @@ export function JobResultMapComparison({
           )}
         </ComparisonPanel>
 
-        <ComparisonPanel title="Optimized">
+        <ComparisonPanel
+          title={L('testbed:jobResultMapComparison.title.optimized')}
+        >
           {optimizedContent.kind === 'placeholder' ? (
             <MapPlaceholder title={optimizedContent.message} />
           ) : optimizedContent.kind === 'error' ? (
             <MapValidationError message={optimizedContent.message} />
           ) : places.status === 'loading' ? (
-            <MapPlaceholder title="장소 정보를 불러오는 중입니다." />
+            <MapPlaceholder
+              title={L(
+                'testbed:jobResultMapComparison.tooltip.loadingLocationInformation',
+              )}
+            />
           ) : places.status === 'error' ? (
             <MapValidationError message={places.message} />
           ) : (
             <>
               <JobComparisonMap
-                ariaLabel="최적화 방문 순서 지도"
+                ariaLabel={L(
+                  'testbed:jobResultMapComparison.ariaLabel.optimizedVisitOrderMap',
+                )}
                 layer="troute-result-optimized"
                 locations={
                   optimizedContent.kind === 'ready'
@@ -108,8 +128,15 @@ function ComparisonPanel({
   title: string;
   children: React.ReactNode;
 }) {
+  const L = useL();
   return (
-    <section className="job-result-map-panel" aria-label={`${title} 경로`}>
+    <section
+      className="job-result-map-panel"
+      aria-label={L(
+        'testbed:jobResultMapComparison.comparisonPanel.ariaLabel.path',
+        { title: title },
+      )}
+    >
       <header>
         <h3 className={Classes.HEADING}>{title}</h3>
       </header>
@@ -281,18 +308,30 @@ function LocationSequence({
             {scheduled ? (
               <>
                 <div>
-                  <dt>도착</dt>
+                  <dt>
+                    {L(
+                      'testbed:jobResultMapComparison.locationSequence.label.arrival',
+                    )}
+                  </dt>
                   <dd>{location.stop?.arrival_time ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt>출발</dt>
+                  <dt>
+                    {L(
+                      'testbed:jobResultMapComparison.locationSequence.label.departure',
+                    )}
+                  </dt>
                   <dd>{location.stop?.departure_time ?? '—'}</dd>
                 </div>
               </>
             ) : null}
             <div>
-              <dt>체류</dt>
-              <dd>{location.request.stay_minutes}분</dd>
+              <dt>{L('testbed:jobRequestLocationTable.text.stay')}</dt>
+              <dd>
+                {L('testbed:jobRequestLocationTable.text.minutes2', {
+                  stay_minutes: location.request.stay_minutes,
+                })}
+              </dd>
             </div>
           </dl>
         </li>
@@ -312,13 +351,16 @@ function MapPlaceholder({ title }: { title: string }) {
 }
 
 function MapValidationError({ message }: { message: string }) {
+  const L = useL();
   return (
     <div className="job-result-map-placeholder">
       <Callout
         compact
         intent={Intent.DANGER}
         role="alert"
-        title="지도 검증 오류"
+        title={L(
+          'testbed:jobResultMapComparison.mapValidationError.tooltip.mapValidationError',
+        )}
       >
         {message}
       </Callout>
@@ -337,7 +379,10 @@ function useRequestPlaces(
   );
   const invalidMessage =
     invalidLocations.length > 0
-      ? `지도 표시에는 유효한 Place ID가 필요합니다: ${invalidLocations.map((location) => location.id).join(', ')}`
+      ? L(
+          'testbed:jobResultMapComparison.useRequestPlaces.text.mapDisplayRequiresValidPlaceId',
+          { value: invalidLocations.map((location) => location.id).join(', ') },
+        )
       : null;
   const [state, setState] = useState<PlaceLoadState>({
     key,
@@ -375,7 +420,9 @@ function useRequestPlaces(
             message:
               cause instanceof Error
                 ? cause.message
-                : '장소 좌표를 불러오지 못했습니다.',
+                : L(
+                    'testbed:jobResultMapComparison.useRequestPlaces.message.failedLoadLocationCoordinates',
+                  ),
           });
         }
       },

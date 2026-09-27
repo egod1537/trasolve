@@ -25,32 +25,32 @@ export type PlaceOpeningTimeline = {
 export type PlaceOpeningStatus =
   | (OpeningStatusBase & {
       type: 'open';
-      label: '영업 중';
+      label: string;
       relativeText?: string;
     })
   | (OpeningStatusBase & {
       type: 'closing-soon';
-      label: '곧 마감';
+      label: string;
       relativeText?: string;
     })
   | (OpeningStatusBase & {
       type: 'closed';
-      label: '영업 종료';
+      label: string;
       nextOpenText?: string;
     })
   | (OpeningStatusBase & {
       type: 'before-open';
-      label: '영업 전';
+      label: string;
       nextOpenText?: string;
       relativeText?: string;
     })
   | (OpeningStatusBase & {
       type: 'always-open';
-      label: '24시간 영업';
+      label: string;
     })
   | (OpeningStatusBase & {
       type: 'unknown';
-      label: '영업시간 정보 없음' | '영업시간 확인 필요';
+      label: string;
       explanation?: string;
     });
 
@@ -78,27 +78,61 @@ export type PlaceOpeningTimelineRange = {
 
 const MINUTES_PER_DAY = 24 * 60;
 const MINUTES_PER_WEEK = 7 * MINUTES_PER_DAY;
-const weekdayLabels = [
-  '일요일',
-  '월요일',
-  '화요일',
-  '수요일',
-  '목요일',
-  '금요일',
-  '토요일',
-];
-const shortWeekdayLabels = ['일', '월', '화', '수', '목', '금', '토'];
+export type PlaceOpeningHoursMessages = {
+  status: {
+    open: string;
+    closingSoon: string;
+    closed: string;
+    beforeOpen: string;
+    alwaysOpen: string;
+    unavailable: string;
+    needsReview: string;
+  };
+  weekdays: readonly string[];
+  shortWeekdays: readonly string[];
+  today: string;
+  tomorrow: string;
+  nextDay: string;
+  closed: string;
+  alwaysOpenWeek: string;
+  missingTimeZone: string;
+  after: (time: string) => string;
+  duration: (hours: number, minutes: number) => string;
+  closesAfter: (duration: string) => string;
+  opensAfter: (duration: string) => string;
+  opensAt: (prefix: string, time: string) => string;
+};
 
-function formatDuration(minutes: number) {
+const EMPTY_MESSAGES: PlaceOpeningHoursMessages = {
+  status: {
+    open: '',
+    closingSoon: '',
+    closed: '',
+    beforeOpen: '',
+    alwaysOpen: '',
+    unavailable: '',
+    needsReview: '',
+  },
+  weekdays: ['', '', '', '', '', '', ''],
+  shortWeekdays: ['', '', '', '', '', '', ''],
+  today: '',
+  tomorrow: '',
+  nextDay: '',
+  closed: '',
+  alwaysOpenWeek: '',
+  missingTimeZone: '',
+  after: (time) => time,
+  duration: (_hours, _minutes) => '',
+  closesAfter: (duration) => duration,
+  opensAfter: (duration) => duration,
+  opensAt: (_prefix, time) => time,
+};
+
+function formatDuration(minutes: number, messages: PlaceOpeningHoursMessages) {
   const rounded = Math.max(0, Math.ceil(minutes));
-  if (rounded < 60) {
-    return `${rounded}분`;
-  }
   const hours = Math.floor(rounded / 60);
   const remainingMinutes = rounded % 60;
-  return remainingMinutes
-    ? `${hours}시간 ${remainingMinutes}분`
-    : `${hours}시간`;
+  return messages.duration(hours, remainingMinutes);
 }
 
 function getParts(date: Date, hours: PlaceOpeningHours): LocalClock | null {
@@ -302,6 +336,7 @@ function isAlwaysOpen(schedule?: PlaceOpeningSchedule) {
 function formatTodayHours(
   periods: readonly PlaceOpeningHoursPeriod[],
   clock: LocalClock,
+  messages: PlaceOpeningHoursMessages,
 ) {
   const ranges: Array<{ start: number; text: string }> = [];
   for (const period of periods) {
@@ -312,14 +347,14 @@ function formatTodayHours(
       if (!period.close) {
         ranges.push({
           start,
-          text: `${formatClockTime(period.open)} 이후`,
+          text: messages.after(formatClockTime(period.open)),
         });
         continue;
       }
       const nextDay = !isSamePointDay(period.open, period.close);
       ranges.push({
         start,
-        text: `${formatClockTime(period.open)} ~ ${nextDay ? '익일 ' : ''}${formatClockTime(period.close)}`,
+        text: `${formatClockTime(period.open)} ~ ${nextDay ? `${messages.nextDay} ` : ''}${formatClockTime(period.close)}`,
       });
     } else if (closesToday && period.close) {
       ranges.push({
@@ -334,7 +369,10 @@ function formatTodayHours(
     .map(({ text }) => text);
 }
 
-function formatWeeklyHours(schedule?: PlaceOpeningSchedule) {
+function formatWeeklyHours(
+  schedule: PlaceOpeningSchedule | undefined,
+  messages: PlaceOpeningHoursMessages,
+) {
   if (schedule?.weekdayDescriptions?.length) {
     return schedule.weekdayDescriptions;
   }
@@ -342,7 +380,7 @@ function formatWeeklyHours(schedule?: PlaceOpeningSchedule) {
     return [];
   }
   if (isAlwaysOpen(schedule)) {
-    return ['월~일 24시간 영업'];
+    return [messages.alwaysOpenWeek];
   }
 
   return [1, 2, 3, 4, 5, 6, 0].map((day) => {
@@ -350,11 +388,11 @@ function formatWeeklyHours(schedule?: PlaceOpeningSchedule) {
       .periods!.filter((period) => !period.open.date && period.open.day === day)
       .map((period) => {
         if (!period.close) {
-          return `${formatClockTime(period.open)} 이후`;
+          return messages.after(formatClockTime(period.open));
         }
         return `${formatClockTime(period.open)} ~ ${formatClockTime(period.close)}`;
       });
-    return `${shortWeekdayLabels[day]} ${ranges.length ? ranges.join(', ') : '휴무'}`;
+    return `${messages.shortWeekdays[day]} ${ranges.length ? ranges.join(', ') : messages.closed}`;
   });
 }
 
@@ -438,23 +476,27 @@ function nextOpeningFromTimestamp(
   } satisfies NextOpening;
 }
 
-function formatNextOpen(next: NextOpening) {
+function formatNextOpen(
+  next: NextOpening,
+  messages: PlaceOpeningHoursMessages,
+) {
   const prefix =
     next.dayOffset <= 0
-      ? '오늘'
+      ? messages.today
       : next.dayOffset === 1
-        ? '내일'
-        : weekdayLabels[next.point.day];
-  return `${prefix} ${formatClockTime(next.point)} 오픈`;
+        ? messages.tomorrow
+        : messages.weekdays[next.point.day];
+  return messages.opensAt(prefix, formatClockTime(next.point));
 }
 
 export function getPlaceOpeningStatus(
   hours: PlaceOpeningHours | undefined,
   now = new Date(),
+  messages: PlaceOpeningHoursMessages = EMPTY_MESSAGES,
 ): PlaceOpeningStatus {
   const current = hours?.current;
   const regular = hours?.regular;
-  const weeklyHours = formatWeeklyHours(regular ?? current);
+  const weeklyHours = formatWeeklyHours(regular ?? current, messages);
   const base = {
     todayHours: [] as string[],
     weeklyHours,
@@ -462,7 +504,7 @@ export function getPlaceOpeningStatus(
   };
 
   if (!hours || (!current && !regular)) {
-    return { ...base, type: 'unknown', label: '영업시간 정보 없음' };
+    return { ...base, type: 'unknown', label: messages.status.unavailable };
   }
 
   const localNow = getParts(now, hours);
@@ -470,9 +512,8 @@ export function getPlaceOpeningStatus(
     return {
       ...base,
       type: 'unknown',
-      label: '영업시간 확인 필요',
-      explanation:
-        '장소의 현지 시간대 정보가 없어 실시간 상태를 계산하지 않습니다.',
+      label: messages.status.needsReview,
+      explanation: messages.missingTimeZone,
     };
   }
 
@@ -480,7 +521,7 @@ export function getPlaceOpeningStatus(
     return {
       ...base,
       type: 'always-open',
-      label: '24시간 영업',
+      label: messages.status.alwaysOpen,
       timelineRanges: [
         {
           start: 0,
@@ -494,7 +535,7 @@ export function getPlaceOpeningStatus(
 
   const schedule = current ?? regular;
   const periods = schedule?.periods ?? [];
-  const todayHours = formatTodayHours(periods, localNow);
+  const todayHours = formatTodayHours(periods, localNow, messages);
   const timelineRanges = getTodayTimelineRanges(periods, localNow);
   const resultBase = { todayHours, weeklyHours, timelineRanges };
   const timing = getWeeklyTiming(periods, localNow);
@@ -504,12 +545,14 @@ export function getPlaceOpeningStatus(
     const closeIn =
       minutesUntil(schedule?.nextCloseTime, now) ?? timing.minutesUntilClose;
     const relativeText =
-      closeIn === undefined ? undefined : `${formatDuration(closeIn)} 후 마감`;
+      closeIn === undefined
+        ? undefined
+        : messages.closesAfter(formatDuration(closeIn, messages));
     return closeIn !== undefined && closeIn <= CLOSING_SOON_THRESHOLD_MINUTES
       ? {
           ...resultBase,
           type: 'closing-soon',
-          label: '곧 마감',
+          label: messages.status.closingSoon,
           relativeText,
           timeline: getOpeningTimeline(
             timelineRanges,
@@ -520,7 +563,7 @@ export function getPlaceOpeningStatus(
       : {
           ...resultBase,
           type: 'open',
-          label: '영업 중',
+          label: messages.status.open,
           relativeText,
           timeline: getOpeningTimeline(timelineRanges, localNow, 'open'),
         };
@@ -533,26 +576,26 @@ export function getPlaceOpeningStatus(
     return {
       ...resultBase,
       type: 'closed',
-      label: '영업 종료',
+      label: messages.status.closed,
       timeline: getOpeningTimeline(timelineRanges, localNow, 'closed'),
     };
   }
 
-  const nextOpenText = formatNextOpen(next);
+  const nextOpenText = formatNextOpen(next, messages);
   if (next.dayOffset === 0) {
     return {
       ...resultBase,
       type: 'before-open',
-      label: '영업 전',
+      label: messages.status.beforeOpen,
       nextOpenText,
-      relativeText: `${formatDuration(next.minutes)} 후 영업 시작`,
+      relativeText: messages.opensAfter(formatDuration(next.minutes, messages)),
       timeline: getOpeningTimeline(timelineRanges, localNow, 'before-open'),
     };
   }
   return {
     ...resultBase,
     type: 'closed',
-    label: '영업 종료',
+    label: messages.status.closed,
     nextOpenText,
     timeline: getOpeningTimeline(timelineRanges, localNow, 'closed'),
   };

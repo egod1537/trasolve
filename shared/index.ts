@@ -149,18 +149,18 @@ export type {
 } from './types/chat.js';
 
 export {
+  googleOAuthProfileSchema,
   googleOAuthResultSchema,
-  googleOAuthUserSchema,
 } from './schemas/googleOAuth.js';
 
 export type {
+  GoogleOAuthProfile,
   GoogleOAuthResult,
-  GoogleOAuthUser,
 } from './types/googleOAuth.js';
 
-export { authMeResponseSchema } from './schemas/auth.js';
+export { authMeResponseSchema, authUserSchema } from './schemas/auth.js';
 
-export type { AuthMeResponse } from './types/auth.js';
+export type { AuthMeResponse, AuthUser } from './types/auth.js';
 
 export {
   openWebUIModelSchema,
@@ -184,6 +184,7 @@ export {
   trouteJobCompletedEventSchema,
   trouteJobFailedEventSchema,
   trouteJobIdSchema,
+  trouteLegacyFlatJobEventSchema,
   trouteJobProgressEventSchema,
   trouteJobSnapshotEventSchema,
   trouteJobStateSchema,
@@ -193,11 +194,13 @@ export {
   trouteOptimizeRequestSchema,
   trouteOptimizeResponseSchema,
   trouteProgressStageSchema,
+  trouteProviderSelectionSourceSchema,
   trouteRemoteJobListResponseSchema,
   trouteRemoteJobSchema,
   trouteRemoteJobSummarySchema,
   trouteRemoteTimelineEntrySchema,
   trouteRemoteTimelineSchema,
+  trouteRouteProviderSchema,
   trouteRouteStopSchema,
   trouteSolverCandidateSchema,
   trouteSolverObjectiveScoreSchema,
@@ -213,6 +216,7 @@ export type {
   TrouteJobCancelledEvent,
   TrouteJobCompletedEvent,
   TrouteJobFailedEvent,
+  TrouteLegacyFlatJobEvent,
   TrouteJobProgressEvent,
   TrouteJobSnapshotEvent,
   TrouteJobState,
@@ -222,11 +226,13 @@ export type {
   TrouteOptimizeRequest,
   TrouteOptimizeResponse,
   TrouteProgressStage,
+  TrouteProviderSelectionSource,
   TrouteRemoteJob,
   TrouteRemoteJobListResponse,
   TrouteRemoteJobSummary,
   TrouteRemoteTimeline,
   TrouteRemoteTimelineEntry,
+  TrouteRouteProvider,
   TrouteRouteStop,
   TrouteSolverCandidate,
   TrouteSolverObjectiveScore,

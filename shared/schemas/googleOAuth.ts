@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { authUserSchema } from './auth.js';
 
-export const googleOAuthUserSchema = z.object({
-  id: z.string().min(1),
+export const googleOAuthProfileSchema = z.object({
+  subject: z.string().min(1),
   email: z.string().min(1),
   emailVerified: z.boolean(),
   name: z.string().min(1).optional(),
@@ -11,7 +12,7 @@ export const googleOAuthUserSchema = z.object({
 export const googleOAuthResultSchema = z.discriminatedUnion('status', [
   z.object({
     status: z.literal('success'),
-    user: googleOAuthUserSchema,
+    user: authUserSchema,
   }),
   z.object({
     status: z.literal('error'),

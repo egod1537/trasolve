@@ -2,7 +2,6 @@ import { useMemo, useState, type ReactNode } from 'react';
 import type { PlaceOpeningHours } from '@trasolve/shared';
 import { LoadingSpinner } from '@/shared/ui/LoadingSpinner';
 import { formatClockTime } from '@/entities/place';
-import { formatDurationMinutes } from '@/entities/place';
 import { getPlaceOpeningStatus } from '@/entities/place';
 import {
   MIN_VISIT_DURATION_MINUTES,
@@ -13,6 +12,8 @@ import {
   TimeRangeTimeline,
   type TimeRangeTimelineRange,
 } from '@/features/place-editor/ui/TimeRangeTimeline';
+import { useL, L, NL } from '@/shared/i18n';
+import { formatDurationMinutes } from '@/shared/i18n/formatters';
 
 type Props = {
   time?: string;
@@ -88,9 +89,13 @@ function formatCompactDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const remainder = minutes % 60;
   if (!hours) {
-    return `${remainder}분`;
+    return L('place:placeTimeTimeline.formatCompactDuration.text.minutes', {
+      remainder: remainder,
+    });
   }
-  return remainder ? `${hours}h ${remainder}m` : `${hours}h`;
+  return remainder
+    ? `${hours}${NL('h')} ${remainder}${NL('m')}`
+    : `${hours}${NL('h')}`;
 }
 
 function getOpeningRange(
@@ -157,13 +162,26 @@ function createTimelineModel(
     arrival === undefined ? undefined : formatClockTime(arrival);
   const labels: string[] = [];
   if (arrivalText) {
-    labels.push(`방문 ${arrivalText}`);
+    labels.push(
+      L('place:placeTimeTimeline.createTimelineModel.text.visit', {
+        arrivalText: arrivalText,
+      }),
+    );
   }
   if (visitDurationMinutes !== undefined) {
-    labels.push(`방문 시간 ${formatDurationMinutes(visitDurationMinutes)}`);
+    labels.push(
+      L('place:placeTimeTimeline.createTimelineModel.text.visitDuration', {
+        formatDurationMinutes: formatDurationMinutes(visitDurationMinutes, L),
+      }),
+    );
   }
   if (opening) {
-    labels.push(`영업 ${opening.startText}부터 ${opening.endText}까지`);
+    labels.push(
+      L('place:placeTimeTimeline.createTimelineModel.text.fromSales', {
+        startText: opening.startText,
+        endText: opening.endText,
+      }),
+    );
   }
 
   return {
@@ -182,14 +200,17 @@ function ExpandedTimeline({
   saving: boolean;
   showCreateHint: boolean;
 }) {
+  const L = useL();
   return (
     <section
       className="place-time-detail"
-      aria-label="시간 타임라인"
+      aria-label={L(
+        'place:placeTimeTimeline.expandedTimeline.ariaLabel.timeTimeline',
+      )}
       aria-busy={saving}
     >
       <div className="place-time-detail-heading">
-        <h3>시간</h3>
+        <h3>{L('place:placeTimeTimeline.expandedTimeline.title.time')}</h3>
         <span
           className={`place-time-saving-indicator${saving ? ' is-visible' : ''}`}
           aria-hidden="true"
@@ -198,14 +219,16 @@ function ExpandedTimeline({
         </span>
         {saving && (
           <span className="sr-only" role="status">
-            시간을 저장하고 있습니다.
+            {L('place:placeTimeTimeline.expandedTimeline.text.youSavingTime')}
           </span>
         )}
       </div>
       {timeline}
       {showCreateHint && (
         <p className="place-time-create-hint">
-          방문 시간을 설정하려면 타임라인을 클릭하세요
+          {L(
+            'place:placeTimeTimeline.expandedTimeline.description.clickTimelineSetVisitTimes',
+          )}
         </p>
       )}
     </section>
@@ -222,6 +245,7 @@ export function PlaceTimeTimeline({
   saving = false,
   onChangeTimeRange,
 }: Props) {
+  const L = useL();
   const [previewRange, setPreviewRange] =
     useState<TimeRangeTimelineRange | null>(null);
   const model = useMemo(
@@ -329,18 +353,26 @@ export function PlaceTimeTimeline({
       }
       ariaLabel={
         awaitingRangeCreation
-          ? '방문 시간이 설정되지 않았습니다. 타임라인에서 방문 시작 시간을 선택하세요.'
+          ? L('place:placeTimeTimeline.ariaLabel.visitingHoursHaveNotBeenSet')
           : previewRange &&
               displayedVisitRange &&
               displayedDuration !== undefined
-            ? `방문 ${formatClockTime(displayedVisitRange.start)}, 방문 시간 ${formatDurationMinutes(displayedDuration)}`
+            ? L('place:placeTimeTimeline.ariaLabel.visitVisitDuration', {
+                formatClockTime: formatClockTime(displayedVisitRange.start),
+                formatDurationMinutes: formatDurationMinutes(
+                  displayedDuration,
+                  L,
+                ),
+              })
             : model.label
       }
       rangeLabel={
         variant === 'compact' &&
         displayedVisitRange &&
         displayedDuration !== undefined
-          ? `방문 ${formatCompactDuration(displayedDuration)}`
+          ? L('place:placeTimeTimeline.text.visit', {
+              formatCompactDuration: formatCompactDuration(displayedDuration),
+            })
           : undefined
       }
       variant={variant}

@@ -1,4 +1,5 @@
 import type { KeyboardEvent, PointerEvent } from 'react';
+import { useL } from '@/shared/i18n';
 
 interface DragHandleProps {
   label: string;
@@ -25,17 +26,20 @@ export function DragHandle({
   onLostPointerCapture,
   onKeyDown,
 }: DragHandleProps) {
+  const L = useL();
   return (
     <button
       type="button"
       className={`${className}${dragging ? ' is-dragging' : ''}`.trim()}
       disabled={disabled}
-      aria-label={`${label} 순서 변경`}
+      aria-label={L('common:dragHandle.ariaLabel.changeOrder', {
+        label: label,
+      })}
       aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
       title={
         disabled
-          ? '출발지와 도착지는 순서를 변경할 수 없습니다.'
-          : '드래그하거나 Alt + ↑/↓ 키로 순서 변경'
+          ? L('common:dragHandle.tooltip.orderOriginDestinationCannotBeChanged')
+          : L('common:dragHandle.tooltip.changeOrderByDraggingUsingAlt')
       }
       onClick={(event) => event.stopPropagation()}
       onPointerDown={onPointerDown}

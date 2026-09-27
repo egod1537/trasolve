@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import type { GoogleOAuthUser } from '@trasolve/shared';
+import type { GoogleOAuthProfile } from '@trasolve/shared';
 
 const authorizationEndpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
 const tokenEndpoint = 'https://oauth2.googleapis.com/token';
@@ -89,7 +89,7 @@ export class GoogleOAuthClient {
   public async completeAuthorization(
     authorizationCode: string,
     codeVerifier: string,
-  ): Promise<GoogleOAuthUser> {
+  ): Promise<GoogleOAuthProfile> {
     const code = requireAuthorizationValue(
       authorizationCode,
       'authorization code',
@@ -153,7 +153,9 @@ export class GoogleOAuthClient {
     return { accessToken };
   }
 
-  private async fetchUserInfo(accessToken: string): Promise<GoogleOAuthUser> {
+  private async fetchUserInfo(
+    accessToken: string,
+  ): Promise<GoogleOAuthProfile> {
     let response: Response;
 
     try {
@@ -179,7 +181,7 @@ export class GoogleOAuthClient {
     }
 
     const body = await readJsonObject(response, 'invalid_userinfo_response');
-    const id = readRequiredString(body, 'sub');
+    const subject = readRequiredString(body, 'sub');
     const email = readRequiredString(body, 'email');
     const emailVerified = body.email_verified;
 
@@ -190,7 +192,7 @@ export class GoogleOAuthClient {
       );
     }
 
-    const user: GoogleOAuthUser = { id, email, emailVerified };
+    const user: GoogleOAuthProfile = { subject, email, emailVerified };
     const name = readOptionalString(body, 'name');
     const pictureUrl = readOptionalHttpsUrl(body, 'picture');
 

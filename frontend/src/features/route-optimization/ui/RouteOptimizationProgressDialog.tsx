@@ -4,6 +4,7 @@ import type { RouteOptimizationProgress } from '@/features/route-optimization/ap
 import { Button } from '@/shared/ui/Button';
 import { Dialog } from '@/shared/ui/Dialog';
 import { Progress } from '@/shared/ui/Progress';
+import { useL, L } from '@/shared/i18n';
 
 export type RouteOptimizationProgressPhase =
   | 'submitting'
@@ -25,63 +26,159 @@ type Props = {
 const PROGRESS_STEPS = [
   {
     stage: 'accepted',
-    label: '요청 접수',
-    message: '최적화 요청을 접수했습니다.',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.label.requestReceived',
+      );
+    },
+    get message() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.message.optimizationRequestHasBeenReceived',
+      );
+    },
   },
   {
     stage: 'validating_request',
-    label: '입력 검증',
-    message: '장소와 일정 조건을 검증하고 있습니다.',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.label.inputValidation',
+      );
+    },
+    get message() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.message.weVerifyingLocationScheduleConditions',
+      );
+    },
   },
   {
     stage: 'selecting_provider',
-    label: '경로 제공자 선택',
-    message: '경로 제공자를 선택하고 있습니다.',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.label.selectRouteProvider',
+      );
+    },
+    get message() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.message.youSelectingRouteProvider',
+      );
+    },
   },
   {
     stage: 'preparing_matrix',
-    label: '이동시간 조회 준비',
-    message: '장소 간 이동시간 조회를 준비하고 있습니다.',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.label.preparingCheckTravelTime',
+      );
+    },
+    get message() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.message.wePreparingCheckTravelTimesBetween',
+      );
+    },
   },
   {
     stage: 'fetching_travel_times',
-    label: '이동시간 조회',
-    message: '장소 간 이동시간을 조회하고 있습니다.',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.label.travelTimeInquiry',
+      );
+    },
+    get message() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.message.weLookingUpTravelTimesBetween',
+      );
+    },
   },
   {
     stage: 'building_matrix',
-    label: '이동시간 행렬 구성',
-    message: '이동시간 행렬을 구성하고 있습니다.',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.label.constructingTravelTimeMatrix',
+      );
+    },
+    get message() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.message.weConstructingTravelTimeMatrix',
+      );
+    },
   },
   {
     stage: 'generating_candidates',
-    label: '초기 경로 후보 생성',
-    message: '초기 경로 후보를 생성하고 있습니다.',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.label.generateInitialRouteCandidates',
+      );
+    },
+    get message() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.message.weGeneratingInitialRouteCandidates',
+      );
+    },
   },
   {
     stage: 'optimizing_route',
-    label: '경로 최적화',
-    message: '방문 순서를 최적화하고 있습니다.',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationModal.title.routeOptimization',
+      );
+    },
+    get message() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.message.weOptimizingOrderVisits',
+      );
+    },
   },
   {
     stage: 'selecting_best_candidate',
-    label: '최적 경로 선택',
-    message: '후보 경로를 비교하고 있습니다.',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.label.chooseOptimalRoute',
+      );
+    },
+    get message() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.message.comparingCandidatePaths',
+      );
+    },
   },
   {
     stage: 'scheduling',
-    label: '일정 계산',
-    message: '방문 일정을 계산하고 있습니다.',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.label.scheduleCalculation',
+      );
+    },
+    get message() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.message.weCalculatingItineraryVisit',
+      );
+    },
   },
   {
     stage: 'validating_schedule',
-    label: '일정 제약 검증',
-    message: '영업시간과 체류시간 제약을 검증하고 있습니다.',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.label.scheduleConstraintVerification',
+      );
+    },
+    get message() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.message.weVerifyingBusinessHoursResidenceTime',
+      );
+    },
   },
   {
     stage: 'finalizing_result',
-    label: '결과 생성',
-    message: '최적화 결과를 정리하고 있습니다.',
+    get label() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.label.generateResults',
+      );
+    },
+    get message() {
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.message.weOrganizingOptimizationResults',
+      );
+    },
   },
 ] as const satisfies readonly {
   stage: TrouteProgressStage;
@@ -99,6 +196,7 @@ export function RouteOptimizationProgressDialog({
   onClose,
   onRetry,
 }: Props) {
+  const L = useL();
   const titleId = useId();
   const descriptionId = useId();
   const currentStepRef = useRef<HTMLLIElement>(null);
@@ -137,8 +235,17 @@ export function RouteOptimizationProgressDialog({
 
         {phase === 'failed' ? (
           <div className="route-optimization-progress-error" role="alert">
-            <strong>경로 최적화에 실패했습니다.</strong>
-            <p>{error ?? '경로 최적화 요청을 완료하지 못했습니다.'}</p>
+            <strong>
+              {L(
+                'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.pathOptimizationFailed',
+              )}
+            </strong>
+            <p>
+              {error ??
+                L(
+                  'routeOptimization:routeOptimizationProgressDialog.description.routeOptimizationRequestCouldNotBe',
+                )}
+            </p>
           </div>
         ) : null}
 
@@ -150,27 +257,33 @@ export function RouteOptimizationProgressDialog({
               animated={active}
               label={
                 percentage === undefined
-                  ? '경로 최적화 진행 중'
-                  : `경로 최적화 진행률 ${percentage}%`
+                  ? L(
+                      'routeOptimization:routeOptimizationProgressDialog.text.routeOptimizationProgress',
+                    )
+                  : L(
+                      'routeOptimization:routeOptimizationProgressDialog.text.routeOptimizationProgress2',
+                      { percentage: percentage },
+                    )
               }
             />
-            <span>{percentage === undefined ? '' : `${percentage}%`}</span>
+            <span>
+              {percentage === undefined
+                ? ''
+                : L(
+                    'routeOptimization:routeOptimizationProgressDialog.text.message',
+                    { percentage: percentage },
+                  )}
+            </span>
           </div>
         ) : null}
 
         <ol
           className="route-optimization-progress-steps"
-          aria-label="경로 최적화 단계"
+          aria-label={L(
+            'routeOptimization:routeOptimizationProgressDialog.ariaLabel.pathOptimizationPhase',
+          )}
           tabIndex={0}
         >
-          {unknownStage ? (
-            <ProgressStep
-              label="처리 중"
-              state={getCurrentStepState(phase)}
-              phase={phase}
-              currentStepRef={currentStepRef}
-            />
-          ) : null}
           {PROGRESS_STEPS.map((step, index) => {
             const state = getStepState(phase, stage, index);
             return (
@@ -183,11 +296,24 @@ export function RouteOptimizationProgressDialog({
               />
             );
           })}
+          {unknownStage ? (
+            <ProgressStep
+              label={L(
+                'routeOptimization:routeOptimizationProgressDialog.text.processing',
+              )}
+              state={getCurrentStepState(phase)}
+              phase={phase}
+              currentStepRef={currentStepRef}
+            />
+          ) : null}
         </ol>
 
         {progress && phase !== 'cancelled' ? (
           <p className="route-optimization-progress-server-status">
-            서버 상태: {formatServerStatus(progress.status)}
+            {L(
+              'routeOptimization:routeOptimizationProgressDialog.text.serverStatus',
+              { status: formatServerStatus(progress.status) },
+            )}
           </p>
         ) : null}
       </div>
@@ -195,14 +321,14 @@ export function RouteOptimizationProgressDialog({
       <footer className="route-optimization-progress-actions">
         {phase === 'failed' ? (
           <>
-            <Button onClick={onClose}>닫기</Button>
+            <Button onClick={onClose}>{L('common:action.close')}</Button>
             <Button variant="primary" onClick={onRetry}>
-              다시 시도
+              {L('common:action.retry')}
             </Button>
           </>
         ) : phase === 'cancelled' ? (
           <Button variant="primary" onClick={onClose}>
-            닫기
+            {L('common:action.close')}
           </Button>
         ) : phase === 'completed' ? null : (
           <Button
@@ -210,7 +336,11 @@ export function RouteOptimizationProgressDialog({
             disabled={phase === 'cancelling'}
             onClick={onCancel}
           >
-            {phase === 'cancelling' ? '취소 중' : '취소'}
+            {phase === 'cancelling'
+              ? L(
+                  'routeOptimization:routeOptimizationProgressDialog.action.canceling',
+                )
+              : L('common:action.cancel')}
           </Button>
         )}
       </footer>
@@ -247,15 +377,25 @@ function ProgressStep({
 function getTitle(phase: RouteOptimizationProgressPhase): string {
   switch (phase) {
     case 'completed':
-      return '최적화가 완료되었습니다';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.getTitle.text.optimizationComplete',
+      );
     case 'failed':
-      return '경로 최적화 실패';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.getTitle.text.pathOptimizationFailed',
+      );
     case 'cancelling':
-      return '최적화를 취소하고 있습니다';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.getTitle.text.cancelingOptimization',
+      );
     case 'cancelled':
-      return '최적화가 취소되었습니다';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.getTitle.text.optimizationHasBeenCanceled',
+      );
     default:
-      return '경로를 최적화하고 있습니다';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.getTitle.text.optimizingRoute',
+      );
   }
 }
 
@@ -268,17 +408,27 @@ function getMessage(
   }
   switch (phase) {
     case 'submitting':
-      return '최적화 요청을 전송하고 있습니다.';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.getMessage.text.sendingOptimizationRequest',
+      );
     case 'running':
       return formatStageMessage(progress?.stage);
     case 'completed':
-      return '최적화가 완료되었습니다.';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.getMessage.text.optimizationComplete',
+      );
     case 'failed':
-      return '요청을 다시 시도하거나 팝업을 닫을 수 있습니다.';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.getMessage.text.youCanRetryRequestClosePop',
+      );
     case 'cancelling':
-      return '실행 중인 요청과 진행 상태 연결을 정리하고 있습니다.';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.getMessage.text.cleaningUpConnectionsBetweenRunningRequests',
+      );
     case 'cancelled':
-      return '최적화가 취소되었습니다.';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.getMessage.text.optimizationHasBeenCancelled',
+      );
   }
 }
 
@@ -286,11 +436,15 @@ function formatStageMessage(
   stage: RouteOptimizationProgress['stage'] | undefined,
 ): string {
   if (stage === 'solving') {
-    return '방문 순서를 최적화하고 있습니다.';
+    return L(
+      'routeOptimization:routeOptimizationProgressDialog.pROGRESSSTEPS.message.weOptimizingOrderVisits',
+    );
   }
   return (
     PROGRESS_STEPS.find((step) => step.stage === stage)?.message ??
-    '서버의 진행 상태를 기다리고 있습니다.'
+    L(
+      'routeOptimization:routeOptimizationProgressDialog.formatStageMessage.text.waitingServerSProgress',
+    )
   );
 }
 
@@ -365,15 +519,29 @@ function formatStepState(
 ): string {
   switch (state) {
     case 'completed':
-      return '완료';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.formatStepState.text.done',
+      );
     case 'failed':
-      return '실패';
+      return L(
+        'routeOptimization:routeOptimizationModal.formatDayStatus.text.failure',
+      );
     case 'cancelled':
-      return '취소됨';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.formatStepState.text.canceled',
+      );
     case 'running':
-      return phase === 'cancelling' ? '취소 중' : '진행 중';
+      return phase === 'cancelling'
+        ? L(
+            'routeOptimization:routeOptimizationProgressDialog.action.canceling',
+          )
+        : L(
+            'routeOptimization:routeOptimizationProgressDialog.formatStepState.text.progress',
+          );
     case 'waiting':
-      return '대기';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.formatStepState.text.waiting',
+      );
   }
 }
 
@@ -382,14 +550,24 @@ function formatServerStatus(
 ): string {
   switch (status) {
     case 'pending':
-      return '대기 중';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.formatServerStatus.text.waiting',
+      );
     case 'running':
-      return '실행 중';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.formatServerStatus.text.running',
+      );
     case 'completed':
-      return '완료';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.formatStepState.text.done',
+      );
     case 'failed':
-      return '실패';
+      return L(
+        'routeOptimization:routeOptimizationModal.formatDayStatus.text.failure',
+      );
     case 'cancelled':
-      return '취소됨';
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.formatStepState.text.canceled',
+      );
   }
 }

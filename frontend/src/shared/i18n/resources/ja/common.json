@@ -1,0 +1,132 @@
+{
+  "action": {
+    "add": "追加",
+    "apply": "適用",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "copy": "コピー",
+    "delete": "削除",
+    "refresh": "更新",
+    "retry": "再試行",
+    "save": "保存",
+    "select": "選択",
+    "signOut": "ログアウト"
+  },
+  "dragHandle": {
+    "ariaLabel": {
+      "changeOrder": "{{label}}を並べ替え"
+    },
+    "tooltip": {
+      "changeOrderByDraggingUsingAlt": "ドラッグするか、Alt+↑/↓キーで順序を変更する",
+      "orderOriginDestinationCannotBeChanged": "出発地と到着地の順番は変更できません。"
+    }
+  },
+  "featureSection": {
+    "features": {
+      "description": {
+        "checkLocationMovementOrderBetweenLocations": "場所間の位置と移動順をスケジュールと併せて確認できます。",
+        "organizePlacesTimesVisitByDate": "日付別に訪問する場所と時間を整理します。",
+        "startPlanningTripByReferringDifferent": "他の旅程構成を参考に、旅行計画を始めます。"
+      },
+      "title": {
+        "movementPath": "移動経路",
+        "travelItinerary": "旅行スケジュール",
+        "travelTemplate": "旅行テンプレート"
+      }
+    },
+    "title": {
+      "manageSchedulesRoutesTogether": "スケジュールとルートを一緒に管理します。"
+    }
+  },
+  "header": {
+    "ariaLabel": {
+      "buildCommitNewTab": "ビルドコミット{{sha}}（新しいタブ）",
+      "buildInformation": "ビルド情報",
+      "mainMenu": "メインメニュー",
+      "trasolveHome": "Trasolve ホーム"
+    },
+    "text": {
+      "goServices": "サービスに移動"
+    }
+  },
+  "hero": {
+    "ariaLabel": {
+      "startMenu": "開始メニュー"
+    },
+    "description": {
+      "makeTravelPlanByLookingAt": "移動経路を確認しながら、旅行計画を組み立てましょう。",
+      "placeScheduleOnePlan": "場所とスケジュールを一つのプランにまとめ、"
+    },
+    "text": {
+      "gettingStarted": "始める",
+      "viewFeatures": "機能を見る"
+    },
+    "title": {
+      "organizeItAllAtOnce": "まとめて整理しましょう。",
+      "travelItineraryRoute": "旅行のスケジュールとルートを"
+    }
+  },
+  "jobs": {
+    "jOBSTATUSLABELS": {
+      "text": {
+        "canceled": "キャンセル済み",
+        "done": "完了",
+        "running": "実行中",
+        "waiting": "待機中"
+      }
+    }
+  },
+  "landingPage": {
+    "healthLabels": {
+      "text": {
+        "checkingServiceConnectionStatus": "サービス接続状態確認中",
+        "serviceApiConnectionNotPossible": "サービスAPI接続不可",
+        "serviceApiConnectionPossible": "サービスAPI接続可能"
+      }
+    },
+    "render": {
+      "description": {
+        "travelPlanningServiceCurrentlyPreparation": "旅行計画サービスは現在準備中です。"
+      }
+    },
+    "text": {
+      "trasolve": "© {{year}} Trasolve"
+    }
+  },
+  "languageControl": {
+    "ariaLabel": {
+      "selectLanguage": "言語を選択"
+    },
+    "error": {
+      "failedChangeLanguage": "言語の変更に失敗しました。"
+    },
+    "label": {
+      "language": "言語"
+    },
+    "language": {
+      "en": "English",
+      "ja": "日本語",
+      "ko": "한국어"
+    }
+  },
+  "routes": {
+    "loadingLabel": {
+      "pageLoading": "ページを読み込んでいます。"
+    }
+  },
+  "status": {
+    "error": "エラー"
+  },
+  "themeControl": {
+    "ariaLabel": {
+      "theme": "テーマ：{{label}}"
+    },
+    "themeOptions": {
+      "label": {
+        "dark": "ダーク",
+        "light": "ライト",
+        "system": "システム"
+      }
+    }
+  }
+}

@@ -1,0 +1,465 @@
+{
+  "bottomContextPanel": {
+    "ariaLabel": {
+      "dayInformation": "{{title}} Dayについて"
+    },
+    "label": {
+      "day": "日"
+    },
+    "text": {
+      "locations": "{{length}}場所"
+    }
+  },
+  "dayColorControl": {
+    "ariaLabel": {
+      "changeColor": "{{dayTitle}}色の変更",
+      "clickShowHidePressHoldChange": "{{dayTitle}} {{value}}クリック：表示/非表示・長押し：カラー変更",
+      "hiddenStatus": "隠し状態",
+      "message": "{{label}} {{value}}",
+      "showing": "表示中"
+    },
+    "dAYCOLORLABELS": {
+      "text": {
+        "blue": "青",
+        "green": "要約",
+        "look": "ボラ",
+        "meeting": "会庁",
+        "namhoe": "男子会",
+        "orange": "オレンジ",
+        "pink": "ピンク",
+        "red": "赤",
+        "teal": "ターコイズ",
+        "yellow": "黄色"
+      }
+    },
+    "text": {
+      "dayColor": "日の色"
+    },
+    "tooltip": {
+      "clickShowHidePressHoldChange": "クリック：表示/非表示・長押し：カラー変更"
+    }
+  },
+  "dayLayerSection": {
+    "ariaLabel": {
+      "editName": "{{title}}名前を編集"
+    },
+    "text": {
+      "expand": "広げる",
+      "fold": "折りたたみ",
+      "message": "{{title}} {{value}}",
+      "putHere": "ここに置く",
+      "thereNoRegisteredItems": "登録された項目はありません。"
+    }
+  },
+  "googleMap": {
+    "ariaLabel": {
+      "map": "地図"
+    },
+    "description": {
+      "mapCannotBeLoadedCheckConnection": "地図を読み込めません。接続を確認してください。",
+      "setUpMapConnection": "地図接続を設定してください。"
+    },
+    "text": {
+      "googleMapsAuthenticationFailed": "Google Maps認証に失敗しました。"
+    }
+  },
+  "layer": {
+    "add": "レイヤーを追加"
+  },
+  "layerBulkActionBar": {
+    "action": {
+      "deleting": "削除中…"
+    },
+    "ariaLabel": {
+      "batchOperationsSelections": "選択項目の一括操作",
+      "bulkChangeMeansTransportation": "移動手段一括変更",
+      "changeSelectedRouteTransportationMethod": "選択した経路移動手段の変更",
+      "deleteSelectedLocations": "選択した場所{{length}}個を削除"
+    },
+    "description": {
+      "connectionRoutesAutomaticallyReorganizedMatchOrder": "接続パスは、場所の順序に合わせて自動的に再設定されます。"
+    },
+    "text": {
+      "failedChangeModeTransportation": "移動手段を変更できませんでした。",
+      "failedDeleteSelectedLocation": "選択した場所を削除できませんでした。",
+      "meansTransportation": "移動手段",
+      "paths": "· ルート {{length}} 個",
+      "selected": "{{totalCount}} 個を選択しました",
+      "taskFailed": "ジョブの失敗",
+      "transportationMixed": "移動手段・混合",
+      "youSureYouWantDeleteSelected": "選択した{{length}}個を削除してもよろしいですか？"
+    }
+  },
+  "layerPanel": {
+    "ariaLabel": {
+      "travelItinerary": "旅行スケジュール"
+    }
+  },
+  "layerPanelContent": {
+    "description": {
+      "thereNoTravelPlansYet": "まだ旅行のスケジュールはありません。"
+    }
+  },
+  "layerPanelHeader": {
+    "action": {
+      "changeTourName": "旅行名の変更"
+    },
+    "ariaLabel": {
+      "editTravelPlanName": "旅行プラン名を編集",
+      "shareTrip": "旅行の共有",
+      "travelOptions": "旅行オプション"
+    },
+    "formatSavedAt": {
+      "label": {
+        "lastSaved": "最終保存：{{value}}",
+        "message": "{{date}} {{time}}",
+        "saved": "保存済み"
+      },
+      "title": {
+        "koKr": "コ-KR"
+      }
+    },
+    "saveLabel": {
+      "text": {
+        "saveFailed": "保存失敗",
+        "saving": "保存中…",
+        "waitingSave": "保存待ち"
+      }
+    },
+    "text": {
+      "dayPcsPlacePcs": "{{length}}日 · {{placeCount}}か所",
+      "share": "共有"
+    },
+    "tooltip": {
+      "doubleClickEditTripName": "ダブルクリックして旅行名を編集"
+    }
+  },
+  "layerValidationIndicator": {
+    "text": {
+      "caution": "注意",
+      "error": "エラー"
+    }
+  },
+  "mapCanvas": {
+    "ariaLabel": {
+      "travelLocationMap": "旅行場所の地図"
+    },
+    "renderMapStatus": {
+      "description": {
+        "checkMapConnectionTryAgainYou": "地図の接続を確認してからもう一度お試しください。カレンダーのリストは引き続き確認できます。",
+        "onceYouVeEstablishedMapConnection": "マップ接続を設定すると、予定の場所とルートが表示されます。左側の例のスケジュールを見ることができます。",
+        "waitMoment": "しばらくお待ちください。"
+      },
+      "title": {
+        "canTLoadMap": "地図を読み込めません",
+        "mapLoading": "地図を読み込んでいます"
+      }
+    }
+  },
+  "mapToolPanel": {
+    "ariaLabel": {
+      "mapTool": "マップツール"
+    },
+    "text": {
+      "moveMap": "地図を移動",
+      "routeOptimization": "ルート最適化",
+      "runAgain": "やり直す",
+      "undo": "元に戻す"
+    }
+  },
+  "mapWorkspacePage": {
+    "render": {
+      "ariaLabel": {
+        "travelSelectionMapBackground": "旅行選択地図の背景"
+      }
+    },
+    "runAction": {
+      "text": {
+        "travelRequestFailed": "旅行リクエストに失敗しました。"
+      }
+    },
+    "text": {
+      "listCouldNotBeLoaded": "リストを読み込めません。"
+    },
+    "title": {
+      "newTravel": "新しい旅行"
+    }
+  },
+  "place": {
+    "welcome": "{{name}}さん、旅行先を選択してください"
+  },
+  "placeLayerItem": {
+    "content": {
+      "ariaLabel": {
+        "editName": "{{name}} 名前を編集"
+      },
+      "text": {
+        "arrivalLocation": "到着場所",
+        "departureLocation": "出発場所"
+      }
+    },
+    "text": {
+      "changeIconColor": "{{name}} アイコンと色の変更",
+      "details": "{{name}}詳細{{value}}",
+      "open": "開く",
+      "stay": "滞在{{formatDurationMinutes}}"
+    }
+  },
+  "polylineLayerItem": {
+    "ariaLabel": {
+      "fromFrom": "{{fromName}}から{{toName}}までの一定期間{{formatClockTime}}から{{formatClockTime}}まで"
+    },
+    "fromName": {
+      "text": {
+        "unknownPlace": "未知の場所"
+      }
+    },
+    "text": {
+      "betweenPlaces": "・場所間{{formatDurationMinutes}}",
+      "details": "{{connectionName}}詳細{{value}}"
+    }
+  },
+  "polylineMetrics": {
+    "formatPolylineDistance": {
+      "text": {
+        "noRouteInformation": "ルート情報なし"
+      }
+    }
+  },
+  "polylineMode": {
+    "pOLYLINEMODEOPTIONS": {
+      "label": {
+        "car": "車",
+        "publicTransportation": "公共交通機関",
+        "straightLine": "直線",
+        "walk": "歩く"
+      }
+    }
+  },
+  "quickSearch": {
+    "ariaLabel": {
+      "closeQuickSearch": "クイック検索を閉じる",
+      "enter": "{{label}} 入力",
+      "searchMode": "検索モード：{{label}}",
+      "searchMode2": "検索モード"
+    },
+    "sEARCHMODES": {
+      "label": {
+        "askAi": "AIに質問",
+        "searchMySchedule": "マイスケジュールを検索",
+        "searchPlace": "場所検索"
+      },
+      "placeholder": {
+        "askQuestionAboutTravelPlans": "旅行プランについて質問する",
+        "searchCurrentTravelItinerariesLocations": "現在の旅行のスケジュールと場所を検索"
+      },
+      "text": {
+        "aiResponse": "AI応答",
+        "enterPlaceYouWantSearch": "検索する場所を入力してください。",
+        "enterQuestionAboutTravelPlans": "旅行プランに関する質問を入力してください。",
+        "enterScheduleLocationYouWantSearch": "検索する予定や場所を入力してください。",
+        "placeSearchResults": "場所検索結果",
+        "scheduleSearchResults": "スケジュール検索結果"
+      }
+    },
+    "text": {
+      "functionNotYetConnected": "{{label}} 機能はまだ接続されていません。",
+      "modeSwitching": "モード切替",
+      "move": "移動",
+      "willAppearHere": "{{resultsTitle}} がここに表示されます。"
+    },
+    "title": {
+      "quickSearch": "クイック検索"
+    }
+  },
+  "route": {
+    "summary": "{{from}}から{{to}}まで{{minutes}}分"
+  },
+  "routeSettingsCard": {
+    "ariaLabel": {
+      "chooseMethodTravel": "移動方法を選択",
+      "message": "{{label}}、{{durationAriaLabel}}",
+      "routeSettings": "ルート設定"
+    },
+    "description": {
+      "weReSavingWayMoving": "移動方法を保存しています。"
+    },
+    "mODEDESCRIPTIONS": {
+      "text": {
+        "straightLineConnectsTwoPlaces": "2つの場所を直線で接続します。",
+        "useCarTravelRoutes": "車の移動ルートを使用してください。",
+        "usePublicTransportationRoutes": "公共交通機関のルートを使用してください。",
+        "useWalkingRoutes": "徒歩で移動パスを使用します。"
+      }
+    },
+    "resolveDurationPresentation": {
+      "ariaLabel": {
+        "estimatedTime": "推定時間{{label}}",
+        "noEstimatedTime": "予想時間なし",
+        "viewingEstimatedTime": "予想時間の照会中"
+      }
+    }
+  },
+  "routes": {
+    "loadingLabel": {
+      "loadingTravelMap": "旅行地図を読み込んでいます。"
+    }
+  },
+  "search": {
+    "placeholder": "場所を検索してください",
+    "result_count": "検索結果 {{count}}件"
+  },
+  "tripCommandDispatcher": {
+    "applyCommands": {
+      "error": {
+        "travelChangeValueIncorrect": "旅行の変更値が正しくありません。"
+      }
+    },
+    "applyHistoryOperation": {
+      "error": {
+        "tripChangeHistoryCannotBeRestored": "旅行の変更履歴を復元できません。"
+      }
+    }
+  },
+  "tripCommandPlanAdapter": {
+    "error": {
+      "durationVisit": "訪問所要時間",
+      "unsupportedTravelOrder": "サポートしていない旅行コマンドです。",
+      "visitStartTime": "訪問開始時間"
+    },
+    "missingVisitField": {
+      "text": {
+        "placesWithoutRetainTheirExistingValues": "{{field}}のない場所は既存の値を保存して変更することはできません。"
+      }
+    }
+  },
+  "tripCommandPlanError": {
+    "normalizeTripCommandPlanError": {
+      "message": {
+        "travelOrderPlanCannotBeSafely": "旅行指導計画を安全に準備することはできません。"
+      }
+    }
+  },
+  "tripCommandPlanExecutor": {
+    "error": {
+      "someSelectedLocationsNotCurrentlyTrip": "選択した場所のうち、現在旅行にない項目があります。",
+      "thereDuplicateIdsSelectedPlacesList": "選択した場所のリストに重複IDがあります。",
+      "thereDuplicateStepIdTravelCommand": "旅行指導計画のステップIDが重複しています。",
+      "travelOrderPlansDoNotCurrently": "旅行指導計画は現在旅行を対象としていません。",
+      "tripHasChangedSinceCommandPlans": "旅行は命令計画を作成した後に変更されました。"
+    },
+    "executePreparedTripCommandPlan": {
+      "message": {
+        "preparedTravelCommandCannotBeSafely": "準備された旅行コマンドを安全に実行することはできません。",
+        "tripHasChangedSinceItWas": "旅行は計画の準備後に変更されました。"
+      }
+    },
+    "prepareTripCommandPlan": {
+      "message": {
+        "containsUnsupportedTravelCommands": "サポートされていない旅行コマンドが含まれています。",
+        "travelCommandPlanFormatIncorrect": "旅行コマンドプランの形式が正しくありません。"
+      }
+    }
+  },
+  "tripCommandPlanPlaceLookup": {
+    "error": {
+      "iCanTFindPlaceAdd": "追加する場所が見つかりません。",
+      "privilegedLocationInformationCouldNotBe": "特権のある場所情報を呼び出すことはできません。",
+      "thereWasNoSingleSearchResult": "追加する場所の検索結果が1つに決定されていません。"
+    }
+  },
+  "tripCommandPlanResolver": {
+    "error": {
+      "connectorDestinationDoesNotExistCurrent": "接続線のターゲットは現在の旅行に存在しません。",
+      "connectorTargetNotFound": "接続線の宛先が見つかりません。",
+      "currentStepCannotReferLaterSteps": "現在のステップは、後のステップや自分自身を参照することはできません。",
+      "dateDestinationDoesNotExistCurrent": "日付のターゲットは現在の旅行に存在しません。",
+      "dateTargetNotFound": "日付の宛先が見つかりません。",
+      "iCanTDecideWhichOrder": "移動する場所の順序を決定できません。",
+      "locationDestinationDoesNotCurrentlyExist": "場所のターゲットは現在の旅行に存在しません。",
+      "locationDestinationNotFound": "場所のターゲットが見つかりません。",
+      "noPlaceFoundMatchingName": "名前が一致する場所が見つかりません。",
+      "previousStepReferencedDoesNotExist": "参照した前のステップは存在しません。",
+      "previousStepResultsNotAvailable": "前のステップの結果は使用できません。",
+      "requestedDateSequenceOutsideCurrentTravel": "要求された日付順が現在の旅行範囲外です。",
+      "requestedPlaceSequenceOutsideCurrentDate": "要求された場所の順序が現在の日付範囲外です。",
+      "resultingFormatFromPreviousStepNot": "前の手順の結果形式は現在のターゲットと互換性がありません。",
+      "selectedLocationDestinationCannotBeFound": "選択した場所のターゲットが見つかりません。",
+      "thereMultiplePlacesMatchingNames": "名前が一致する場所が複数あります。",
+      "unableDetermineOrderDatesMove": "移動する日付の順序を決定できません。"
+    }
+  },
+  "tripCommands": {
+    "error": {
+      "canTFindPlaceMove": "引っ越し先が見つからない。",
+      "confirmDateOrderMovement": "移動する日付と順序を確認してください。",
+      "connectorNotFound": "コネクタが見つかりません。",
+      "dateWhichScheduleAppliesCannotBe": "スケジュールが適用される日付が見つかりません。",
+      "iCanTFindDateChange": "名前を変更する日付が見つかりません。",
+      "iCanTFindDateChange2": "色を変更する日付が見つかりません。",
+      "iCanTFindDateChange3": "注文を変更する日付が見つかりません。",
+      "locationNotFound": "場所が見つかりません。",
+      "locationStartEndPointOptimizationSchedule": "最適化スケジュールの場所または開始/終了点が現在の日と一致しません。",
+      "newTripItemIdIncorrect": "The new trip item ID is incorrect.",
+      "orderPlacesOptimizationResultsDoesNot": "最適化結果の順位が現在の日と一致しません。",
+      "selectDateYouWouldLikeAdd": "場所を追加する日付を選択してください。"
+    }
+  },
+  "tripEditController": {
+    "error": {
+      "savedTripDifferentFromCurrentSession": "保存されたトリップは現在のセッションとは異なります。"
+    },
+    "executeTripCommandString": {
+      "error": {
+        "youCannotRunCommandsClosedTrip": "終了した旅行エディタではコマンドを実行できません。"
+      }
+    },
+    "getCommandExecutionError": {
+      "text": {
+        "commandExecutionFailed": "コマンドの実行に失敗しました。",
+        "thereNoChangeHistoryRedo": "再実行する変更履歴はありません。",
+        "thereNoChangeHistoryRevert": "元に戻す変更履歴はありません。"
+      }
+    },
+    "runSave": {
+      "error": {
+        "failedSaveTrip": "旅行の保存に失敗しました。"
+      }
+    }
+  },
+  "tripLayer": {
+    "toTripLayerModel": {
+      "title": {
+        "message": "{{title}} · {{order}}。 {{name}}"
+      }
+    }
+  },
+  "tripPolylineCard": {
+    "ariaLabel": {
+      "changeModeTransportation": "移動手段の変更: {{formatPolylineMode}}"
+    },
+    "description": {
+      "movementSection": "・移動区間"
+    },
+    "label": {
+      "distance": "ストリート",
+      "estimatedTravelTime": "予想移動時間",
+      "memo": "メモ"
+    },
+    "text": {
+      "beforeRouteCalculation": "ルート計算前",
+      "closeTravelMethodSettings": "移動方法の設定を閉じる",
+      "closeTripRouteCard": "トリップパスカードを閉じる",
+      "movementSection": "{{title}} · 移動区間",
+      "notSet": "設定しない"
+    },
+    "tooltip": {
+      "wayMoving": "移動方法"
+    }
+  },
+  "useTrip": {
+    "error": {
+      "tripproviderRequired": "TripProvider が必要です。"
+    }
+  }
+}

@@ -3,6 +3,7 @@ import { memo } from 'react';
 import type { TrouteOptimizeResponse } from '@trasolve/shared';
 import type { TestbedJob } from '@/entities/route-job';
 import { JobResultMapComparison } from '@/features/troute-testbed/components/detail/JobResultMapComparison';
+import { useL } from '@/shared/i18n';
 
 export const JobResultSummary = memo(function JobResultSummary({
   job,
@@ -11,30 +12,45 @@ export const JobResultSummary = memo(function JobResultSummary({
   job: TestbedJob;
   optimization: TrouteOptimizeResponse | null;
 }) {
+  const L = useL();
   return (
     <section className="route-summary" aria-labelledby="route-title">
       <div className="route-overview">
         <div>
           <h2 id="route-title" className={Classes.HEADING}>
-            Input vs Optimized
+            {L('testbed:jobResultSummary.title.inputVsOptimized')}
           </h2>
           {optimization ? (
             <>
-              <span className={Classes.TEXT_MUTED}>최종 경로</span>
-              <div aria-label="결과 방문 순서">
+              <span className={Classes.TEXT_MUTED}>
+                {L('testbed:jobResultSummary.text.finalRoute')}
+              </span>
+              <div
+                aria-label={L(
+                  'testbed:jobResultSummary.ariaLabel.resultsVisitOrder',
+                )}
+              >
                 {optimization.route.map((stop) => stop.location_id).join(' → ')}
               </div>
             </>
           ) : (
             <span className={Classes.TEXT_MUTED}>
-              입력 순서와 최적화 결과를 비교합니다.
+              {L(
+                'testbed:jobResultSummary.text.compareInputSequenceOptimizationResults',
+              )}
             </span>
           )}
         </div>
         {optimization ? (
           <div>
-            <span className={Classes.TEXT_MUTED}>총 이동 시간</span>
-            <strong>{optimization.total_travel_minutes}분</strong>
+            <span className={Classes.TEXT_MUTED}>
+              {L('testbed:jobResultSummary.text.totalTravelTime')}
+            </span>
+            <strong>
+              {L('testbed:jobResultSummary.text.minutes', {
+                total_travel_minutes: optimization.total_travel_minutes,
+              })}
+            </strong>
           </div>
         ) : null}
       </div>

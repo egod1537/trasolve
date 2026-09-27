@@ -18,6 +18,7 @@ import { JobResultSummary } from '@/features/troute-testbed/components/detail/Jo
 import { JobSummary } from '@/features/troute-testbed/components/detail/JobSummary';
 import { JobTimeline } from '@/features/troute-testbed/components/detail/JobTimeline';
 import type { TrouteJobEventStreamStatus } from '@/features/troute-testbed/model/useTrouteJobEventStream';
+import { useL } from '@/shared/i18n';
 
 interface JobDetailProps {
   job: TestbedJob | null;
@@ -34,13 +35,16 @@ export const JobDetail = memo(function JobDetail({
   streamError,
   onRequestCancel,
 }: JobDetailProps) {
+  const L = useL();
   if (!job) {
     return (
       <Card className="job-detail job-detail-empty" elevation={1} compact>
         <NonIdealState
           icon="search"
-          title="실행 정보를 확인할 Job을 선택하세요."
-          description="새 Job은 생성 즉시 왼쪽 목록에 표시됩니다."
+          title={L(
+            'testbed:jobDetail.tooltip.selectJobCheckExecutionInformation',
+          )}
+          description={L('testbed:jobDetail.text.newJobsAppearListLeftAs')}
         />
       </Card>
     );
@@ -52,30 +56,32 @@ export const JobDetail = memo(function JobDetail({
     <Card className="job-detail" elevation={1} compact>
       <div className="detail-heading">
         <div className="detail-heading-copy">
-          <h1 className={Classes.HEADING}>Job 상세</h1>
+          <h1 className={Classes.HEADING}>
+            {L('testbed:jobDetail.title.jobDetails')}
+          </h1>
           <span className={Classes.TEXT_MUTED}>
-            Trasolve gateway 관찰 정보
+            {L('testbed:jobDetail.text.trasolveGatewayObservationInformation')}
             {streamStatus === 'retrying' ? (
               <span
                 className="job-stream-retrying"
                 role="status"
                 title={streamError ?? undefined}
               >
-                연결 재시도 중
+                {L('testbed:jobDetail.text.retryingConnection')}
               </span>
             ) : null}
           </span>
         </div>
         {job.status === 'pending' || job.status === 'running' ? (
           <Button
-            aria-label="Job 강제 종료"
+            aria-label={L('testbed:cancelJobDialog.tooltip.forceQuitJob')}
             icon="stop"
             intent={Intent.DANGER}
             loading={cancelling}
             disabled={cancelling}
             onClick={() => onRequestCancel(job.id)}
           >
-            Job 강제 종료
+            {L('testbed:cancelJobDialog.tooltip.forceQuitJob')}
           </Button>
         ) : null}
       </div>
@@ -90,7 +96,7 @@ export const JobDetail = memo(function JobDetail({
             compact
             intent={Intent.DANGER}
             role="alert"
-            title="요청 실패"
+            title={L('testbed:jobDetail.tooltip.requestFailed')}
           >
             {job.error}
           </Callout>
@@ -101,9 +107,12 @@ export const JobDetail = memo(function JobDetail({
             compact
             intent={Intent.WARNING}
             role="status"
-            title="Job 상태 확인 실패"
+            title={L('testbed:jobDetail.tooltip.requestFailed')}
           >
-            {job.inspectionError} 기존 gateway 결과와 Timeline은 유지됩니다.
+            {L(
+              'testbed:jobDetail.text.existingGatewayResultsTimelineMaintained',
+              { inspectionError: job.inspectionError },
+            )}
           </Callout>
         ) : null}
 
@@ -112,7 +121,7 @@ export const JobDetail = memo(function JobDetail({
             compact
             intent={Intent.DANGER}
             role="alert"
-            title="Job 강제 종료에 실패했습니다."
+            title={L('testbed:jobDetail.tooltip.forceTerminationJobFailed')}
           >
             {job.cancelError}
           </Callout>
@@ -123,10 +132,11 @@ export const JobDetail = memo(function JobDetail({
             compact
             intent={Intent.WARNING}
             role="status"
-            title="결과 불일치"
+            title={L('testbed:jobDetail.tooltip.resultDiscrepancy')}
           >
-            Job 조회 결과와 gateway 응답의 최적화 결과가 다릅니다. Job 조회
-            결과를 우선 표시합니다.
+            {L(
+              'testbed:jobDetail.text.optimizationResultsJobQueryResultGateway',
+            )}
           </Callout>
         ) : null}
 

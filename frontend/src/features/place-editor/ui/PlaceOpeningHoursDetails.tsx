@@ -1,20 +1,27 @@
 import { useId } from 'react';
 import type { PlaceOpeningHours } from '@trasolve/shared';
 import { getPlaceOpeningStatus } from '@/entities/place';
+import { createPlaceOpeningHoursMessages } from '@/features/place-editor/lib/placeOpeningHoursMessages';
+import { useL } from '@/shared/i18n';
 
 type Props = {
   hours: PlaceOpeningHours;
 };
 
 export function PlaceOpeningHoursDetails({ hours }: Props) {
+  const L = useL();
   const weeklyHoursTitleId = useId();
-  const status = getPlaceOpeningStatus(hours);
+  const status = getPlaceOpeningStatus(
+    hours,
+    new Date(),
+    createPlaceOpeningHoursMessages(L),
+  );
   const todayHours =
     status.type === 'always-open'
-      ? '24시간 영업'
+      ? L('place:placeOpeningHours.text.open24Hours')
       : status.todayHours.length > 0
         ? status.todayHours.join(', ')
-        : '휴무';
+        : L('place:placeOpeningHours.formatWeeklyHours.text.closed');
 
   return (
     <div className={`place-opening-details is-${status.type}`}>
@@ -25,7 +32,9 @@ export function PlaceOpeningHoursDetails({ hours }: Props) {
 
       <dl className="place-opening-detail-summary">
         <div>
-          <dt>오늘 영업시간</dt>
+          <dt>
+            {L('place:placeOpeningHoursDetails.label.businessHoursToday')}
+          </dt>
           <dd>{todayHours}</dd>
         </div>
       </dl>
@@ -34,7 +43,9 @@ export function PlaceOpeningHoursDetails({ hours }: Props) {
         className="place-opening-detail-weekly"
         aria-labelledby={weeklyHoursTitleId}
       >
-        <h4 id={weeklyHoursTitleId}>요일별 영업시간</h4>
+        <h4 id={weeklyHoursTitleId}>
+          {L('place:placeOpeningHoursDetails.title.businessHoursByDay')}
+        </h4>
         {status.weeklyHours.length > 0 ? (
           <ul>
             {status.weeklyHours.map((description, index) => (
@@ -42,7 +53,11 @@ export function PlaceOpeningHoursDetails({ hours }: Props) {
             ))}
           </ul>
         ) : (
-          <p>주간 영업시간 정보가 없습니다.</p>
+          <p>
+            {L(
+              'place:placeOpeningHoursDetails.description.weeklyBusinessHoursInformationNotAvailable',
+            )}
+          </p>
         )}
       </section>
 

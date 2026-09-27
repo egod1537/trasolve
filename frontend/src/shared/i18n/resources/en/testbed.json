@@ -1,0 +1,1233 @@
+{
+  "aiChatTestPage": {
+    "aiChatTestContent": {
+      "action": {
+        "loading": "Loading...",
+        "resetConversation": "Reset conversation",
+        "viewModelList": "View model list"
+      },
+      "description": {
+        "checkConversationsWaitResponsesDisplayErrors": "Check conversations, wait for responses, and display errors with the real chat API.",
+        "sendEnterBreakLineShiftEnter": "Send with Enter · Break line with Shift+Enter · Reset also cancels any requests in progress.",
+        "thereNoModelsAvailable": "There are no models available."
+      },
+      "label": {
+        "requestModel": "request model"
+      },
+      "text": {
+        "modelListCouldNotBeLoaded": "The model list could not be loaded.",
+        "serverDefaultModelOpenwebuiModel": "Server default model (OPENWEBUI_MODEL)",
+        "testbedList": "← Testbed list"
+      },
+      "title": {
+        "aiChatTestBed": "AI Chat Test Bed",
+        "openwebuiModels": "OpenWebUI Models"
+      }
+    }
+  },
+  "appHeader": {
+    "ariaLabel": {
+      "api": "API {{healthLabel}}",
+      "refreshApiStatus": "Refresh API status",
+      "refreshTcacheStatus": "Refresh tcache status",
+      "returnTestbedList": "Return to testbed list",
+      "tcache": "tcache {{healthLabel}}"
+    },
+    "tHEMEOPTIONS": {
+      "label": {
+        "dark": "dark",
+        "light": "light",
+        "system": "system"
+      }
+    },
+    "text": {
+      "apiPost": "/api · POST",
+      "checking": "Checking",
+      "connectionFailed": "Connection failed",
+      "normal": "normal",
+      "offline": "offline",
+      "online": "online",
+      "trasolveTcacheRouteTestbed": "Trasolve · tcache Route Testbed",
+      "trasolveTestbed": "trasolve testbed"
+    },
+    "themeMenu": {
+      "ariaLabel": {
+        "theme": "theme",
+        "theme2": "Theme: {{label}}"
+      }
+    }
+  },
+  "cancelJobDialog": {
+    "description": {
+      "calculationsRecordsThatHaveAlreadyBeen": "Calculations and records that have already been performed are maintained, and a new Job must be created to run them again after termination.",
+      "finalStatusReflectedAfterCancellationResponse": "The final status is reflected after the cancellation response or SSE status is confirmed.",
+      "terminatesCurrentlyRunningJob": "Terminates the currently running Job.",
+      "youSureYouWantCancelOperation": "Are you sure you want to cancel the operation?"
+    },
+    "tooltip": {
+      "cancelRouteOperation": "Cancel route operation",
+      "forceQuitJob": "Force quit job"
+    }
+  },
+  "debugPanel": {
+    "ariaLabel": {
+      "request": "Request"
+    },
+    "debugPanelContent": {
+      "ariaLabel": {
+        "eventLog": "event log"
+      },
+      "title": {
+        "requestLastRequestValue": "Request · Last request value"
+      }
+    },
+    "logText": {
+      "text": {
+        "waitingEvent": "waiting for event"
+      }
+    },
+    "requestJson": {
+      "text": {
+        "waitingRequest": "waiting for request"
+      }
+    },
+    "text": {
+      "debugApiInformation": "Debug/API information",
+      "routePolylineCoordinates": "Route polyline ({{coordinateCount}} coordinates)"
+    }
+  },
+  "directionsPanel": {
+    "action": {
+      "addWaypoint": "+ Add waypoint",
+      "requesting": "Requesting…"
+    },
+    "ariaLabel": {
+      "deleteWaypoint": "Delete waypoint {{value}}"
+    },
+    "describeEndpoint": {
+      "text": {
+        "addressString": "address string",
+        "coordinates": "Coordinates: {{lat}}, {{lng}}",
+        "selectedPlacePlaceid": "Selected place · placeId: {{placeId}}"
+      }
+    },
+    "label": {
+      "directions": "Directions"
+    },
+    "text": {
+      "description": "{{inputId}}-description",
+      "mapsTestIntermediate": "maps-test-intermediate-{{id}}",
+      "waypoint": "waypoint {{value}}"
+    }
+  },
+  "gatewayResultModel": {
+    "describeCancelError": {
+      "text": {
+        "jobForceTerminationResponseFormatIncorrect": "Job force termination response format is incorrect.",
+        "requestForceTerminateJobFailed": "The request to force terminate the Job failed."
+      }
+    },
+    "describeGatewayError": {
+      "text": {
+        "responseValidationFailed": "Response validation failed: {{value}}",
+        "successResponseDoesNotMatchTroute": "The success response does not match the troute contract.",
+        "trasolveBackendRequestFailed": "Trasolve backend request failed."
+      }
+    }
+  },
+  "googleMapsTestPage": {
+    "googleMapsTestContent": {
+      "ariaLabel": {
+        "mapControl": "map control"
+      },
+      "description": {
+        "playgroundDevelopmentRealGoogleApi": "Playground for development · Real Google API"
+      },
+      "text": {
+        "mapClick": "Map click: {{lat}}, {{lng}}{{value}}",
+        "mapReady": "Map is ready",
+        "selectLocation": "Select location: {{name}}"
+      },
+      "title": {
+        "googleMapsTestBed": "Google Maps Test Bed"
+      }
+    }
+  },
+  "googleOAuthTestPage": {
+    "googleOAuthTestContent": {
+      "action": {
+        "loginGoogle": "Login with Google"
+      },
+      "description": {
+        "developmentOnlyBackendOauthFlowVerification": "Development-only backend OAuth flow verification."
+      },
+      "title": {
+        "googleOauthTest": "Google OAuth Test"
+      }
+    },
+    "oAuthResultView": {
+      "description": {
+        "backendGoogleOauthConfigurationUnavailable": "The backend Google OAuth configuration is unavailable.",
+        "idleNoOauthResultRequested": "Idle — no OAuth result requested.",
+        "loadingOauthResult": "Loading OAuth result…",
+        "oneTimeOauthResultMissingHas": "The one-time OAuth result is missing or has expired.",
+        "sanitizedOauthResultCouldNotBe": "The sanitized OAuth result could not be read."
+      },
+      "label": {
+        "email": "Email",
+        "emailVerified": "Email verified",
+        "name": "Name",
+        "pictureUrl": "Picture URL"
+      },
+      "status": {
+        "success": "Success"
+      },
+      "text": {
+        "no": "No",
+        "yes": "Yes"
+      },
+      "title": {
+        "oauthFailed": "OAuth failed",
+        "oauthUnavailable": "OAuth unavailable",
+        "resultMissing": "Result missing",
+        "resultRequestFailed": "Result request failed"
+      }
+    }
+  },
+  "googlePlaceSearch": {
+    "label": {
+      "searchPlace": "Search for a place"
+    },
+    "placeholder": {
+      "enterPlaceAddress": "Enter a place or address"
+    },
+    "selectSuggestion": {
+      "text": {
+        "selected": "{{name}} selected"
+      }
+    },
+    "text": {
+      "enterAtLeast2Characters": "Please enter at least 2 characters.",
+      "locationSearchFailed": "Location search failed.",
+      "noSearchResults": "No search results.",
+      "thereSearchResults": "There are {{length}} search results."
+    },
+    "updateInput": {
+      "text": {
+        "searchingLocation": "Searching for a location."
+      }
+    }
+  },
+  "jobBuilderDialog": {
+    "addPlace": {
+      "message": {
+        "youHaveSelectedPlaceThatAlready": "You have selected a place that is already in the locations list."
+      }
+    },
+    "applyRawToForm": {
+      "message": {
+        "rawJsonHasLocationsNotSelected": "Raw JSON has locations not selected on the map and cannot be converted to visual mode. Create a Job in Raw JSON mode or start a new visual builder.",
+        "rawJsonWasAppliedForm": "Raw JSON was applied to the Form."
+      }
+    },
+    "parseRaw": {
+      "message": {
+        "jsonParsingFailed": "JSON parsing failed: {{value}}",
+        "makeSureItSValidJson": "Make sure it's valid JSON."
+      }
+    },
+    "rawJsonEditor": {
+      "action": {
+        "applyForm": "Apply to Form",
+        "format": "Format",
+        "restoreFromForm": "Restore from Form"
+      },
+      "ariaLabel": {
+        "requestJson": "Request JSON"
+      },
+      "description": {
+        "displaysRequestLikeFormIfYou": "Displays a request like a Form. If you modify JSON and apply it to the form, it will be converted in both directions."
+      },
+      "title": {
+        "rawJson": "Raw JSON"
+      }
+    },
+    "tooltip": {
+      "applyRawJsonChangesFormFirst": "Apply Raw JSON changes to the Form first."
+    },
+    "validateVisual": {
+      "message": {
+        "jobAlreadyExistsCurrentSession": "Job \"{{job_id}}\" already exists in the current session.",
+        "requestValid": "Your request is valid.",
+        "requestValidationFailed": "Request validation failed: {{formatSchemaIssues}}"
+      }
+    }
+  },
+  "jobBuilderLocationList": {
+    "action": {
+      "middleOrderShuffle": "middle order shuffle"
+    },
+    "ariaLabel": {
+      "shuffleIntermediatePositions": "Shuffle intermediate positions"
+    },
+    "jobBuilderLocationItem": {
+      "ariaLabel": {
+        "businessClosingTime": "{{name}} business closing time",
+        "businessStartTime": "{{name}} business start time",
+        "dwellTimeMinutes": "{{name}} dwell time (minutes)",
+        "id": "{{name}} ID",
+        "name": "{{name}} name",
+        "placeId": "{{name}} Place ID",
+        "remove": "remove {{name}}"
+      },
+      "text": {
+        "businessHours": "business hours",
+        "id": "ID",
+        "location": "{{name}} location",
+        "name": "name",
+        "placeIdOptional": "Place ID (optional)",
+        "residenceTime": "residence time"
+      },
+      "tooltip": {
+        "remove": "remove"
+      }
+    },
+    "text": {
+      "dog": "dog",
+      "firstPositionFixedStartLastPosition": "The first position is fixed start, and the last position is fixed destination. Only intermediate positions can be reordered and the time is entered in {{value}} {{VISIT_TIME_GRANULARITY_MINUTES}} minutes.",
+      "message": "{{length}}",
+      "youNeedAtLeastTwoLocations": "You need at least two locations, including origin and destination."
+    },
+    "tooltip": {
+      "noLocationsHaveBeenAdded": "No locations have been added."
+    }
+  },
+  "jobBuilderMap": {
+    "action": {
+      "addJob": "Add to Job",
+      "selectAddedLocation": "Select added location"
+    },
+    "ariaLabel": {
+      "jobLocationSelectionMap": "Job location selection map"
+    }
+  },
+  "jobBuilderMatrixGenerator": {
+    "getTravelTimeMatrixGeneratorError": {
+      "text": {
+        "enterSeedAsIntegerGreaterThan": "Please enter Seed as an integer greater than 0.",
+        "enterTravelTimeRangeAsInteger": "Enter the travel time range as an integer greater than or equal to 0.",
+        "matrixCreationPatternNotSupported": "Matrix creation pattern is not supported.",
+        "minimumTravelTimeCannotBeGreater": "The minimum travel time cannot be greater than the maximum travel time.",
+        "numberPlacesMustBeIntegerGreater": "The number of places must be an integer greater than or equal to 0."
+      }
+    }
+  },
+  "jobBuilderPresetPicker": {
+    "action": {
+      "load": "load"
+    },
+    "label": {
+      "testCase": "Test Case"
+    },
+    "text": {
+      "locations": "{{locationCount}} locations · {{sourceLabel}} · {{value}} {{description}}"
+    }
+  },
+  "jobBuilderSettings": {
+    "description": {
+      "directMatrixValuesPreservedButNot": "In Direct Matrix, the values are preserved but not used in the actual routing lookup.",
+      "solverSearchesLatestPossibleDepartureTime": "The solver searches for the latest possible departure time after this time.",
+      "thisTestbedOnlyOptionTestProgress": "This is a testbed only option. Test progress and SSE indications by running the Job for a minimum specified amount of time. Shuffling route results maintains the starting point and destination and randomly shuffles the order of intermediate stopover results.",
+      "thisTransportationMethodUsedByTcache": "This is the transportation method used by tcache to check the actual travel time.",
+      "uniqueIdThatIdentifiesTrouteJob": "A unique ID that identifies the troute Job."
+    },
+    "text": {
+      "debugMode": "debug mode",
+      "minimumDepartureTime": "Minimum departure time"
+    },
+    "title": {
+      "advancedDebug": "Advanced debug",
+      "basicInformation": "basic information"
+    }
+  },
+  "jobBuilderTravelTimeSource": {
+    "description": {
+      "checkActualTravelTimeUsingPlace": "Check the actual travel time using Place ID and transportation method.",
+      "enteredMatrixUsedAsTcacheSearch": "The entered Matrix is used as is and the tcache search is omitted.",
+      "placeIdRequiredAllLocationsRequest": "A Place ID is required for all locations and the request does not include a travel_time_matrix. troute creates a directed matrix with Place ID and means of transportation.",
+      "searchTravelTimeUsingActualPlace": "Search the travel time using the actual Place ID or directly enter the directed matrix to be passed to the solver."
+    },
+    "label": {
+      "seed": "Seed",
+      "travelTimeSource": "travel time source"
+    },
+    "mATRIXPATTERNOPTIONS": {
+      "label": {
+        "clustered": "Clustered",
+        "directedUniform": "Directed Uniform",
+        "nearSymmetric": "Near Symmetric",
+        "shortMovesLongOutliers": "Short moves + long outliers",
+        "symmetric": "Symmetric"
+      }
+    },
+    "text": {
+      "directMatrix": "Direct Matrix"
+    },
+    "title": {
+      "travelTimeSource": "Travel time Source"
+    },
+    "travelTimeMatrixEditor": {
+      "action": {
+        "empty": "Empty",
+        "fullRegeneration": "full regeneration",
+        "randomlyFillEmptyCells": "Randomly fill empty cells"
+      },
+      "ariaLabel": {
+        "matrixRandomGeneration": "Matrix random generation",
+        "randomMatrixGenerationPattern": "Random Matrix Generation Pattern",
+        "randomMatrixMaximumMovementTime": "Random Matrix maximum movement time",
+        "randomMatrixMinimumTravelTime": "Random Matrix Minimum Travel Time",
+        "randomMatrixSeed": "Random Matrix Seed",
+        "travelTimeFrom": "Travel time from {{name}} to {{name}}"
+      },
+      "description": {
+        "editMatrixAddLocation": "To edit the Matrix, add a location.",
+        "itNNDirectedMatrixDiagonal": "It is an N × N directed matrix. The diagonal is fixed at 0, and A→B and B→A are independent. The travel_mode value is retained but not used in actual routing lookups."
+      },
+      "text": {
+        "pattern": "pattern",
+        "rangeMinutes": "Range (minutes)",
+        "travelTimeMatrixByLocation": "Travel time matrix by location"
+      }
+    }
+  },
+  "jobBuilderValidation": {
+    "validateJobBuilderDraft": {
+      "text": {
+        "checkInputValuesEachLocation": "Check the input values for each location.",
+        "endTimeCannotBeEarlierThan": "The end time cannot be earlier than the start time.",
+        "enterBusinessStartTimeMinutes": "Please enter the business start time in {{VISIT_TIME_GRANULARITY_MINUTES}} minutes.",
+        "enterClosingTimeMinutes": "Please enter the closing time in {{VISIT_TIME_GRANULARITY_MINUTES}} minutes.",
+        "enterIdThatDoesNotOverlap": "Please enter an ID that does not overlap with other locations.",
+        "enterIntegerGreaterThanEqual0": "Enter an integer greater than or equal to 0 directly into every off-diagonal cell of the Matrix.",
+        "enterLocationId": "Please enter your location ID.",
+        "enterMinimumDepartureTimeMinutes": "Please enter the minimum departure time in {{VISIT_TIME_GRANULARITY_MINUTES}} minutes.",
+        "enterMinutesBetweenMinutes": "Enter {{minimumStayMinutes}} minutes between {{MAX_STAY_MINUTES}} and {{VISIT_TIME_GRANULARITY_MINUTES}} minutes.",
+        "enterPlaceIdThatDoesNot": "Please enter a Place ID that does not overlap with any other location.",
+        "jobAlreadyExistsCurrentSession": "Job \"{{jobId}}\" already exists in the current session.",
+        "locationIdsMustBeNonEmpty": "Location IDs must be non-empty and different.",
+        "minimumExecutionTimeMustBeInteger": "The minimum execution time must be an integer between 0 and {{TROUTE_MAX_DEBUG_JOB_DURATION_MS}}ms.",
+        "placeIdEachLocationMustBe": "The place_id for each location must be different.",
+        "placeIdRequired": "{{name}}: place_id required.",
+        "request": "Request {{value}}: {{message}}",
+        "tcacheLookupRequiresPlaceId": "tcache lookup requires Place ID."
+      }
+    }
+  },
+  "jobBuilderValidationIndicator": {
+    "sTATUSDETAILS": {
+      "label": {
+        "requestValid": "Your request is valid",
+        "thereItemsThatNeedCorrection": "There are items that need correction",
+        "verifying": "Verifying",
+        "waitingVerification": "Waiting for verification"
+      }
+    },
+    "text": {
+      "message": "{{label}} ({{errorCount}})"
+    }
+  },
+  "jobDetail": {
+    "formatDuration": {
+      "text": {
+        "hoursMinutes": "{{floor}} hours {{round}} minutes",
+        "minutes": "{{round}} minutes"
+      }
+    },
+    "formatStreamState": {
+      "text": {
+        "connected": "connected",
+        "connecting": "Connecting",
+        "connectionLost": "connection lost",
+        "reconnecting": "Reconnecting",
+        "waiting": "Waiting"
+      }
+    },
+    "overview": {
+      "label": {
+        "cache": "Cache",
+        "provider": "Provider",
+        "status": "status"
+      },
+      "text": {
+        "communicationMethod": "communication method",
+        "completionTime": "completion time",
+        "creationTime": "creation time",
+        "currentStage": "current stage",
+        "jobId": "Job ID",
+        "progress": "progress"
+      },
+      "title": {
+        "overview": "Overview"
+      }
+    },
+    "progress": {
+      "label": {
+        "stage": "Stage"
+      }
+    },
+    "progressSection": {
+      "text": {
+        "recentEvents": "Recent Events"
+      },
+      "title": {
+        "progress": "progress"
+      }
+    },
+    "rawSection": {
+      "text": {
+        "originalJson": "Original JSON"
+      }
+    },
+    "requestSection": {
+      "description": {
+        "departureTime": "Departure time:",
+        "notSpecified": "Not specified"
+      },
+      "text": {
+        "coordinatesAddress": "Coordinates/Address",
+        "location": "location",
+        "order": "order",
+        "placeId": "Place ID",
+        "role": "role"
+      },
+      "title": {
+        "request": "request"
+      }
+    },
+    "result": {
+      "label": {
+        "distance": "Distance",
+        "duration": "Duration",
+        "latency": "Latency"
+      }
+    },
+    "resultSection": {
+      "description": {
+        "noRouteResultsHaveBeenReceived": "No route results have been received yet."
+      },
+      "text": {
+        "rawResult": "Raw Result",
+        "routeCount": "Route count"
+      },
+      "title": {
+        "result": "result"
+      }
+    },
+    "text": {
+      "existingGatewayResultsTimelineMaintained": "{{inspectionError}} Existing gateway results and timeline are maintained.",
+      "newJobsAppearListLeftAs": "New Jobs appear in the list on the left as soon as they are created.",
+      "newTasksAutomaticallySelectedImmediatelyAfter": "New tasks are automatically selected immediately after creation.",
+      "optimizationResultsJobQueryResultGateway": "The optimization results of the job query result and the gateway response are different. Job search results are displayed first.",
+      "retryingConnection": "Retrying connection",
+      "sse": "SSE {{formatStreamState}}",
+      "trasolveGatewayObservationInformation": "Trasolve gateway observation information",
+      "trasolveTcacheCommunicationObservationInformation": "Trasolve → tcache communication observation information"
+    },
+    "timelineSection": {
+      "description": {
+        "noCommunicationEventsObserved": "No communication events observed."
+      },
+      "title": {
+        "timeline": "timeline"
+      }
+    },
+    "title": {
+      "jobDetails": "Job details"
+    },
+    "tooltip": {
+      "forceTerminationJobFailed": "Force termination of Job failed.",
+      "requestFailed": "request failed",
+      "resultDiscrepancy": "result discrepancy",
+      "selectJobCheckExecutionInformation": "Select a Job to check execution information.",
+      "selectRouteOperationYouWantCheck": "Select the route operation you want to check.",
+      "taskFailed": "task failed"
+    }
+  },
+  "jobList": {
+    "ariaLabel": {
+      "testbedJobs": "Testbed Jobs"
+    },
+    "text": {
+      "createNewJobRunOptimizationRequest": "Create a new Job and run an optimization request."
+    },
+    "tooltip": {
+      "thereNoJobsYet": "There are no jobs yet."
+    }
+  },
+  "jobRequestLocationTable": {
+    "text": {
+      "businessHours": "Business hours",
+      "inputOrder": "Input order",
+      "locationId": "Location ID",
+      "minutes": "minutes",
+      "minutes2": "{{stay_minutes}} minutes",
+      "stay": "stay"
+    }
+  },
+  "jobRequestSummary": {
+    "action": {
+      "copied": "copied"
+    },
+    "ariaLabel": {
+      "copyRequestJson": "Copy request JSON",
+      "requestJsonCopied": "Request JSON copied",
+      "requestLocationInputOrder": "Request location input order"
+    },
+    "description": {
+      "jobDebugPathShufflingEnabledKeep": "A Job with debug path shuffling enabled. Keep the origin and destination locations and shuffle the resultant order of intermediate stops."
+    },
+    "label": {
+      "meansTransportation": "means of transportation",
+      "minimumExecutionTime": "Minimum execution time",
+      "shufflePathResults": "Shuffle path results",
+      "shuffleSeed": "Shuffle seed",
+      "startTime": "start time",
+      "startupMethod": "Startup method"
+    },
+    "sTARTPOLICYLABELS": {
+      "text": {
+        "asLateAsPossible": "as late as possible",
+        "asSoonAsPossible": "as soon as possible",
+        "designatedTime": "designated time"
+      }
+    },
+    "text": {
+      "disabled": "Disabled",
+      "expand": "Expand",
+      "fold": "fold",
+      "ms": "ms",
+      "ms2": "{{min_job_duration_ms}} ms",
+      "rawJsonView": "Raw JSON view",
+      "savedOriginalRequests": "Saved Original Requests",
+      "shufflePaths": "shuffle paths",
+      "use": "use"
+    },
+    "title": {
+      "inputPath": "input path"
+    }
+  },
+  "jobResultMapComparison": {
+    "ariaLabel": {
+      "inputVisitOrderMap": "Input visit order map",
+      "optimizedVisitOrderMap": "Optimized visit order map"
+    },
+    "comparisonPanel": {
+      "ariaLabel": {
+        "path": "{{title}} path"
+      }
+    },
+    "description": {
+      "linesComparisonVisitOrderNotActual": "Lines are for comparison of visit order and are not actual road/transit routes."
+    },
+    "locationSequence": {
+      "label": {
+        "arrival": "arrival",
+        "departure": "departure"
+      }
+    },
+    "mapValidationError": {
+      "tooltip": {
+        "mapValidationError": "Map validation error"
+      }
+    },
+    "title": {
+      "input": "Input",
+      "optimized": "Optimized"
+    },
+    "tooltip": {
+      "loadingLocationInformation": "Loading location information."
+    },
+    "useRequestPlaces": {
+      "message": {
+        "failedLoadLocationCoordinates": "Failed to load location coordinates."
+      },
+      "text": {
+        "mapDisplayRequiresValidPlaceId": "Map display requires a valid Place ID: {{value}}"
+      }
+    }
+  },
+  "jobResultMapModel": {
+    "createOptimizedMapContent": {
+      "message": {
+        "optimizationResultReferencesLocationIdThat": "The optimization result references a location_id that is not in the request: {{value}}",
+        "thereNoOptimizationResultsCompletedJob": "There are no optimization results for the completed Job."
+      }
+    },
+    "getStatusMessage": {
+      "text": {
+        "jobHasBeenCanceledResultingMap": "The job has been canceled and the resulting map cannot be displayed.",
+        "optimizationProgress": "Optimization is in progress.",
+        "resultingMapCannotBeDisplayedBecause": "The resulting map cannot be displayed because optimization failed.",
+        "waitingOptimizationRun": "Waiting for optimization to run."
+      }
+    }
+  },
+  "jobResultSummary": {
+    "ariaLabel": {
+      "resultsVisitOrder": "Results Visit Order"
+    },
+    "text": {
+      "compareInputSequenceOptimizationResults": "Compare the input sequence and optimization results.",
+      "finalRoute": "final route",
+      "minutes": "{{total_travel_minutes}} minutes",
+      "totalTravelTime": "total travel time"
+    },
+    "title": {
+      "inputVsOptimized": "Input vs Optimized"
+    }
+  },
+  "jobSidebar": {
+    "action": {
+      "newRequest": "new request"
+    },
+    "ariaLabel": {
+      "refreshRouteTaskList": "Refresh route task list",
+      "refreshingJobList": "Refreshing job list",
+      "tcacheRouteTaskList": "tcache Route task list"
+    },
+    "text": {
+      "cache": "· Cache {{toUpperCase}}",
+      "newJob": "New Job",
+      "progress": "{{id}} progress",
+      "refreshJobList": "Refresh job list",
+      "tcacheRouteJobs": "tcache Route Jobs",
+      "testTrasolveTcacheCommunicationByCreating": "Test Trasolve and tcache communication by creating a new request."
+    },
+    "title": {
+      "jobs": "Jobs",
+      "pathOperation": "path operation"
+    },
+    "tooltip": {
+      "noTcacheRouteTaskWasCreated": "No tcache Route task was created."
+    }
+  },
+  "jobStatusBadge": {
+    "sTATUSLABELS": {
+      "text": {
+        "canceled": "Cancelled",
+        "done": "Complete",
+        "failure": "Failed",
+        "running": "Running"
+      }
+    }
+  },
+  "jobSummary": {
+    "formatElapsed": {
+      "text": {
+        "minutesSeconds": "{{minutes}} minutes {{padStart}} seconds",
+        "seconds": "{{toFixed}}seconds"
+      }
+    },
+    "label": {
+      "elapsedTime": "elapsed time",
+      "message": "message",
+      "step": "step"
+    },
+    "text": {
+      "jobIdFrontendObservationJob": "job_id · Frontend observation Job",
+      "jobProgress": "Job progress {{progress}}%"
+    }
+  },
+  "jobTimeline": {
+    "text": {
+      "httpSseInstancesObservedBrowsers": "HTTP/SSE {{length}} instances observed in browsers"
+    },
+    "tooltip": {
+      "noRequestsHaveBeenObservedYet": "No requests have been observed yet."
+    }
+  },
+  "localizationTestPage": {
+    "ariaLabel": {
+      "resourceFilter": "Resource filter",
+      "resourceSummary": "Resource summary",
+      "selectCurrentLanguage": "Select current language"
+    },
+    "description": {
+      "comparesResourcesLoadedCurrentLocalizationRuntime": "Compares the resources loaded in the current localization runtime.",
+      "ifYouSelectKeyYouCan": "If you select a Key, you can see the interpolation below.",
+      "noKeySelected": "No key selected",
+      "selectKeyFromTable": "Select a key from the table.",
+      "thereNoInterpolationVariableThisKey": "There is no interpolation variable for this key.",
+      "thereNoLocalizationKeyThatMatches": "There is no localization key that matches the conditions."
+    },
+    "label": {
+      "currentLanguage": "current language",
+      "localizationKeyTranslationSearch": "Localization key or translation search",
+      "namespace": "Namespace"
+    },
+    "placeholder": {
+      "searchKeyKoJaEn": "Search for key, KO, JA, EN",
+      "value": "{{variable}} value"
+    },
+    "rowStatus": {
+      "label": {
+        "empty": "empty · {{localeList}}",
+        "fallbackEn": "fallback · {{language}} → EN",
+        "missing": "missing · {{localeList}}"
+      }
+    },
+    "table": {
+      "column": {
+        "key": "Key",
+        "status": "Status"
+      }
+    },
+    "text": {
+      "failedChangeLanguage": "Failed to change language.",
+      "fullNamespace": "All namespaces",
+      "numberErrors": "Errors",
+      "numberNamespaces": "Namespaces",
+      "rawJsonLanguage": "Raw JSON language",
+      "rawJsonNamespace": "Raw JSON namespace",
+      "resolved": "Resolved ({{language}})",
+      "show": "Show {{count}}",
+      "totalNumberKeys": "Total number of keys"
+    },
+    "title": {
+      "interpolationPreview": "Interpolation preview",
+      "localeComparison": "Locale comparison",
+      "localizationTestBed": "Localization testbed",
+      "rawNamespaceJson": "Raw namespace JSON"
+    },
+    "value": {
+      "empty": "Empty",
+      "missing": "Missing"
+    }
+  },
+  "mapPanel": {
+    "ariaLabel": {
+      "mapsCameras": "maps and cameras"
+    },
+    "description": {
+      "waitingMapBeReady": "Waiting for the map to be ready",
+      "zoom": "zoom:"
+    },
+    "label": {
+      "camera": "Camera"
+    }
+  },
+  "presets": {
+    "jOBBUILDERPRESETS": {
+      "description": {
+        "fastestSmokeTestUsingRealPlace": "Fastest smoke test using real Place ID",
+        "generalTcCheckDifferenceBetweenInput": "General TC to check the difference between input order and optimization order",
+        "smokeTestQuicklyConfirmed3Key": "Smoke test quickly confirmed in 3 key locations in Seoul",
+        "tcCheckPairQueriesOptimizationResults": "TC to check pair queries and optimization results in various areas of Seoul",
+        "tcConfirmingGeneralOptimizationByMixing": "TC confirming general optimization by mixing Gangbuk and Gangnam",
+        "tcThatQuicklyVerifiesOnlySolver": "TC that quickly verifies only the solver with an asymmetric directed matrix",
+        "tcVerifyDifferentOperatingHoursResidence": "TC to verify different operating hours and residence time constraints"
+      }
+    }
+  },
+  "routeResultModel": {
+    "buildRouteItinerary": {
+      "text": {
+        "arrival": "{{arrivalTime}} Arrival",
+        "boardingStationUnknown": "Boarding station unknown",
+        "departure": "{{departureTime}} Departure",
+        "dropOffStationUnknown": "Drop off station unknown",
+        "stops": "{{stopCount}}Stops",
+        "towards": "Towards {{headsign}}"
+      }
+    },
+    "formatDuration": {
+      "text": {
+        "hours": "{{hours}} hours",
+        "hoursMinutes": "{{hours}} hours {{remainingMinutes}} minutes",
+        "minutes": "{{minutes}} minutes"
+      }
+    },
+    "getTravelModeLabel": {
+      "text": {
+        "move": "move",
+        "twoWheeler": "two wheeler"
+      }
+    },
+    "nOTAVAILABLE": {
+      "text": {
+        "notProvided": "Not provided"
+      }
+    },
+    "vehicleLabels": {
+      "text": {
+        "bus": "bus",
+        "cableCar": "cable car",
+        "ferry": "ferry",
+        "funicular": "funicular",
+        "gondola": "gondola",
+        "highSpeedRail": "high speed rail",
+        "intercityBus": "intercity bus",
+        "longDistanceTrain": "long distance train",
+        "monorail": "monorail",
+        "railway": "railway",
+        "sharedTaxi": "shared taxi",
+        "subway": "subway",
+        "train": "train",
+        "tram": "tram",
+        "trolleybus": "trolleybus"
+      }
+    }
+  },
+  "routeResultPanel": {
+    "action": {
+      "fitMapSelectedRoute": "Fit map to selected route"
+    },
+    "ariaLabel": {
+      "directionsResults": "Directions results",
+      "section": "{{title}} to {{title}} section",
+      "selectRoute": "Select route"
+    },
+    "description": {
+      "noPathWasReturned": "· No path was returned.",
+      "path": "path",
+      "routesApi": "Routes API"
+    },
+    "routeDebugDetails": {
+      "ariaLabel": {
+        "googleRequestDiagnostics": "Google Request Diagnostics",
+        "selectionPathSourceField": "Selection Path Source Field"
+      },
+      "label": {
+        "coordinates": "coordinates",
+        "description": "Description"
+      },
+      "text": {
+        "debugDetails": "Debug Details",
+        "none": "None",
+        "rawApiResponse": "Raw API Response",
+        "warnings": "· {{length}} warnings",
+        "yes": "Yes"
+      }
+    },
+    "routeErrorDetails": {
+      "description": {
+        "ifRouteJapanYouMayBe": "If your route is in Japan, you may be subject to a limitation where the Google Maps Platform Routes API does not support Google Transit partners in Japan."
+      },
+      "label": {
+        "backendHttp": "Backend HTTP",
+        "destinationType": "Destination type",
+        "googleHttp": "Google HTTP",
+        "googleMessage": "Google message",
+        "googleStatus": "Google status",
+        "originType": "Origin type",
+        "travelMode": "Travel mode"
+      },
+      "text": {
+        "failureDebugDetails": "Failure Debug Details",
+        "googleRequestBody": "Google request body",
+        "googleSourceErrorEmptyResponse": "Google Source Error/Empty Response",
+        "noneResponse": "None in response",
+        "unableConfirm": "Unable to confirm"
+      }
+    },
+    "routeSummary": {
+      "text": {
+        "estimatedCost": "estimated cost",
+        "totalDistance": "total distance",
+        "totalTimeRequired": "Total time required"
+      }
+    },
+    "text": {
+      "path": "path {{value}}",
+      "pathFindingFailure": "Path finding failure · {{code}}",
+      "pathSummary": "Path {{value}} summary"
+    },
+    "title": {
+      "routeBySection": "Route by section",
+      "routeResult": "route result"
+    }
+  },
+  "routes": {
+    "loadingLabel": {
+      "loadingGoogleMapsTestbed": "Loading the Google Maps testbed.",
+      "loadingGoogleOauthTestPage": "Loading Google OAuth test page.",
+      "loadingLocalizationTestbed": "Loading the Localization testbed.",
+      "loadingOurAiChatTestbed": "Loading our AI chat testbed.",
+      "loadingTcacheRouteTestPage": "Loading the tcache route test page.",
+      "loadingTestbedList": "Loading the testbed list.",
+      "trouteIntegrationTestPageLoading": "The troute integration test page is loading."
+    }
+  },
+  "selectionPanel": {
+    "ariaLabel": {
+      "lastMapClick": "Last Map Click",
+      "selectedLocation": "selected location"
+    },
+    "description": {
+      "clickMapUseCoordinatesDirections": "Click on the map to use the coordinates for directions.",
+      "selectLocationFromSearchResults": "Please select a location from the search results."
+    },
+    "label": {
+      "address": "address",
+      "placeId": "place id"
+    },
+    "text": {
+      "noneClickLocationIcon": "None · Please click the location icon."
+    },
+    "title": {
+      "lastMapClickSelectCoordinates": "Last Map Click · Select coordinates",
+      "placeChoice": "place of choice"
+    }
+  },
+  "tcacheJobBuilderDialog": {
+    "text": {
+      "needsModification": "Needs modification",
+      "valid": "valid"
+    },
+    "title": {
+      "requestPreview": "Request Preview"
+    },
+    "tooltip": {
+      "confirmRequest": "Please confirm your request.",
+      "requestNewTcachePath": "Request a new tcache path"
+    }
+  },
+  "tcacheJobBuilderModel": {
+    "validateTcacheJobBuilder": {
+      "text": {
+        "checkInvalidLocation": "Please check for invalid location.",
+        "enterLanguagecode": "Please enter languageCode.",
+        "enterValidDepartureDateTime": "Please enter a valid departure date and time.",
+        "samePlaceIdDuplicated": "The same Place ID is duplicated.",
+        "selectLocationUsingLocationSearch": "Please select a location using the location search.",
+        "youCanAddUpLocations": "You can add up to {{MAX_TCACHE_LOCATIONS}} locations.",
+        "youNeedAtLeastTwoLocations": "You need at least two locations, including origin and destination."
+      }
+    }
+  },
+  "tcacheLocationList": {
+    "action": {
+      "addLocation": "Add location"
+    },
+    "ariaLabel": {
+      "delete": "Delete {{value}}",
+      "thLocationAddress": "{{value}}th location address"
+    },
+    "description": {
+      "firstLocationOriginLastLocationDestination": "The first location is the origin and the last location is the destination."
+    },
+    "placeholder": {
+      "enterAddressDirectlySelectFromMap": "Enter address directly or select from map"
+    },
+    "text": {
+      "addMoreThanOneLocation": "Please add more than one location.",
+      "changeOrderPositions": "Change the order of {{value}} positions",
+      "message2": "{{lat}}, {{lng}}",
+      "thPosition": "{{value}}th position"
+    },
+    "title": {
+      "locationList": "Location list"
+    },
+    "tooltip": {
+      "thereNoLocation": "There is no location."
+    }
+  },
+  "tcacheResultMap": {
+    "ariaLabel": {
+      "resultMap": "{{label}} Result Map"
+    },
+    "createMarkerModels": {
+      "label": {
+        "e": "E",
+        "s": "S"
+      }
+    },
+    "description": {
+      "resultsContainNoPathPolylineCoordinates": "The results contain no path/polyline coordinates to display on the map."
+    }
+  },
+  "tcacheRoute": {
+    "cancelTcacheRouteJob": {
+      "label": {
+        "postCancel": "POST cancel"
+      }
+    },
+    "parseLeg": {
+      "text": {
+        "interval": "Interval {{value}}"
+      }
+    }
+  },
+  "tcacheRouteMap": {
+    "action": {
+      "addAsStopover": "Add as a stopover",
+      "setAsDeparturePoint": "Set as departure point",
+      "setAsDestination": "Set as destination"
+    },
+    "ariaLabel": {
+      "closeSelectedCoordinates": "Close selected coordinates",
+      "closeSelectedPlace": "Close selected place",
+      "tcacheRouteRequestLocationMap": "tcache route request location map"
+    },
+    "description": {
+      "failedLoadLocationInformation": "Failed to load location information.",
+      "loadingLocationInformation": "Loading location information."
+    },
+    "text": {
+      "mapCoordinates": "map coordinates",
+      "noAddressInformation": "No address information"
+    }
+  },
+  "tcacheRouteOptions": {
+    "mODES": {
+      "label": {
+        "bicycle": "bicycle",
+        "car": "car",
+        "publicTransportation": "public transportation",
+        "walk": "walk"
+      }
+    },
+    "text": {
+      "advancedOptions": "advanced options",
+      "alternateRouteRequest": "Alternate route request",
+      "departureTime": "departure time",
+      "meansTransportation": "means of transportation"
+    },
+    "title": {
+      "requestSettings": "Request Settings"
+    }
+  },
+  "tcacheRouteTestbed": {
+    "applyStreamEvent": {
+      "error": {
+        "tcacheRouteJobFailed": "tcache Route Job failed."
+      }
+    },
+    "errorMessage": {
+      "text": {
+        "unknownErrorOccurred": "An unknown error occurred."
+      }
+    },
+    "label": {
+      "resultError": "Result error",
+      "resultRequest": "Result request",
+      "resultResponse": "Result response",
+      "sseDisconnect": "SSE disconnect",
+      "sseOpen": "SSE open",
+      "sseReconnect": "SSE reconnect"
+    }
+  },
+  "testbedPage": {
+    "render": {
+      "ariaLabel": {
+        "testbedList": "Testbed list"
+      },
+      "description": {
+        "thisDebugPageDevelopmentWhereYou": "This is a debug page for development where you can directly run and check functions."
+      },
+      "text": {
+        "openTestbed": "Open testbed →",
+        "trasolveHome": "Trasolve Home"
+      },
+      "title": {
+        "testBed": "Test Bed"
+      }
+    },
+    "testbeds": {
+      "description": {
+        "checkLocaleSpecificResourcesFallbackInterpolation": "Check the locale-specific resources, fallback, interpolation, and namespace source JSON loaded in the current runtime.",
+        "checkRequestProgressResultsCommunicationTimeline": "Check the request, progress, results, and communication timeline of the tcache route job through the Trasolve backend.",
+        "runPlaceSearchesMapEventsRoute": "Run place searches, map events, and route navigation with real Google APIs and view results and debug logs.",
+        "runRealGoogleOauthLoginFlow": "Run a real Google OAuth login flow and check for sanitized user information and safe error conditions.",
+        "sendReceiveConversationsUsingRealChat": "Send and receive conversations using the real chat API and check response waiting animations, conversation history, and error displays.",
+        "trouteOptimizeRequestsThroughTrasolveBackend": "Troute optimize requests through the Trasolve backend and check the original response, HTTP status, and round trip time."
+      },
+      "title": {
+        "aiChat": "AI Chat",
+        "googleMaps": "Google Maps",
+        "googleOauth": "Google OAuth",
+        "tcacheRoute": "tcache Route",
+        "trouteIntegration": "troute Integration"
+      }
+    }
+  },
+  "timelineEntry": {
+    "ariaLabel": {
+      "copyTimelineItems": "Copy Timeline items"
+    },
+    "detail": {
+      "label": {
+        "body": "Body",
+        "headers": "Headers",
+        "query": "Query"
+      }
+    },
+    "detailValue": {
+      "text": {
+        "empty": "(empty)"
+      }
+    },
+    "requestDetail": {
+      "tooltip": {
+        "rawPayload": "Raw payload"
+      }
+    },
+    "responseDetail": {
+      "tooltip": {
+        "httpStatus": "HTTP status",
+        "rawResponse": "Raw response"
+      }
+    }
+  },
+  "troute": {
+    "optimizeRouteWithTroute": {
+      "text": {
+        "responseJobIdDoesNotMatch": "Response job_id does not match request job_id."
+      }
+    }
+  },
+  "trouteTestbed": {
+    "message": {
+      "althoughGatewayConnectionLostRemoteJob": "Although the gateway connection is lost, remote job status inquiry continues.",
+      "gatewayResponseFailsButContinuesQuery": "The gateway response fails, but continues to query the remote job status.",
+      "trasolveGatewayRequestCompleted": "Trasolve gateway request completed.",
+      "trasolveGatewayRequestFailed": "Trasolve gateway request failed.",
+      "waitingTrasolveGatewayRequestBeExecuted": "Waiting for Trasolve gateway request to be executed."
+    },
+    "text": {
+      "thisJobHasAlreadyEnded": "This Job has already ended.",
+      "unknownErrorOccurredDuringTrasolveBackend": "An unknown error occurred during the Trasolve backend request.",
+      "unknownErrorOccurredWhileForcingJob": "An unknown error occurred while forcing the job to terminate."
+    }
+  },
+  "useDirectionsState": {
+    "text": {
+      "directionsResponseRoutes": "Directions response: {{length}} routes",
+      "googleResponseHttpStatusMessage": "Google Response: HTTP {{httpStatus}}; status={{value}}; message={{value}}",
+      "message": "東京駅、日本",
+      "message2": "東京タワー、日本",
+      "pathfindingFailed": "Pathfinding failed: {{code}}: {{message}}",
+      "requestDirectionsOriginDestinationIntermediatesAlternatives": "Request directions: {{travelMode}}; origin={{type}}; destination={{type}}; intermediates={{length}}; alternatives={{alternatives}}"
+    }
+  },
+  "useTrouteJobEventStream": {
+    "text": {
+      "jobCannotProcessRealTimeEvents": "Job cannot process real-time events.",
+      "jobStatusCannotBeResynchronized": "Job status cannot be resynchronized.",
+      "liveConnectionWasLostBeingReconnected": "The live connection was lost and is being reconnected."
+    }
+  },
+  "useTrouteJobListPolling": {
+    "text": {
+      "trouteJobListCouldNotBe": "Troute Job list could not be loaded."
+    }
+  },
+  "viewModel": {
+    "getTcacheRouteLocationRole": {
+      "text": {
+        "stopover": "stopover"
+      }
+    }
+  }
+}

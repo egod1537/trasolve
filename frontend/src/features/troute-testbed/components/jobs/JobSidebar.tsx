@@ -10,6 +10,7 @@ import { JobList } from '@/features/troute-testbed/components/jobs/JobList';
 import { IconButton } from '@/shared/ui/IconButton';
 import { Tooltip } from '@/shared/ui/Tooltip';
 import { RefreshIcon } from '@/shared/ui/icons';
+import { useL } from '@/shared/i18n';
 
 interface JobSidebarProps {
   jobs: TestbedJob[];
@@ -28,16 +29,21 @@ export const JobSidebar = memo(function JobSidebar({
   onRefresh,
   onSelect,
 }: JobSidebarProps) {
+  const L = useL();
   return (
     <Card className="job-sidebar" elevation={1} compact>
       <div className="sidebar-heading">
-        <h1 className={Classes.HEADING}>Jobs</h1>
+        <h1 className={Classes.HEADING}>
+          {L('testbed:jobSidebar.title.jobs')}
+        </h1>
         <div className="sidebar-heading-actions">
-          <Tooltip label="Job 목록 새로고침">
+          <Tooltip label={L('testbed:jobSidebar.text.refreshJobList')}>
             <IconButton
               className="jobs-refresh-button"
               aria-label={
-                refreshing ? 'Job 목록 새로고침 중' : 'Job 목록 새로고침'
+                refreshing
+                  ? L('testbed:jobSidebar.ariaLabel.refreshingJobList')
+                  : L('testbed:jobSidebar.text.refreshJobList')
               }
               icon={<RefreshIcon />}
               variant="ghost"
@@ -48,7 +54,7 @@ export const JobSidebar = memo(function JobSidebar({
             />
           </Tooltip>
           <BlueprintButton icon="plus" intent="primary" onClick={onNewJob}>
-            새 Job
+            {L('testbed:jobSidebar.text.newJob')}
           </BlueprintButton>
         </div>
       </div>

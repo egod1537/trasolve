@@ -23,6 +23,7 @@ import {
 } from '@/features/troute-testbed/job-builder/jobBuilderModel';
 import { JobBuilderValidationIndicator } from '@/features/troute-testbed/job-builder/JobBuilderValidationIndicator';
 import type { JobBuilderValidationStatus } from '@/features/troute-testbed/job-builder/useJobBuilderValidation';
+import { useL, L } from '@/shared/i18n';
 
 interface JobBuilderLocationListProps {
   locations: JobBuilderLocation[];
@@ -81,6 +82,7 @@ export function JobBuilderLocationList({
   onReorder,
   onShuffle,
 }: JobBuilderLocationListProps) {
+  const L = useL();
   const scrollRef = useRef<HTMLDivElement>(null);
   const sortableListRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef(new Map<string, HTMLElement>());
@@ -281,27 +283,39 @@ export function JobBuilderLocationList({
     <aside className="job-builder-location-panel">
       <header>
         <div>
-          <h2 className={Classes.HEADING}>위치 목록</h2>
+          <h2 className={Classes.HEADING}>
+            {L('testbed:tcacheLocationList.title.locationList')}
+          </h2>
           <p>
-            첫 위치는 fixed start, 마지막 위치는 fixed destination입니다. 중간
-            위치만 순서를 변경할 수 있으며 시간은{' '}
-            {VISIT_TIME_GRANULARITY_MINUTES}분 단위로 입력합니다.
+            {L(
+              'testbed:jobBuilderLocationList.text.firstPositionFixedStartLastPosition',
+              {
+                value: ' ',
+                VISIT_TIME_GRANULARITY_MINUTES: VISIT_TIME_GRANULARITY_MINUTES,
+              },
+            )}
           </p>
         </div>
         <div className="job-builder-location-meta">
           <span className="job-builder-location-count">
-            {locations.length}개
+            {L('testbed:jobBuilderLocationList.text.message', {
+              length: locations.length,
+            })}
           </span>
           <Button
             icon="random"
             size="small"
             variant="minimal"
             disabled={!canShuffleJobBuilderLocations(locations)}
-            aria-label="중간 위치 순서 섞기"
-            title="중간 위치 순서 섞기"
+            aria-label={L(
+              'testbed:jobBuilderLocationList.ariaLabel.shuffleIntermediatePositions',
+            )}
+            title={L(
+              'testbed:jobBuilderLocationList.ariaLabel.shuffleIntermediatePositions',
+            )}
             onClick={onShuffle}
           >
-            중간 순서 섞기
+            {L('testbed:jobBuilderLocationList.action.middleOrderShuffle')}
           </Button>
           <JobBuilderValidationIndicator
             status={validationStatus}
@@ -315,8 +329,12 @@ export function JobBuilderLocationList({
           <NonIdealState
             className="job-builder-location-empty"
             icon="map-marker"
-            title="추가된 장소가 없습니다."
-            description="출발지와 도착지를 포함해 장소가 2개 이상 필요합니다."
+            title={L(
+              'testbed:jobBuilderLocationList.tooltip.noLocationsHaveBeenAdded',
+            )}
+            description={L(
+              'testbed:jobBuilderLocationList.text.youNeedAtLeastTwoLocations',
+            )}
           />
         ) : (
           <div ref={sortableListRef} className="job-builder-location-list">
@@ -381,6 +399,7 @@ function JobBuilderLocationItem({
   onUpdate,
   onRemove,
 }: JobBuilderLocationItemProps) {
+  const L = useL();
   return (
     <article
       ref={setRowRef}
@@ -394,7 +413,10 @@ function JobBuilderLocationItem({
       <div className="job-builder-location-heading">
         <DragHandle
           className="job-builder-drag-handle"
-          label={`${location.name} 위치`}
+          label={L(
+            'testbed:jobBuilderLocationList.jobBuilderLocationItem.text.location',
+            { name: location.name },
+          )}
           dragging={drag.dragging}
           disabled={role !== 'waypoint'}
           onPointerDown={drag.onPointerDown}
@@ -412,12 +434,18 @@ function JobBuilderLocationItem({
             <strong>{location.name}</strong>
           </span>
           <span className="job-builder-location-address">
-            {location.address ?? '주소 정보 없음'}
+            {location.address ??
+              L('testbed:tcacheRouteMap.text.noAddressInformation')}
           </span>
         </div>
         <Button
-          aria-label={`${location.name} 제거`}
-          title="제거"
+          aria-label={L(
+            'testbed:jobBuilderLocationList.jobBuilderLocationItem.ariaLabel.remove',
+            { name: location.name },
+          )}
+          title={L(
+            'testbed:jobBuilderLocationList.jobBuilderLocationItem.tooltip.remove',
+          )}
           icon="cross"
           size="small"
           variant="minimal"
@@ -433,11 +461,16 @@ function JobBuilderLocationItem({
         onClick={(event) => event.stopPropagation()}
       >
         <label>
-          <span>ID</span>
+          <span>
+            {L('testbed:jobBuilderLocationList.jobBuilderLocationItem.text.id')}
+          </span>
           <input
             className="bp6-input"
             type="text"
-            aria-label={`${location.name} ID`}
+            aria-label={L(
+              'testbed:jobBuilderLocationList.jobBuilderLocationItem.ariaLabel.id',
+              { name: location.name },
+            )}
             aria-invalid={Boolean(errors.id)}
             value={location.id}
             onChange={(event) => onUpdate({ id: event.currentTarget.value })}
@@ -449,22 +482,38 @@ function JobBuilderLocationItem({
           </p>
         ) : null}
         <label>
-          <span>이름</span>
+          <span>
+            {L(
+              'testbed:jobBuilderLocationList.jobBuilderLocationItem.text.name',
+            )}
+          </span>
           <input
             className="bp6-input"
             type="text"
-            aria-label={`${location.name} 이름`}
+            aria-label={L(
+              'testbed:jobBuilderLocationList.jobBuilderLocationItem.ariaLabel.name',
+              { name: location.name },
+            )}
             value={location.name}
             onChange={(event) => onUpdate({ name: event.currentTarget.value })}
           />
         </label>
         <label>
-          <span>{placeIdRequired ? 'Place ID' : 'Place ID (선택)'}</span>
+          <span>
+            {placeIdRequired
+              ? L('testbed:jobDetail.requestSection.text.placeId')
+              : L(
+                  'testbed:jobBuilderLocationList.jobBuilderLocationItem.text.placeIdOptional',
+                )}
+          </span>
           <input
             className="bp6-input"
             type="text"
             required={placeIdRequired}
-            aria-label={`${location.name} Place ID`}
+            aria-label={L(
+              'testbed:jobBuilderLocationList.jobBuilderLocationItem.ariaLabel.placeId',
+              { name: location.name },
+            )}
             aria-invalid={Boolean(errors.placeId)}
             value={location.placeId}
             onChange={(event) => onUpdate({ placeId: event.target.value })}
@@ -476,13 +525,20 @@ function JobBuilderLocationItem({
           </p>
         ) : null}
         <label>
-          <span>영업 시간</span>
+          <span>
+            {L(
+              'testbed:jobBuilderLocationList.jobBuilderLocationItem.text.businessHours',
+            )}
+          </span>
           <span className="job-builder-time-range">
             <input
               className="bp6-input"
               type="time"
               step={VISIT_TIME_GRANULARITY_MINUTES * 60}
-              aria-label={`${location.name} 영업 시작 시각`}
+              aria-label={L(
+                'testbed:jobBuilderLocationList.jobBuilderLocationItem.ariaLabel.businessStartTime',
+                { name: location.name },
+              )}
               aria-invalid={Boolean(errors.openTime)}
               value={location.openTime}
               onChange={(event) => onUpdate({ openTime: event.target.value })}
@@ -492,7 +548,10 @@ function JobBuilderLocationItem({
               className="bp6-input"
               type="time"
               step={VISIT_TIME_GRANULARITY_MINUTES * 60}
-              aria-label={`${location.name} 영업 종료 시각`}
+              aria-label={L(
+                'testbed:jobBuilderLocationList.jobBuilderLocationItem.ariaLabel.businessClosingTime',
+                { name: location.name },
+              )}
               aria-invalid={Boolean(errors.closeTime)}
               value={location.closeTime}
               onChange={(event) => onUpdate({ closeTime: event.target.value })}
@@ -505,7 +564,11 @@ function JobBuilderLocationItem({
           </p>
         ) : null}
         <label>
-          <span>체류 시간</span>
+          <span>
+            {L(
+              'testbed:jobBuilderLocationList.jobBuilderLocationItem.text.residenceTime',
+            )}
+          </span>
           <span className="job-builder-stay-input">
             <input
               className="bp6-input"
@@ -513,14 +576,17 @@ function JobBuilderLocationItem({
               min={role === 'waypoint' ? MIN_VISIT_DURATION_MINUTES : 0}
               max={MAX_STAY_MINUTES}
               step={VISIT_TIME_GRANULARITY_MINUTES}
-              aria-label={`${location.name} 체류 시간(분)`}
+              aria-label={L(
+                'testbed:jobBuilderLocationList.jobBuilderLocationItem.ariaLabel.dwellTimeMinutes',
+                { name: location.name },
+              )}
               aria-invalid={Boolean(errors.stayMinutes)}
               value={location.stayMinutes}
               onChange={(event) =>
                 onUpdate({ stayMinutes: Number(event.target.value) })
               }
             />
-            <span>분</span>
+            <span>{L('testbed:jobRequestLocationTable.text.minutes')}</span>
           </span>
         </label>
         {errors.stayMinutes ? (
@@ -538,10 +604,10 @@ function getLocationRoleLabel(
   index: number,
 ): string {
   if (role === 'start') {
-    return 'start';
+    return L('testbed:jobResultMapComparison.locationSequence.label.departure');
   }
   if (role === 'end') {
-    return 'destination';
+    return L('testbed:jobResultMapComparison.locationSequence.label.arrival');
   }
   return String(index + 1);
 }

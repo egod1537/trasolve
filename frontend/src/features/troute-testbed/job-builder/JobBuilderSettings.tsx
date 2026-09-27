@@ -5,6 +5,7 @@ import {
 } from '@trasolve/shared';
 import { VISIT_TIME_GRANULARITY_MINUTES } from '@/entities/place';
 import type { JobBuilderState } from '@/features/troute-testbed/job-builder/jobBuilderModel';
+import { useL, L } from '@/shared/i18n';
 
 interface JobBuilderSettingsProps {
   jobId: string;
@@ -21,10 +22,30 @@ const TRAVEL_MODE_OPTIONS: readonly {
   value: TrouteTravelMode;
   label: string;
 }[] = [
-  { value: 'TRANSIT', label: '대중교통' },
-  { value: 'DRIVING', label: '자동차' },
-  { value: 'WALKING', label: '도보' },
-  { value: 'BICYCLING', label: '자전거' },
+  {
+    value: 'TRANSIT',
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.publicTransportation');
+    },
+  },
+  {
+    value: 'DRIVING',
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.car');
+    },
+  },
+  {
+    value: 'WALKING',
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.walk');
+    },
+  },
+  {
+    value: 'BICYCLING',
+    get label() {
+      return L('testbed:tcacheRouteOptions.mODES.label.bicycle');
+    },
+  },
 ];
 
 export function JobBuilderSettings({
@@ -35,30 +56,39 @@ export function JobBuilderSettings({
   onJobIdChange,
   onChange,
 }: JobBuilderSettingsProps) {
+  const L = useL();
   return (
     <section
       className="job-builder-settings"
       aria-labelledby="job-settings-title"
     >
       <h2 id="job-settings-title" className={Classes.HEADING}>
-        기본 정보
+        {L('testbed:jobBuilderSettings.title.basicInformation')}
       </h2>
       <div className="job-builder-settings-fields">
         <label className="job-builder-settings-row">
-          <span>Job ID</span>
+          <span>{L('testbed:jobDetail.overview.text.jobId')}</span>
           <input
             className="bp6-input job-builder-job-id-input"
             type="text"
             value={jobId}
             onChange={(event) => onJobIdChange(event.currentTarget.value)}
           />
-          <small>troute Job을 식별하는 고유 ID입니다.</small>
+          <small>
+            {L(
+              'testbed:jobBuilderSettings.description.uniqueIdThatIdentifiesTrouteJob',
+            )}
+          </small>
         </label>
 
         <label className="job-builder-settings-row">
-          <span>이동수단</span>
+          <span>
+            {L('testbed:jobRequestSummary.label.meansTransportation')}
+          </span>
           <HTMLSelect
-            aria-label="이동수단"
+            aria-label={L(
+              'testbed:jobRequestSummary.label.meansTransportation',
+            )}
             value={state.travelMode}
             onChange={(event) =>
               onChange({
@@ -73,15 +103,21 @@ export function JobBuilderSettings({
             ))}
           </HTMLSelect>
           <small>
-            tcache가 실제 이동시간을 조회할 때 사용하는 이동수단입니다.
+            {L(
+              'testbed:jobBuilderSettings.description.thisTransportationMethodUsedByTcache',
+            )}
             {state.travelTimeSource === 'direct'
-              ? ' Direct Matrix에서는 값은 유지되지만 실제 routing 조회에는 사용되지 않습니다.'
+              ? ` ${L(
+                  'testbed:jobBuilderSettings.description.directMatrixValuesPreservedButNot',
+                )}`
               : ''}
           </small>
         </label>
 
         <label className="job-builder-settings-row">
-          <span>최소 출발 시각</span>
+          <span>
+            {L('testbed:jobBuilderSettings.text.minimumDepartureTime')}
+          </span>
           <input
             className="bp6-input"
             type="time"
@@ -96,17 +132,21 @@ export function JobBuilderSettings({
             </small>
           ) : (
             <small>
-              solver는 이 시각 이후에서 가능한 가장 늦은 출발시각을 탐색합니다.
+              {L(
+                'testbed:jobBuilderSettings.description.solverSearchesLatestPossibleDepartureTime',
+              )}
             </small>
           )}
         </label>
 
-        <h3 className="job-builder-settings-subheading">고급 디버그</h3>
+        <h3 className="job-builder-settings-subheading">
+          {L('testbed:jobBuilderSettings.title.advancedDebug')}
+        </h3>
         <div className="job-builder-settings-row">
-          <span>디버그 모드</span>
+          <span>{L('testbed:jobBuilderSettings.text.debugMode')}</span>
           <Switch
             checked={state.debug.enabled}
-            label="사용"
+            label={L('testbed:jobRequestSummary.text.use')}
             onChange={(event) =>
               onChange({
                 debug: {
@@ -119,7 +159,9 @@ export function JobBuilderSettings({
         </div>
 
         <label className="job-builder-settings-row">
-          <span>최소 실행 시간</span>
+          <span>
+            {L('testbed:jobRequestSummary.label.minimumExecutionTime')}
+          </span>
           <span className="job-builder-duration-input">
             <input
               className="bp6-input"
@@ -146,7 +188,7 @@ export function JobBuilderSettings({
                 })
               }
             />
-            <span>ms</span>
+            <span>{L('testbed:jobRequestSummary.text.ms')}</span>
           </span>
           {minJobDurationMsError ? (
             <small className="job-builder-field-error" role="alert">
@@ -156,11 +198,11 @@ export function JobBuilderSettings({
         </label>
 
         <div className="job-builder-settings-row">
-          <span>경로 결과 섞기</span>
+          <span>{L('testbed:jobRequestSummary.label.shufflePathResults')}</span>
           <Switch
             checked={state.debug.shuffleResultRoute}
             disabled={!state.debug.enabled}
-            label="사용"
+            label={L('testbed:jobRequestSummary.text.use')}
             onChange={(event) =>
               onChange({
                 debug: {
@@ -173,9 +215,9 @@ export function JobBuilderSettings({
         </div>
 
         <p className="job-builder-debug-help">
-          Testbed 전용 옵션입니다. Job을 최소 지정 시간 동안 실행하여 progress와
-          SSE 표시를 테스트합니다. 경로 결과 섞기는 출발지와 도착지는 유지하고
-          중간 경유지 결과 순서를 임의로 섞습니다.
+          {L(
+            'testbed:jobBuilderSettings.description.thisTestbedOnlyOptionTestProgress',
+          )}
         </p>
       </div>
     </section>

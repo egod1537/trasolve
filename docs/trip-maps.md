@@ -38,13 +38,13 @@ optional fields are removed and omitted days/places are deleted.
 
 ## HTTP contract
 
-| Method | Endpoint            | Success                         |
-| ------ | ------------------- | ------------------------------- |
-| GET    | `/api/trips`        | 200, Trip[] for the current user |
-| POST   | `/api/trips`        | 201, created Trip               |
-| GET    | `/api/trips/:tripId` | 200, Trip                       |
-| PUT    | `/api/trips/:tripId` | 200, saved Trip                 |
-| DELETE | `/api/trips/:tripId` | 204, no body                    |
+| Method | Endpoint             | Success                          |
+| ------ | -------------------- | -------------------------------- |
+| GET    | `/api/trips`         | 200, Trip[] for the current user |
+| POST   | `/api/trips`         | 201, created Trip                |
+| GET    | `/api/trips/:tripId` | 200, Trip                        |
+| PUT    | `/api/trips/:tripId` | 200, saved Trip                  |
+| DELETE | `/api/trips/:tripId` | 204, no body                     |
 
 POST/PUT accept TripInput as JSON, for example:
 
@@ -76,45 +76,49 @@ POST/PUT accept TripInput as JSON, for example:
 Input bodies are strict objects, limited to 2MiB, 100 days and 500 places per day.
 IDs must match `^[a-zA-Z0-9_-]{1,128}$`. Dates and coordinates are validated. All
 responses use `Cache-Control: no-store`. Errors expose only `{error:{code,message}}`:
-400 INVALID_TRIP_REQUEST, 404 TRIP_NOT_FOUND, 405 METHOD_NOT_ALLOWED,
-413 REQUEST_TOO_LARGE, 415 UNSUPPORTED_MEDIA_TYPE, 503 TRIP_STORAGE_UNAVAILABLE.
+400 INVALID_TRIP_REQUEST, 401 AUTHENTICATION_REQUIRED, 404 TRIP_NOT_FOUND, 405 METHOD_NOT_ALLOWED,
+409 TRIP_REVISION_CONFLICT/TRIP_ALREADY_EXISTS, 413 REQUEST_TOO_LARGE,
+415 UNSUPPORTED_MEDIA_TYPE, 503 TRIP_STORAGE_UNAVAILABLE.
 Get/delete of missing trips return 404; the low-level repository delete ignores
 ENOENT. Filesystem paths, contents and stack traces are not returned to clients.
 
 ## Storage and current user
 
-instances.ts is the composition root:
+index.ts and instances.ts form the composition root:
 
 ```text
-new LocalFileTripRepository({ rootDir })
-  → new TripController(repository) → API.Trip
-  → new TripHttpService(controller, currentUserResolver) → API.TripHttp
+DB session → CurrentUserResolver
+PostgresTripRepository → TripController
+  → TripHttpService(controller, currentUserResolver)
 ```
 
-`TRASOLVE_DATA_DIR` defaults to `backend/data`, resolved relative to the backend
-directory for both src and dist entry points. An absolute path is also accepted.
-Files live at `users/<userId>/trips/<tripId>.json` under that root. Runtime data
-and temporary files are excluded from Git and the default Docker build context.
+PostgreSQL is the production Trip source of truth. Stable metadata lives in
+columns and versioned editable content lives in `trips.document` JSONB. The
+repository validates `StoredTripV1` before writes and after reads. It maps DB
+metadata back into the existing Trip DTO without duplicating it in JSONB.
 
-`TRASOLVE_LOCAL_USER_ID` defaults to `local-user`. The HTTP service resolves this
-on the server, never from request bodies or headers. This is a single configured
-local identity, not authentication: all clients of a server share that identity.
-Future authentication replaces CurrentUserResolver at the composition root.
-Repository methods always take userId and verify that loaded records match both
-the requested owner and trip ID.
+`CurrentUserResolver` parses the HttpOnly session cookie and resolves it through
+the PostgreSQL session repository. Missing, expired, revoked and deleted-user
+sessions return 401; there is no local-user fallback. Repository methods receive
+the authenticated actor ID separately from the Trip owner field. The current
+file repository implements owner-only access and verifies that loaded records
+match both owner and trip ID, so inaccessible trips are returned as 404. Existing
+`local-user` files are not assigned to the first login user and remain untouched
+until an explicit data migration is run.
 
-The repository validates JSON on reads and writes. Saves lazily create directories,
-write a unique sibling `.tmp` file with exclusive creation, flush and close it,
-then rename it over the target. Temporary files are cleaned up after normal failure;
-orphan `.tmp` files after process termination are ignored by listings. Saves/deletes
-are queued per trip in the repository. The controller also queues the entire
-read/modify/write operation to prevent delete/save races. This covers one process;
-multiple servers and stale snapshots across clients require future transactions or
-version checks. Whole-trip concurrent saves currently use the last queued snapshot.
+Update and soft delete include actor ownership, expected bigint revision and
+`deleted_at IS NULL` in the SQL predicate. The revision trigger advances successful
+writes and zero-row writes are classified as stale or inaccessible/missing. The
+controller still queues same-process mutations; PostgreSQL optimistic locking covers
+other processes. Single Trip GET/POST/PUT responses expose the bigint revision as a
+strong ETag. PUT and DELETE require that value in If-Match; missing preconditions are
+428 and stale revisions on accessible trips are 412. DELETE also returns its advanced
+revision as an ETag.
 
-Deployment mounts the stable branch volume `jjs-<branch-slug>-trip-data` at
-`/app/backend/data`, owned by the image's node user. Container replacement keeps
-the volume; undeploy does not delete named volumes. Back up this volume separately.
+`LocalFileTripRepository` remains as a rollback and migration source only. Runtime
+does not instantiate it and never dual-writes. Existing files under
+`.local/trasolve/users` or the deployment data volume remain untouched until an
+explicit owner-mapped migration is run.
 
 ## Frontend
 
@@ -130,6 +134,13 @@ TripEditController commands for title, places, coordinates/memos, visit duration
 preferred duration and days remain available. Trip deletion belongs to MapPage and
 is exposed in the picker.
 Mutations still use the existing APIs; dates and other fields are preserved.
+
+`HttpTripRepository` owns ETag metadata so components never handle HTTP revisions.
+It serializes writes per Trip and captures each request's revision before waiting, so
+a queued stale save cannot reuse an earlier save's newer ETag. On 412 it does not retry
+the PUT: it reloads the latest server Trip, updates the revision cache and surfaces a
+conflict to `TripEditController`. The controller replaces the stale local snapshot,
+clears its undo history, stops any automatic follow-up save and displays the conflict.
 
 `src/pages/map/domain/tripMapping.ts` maps persisted data to the existing map view
 types; the sample creation helper maps the example to an API input. TripStore

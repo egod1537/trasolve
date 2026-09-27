@@ -7,6 +7,7 @@ import {
 import { Dialog } from '@/shared/ui/Dialog';
 import { IconButton } from '@/shared/ui/IconButton';
 import { CloseIcon } from '@/shared/ui/icons';
+import { useL } from '@/shared/i18n';
 
 type Props = {
   dayId: string;
@@ -29,6 +30,7 @@ export function RouteMapComparisonDialog({
   selectedEndPlaceId,
   onClose,
 }: Props) {
+  const L = useL();
   const titleId = useId();
   const descriptionId = useId();
   const viewportPlaces = useMemo(
@@ -51,11 +53,22 @@ export function RouteMapComparisonDialog({
     >
       <header className="route-map-comparison-header">
         <div>
-          <h2 id={titleId}>경로 지도 비교</h2>
-          <p id={descriptionId}>{dayTitle}의 방문 순서를 비교합니다.</p>
+          <h2 id={titleId}>
+            {L(
+              'routeOptimization:routeMapComparisonDialog.title.routeMapComparison',
+            )}
+          </h2>
+          <p id={descriptionId}>
+            {L(
+              'routeOptimization:routeMapComparisonDialog.text.comparesVisitOrder',
+              { dayTitle: dayTitle },
+            )}
+          </p>
         </div>
         <IconButton
-          aria-label="경로 지도 비교 닫기"
+          aria-label={L(
+            'routeOptimization:routeMapComparisonDialog.ariaLabel.closeRouteMapComparison',
+          )}
           icon={<CloseIcon />}
           variant="ghost"
           size="sm"
@@ -64,9 +77,12 @@ export function RouteMapComparisonDialog({
       </header>
       <div className="route-map-comparison-grid">
         <RouteComparisonMap
-          title="Before"
-          heading="Before"
-          ariaLabel={`${dayTitle} 현재 방문 순서 확대 지도`}
+          phase="before"
+          heading={L('routeOptimization:comparison.label.before')}
+          ariaLabel={L(
+            'routeOptimization:routeMapComparisonDialog.ariaLabel.currentVisitOrderExpandedMap',
+            { dayTitle: dayTitle },
+          )}
           layer={`route-optimization-expanded-before-${dayId}`}
           places={beforePlaces}
           viewportPlaces={viewportPlaces}
@@ -75,9 +91,12 @@ export function RouteMapComparisonDialog({
         />
         {hasAfter ? (
           <RouteComparisonMap
-            title="After"
-            heading="After"
-            ariaLabel={`${dayTitle} 최적화 방문 순서 확대 지도`}
+            phase="after"
+            heading={L('routeOptimization:comparison.label.after')}
+            ariaLabel={L(
+              'routeOptimization:routeMapComparisonDialog.ariaLabel.optimizedVisitOrderExpansionMap',
+              { dayTitle: dayTitle },
+            )}
             layer={`route-optimization-expanded-after-${dayId}`}
             places={afterPlaces}
             viewportPlaces={viewportPlaces}
@@ -86,8 +105,10 @@ export function RouteMapComparisonDialog({
           />
         ) : (
           <RouteComparisonPlaceholder
-            heading="After"
-            message="아직 최적화를 실행하지 않았습니다."
+            heading={L('routeOptimization:comparison.label.after')}
+            message={L(
+              'routeOptimization:routeMapComparisonDialog.text.noOptimizationHasBeenRunYet',
+            )}
           />
         )}
       </div>

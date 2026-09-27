@@ -34,6 +34,7 @@ import type {
   TripCommandPlanResultBinding,
   TripCommandPlanResultKind,
 } from '@/features/map-workspace/ai-command/TripCommandPlanResolver';
+import { L } from '@/shared/i18n';
 
 /**
  * Deterministic preview of what a prepared plan would change, computed from
@@ -97,7 +98,9 @@ export async function prepareTripCommandPlan(
       success: false,
       error: {
         code: 'unsupported_operation',
-        message: '지원하지 않는 여행 명령이 포함되어 있습니다.',
+        message: L(
+          'map:tripCommandPlanExecutor.prepareTripCommandPlan.message.containsUnsupportedTravelCommands',
+        ),
       },
     };
   }
@@ -108,7 +111,9 @@ export async function prepareTripCommandPlan(
       success: false,
       error: {
         code: 'schema_invalid',
-        message: '여행 명령 계획 형식이 올바르지 않습니다.',
+        message: L(
+          'map:tripCommandPlanExecutor.prepareTripCommandPlan.message.travelCommandPlanFormatIncorrect',
+        ),
       },
     };
   }
@@ -206,7 +211,9 @@ export async function executePreparedTripCommandPlan(
       success: false,
       error: {
         code: 'stale_plan',
-        message: '여행이 계획 준비 이후 변경되었습니다.',
+        message: L(
+          'map:tripCommandPlanExecutor.executePreparedTripCommandPlan.message.tripHasChangedSinceItWas',
+        ),
       },
     };
   }
@@ -218,7 +225,9 @@ export async function executePreparedTripCommandPlan(
         success: false,
         error: {
           code: 'unsafe_operation',
-          message: '준비된 여행 명령을 안전하게 실행할 수 없습니다.',
+          message: L(
+            'map:tripCommandPlanExecutor.executePreparedTripCommandPlan.message.preparedTravelCommandCannotBeSafely',
+          ),
         },
       };
 }
@@ -227,7 +236,7 @@ async function validateBase(plan: TripCommandPlan, trip: Trip): Promise<void> {
   if (plan.base.tripId !== trip.id) {
     throw new TripCommandPlanError(
       'stale_plan',
-      '여행 명령 계획이 현재 여행을 대상으로 하지 않습니다.',
+      L('map:tripCommandPlanExecutor.error.travelOrderPlansDoNotCurrently'),
     );
   }
   if (
@@ -235,7 +244,7 @@ async function validateBase(plan: TripCommandPlan, trip: Trip): Promise<void> {
   ) {
     throw new TripCommandPlanError(
       'stale_plan',
-      '여행이 명령 계획을 만든 이후 변경되었습니다.',
+      L('map:tripCommandPlanExecutor.error.tripHasChangedSinceCommandPlans'),
     );
   }
 }
@@ -247,7 +256,9 @@ function validateSelection(
   if (new Set(selectedPlaceIds).size !== selectedPlaceIds.length) {
     throw new TripCommandPlanError(
       'unsafe_operation',
-      '선택된 장소 목록에 중복 ID가 있습니다.',
+      L(
+        'map:tripCommandPlanExecutor.error.thereDuplicateIdsSelectedPlacesList',
+      ),
     );
   }
   const placeIds = new Set(
@@ -256,7 +267,9 @@ function validateSelection(
   if (selectedPlaceIds.some((placeId) => !placeIds.has(placeId))) {
     throw new TripCommandPlanError(
       'unresolved_target',
-      '선택된 장소 중 현재 여행에 없는 항목이 있습니다.',
+      L(
+        'map:tripCommandPlanExecutor.error.someSelectedLocationsNotCurrentlyTrip',
+      ),
     );
   }
   return Object.freeze([...selectedPlaceIds]);
@@ -270,7 +283,9 @@ function createStepIndexes(
     if (indexes.has(operation.stepId)) {
       throw new TripCommandPlanError(
         'unsafe_operation',
-        '여행 명령 계획의 단계 ID가 중복되었습니다.',
+        L(
+          'map:tripCommandPlanExecutor.error.thereDuplicateStepIdTravelCommand',
+        ),
         operation.stepId,
       );
     }

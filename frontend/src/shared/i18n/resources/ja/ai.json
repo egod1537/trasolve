@@ -1,0 +1,102 @@
+{
+  "chatMarkdown": {
+    "components": {
+      "ariaLabel": {
+        "table": "テーブル"
+      }
+    }
+  },
+  "mapAiButton": {
+    "actionLabel": {
+      "text": {
+        "closeAiPanel": "AIパネルを閉じる",
+        "openAiPanel": "AIパネルを開く"
+      }
+    },
+    "label": {
+      "text": {
+        "generatingAiResponse": "AIレスポンスの作成中 · {{actionLabel}}"
+      }
+    }
+  },
+  "mapAiPanel": {
+    "action": {
+      "creating": "作成中",
+      "transfer": "送信"
+    },
+    "ariaLabel": {
+      "aiChatList": "AIチャットリスト",
+      "closeAiAssistant": "AIアシスタントを閉じる",
+      "closeChatList": "チャットリストを閉じる",
+      "currentConversation": "現在の会話",
+      "openChatList": "チャットリストを開く",
+      "saveAsMarkdown": "Markdownとして保存",
+      "trasolveAiTravelAssistant": "Trasolve AIトラベルヘルパー"
+    },
+    "createThread": {
+      "title": {
+        "newChat": "新しいチャット"
+      }
+    },
+    "description": {
+      "thereNoDialogue": "会話がありません。",
+      "travelAssistant": "旅行ヘルパー",
+      "weWillHelpYouPlanTrip": "地図とスケジュールを見ながら旅行計画をお手伝いします。"
+    },
+    "formatRelativeTime": {
+      "text": {
+        "daysAgo": "{{elapsedDays}}日前",
+        "hoursAgo": "{{elapsedHours}}時間前",
+        "justNow": "たった今",
+        "minutesAgo": "{{elapsedMinutes}}分前"
+      }
+    },
+    "label": {
+      "sendMessageAiTravelAssistant": "AIトラベルヘルパーにメッセージを送る"
+    },
+    "placeholder": {
+      "askAboutTravel": "旅行について尋ねる"
+    },
+    "renderThread": {
+      "action": {
+        "cancelCreation": "作成をキャンセル",
+        "changeName": "名前変更",
+        "storage": "アーカイブ",
+        "unarchive": "アーカイブ解除"
+      },
+      "ariaLabel": {
+        "chatName": "チャット名",
+        "generatingAiResponse": "AIレスポンス生成中",
+        "menu": "{{title}}メニュー"
+      },
+      "tooltip": {
+        "chatMenu": "チャットメニュー"
+      }
+    },
+    "submitMessage": {
+      "error": {
+        "answerCouldNotBeRetrievedTry": "回答を呼び出せません。もう一度お試しください。"
+      }
+    },
+    "text": {
+      "chatSearch": "チャット検索",
+      "iMThinkingAnswer": "答えを考えています。"
+    },
+    "title": {
+      "archived": "アーカイブ",
+      "recentConversations": "最近の会話",
+      "trasolveAi": "トラソルブAI"
+    }
+  },
+  "mapAiUnreadPreviews": {
+    "ariaLabel": {
+      "openUnconfirmedAiResponse": "{{threadTitle}}の未確認のAIレスポンスを開く",
+      "unconfirmedAiResponse": "未確認のAI応答"
+    },
+    "toPreviewText": {
+      "text": {
+        "code": "コード"
+      }
+    }
+  }
+}

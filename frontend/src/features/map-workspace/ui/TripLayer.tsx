@@ -14,6 +14,7 @@ import type { MapPolylineHandle } from '@/shared/map/MapPolylineHandle';
 import type { GeoPoint } from '@/shared/types/mapTypes';
 import { getPlaceStyleOption, resolvePlaceStyle } from '@/entities/place';
 import { getTripPolylineStyle } from '@/entities/trip';
+import { L } from '@/shared/i18n';
 
 type Props = {
   objects: MapObjectController;
@@ -184,7 +185,11 @@ function toTripLayerModel(trip: Trip): TripLayerModel {
         dayId: day.id,
         order: layerOrder.get(`place:${place.id}`) ?? place.order,
         position: place.location,
-        title: `${day.title} · ${place.order}. ${place.name}`,
+        title: L('map:tripLayer.toTripLayerModel.title.message', {
+          title: day.title,
+          order: place.order,
+          name: place.name,
+        }),
         color: placeStyle.color,
         icon: getPlaceStyleOption(placeStyle.type).icon,
       });

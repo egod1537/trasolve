@@ -12,6 +12,7 @@ import {
   initialZoom,
   mapOptions,
 } from '@/pages/testbed/components/google-maps/config';
+import { useL } from '@/shared/i18n';
 
 type Props = {
   mapRef: RefObject<GoogleMapHandle | null>;
@@ -36,8 +37,12 @@ export function MapPanel({
   onZoomChanged,
   onError,
 }: Props) {
+  const L = useL();
   return (
-    <section className="maps-test-map-panel" aria-label="지도 및 카메라">
+    <section
+      className="maps-test-map-panel"
+      aria-label={L('testbed:mapPanel.ariaLabel.mapsCameras')}
+    >
       <GoogleMap
         ref={mapRef}
         center={initialCenter}
@@ -50,15 +55,18 @@ export function MapPanel({
         onZoomChanged={onZoomChanged}
         onError={onError}
       />
-      <section aria-label="Camera">
-        <h2>Camera</h2>
+      <section aria-label={L('testbed:mapPanel.label.camera')}>
+        <h2>{L('testbed:mapPanel.label.camera')}</h2>
         {camera ? (
           <>
             <Coordinates point={camera} />
-            <p>zoom: {zoom}</p>
+            <p>
+              {L('testbed:mapPanel.description.zoom')}
+              {zoom}
+            </p>
           </>
         ) : (
-          <p>지도 준비 대기</p>
+          <p>{L('testbed:mapPanel.description.waitingMapBeReady')}</p>
         )}
       </section>
     </section>

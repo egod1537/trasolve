@@ -40,14 +40,6 @@ type RemoteJobVersion = {
   sequence?: number;
 };
 
-export const JOB_STATUS_LABELS: Record<TestbedJobStatus, string> = {
-  pending: '대기 중',
-  running: '실행 중',
-  completed: '완료',
-  failed: '오류',
-  cancelled: '취소됨',
-};
-
 export function getFinalOptimization(
   job: TestbedJob,
 ): TrouteOptimizeResponse | null {

@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { CloseIcon } from '@/shared/ui/icons';
 import '@/features/map-workspace/styles/quick-search.css';
+import { useL, L, NL } from '@/shared/i18n';
 
 type Props = {
   open: boolean;
@@ -33,28 +34,60 @@ const SEARCH_MODES: readonly SearchModeDefinition[] = [
   {
     id: 'place',
     shortcutKey: '1',
-    label: '장소 검색',
-    placeholder: '장소를 검색하세요',
-    resultsTitle: '장소 검색 결과',
-    emptyMessage: '검색할 장소를 입력하세요.',
+    get label() {
+      return L('map:quickSearch.sEARCHMODES.label.searchPlace');
+    },
+    get placeholder() {
+      return L('map:search.placeholder');
+    },
+    get resultsTitle() {
+      return L('map:quickSearch.sEARCHMODES.text.placeSearchResults');
+    },
+    get emptyMessage() {
+      return L('map:quickSearch.sEARCHMODES.text.enterPlaceYouWantSearch');
+    },
     path: 'M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Zm-5.5 0a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z',
   },
   {
     id: 'schedule',
     shortcutKey: '2',
-    label: '내 일정 검색',
-    placeholder: '현재 여행의 일정과 장소를 검색하세요',
-    resultsTitle: '일정 검색 결과',
-    emptyMessage: '검색할 일정이나 장소를 입력하세요.',
+    get label() {
+      return L('map:quickSearch.sEARCHMODES.label.searchMySchedule');
+    },
+    get placeholder() {
+      return L(
+        'map:quickSearch.sEARCHMODES.placeholder.searchCurrentTravelItinerariesLocations',
+      );
+    },
+    get resultsTitle() {
+      return L('map:quickSearch.sEARCHMODES.text.scheduleSearchResults');
+    },
+    get emptyMessage() {
+      return L(
+        'map:quickSearch.sEARCHMODES.text.enterScheduleLocationYouWantSearch',
+      );
+    },
     path: 'M6 3v3m12-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Zm3 8h3m2 0h3m-8 4h3m2 0h3',
   },
   {
     id: 'ai',
     shortcutKey: '3',
-    label: 'AI에게 질문',
-    placeholder: '여행 계획에 대해 질문하세요',
-    resultsTitle: 'AI 응답',
-    emptyMessage: '여행 계획에 대한 질문을 입력하세요.',
+    get label() {
+      return L('map:quickSearch.sEARCHMODES.label.askAi');
+    },
+    get placeholder() {
+      return L(
+        'map:quickSearch.sEARCHMODES.placeholder.askQuestionAboutTravelPlans',
+      );
+    },
+    get resultsTitle() {
+      return L('map:quickSearch.sEARCHMODES.text.aiResponse');
+    },
+    get emptyMessage() {
+      return L(
+        'map:quickSearch.sEARCHMODES.text.enterQuestionAboutTravelPlans',
+      );
+    },
     path: 'M12 3.5c.45 3.52 2.48 5.55 6 6-3.52.45-5.55 2.48-6 6-.45-3.52-2.48-5.55-6-6 3.52-.45 5.55-2.48 6-6Zm6.5 11c.2 1.56 1.1 2.46 2.5 2.66-1.4.2-2.3 1.1-2.5 2.66-.2-1.56-1.1-2.46-2.5-2.66 1.4-.2 2.3-1.1 2.5-2.66Z',
   },
 ] as const;
@@ -64,7 +97,7 @@ function getSearchMode(mode: SearchMode): SearchModeDefinition {
 }
 
 function getModeShortcutLabel(shortcutKey: SearchModeShortcutKey): string {
-  return `Alt+${shortcutKey}`;
+  return `${NL('Alt+')}${shortcutKey}`;
 }
 
 function getModeFromShortcut(event: KeyboardEvent): SearchMode | undefined {
@@ -92,12 +125,15 @@ function SearchModeIcon({ mode }: { mode: SearchModeDefinition }) {
 
 export function getQuickSearchShortcutLabel(): string {
   if (typeof navigator === 'undefined') {
-    return 'Ctrl K';
+    return NL('Ctrl K');
   }
-  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
+  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform)
+    ? NL('⌘ K')
+    : NL('Ctrl K');
 }
 
 export function QuickSearch({ open, shortcutLabel, onOpen, onClose }: Props) {
+  const L = useL();
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<SearchMode>('place');
   const [modeMenuOpen, setModeMenuOpen] = useState(false);
@@ -224,7 +260,7 @@ export function QuickSearch({ open, shortcutLabel, onOpen, onClose }: Props) {
         aria-labelledby="quick-search-title"
       >
         <h2 id="quick-search-title" className="sr-only">
-          빠른 검색
+          {L('map:quickSearch.title.quickSearch')}
         </h2>
         <div className="quick-search-input-row">
           <svg
@@ -239,7 +275,9 @@ export function QuickSearch({ open, shortcutLabel, onOpen, onClose }: Props) {
             <button
               type="button"
               className="quick-search-mode-trigger"
-              aria-label={`검색 모드: ${currentMode.label}`}
+              aria-label={L('map:quickSearch.ariaLabel.searchMode', {
+                label: currentMode.label,
+              })}
               aria-haspopup="menu"
               aria-expanded={modeMenuOpen}
               aria-controls="quick-search-mode-menu"
@@ -256,7 +294,7 @@ export function QuickSearch({ open, shortcutLabel, onOpen, onClose }: Props) {
                 id="quick-search-mode-menu"
                 className="quick-search-mode-menu"
                 role="menu"
-                aria-label="검색 모드"
+                aria-label={L('map:quickSearch.ariaLabel.searchMode2')}
               >
                 {SEARCH_MODES.map((item) => (
                   <button
@@ -287,7 +325,9 @@ export function QuickSearch({ open, shortcutLabel, onOpen, onClose }: Props) {
             ref={inputRef}
             type="search"
             role="searchbox"
-            aria-label={`${currentMode.label} 입력`}
+            aria-label={L('map:quickSearch.ariaLabel.enter', {
+              label: currentMode.label,
+            })}
             aria-controls="quick-search-results"
             placeholder={currentMode.placeholder}
             value={query}
@@ -302,8 +342,8 @@ export function QuickSearch({ open, shortcutLabel, onOpen, onClose }: Props) {
           <button
             type="button"
             className="quick-search-close"
-            aria-label="빠른 검색 닫기"
-            title="닫기"
+            aria-label={L('map:quickSearch.ariaLabel.closeQuickSearch')}
+            title={L('common:action.close')}
             onClick={close}
           >
             <CloseIcon />
@@ -319,9 +359,13 @@ export function QuickSearch({ open, shortcutLabel, onOpen, onClose }: Props) {
             <h3>{currentMode.resultsTitle}</h3>
             <div role="status">
               {submitted
-                ? `${currentMode.label} 기능은 아직 연결되지 않았습니다.`
+                ? L('map:quickSearch.text.functionNotYetConnected', {
+                    label: currentMode.label,
+                  })
                 : query.trim()
-                  ? `${currentMode.resultsTitle}가 여기에 표시됩니다.`
+                  ? L('map:quickSearch.text.willAppearHere', {
+                      resultsTitle: currentMode.resultsTitle,
+                    })
                   : currentMode.emptyMessage}
             </div>
           </section>
@@ -332,17 +376,20 @@ export function QuickSearch({ open, shortcutLabel, onOpen, onClose }: Props) {
             {SEARCH_MODES.map((item) => (
               <kbd key={item.id}>{getModeShortcutLabel(item.shortcutKey)}</kbd>
             ))}{' '}
-            모드 전환
+            {L('map:quickSearch.text.modeSwitching')}
           </span>
           <span>
             <kbd>↑</kbd>
-            <kbd>↓</kbd> 이동
+            <kbd>↓</kbd>
+            {L('map:quickSearch.text.move')}
           </span>
           <span>
-            <kbd>Enter</kbd> 선택
+            <kbd>{NL('Enter')}</kbd>
+            {L('common:action.select')}
           </span>
           <span>
-            <kbd>Esc</kbd> 닫기
+            <kbd>{NL('Esc')}</kbd>
+            {L('common:action.close')}
           </span>
         </footer>
       </section>

@@ -3,6 +3,7 @@ import type {
   TripCommandPlanValidationError,
   TripCommandPlanValidationErrorCode,
 } from '@trasolve/shared';
+import { L } from '@/shared/i18n';
 
 export class TripCommandPlanError extends Error {
   public constructor(
@@ -31,7 +32,9 @@ export function normalizeTripCommandPlanError(
     ? cause.toValidationError()
     : {
         code: 'unsafe_operation',
-        message: '여행 명령 계획을 안전하게 준비할 수 없습니다.',
+        message: L(
+          'map:tripCommandPlanError.normalizeTripCommandPlanError.message.travelOrderPlanCannotBeSafely',
+        ),
         ...(stepId ? { stepId } : {}),
       };
 }

@@ -1,0 +1,316 @@
+{
+  "googlePlaceCard": {
+    "action": {
+      "addSchedule": "スケジュールに追加",
+      "adding": "追加中..."
+    },
+    "description": {
+      "failedAddLocation": "場所を追加できませんでした。",
+      "failedLoadLocationInformation": "場所情報を読み込めませんでした。",
+      "loadingLocationInformation": "場所情報を読み込んでいます。"
+    },
+    "rating": {
+      "ariaLabel": {
+        "ratingPoints": "評価{{toFixed}}点{{value}}",
+        "reviews": "、{{format}}レビュー"
+      }
+    },
+    "text": {
+      "addAnotherLayer": "レイヤーを1つ追加してください",
+      "address": "住所",
+      "closeGooglePlacesDetailCard": "Google プレイス詳細カードを閉じる",
+      "phoneNumber": "電話番号",
+      "reviews": "{{reviewCount}}件のレビュー",
+      "selectDifferentLocationTryAgainLater": "しばらくして別の場所を選択してもう一度やり直してください。",
+      "viewGoogleMaps": "Googleマップで見る",
+      "website": "ウェブサイト"
+    },
+    "tooltip": {
+      "locationInformation": "場所情報"
+    }
+  },
+  "mapSearchToolbar": {
+    "ariaLabel": {
+      "mapPlaceSearch": "地図の場所を検索",
+      "openQuickSearch": "クイック検索を開く（{{quickSearchShortcutLabel}}）",
+      "placeSearchResults": "場所検索結果",
+      "search": "検索",
+      "searchPlace": "場所検索"
+    },
+    "description": {
+      "noSearchResults": "検索結果がありません",
+      "searchingLocation": "場所を検索しています。"
+    },
+    "runSearch": {
+      "text": {
+        "enterAtLeastTwoCharactersAs": "検索語を2文字以上入力してください。"
+      }
+    },
+    "searchAutocomplete": {
+      "text": {
+        "locationSearchFailedTryAgain": "場所の検索に失敗しました。もう一度お試しください。"
+      }
+    },
+    "selectSuggestion": {
+      "text": {
+        "failedLoadLocationInformationSelectAgain": "場所情報を読み込めませんでした。もう一度選択してください。"
+      }
+    },
+    "text": {
+      "noAddressInformation": "住所情報なし"
+    },
+    "tooltip": {
+      "quickSearch": "クイック検索（{{quickSearchShortcutLabel}}）"
+    }
+  },
+  "placeCategory": {
+    "pLACECATEGORYLABELS": {
+      "text": {
+        "accommodation": "宿泊施設",
+        "cafe": "カフェ",
+        "educationalFacilities": "教育施設",
+        "medicalFacility": "医療施設",
+        "park": "公園",
+        "place": "場所",
+        "restaurant": "レストラン",
+        "store": "お店",
+        "touristAttraction": "観光スポット",
+        "transportationFacilities": "交通施設"
+      }
+    }
+  },
+  "placeDeleteConfirmCard": {
+    "action": {
+      "deleting": "削除中…"
+    },
+    "ariaLabel": {
+      "confirmDeletion": "{{placeName}}削除の確認",
+      "removeFromCalendar": "{{placeName}} 予定から削除"
+    },
+    "text": {
+      "willBeRemovedFromCurrentSchedule": "「{{placeName}}」は現在のスケジュールから削除されます。",
+      "youSureYouWantDeleteIt": "本当にスケジュールから削除しますか？"
+    }
+  },
+  "placeDetailContent": {
+    "ariaLabel": {
+      "edit": "修正",
+      "editPlaceName": "{{name}}場所名を編集",
+      "memo": "{{name}}メモ{{value}}",
+      "notes": "{{name}}メモ",
+      "removeFromCalendar": "予定から削除"
+    },
+    "description": {
+      "doubleClickEnterNote": "メモを入力するにはダブルクリックしてください",
+      "noNotes": "メモなし",
+      "setTimeYouWillStayAt": "この場所に滞在する時間を設定してください"
+    },
+    "text": {
+      "changeVenueStyle": "場所スタイルの変更",
+      "closeBusinessHoursDetails": "営業時間詳細を閉じる",
+      "closeLocationDetailsCard": "場所詳細カードを閉じる",
+      "savingNote": "メモを保存しています。"
+    },
+    "title": {
+      "desiredStayTime": "希望滞在時間",
+      "memo": "メモ"
+    },
+    "tooltip": {
+      "businessHours": "営業時間",
+      "doubleClickEdit": "ダブルクリックして編集",
+      "doubleClickEditPlaceName": "ダブルクリックして場所名を編集"
+    }
+  },
+  "placeDuration": {
+    "formatDurationMinutes": {
+      "text": {
+        "hours": "{{hours}}時間",
+        "hoursMinutes": "{{hours}}時間{{minutes}}分",
+        "minutes": "{{minutes}}分"
+      }
+    }
+  },
+  "placeDurationControl": {
+    "ariaLabel": {
+      "desiredLengthStay": "希望滞在時間: {{value}}",
+      "selectDesiredStayTime": "希望滞在時間の選択"
+    },
+    "formatDurationOption": {
+      "text": {
+        "minutes": "{{durationMinutes}}分"
+      }
+    },
+    "text": {
+      "dwellTimeEnterManually": "直接入力する滞在時間",
+      "enterDirectlyMinutes": "直接入力（{{stepMinutes}}分単位）",
+      "minutes": "分",
+      "notSet": "設定しない",
+      "selectTime": "時間を選択してください",
+      "set2": "設定済み"
+    }
+  },
+  "placeOpeningHours": {
+    "ariaLabel": {
+      "viewAllBusinessHours": "営業時間全体を見る"
+    },
+    "description": {
+      "locationOpeningHoursCouldNotBe": "場所営業時間を呼び出せませんでした。"
+    },
+    "formatDuration": {
+      "text": {
+        "hoursMinutes": "{{hours}}時間{{remainingMinutes}}分",
+        "minutes": "{{rounded}}分"
+      }
+    },
+    "formatNextOpen": {
+      "text": {
+        "open": "{{prefix}} {{formatClockTime}} オープン",
+        "today": "今日",
+        "tomorrow": "明日"
+      }
+    },
+    "formatTodayHours": {
+      "text": {
+        "after": "{{formatClockTime}}以降",
+        "message": "{{formatClockTime}} ~ {{value}}{{formatClockTime}}",
+        "message2": "{{formatClockTime}} ~ {{formatClockTime}}",
+        "nextDay": "翌日"
+      }
+    },
+    "formatWeeklyHours": {
+      "text": {
+        "closed": "休業",
+        "open24HoursFromMondaySunday": "月～日24時間営業"
+      }
+    },
+    "getPlaceOpeningStatus": {
+      "text": {
+        "businessStartsAfter": "{{formatDuration}} で営業開始",
+        "closedAfter": "{{formatDuration}} の終了",
+        "noRealTimeStatusCalculatedAs": "場所の現地時間帯情報がないため、リアルタイムの状態を計算しません。"
+      }
+    },
+    "shortWeekdayLabels": {
+      "text": {
+        "angry": "火",
+        "gold": "金",
+        "month": "月",
+        "neck": "木",
+        "number": "水",
+        "sat": "土",
+        "work": "日"
+      }
+    },
+    "text": {
+      "beforeSales": "営業前",
+      "businessHoursToday": "今日の営業時間：{{value}}",
+      "closed": "営業終了",
+      "dueSoon": "まもなく終了",
+      "from": "{{startText}}から{{endText}}まで",
+      "loadingBusinessHours": "営業時間を呼び出す",
+      "needCheckBusinessHours": "営業時間確認が必要",
+      "noBusinessHoursInformation": "営業時間情報なし",
+      "noOpeningsToday": "今日営業区間なし",
+      "open": "営業中",
+      "open24Hours": "24時間営業"
+    },
+    "weekdayLabels": {
+      "text": {
+        "friday": "金曜日",
+        "monday": "月曜日",
+        "saturday": "土曜日",
+        "sunday": "日曜日",
+        "thursday": "木曜日",
+        "tuesday": "火曜日",
+        "wednesday": "水曜日"
+      }
+    }
+  },
+  "placeOpeningHoursDetails": {
+    "description": {
+      "weeklyBusinessHoursInformationNotAvailable": "週間営業時間情報はありません。"
+    },
+    "label": {
+      "businessHoursToday": "今日の営業時間"
+    },
+    "title": {
+      "businessHoursByDay": "曜日別営業時間"
+    }
+  },
+  "placeStyle": {
+    "pLACESTYLEOPTIONS": {
+      "label": {
+        "entertainment": "エンターテイメント",
+        "generalPlace": "一般的な場所",
+        "guitar": "その他",
+        "landmark": "ランドマーク",
+        "museumCulture": "博物館/文化",
+        "observatory": "展望台",
+        "parksNature": "公園/自然",
+        "shopping": "ショッピング",
+        "transportationStation": "交通/駅"
+      }
+    }
+  },
+  "placeStyleControl": {
+    "ariaLabel": {
+      "changeIconColor": "{{placeName}} アイコンと色の変更",
+      "closeStyleSettings": "スタイル設定を閉じる",
+      "color": "{{color}}色",
+      "setIconColor": "{{placeName}}アイコンと色の設定"
+    },
+    "label": {
+      "color": "色",
+      "locationType": "場所タイプ"
+    },
+    "tooltip": {
+      "changeIconsColors": "アイコンと色の変更"
+    }
+  },
+  "placeTimeTimeline": {
+    "ariaLabel": {
+      "visitVisitDuration": "訪問{{formatClockTime}}、訪問時間{{formatDurationMinutes}}",
+      "visitingHoursHaveNotBeenSet": "訪問時間が設定されていません。タイムラインで訪問開始時間を選択してください。"
+    },
+    "createTimelineModel": {
+      "text": {
+        "fromSales": "営業{{startText}}から{{endText}}まで",
+        "visit": "訪問{{arrivalText}}",
+        "visitDuration": "訪問時間{{formatDurationMinutes}}"
+      }
+    },
+    "expandedTimeline": {
+      "ariaLabel": {
+        "timeTimeline": "タイムタイムライン"
+      },
+      "description": {
+        "clickTimelineSetVisitTimes": "訪問時間を設定するには、タイムラインをクリックしてください"
+      },
+      "text": {
+        "youSavingTime": "時間を保存しています。"
+      },
+      "title": {
+        "time": "時間"
+      }
+    },
+    "formatCompactDuration": {
+      "text": {
+        "minutes": "{{remainder}}分"
+      }
+    },
+    "text": {
+      "visit": "訪問{{formatCompactDuration}}"
+    }
+  },
+  "timeRangeTimeline": {
+    "ariaLabel": {
+      "adjustVisitStartTime": "訪問開始時間の調整",
+      "adjustmentStayEndTime": "滞在終了時間の調整",
+      "selectVisitStartTime": "訪問開始時間の選択"
+    },
+    "tooltip": {
+      "adjustByDraggingUsingLeftRight": "ドラッグまたは左右方向キーで調整",
+      "selectVisitStartTimeByClicking": "クリックまたは方向キーとEnterで訪問開始時刻を選択"
+    }
+  }
+}

@@ -6,6 +6,7 @@ import {
   type TransitionEvent,
 } from 'react';
 import type { MapAiUnreadPreview } from '@/features/ai-chat/ui/MapAiPanel';
+import { L, useL } from '@/shared/i18n';
 
 type Props = {
   previews: MapAiUnreadPreview[];
@@ -18,7 +19,10 @@ type PreviewStyle = CSSProperties & {
 
 function toPreviewText(content: string): string {
   return content
-    .replace(/```[\s\S]*?```/g, ' 코드 ')
+    .replace(
+      /```[\s\S]*?```/g,
+      ` ${L('ai:mapAiUnreadPreviews.toPreviewText.text.code')} `,
+    )
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
     .replace(/^#{1,6}\s+/gm, '')
@@ -29,6 +33,7 @@ function toPreviewText(content: string): string {
 }
 
 export function MapAiUnreadPreviews({ previews, onOpen }: Props) {
+  const L = useL();
   const [renderedPreviews, setRenderedPreviews] = useState(() =>
     previews.slice(0, 3),
   );
@@ -101,7 +106,7 @@ export function MapAiUnreadPreviews({ previews, onOpen }: Props) {
   return (
     <section
       className={`trip-map-ai-unread-previews is-${motionState}`}
-      aria-label="확인하지 않은 AI 응답"
+      aria-label={L('ai:mapAiUnreadPreviews.ariaLabel.unconfirmedAiResponse')}
       onTransitionEnd={finishExit}
     >
       <ol>
@@ -112,7 +117,10 @@ export function MapAiUnreadPreviews({ previews, onOpen }: Props) {
           >
             <button
               type="button"
-              aria-label={`${preview.threadTitle}의 확인하지 않은 AI 응답 열기`}
+              aria-label={L(
+                'ai:mapAiUnreadPreviews.ariaLabel.openUnconfirmedAiResponse',
+                { threadTitle: preview.threadTitle },
+              )}
               onClick={() => onOpen(preview)}
             >
               <span className="trip-map-ai-unread-title">

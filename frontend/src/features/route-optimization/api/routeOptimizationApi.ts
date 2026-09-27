@@ -14,6 +14,7 @@ import {
   type TrouteOptimizeRequest,
   type TrouteOptimizeResponse,
 } from '@trasolve/shared';
+import { L } from '@/shared/i18n';
 
 const ROUTE_OPTIMIZATION_API_CONFIG = {
   requestTimeoutMs: 120_000,
@@ -48,7 +49,9 @@ export async function optimizeDayRoute(
   const parsedRequest = trouteOptimizeRequestSchema.safeParse(request);
   if (!parsedRequest.success) {
     throw new RouteOptimizationApiError(
-      '경로 최적화 요청 데이터가 올바르지 않습니다.',
+      L(
+        'routeOptimization:routeOptimizationApi.error.routeOptimizationRequestDataIncorrect',
+      ),
     );
   }
 
@@ -75,14 +78,19 @@ export async function optimizeDayRoute(
       throw new RouteOptimizationApiError(
         readApiError(
           responseBody.body,
-          `최적화 요청이 HTTP ${response.status}로 실패했습니다.`,
+          L(
+            'routeOptimization:routeOptimizationApi.error.optimizationRequestFailedHttp',
+            { status: response.status },
+          ),
           parsedRequest.data,
         ),
       );
     }
     if (!responseBody.isJson) {
       throw new RouteOptimizationApiError(
-        '최적화 요청 응답 형식이 올바르지 않습니다.',
+        L(
+          'routeOptimization:routeOptimizationApi.error.optimizationRequestResponseFormatIncorrect',
+        ),
       );
     }
 
@@ -96,12 +104,16 @@ export async function optimizeDayRoute(
     );
     if (!submission.success) {
       throw new RouteOptimizationApiError(
-        '최적화 요청 응답 형식이 올바르지 않습니다.',
+        L(
+          'routeOptimization:routeOptimizationApi.error.optimizationRequestResponseFormatIncorrect',
+        ),
       );
     }
     if (submission.data.job_id !== parsedRequest.data.job_id) {
       throw new RouteOptimizationApiError(
-        '최적화 Job ID가 요청과 일치하지 않습니다.',
+        L(
+          'routeOptimization:routeOptimizationApi.error.optimizationJobIdDoesNotMatch',
+        ),
       );
     }
 
@@ -124,7 +136,9 @@ export async function optimizeDayRoute(
       throw cause;
     }
     throw new RouteOptimizationApiError(
-      'troute와 통신하는 중 오류가 발생했습니다.',
+      L(
+        'routeOptimization:routeOptimizationApi.error.errorOccurredWhileCommunicatingTroute',
+      ),
     );
   }
 }
@@ -147,7 +161,10 @@ async function streamOptimizationJob(
     throw new RouteOptimizationApiError(
       readApiError(
         responseBody.body,
-        `최적화 진행 상태 연결이 HTTP ${response.status}로 실패했습니다.`,
+        L(
+          'routeOptimization:routeOptimizationApi.error.optimizationProgressConnectionFailedHttp',
+          { status: response.status },
+        ),
       ),
     );
   }
@@ -159,7 +176,9 @@ async function streamOptimizationJob(
       .startsWith('text/event-stream')
   ) {
     throw new RouteOptimizationApiError(
-      '최적화 진행 상태 응답 형식이 올바르지 않습니다.',
+      L(
+        'routeOptimization:routeOptimizationApi.error.optimizationProgressResponseFormatIncorrect',
+      ),
     );
   }
 
@@ -197,14 +216,19 @@ async function getOptimizationJobState(
     throw new RouteOptimizationApiError(
       readApiError(
         responseBody.body,
-        `최적화 상태 조회가 HTTP ${response.status}로 실패했습니다.`,
+        L(
+          'routeOptimization:routeOptimizationApi.error.optimizationStatusQueryFailedHttp',
+          { status: response.status },
+        ),
       ),
     );
   }
   const parsed = trouteJobStateSchema.safeParse(responseBody.body);
   if (!responseBody.isJson || !parsed.success || parsed.data.job_id !== jobId) {
     throw new RouteOptimizationApiError(
-      '최적화 상태 응답 형식이 올바르지 않습니다.',
+      L(
+        'routeOptimization:routeOptimizationApi.error.optimizationStatusResponseFormatIncorrect',
+      ),
     );
   }
   return parsed.data;
@@ -215,7 +239,11 @@ function getOptimizationResult(state: TrouteJobState): TrouteOptimizeResponse {
     if (state.result) {
       return state.result;
     }
-    throw new RouteOptimizationApiError('완료된 최적화 Job에 결과가 없습니다.');
+    throw new RouteOptimizationApiError(
+      L(
+        'routeOptimization:routeOptimizationApi.error.completedOptimizationJobHasNoResults',
+      ),
+    );
   }
   if (state.status === 'failed') {
     throw new RouteOptimizationApiError(
@@ -223,10 +251,16 @@ function getOptimizationResult(state: TrouteJobState): TrouteOptimizeResponse {
     );
   }
   if (state.status === 'cancelled') {
-    throw new RouteOptimizationApiError('경로 최적화가 취소되었습니다.');
+    throw new RouteOptimizationApiError(
+      L(
+        'routeOptimization:routeOptimizationApi.error.routeOptimizationHasBeenCancelled',
+      ),
+    );
   }
   throw new RouteOptimizationApiError(
-    '최적화 진행 상태 연결이 결과 없이 종료되었습니다.',
+    L(
+      'routeOptimization:routeOptimizationApi.error.optimizationProgressConnectionTerminatedWithoutResult',
+    ),
   );
 }
 
@@ -240,7 +274,9 @@ function parseOptimizationJobEvent(
     body = JSON.parse(data) as unknown;
   } catch {
     throw new RouteOptimizationApiError(
-      '최적화 진행 상태 데이터가 JSON 형식이 아닙니다.',
+      L(
+        'routeOptimization:routeOptimizationApi.error.optimizationProgressDataNotJsonFormat',
+      ),
     );
   }
   const envelope = getOptimizationEventSchema(type).safeParse(body);
@@ -256,7 +292,9 @@ function parseOptimizationJobEvent(
     (!envelope.success && !eventMatchesState(type, rawState))
   ) {
     throw new RouteOptimizationApiError(
-      '최적화 진행 상태 데이터 형식이 올바르지 않습니다.',
+      L(
+        'routeOptimization:routeOptimizationApi.error.optimizationProgressDataFormatIncorrect',
+      ),
     );
   }
   return rawState;
@@ -357,22 +395,30 @@ function isTrouteJobEventType(value: string): value is TrouteJobEventType {
 
 function formatOptimizationJobError(error: TrouteJobState['error']): string {
   if (!error) {
-    return '경로 최적화에 실패했습니다.';
+    return L(
+      'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.pathOptimizationFailed',
+    );
   }
 
   if (
     error.code === 'NO_FEASIBLE_ROUTE' ||
     error.code === 'NO_FEASIBLE_SCHEDULE'
   ) {
-    return '현재 영업시간과 체류시간 조건으로 가능한 경로를 찾지 못했습니다.';
+    return L(
+      'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.weCouldNotFindPossibleRoute',
+    );
   }
 
   if (isProviderConfigurationError(error.code)) {
-    return '경로 조회 제공자가 설정되어 있지 않습니다. 서버 설정을 확인해 주세요.';
+    return L(
+      'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.noRouteLookupProviderSetUp',
+    );
   }
 
   if (isInvalidTimeWindowError(error.code)) {
-    return '장소 영업시간 또는 방문시간 범위가 올바르지 않습니다.';
+    return L(
+      'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.locationOpeningHoursVisitingHoursRange',
+    );
   }
 
   const detail = error.detail?.toLowerCase() ?? '';
@@ -380,7 +426,9 @@ function formatOptimizationJobError(error: TrouteJobState['error']): string {
     error.code === 'INVALID_REQUEST' &&
     (detail.includes('time window') || detail.includes('open_time'))
   ) {
-    return '장소 영업시간 또는 방문시간 범위가 올바르지 않습니다.';
+    return L(
+      'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.locationOpeningHoursVisitingHoursRange',
+    );
   }
 
   if (error.code === 'ROUTING_UNAVAILABLE') {
@@ -390,13 +438,17 @@ function formatOptimizationJobError(error: TrouteJobState['error']): string {
         detail.includes('configuration') ||
         detail.includes('api key'))
     ) {
-      return '경로 조회 제공자가 설정되어 있지 않습니다. 서버 설정을 확인해 주세요.';
+      return L(
+        'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.noRouteLookupProviderSetUp',
+      );
     }
     if (
       detail.includes('place id') &&
       (detail.includes('invalid') || detail.includes('not found'))
     ) {
-      return '유효하지 않은 Place ID가 있어 이동 경로를 조회하지 못했습니다.';
+      return L(
+        'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.routeSearchFailedBecauseThereWas',
+      );
     }
     if (
       detail.includes('tcache') &&
@@ -405,19 +457,29 @@ function formatOptimizationJobError(error: TrouteJobState['error']): string {
         detail.includes('unavailable') ||
         detail.includes('failed to fetch'))
     ) {
-      return 'tcache 서버에 연결할 수 없어 이동시간을 조회하지 못했습니다.';
+      return L(
+        'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.travelTimeCouldNotBeRetrieved',
+      );
     }
     if (detail.includes('google_routes_error')) {
-      return 'Google Routes가 해당 장소와 이동수단의 경로를 반환하지 않았습니다.';
+      return L(
+        'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.googleRoutesDidnTReturnDirections',
+      );
     }
-    return 'tcache 또는 Google Routes에서 이동시간을 조회하지 못했습니다.';
+    return L(
+      'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.failedRetrieveTravelTimeFromTcache',
+    );
   }
 
   if (error.code.includes('TIMEOUT')) {
-    return '경로 최적화 처리 시간이 초과됐습니다.';
+    return L(
+      'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.routeOptimizationProcessingTimedOut',
+    );
   }
 
-  return error.message;
+  return L(
+    'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.pathOptimizationFailed',
+  );
 }
 
 async function cancelOptimizationJob(jobId: string): Promise<void> {
@@ -456,10 +518,17 @@ function createAbortError(
 ): RouteOptimizationApiError {
   if (timeoutSignal.aborted && !userSignal?.aborted) {
     return new RouteOptimizationApiError(
-      `경로 최적화 요청 시간이 ${ROUTE_OPTIMIZATION_API_CONFIG.requestTimeoutMs / 1_000}초를 초과했습니다.`,
+      L(
+        'routeOptimization:routeOptimizationApi.createAbortError.text.routeOptimizationRequestTimeExceededSeconds',
+        { value: ROUTE_OPTIMIZATION_API_CONFIG.requestTimeoutMs / 1_000 },
+      ),
     );
   }
-  return new RouteOptimizationApiError('경로 최적화 요청이 취소되었습니다.');
+  return new RouteOptimizationApiError(
+    L(
+      'routeOptimization:routeOptimizationApi.createAbortError.text.routeOptimizationRequestHasBeenCancelled',
+    ),
+  );
 }
 
 function readApiError(
@@ -473,19 +542,30 @@ function readApiError(
   }
   const { code, message } = parsed.data.error;
   if (code === 'TROUTE_NOT_CONFIGURED') {
-    return '경로 최적화 서버가 설정되어 있지 않습니다.';
+    return L(
+      'routeOptimization:routeOptimizationApi.readApiError.text.routeOptimizationServerNotSetUp',
+    );
   }
   if (code === 'TROUTE_UNAVAILABLE') {
-    return '경로 최적화 서버에 연결할 수 없습니다.';
+    return L(
+      'routeOptimization:routeOptimizationApi.readApiError.text.unableConnectRouteOptimizationServer',
+    );
   }
   if (code === 'TROUTE_TIMEOUT') {
-    return '경로 최적화 요청 시간이 초과됐습니다.';
+    return L(
+      'routeOptimization:routeOptimizationApi.readApiError.text.routeOptimizationRequestTimedOut',
+    );
   }
   if (code === 'TROUTE_START_POLICY_UNSUPPORTED') {
-    return `${formatStartPolicy(request?.start_policy)} 시작 방식은 현재 troute 서버에서 지원하지 않습니다.`;
+    return L(
+      'routeOptimization:routeOptimizationApi.readApiError.text.startupMethodNotCurrentlySupportedBy',
+      { formatStartPolicy: formatStartPolicy(request?.start_policy) },
+    );
   }
   if (isInvalidTimeWindowError(code)) {
-    return '장소 영업시간 또는 방문시간 범위가 올바르지 않습니다.';
+    return L(
+      'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.locationOpeningHoursVisitingHoursRange',
+    );
   }
   return message;
 }
@@ -511,12 +591,20 @@ function formatStartPolicy(
 ): string {
   switch (policy) {
     case 'FIXED':
-      return '지정 시각';
+      return L(
+        'routeOptimization:routeOptimizationApi.formatStartPolicy.text.designatedTime',
+      );
     case 'EARLIEST':
-      return '최대한 이르게';
+      return L(
+        'routeOptimization:routeOptimizationApi.formatStartPolicy.text.asSoonAsPossible',
+      );
     case 'LATEST':
-      return '최대한 늦게';
+      return L(
+        'routeOptimization:routeOptimizationApi.formatStartPolicy.text.asLateAsPossible',
+      );
     default:
-      return '선택한';
+      return L(
+        'routeOptimization:routeOptimizationApi.formatStartPolicy.text.selected',
+      );
   }
 }

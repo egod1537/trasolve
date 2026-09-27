@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { TrouteJobHistoryItem } from '@trasolve/shared';
 import { listTrouteJobs } from '@/features/troute-testbed/api/troute';
 import { reuseJsonValue } from '@/shared/lib/structuralSharing';
+import { L } from '@/shared/i18n';
 
 const JOB_LIST_POLL_INTERVAL_MS = 2_000;
 const RECENT_JOB_LIMIT = 50;
@@ -91,7 +92,9 @@ export function useTrouteJobListPolling({ onJobs }: Options = {}) {
           const error =
             cause instanceof Error
               ? cause.message
-              : 'troute Job 목록을 불러올 수 없습니다.';
+              : L(
+                  'testbed:useTrouteJobListPolling.text.trouteJobListCouldNotBe',
+                );
           setState((current) =>
             current.error === error && !current.loading
               ? current

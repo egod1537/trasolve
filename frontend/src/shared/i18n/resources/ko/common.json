@@ -1,0 +1,132 @@
+{
+  "action": {
+    "add": "추가",
+    "apply": "적용",
+    "cancel": "취소",
+    "close": "닫기",
+    "copy": "복사",
+    "delete": "삭제",
+    "refresh": "새로고침",
+    "retry": "다시 시도",
+    "save": "저장",
+    "select": "선택",
+    "signOut": "로그아웃"
+  },
+  "dragHandle": {
+    "ariaLabel": {
+      "changeOrder": "{{label}} 순서 변경"
+    },
+    "tooltip": {
+      "changeOrderByDraggingUsingAlt": "드래그하거나 Alt + ↑/↓ 키로 순서 변경",
+      "orderOriginDestinationCannotBeChanged": "출발지와 도착지는 순서를 변경할 수 없습니다."
+    }
+  },
+  "featureSection": {
+    "features": {
+      "description": {
+        "checkLocationMovementOrderBetweenLocations": "장소 간 위치와 이동 순서를 일정과 함께 확인합니다.",
+        "organizePlacesTimesVisitByDate": "날짜별로 방문할 장소와 시간을 정리합니다.",
+        "startPlanningTripByReferringDifferent": "다른 일정 구조를 참고해 여행 계획을 시작합니다."
+      },
+      "title": {
+        "movementPath": "이동 경로",
+        "travelItinerary": "여행 일정",
+        "travelTemplate": "여행 템플릿"
+      }
+    },
+    "title": {
+      "manageSchedulesRoutesTogether": "일정과 경로를 함께 관리합니다."
+    }
+  },
+  "header": {
+    "ariaLabel": {
+      "buildCommitNewTab": "빌드 커밋 {{sha}} (새 탭)",
+      "buildInformation": "빌드 정보",
+      "mainMenu": "주요 메뉴",
+      "trasolveHome": "Trasolve 홈"
+    },
+    "text": {
+      "goServices": "서비스로 이동"
+    }
+  },
+  "hero": {
+    "ariaLabel": {
+      "startMenu": "시작 메뉴"
+    },
+    "description": {
+      "makeTravelPlanByLookingAt": "이동 동선을 함께 보며 여행 계획을 구성하세요.",
+      "placeScheduleOnePlan": "장소와 일정을 하나의 플랜에 담고,"
+    },
+    "text": {
+      "gettingStarted": "시작하기",
+      "viewFeatures": "기능 보기"
+    },
+    "title": {
+      "organizeItAllAtOnce": "한 번에 정리하세요.",
+      "travelItineraryRoute": "여행 일정과 경로를"
+    }
+  },
+  "jobs": {
+    "jOBSTATUSLABELS": {
+      "text": {
+        "canceled": "취소됨",
+        "done": "완료",
+        "running": "실행 중",
+        "waiting": "대기 중"
+      }
+    }
+  },
+  "landingPage": {
+    "healthLabels": {
+      "text": {
+        "checkingServiceConnectionStatus": "서비스 연결 상태 확인 중",
+        "serviceApiConnectionNotPossible": "서비스 API 연결 불가",
+        "serviceApiConnectionPossible": "서비스 API 연결 가능"
+      }
+    },
+    "render": {
+      "description": {
+        "travelPlanningServiceCurrentlyPreparation": "여행 계획 서비스는 현재 준비 중입니다."
+      }
+    },
+    "text": {
+      "trasolve": "© {{year}} Trasolve"
+    }
+  },
+  "languageControl": {
+    "ariaLabel": {
+      "selectLanguage": "언어 선택"
+    },
+    "error": {
+      "failedChangeLanguage": "언어를 변경하지 못했습니다."
+    },
+    "label": {
+      "language": "언어"
+    },
+    "language": {
+      "en": "English",
+      "ja": "日本語",
+      "ko": "한국어"
+    }
+  },
+  "routes": {
+    "loadingLabel": {
+      "pageLoading": "페이지를 불러오고 있습니다."
+    }
+  },
+  "status": {
+    "error": "오류"
+  },
+  "themeControl": {
+    "ariaLabel": {
+      "theme": "테마: {{label}}"
+    },
+    "themeOptions": {
+      "label": {
+        "dark": "다크",
+        "light": "라이트",
+        "system": "시스템"
+      }
+    }
+  }
+}

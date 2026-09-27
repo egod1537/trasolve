@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { GoogleOAuthResult, GoogleOAuthUser } from '@trasolve/shared';
+import type { AuthUser, GoogleOAuthResult } from '@trasolve/shared';
 import {
   consumeGoogleOAuthResult,
   startGoogleOAuth,
@@ -8,22 +8,42 @@ import {
   fetchCurrentUser,
   logout as requestLogout,
 } from '@/features/auth/api/auth';
+import { L } from '@/shared/i18n';
 
 export type CurrentUserState =
   | { status: 'loading' }
   | { status: 'signed-out' }
-  | { status: 'signed-in'; user: GoogleOAuthUser };
+  | { status: 'signed-in'; user: AuthUser };
 
 const oauthErrorMessages: Record<
   Extract<GoogleOAuthResult, { status: 'error' }>['error'],
   string
 > = {
-  access_denied: 'Google 로그인이 취소되었습니다.',
-  provider_error: 'Google에서 로그인 요청을 완료하지 못했습니다.',
-  invalid_callback:
-    '로그인 요청이 만료되었거나 유효하지 않습니다. 다시 시도해 주세요.',
-  token_exchange_failed: '인증 코드를 처리하지 못했습니다. 다시 시도해 주세요.',
-  userinfo_request_failed: 'Google 프로필 정보를 가져오지 못했습니다.',
+  get access_denied() {
+    return L(
+      'auth:useCurrentUser.oauthErrorMessages.text.googleSignHasBeenCanceled',
+    );
+  },
+  get provider_error() {
+    return L(
+      'auth:useCurrentUser.oauthErrorMessages.text.googleWasUnableCompleteSignRequest',
+    );
+  },
+  get invalid_callback() {
+    return L(
+      'auth:useCurrentUser.oauthErrorMessages.text.loginRequestHasExpiredInvalidTry',
+    );
+  },
+  get token_exchange_failed() {
+    return L(
+      'auth:useCurrentUser.oauthErrorMessages.text.failedProcessVerificationCodeTryAgain',
+    );
+  },
+  get userinfo_request_failed() {
+    return L(
+      'auth:useCurrentUser.oauthErrorMessages.text.failedRetrieveGoogleProfileInformation',
+    );
+  },
 };
 
 /**
@@ -57,16 +77,16 @@ export function useCurrentUser() {
             setAuthNotice(oauthErrorMessages[result.error]);
           } else if (result.status === 'unavailable') {
             setAuthNotice(
-              'Google 로그인이 서버에 설정되어 있지 않습니다. 관리자에게 문의해 주세요.',
+              L('auth:useCurrentUser.text.googleSignNotSetUpServer'),
             );
           } else if (result.status === 'missing') {
             setAuthNotice(
-              '로그인 결과를 확인할 수 없습니다. 다시 시도해 주세요.',
+              L('auth:useCurrentUser.text.weCannotConfirmLoginResultsTry'),
             );
           }
         } catch {
           setAuthNotice(
-            '로그인 결과를 불러오지 못했습니다. 다시 시도해 주세요.',
+            L('auth:useCurrentUser.text.failedLoadLoginResultsTryAgain'),
           );
         }
 

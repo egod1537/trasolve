@@ -3,6 +3,7 @@ import {
   JOB_BUILDER_PRESETS,
   getJobBuilderPreset,
 } from '@/features/troute-testbed/job-builder/presets';
+import { useL } from '@/shared/i18n';
 
 export function JobBuilderPresetPicker({
   presetId,
@@ -13,13 +14,14 @@ export function JobBuilderPresetPicker({
   onPresetChange: (presetId: string) => void;
   onApply: () => void;
 }) {
+  const L = useL();
   const selectedPreset = getJobBuilderPreset(presetId);
 
   return (
     <section className="job-builder-preset" aria-labelledby="preset-title">
       <div className="job-builder-preset-controls">
         <label htmlFor="job-builder-preset-select" id="preset-title">
-          Test Case
+          {L('testbed:jobBuilderPresetPicker.label.testCase')}
         </label>
         <HTMLSelect
           id="job-builder-preset-select"
@@ -33,13 +35,17 @@ export function JobBuilderPresetPicker({
           ))}
         </HTMLSelect>
         <Button icon="import" intent="primary" onClick={onApply}>
-          불러오기
+          {L('testbed:jobBuilderPresetPicker.action.load')}
         </Button>
       </div>
       {selectedPreset ? (
         <p>
-          {selectedPreset.locationCount}개 장소 · {selectedPreset.sourceLabel} ·{' '}
-          {selectedPreset.description}
+          {L('testbed:jobBuilderPresetPicker.text.locations', {
+            locationCount: selectedPreset.locationCount,
+            sourceLabel: selectedPreset.sourceLabel,
+            value: ' ',
+            description: selectedPreset.description,
+          })}
         </p>
       ) : null}
     </section>

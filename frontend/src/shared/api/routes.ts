@@ -7,6 +7,7 @@ import {
   type DirectionsRequest,
   type DirectionsResult,
 } from '@trasolve/shared';
+import { L } from '@/shared/i18n';
 
 export class DirectionsApiError extends Error {
   public constructor(
@@ -38,19 +39,23 @@ export async function getDirections(
       throw new DirectionsApiError(
         response.status,
         parsed.data.error.code,
-        parsed.data.error.message,
+        L('errors:routes.error.routeLookupFailedHttp', {
+          status: response.status,
+        }),
         parsed.data.error.details,
       );
     }
     throw new DirectionsApiError(
       response.status,
       'ROUTES_REQUEST_FAILED',
-      `경로 조회 실패 (HTTP ${response.status})`,
+      L('errors:routes.error.routeLookupFailedHttp', {
+        status: response.status,
+      }),
     );
   }
   const parsed = directionsResultSchema.safeParse(body);
   if (!parsed.success) {
-    throw new Error('경로 응답 형식이 올바르지 않습니다.');
+    throw new Error(L('errors:routes.error.routeResponseFormatIncorrect'));
   }
   return parsed.data;
 }

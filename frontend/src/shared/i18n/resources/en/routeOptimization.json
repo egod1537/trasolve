@@ -1,0 +1,413 @@
+{
+  "comparison": {
+    "label": {
+      "after": "After",
+      "before": "Before"
+    }
+  },
+  "routeComparisonMap": {
+    "ariaLabel": {
+      "enlargeRouteMap": "{{title}} Enlarge route map"
+    },
+    "comparisonMarkers": {
+      "text": {
+        "arrivalPoint": "· Arrival point",
+        "startingPoint": "· Departure point"
+      }
+    },
+    "text": {
+      "currentVisitOrder": "Current visit order",
+      "destination": "Destination",
+      "map": "Map",
+      "optimizedVisitOrder": "Optimized visit order",
+      "startingPoint": "Departure point"
+    }
+  },
+  "routeEndpointContextMenu": {
+    "action": {
+      "destinationPoint": "✓ Destination point",
+      "setAsDestination": "Set as destination",
+      "setAsStartingPoint": "Set as departure point",
+      "startingPoint": "✓ Departure point"
+    },
+    "ariaLabel": {
+      "setStartingEndingPoints": "Set departure and arrival points for {{placeName}}"
+    }
+  },
+  "routeMapComparisonDialog": {
+    "ariaLabel": {
+      "closeRouteMapComparison": "Close route map comparison",
+      "currentVisitOrderExpandedMap": "{{dayTitle}} current visit order expanded map",
+      "optimizedVisitOrderExpansionMap": "{{dayTitle}} Optimized visit order expansion map"
+    },
+    "text": {
+      "comparesVisitOrder": "Compare the visit order for {{dayTitle}}.",
+      "noOptimizationHasBeenRunYet": "No optimization has been run yet."
+    },
+    "title": {
+      "routeMapComparison": "Route map comparison"
+    }
+  },
+  "routeOptimization": {
+    "error": {
+      "routeOptimizationRequestValueIncorrect": "The route optimization request value is incorrect."
+    },
+    "getLocationConstraint": {
+      "text": {
+        "stayTimeMustBe10Minute": "The stay time for {{name}} must be in 10 minute increments: {{stayMinutes}} minutes"
+      }
+    },
+    "getOpeningWindow": {
+      "text": {
+        "closingTimeMustBe10Minute": "Closing time for {{name}} must be in 10 minute increments: {{endText}}",
+        "hasNoValidBusinessHoursSelected": "{{name}} has no valid business hours on the selected date.",
+        "nextBusinessHoursNotCurrentlySupported": "Next business hours for {{name}} are not currently supported by route optimization.",
+        "openingTimeMustBe10Minute": "The opening time for {{name}} must be in 10 minute increments: {{startText}}"
+      }
+    },
+    "getRouteOptimizationIssue": {
+      "text": {
+        "endpointMustBeLocationIncludedCurrent": "The arrival point must be a location in the current day.",
+        "placeIdRequiredCheckActualTravel": "Place ID is required to check actual travel time: {{value}}",
+        "routeOptimizationRequiresTwoMoreLocations": "Route optimization requires two or more locations.",
+        "specifiedStartTimeMustBe10": "The specified start time must be in 10-minute increments.",
+        "specifiedTimeStartRequiresStartTime": "Specified time start requires a start time in HH:mm format.",
+        "startingEndingPointsMustBeDifferent": "The departure and arrival points must be different places.",
+        "startingPointMustBeLocationIncluded": "The departure point must be a location in the current day.",
+        "thisStartupMethodNotSupported": "This departure-time setting is not supported.",
+        "thisTransportationMethodNotSupported": "This transportation method is not supported: {{String}}"
+      }
+    }
+  },
+  "routeOptimizationApi": {
+    "createAbortError": {
+      "text": {
+        "routeOptimizationRequestHasBeenCancelled": "The route optimization request has been cancelled.",
+        "routeOptimizationRequestTimeExceededSeconds": "The route optimization request time exceeded {{value}} seconds."
+      }
+    },
+    "error": {
+      "completedOptimizationJobHasNoResults": "The completed optimization job has no results.",
+      "errorOccurredWhileCommunicatingTroute": "An error occurred while communicating with troute.",
+      "optimizationJobIdDoesNotMatch": "Optimization Job ID does not match request.",
+      "optimizationProgressConnectionFailedHttp": "Optimization Progress Connection failed with HTTP {{status}}.",
+      "optimizationProgressConnectionTerminatedWithoutResult": "Optimization in progress Connection terminated without result.",
+      "optimizationProgressDataFormatIncorrect": "The optimization progress data format is incorrect.",
+      "optimizationProgressDataNotJsonFormat": "Optimization progress data is not in JSON format.",
+      "optimizationProgressResponseFormatIncorrect": "The optimization progress response format is incorrect.",
+      "optimizationRequestFailedHttp": "Optimization request failed with HTTP {{status}}.",
+      "optimizationRequestResponseFormatIncorrect": "Optimization request response format is incorrect.",
+      "optimizationStatusQueryFailedHttp": "Optimization status query failed with HTTP {{status}}.",
+      "optimizationStatusResponseFormatIncorrect": "The optimization status response format is incorrect.",
+      "routeOptimizationHasBeenCancelled": "Route optimization has been cancelled.",
+      "routeOptimizationRequestDataIncorrect": "The route optimization request data is incorrect."
+    },
+    "formatOptimizationJobError": {
+      "text": {
+        "failedRetrieveTravelTimeFromTcache": "Failed to retrieve travel time from tcache or Google Routes.",
+        "googleRoutesDidnTReturnDirections": "Google Routes didn't return directions for that place or mode of transportation.",
+        "locationOpeningHoursVisitingHoursRange": "The location opening hours or visiting hours range are incorrect.",
+        "noRouteLookupProviderSetUp": "No route lookup provider is set up. Please check your server settings.",
+        "pathOptimizationFailed": "Route optimization failed.",
+        "routeOptimizationProcessingTimedOut": "Route optimization processing timed out.",
+        "routeSearchFailedBecauseThereWas": "Unable to find the route because a Place ID is invalid.",
+        "travelTimeCouldNotBeRetrieved": "The travel time could not be retrieved because the tcache server could not be connected.",
+        "weCouldNotFindPossibleRoute": "We could not find a possible route given the current business hours and stay time conditions."
+      }
+    },
+    "formatStartPolicy": {
+      "text": {
+        "asLateAsPossible": "As late as possible",
+        "asSoonAsPossible": "As soon as possible",
+        "designatedTime": "Fixed time",
+        "selected": "Selected"
+      }
+    },
+    "readApiError": {
+      "text": {
+        "routeOptimizationRequestTimedOut": "The route optimization request timed out.",
+        "routeOptimizationServerNotSetUp": "The route optimization server is not set up.",
+        "startupMethodNotCurrentlySupportedBy": "The {{formatStartPolicy}} departure-time setting is not currently supported by the troute server.",
+        "unableConnectRouteOptimizationServer": "Unable to connect to route optimization server."
+      }
+    }
+  },
+  "routeOptimizationMetrics": {
+    "createMetrics": {
+      "label": {
+        "scheduleEndTime": "Schedule end time",
+        "scheduleStartTime": "Schedule start time",
+        "totalTravelTime": "total travel time",
+        "totalWaitingTime": "total waiting time"
+      }
+    },
+    "describeMetricDelta": {
+      "label": {
+        "decrease": "decrease",
+        "faster": "faster",
+        "increase": "increase",
+        "late": "late",
+        "matchesSpecifiedTime": "Matches the specified time",
+        "minutes": "{{absolute}} minutes {{value}}",
+        "noChange": "no change",
+        "noComparativeData": "No comparative data"
+      }
+    },
+    "description": {
+      "calculatingRouteMetrics": "Calculating route metrics.",
+      "compareKeyFiguresFromCurrentSchedule": "Compare key metrics from the current schedule and optimization results.",
+      "whenYouRunOptimizationYouCan": "When you run an optimization, you can compare Before/After metrics."
+    },
+    "formatMetricValue": {
+      "text": {
+        "minutes": "{{value}} minutes"
+      }
+    },
+    "title": {
+      "indicatorChange": "Metric changes"
+    }
+  },
+  "routeOptimizationModal": {
+    "action": {
+      "applyThisResult": "Apply this result",
+      "optimizationRun": "Run optimization",
+      "runAgain": "Run again"
+    },
+    "ariaLabel": {
+      "closeRouteOptimization": "Close route optimization",
+      "currentVisitOrderMap": "{{title}} current visit order map",
+      "optimizedVisitOrderMap": "{{title}} Optimized visit order map"
+    },
+    "dayList": {
+      "ariaLabel": {
+        "selectDay": "Select Day"
+      },
+      "text": {
+        "inputConfirmationRequired": "Input confirmation required"
+      }
+    },
+    "description": {
+      "anyExistingSuccessResultsWillRemain": "Any existing success results will remain the same.",
+      "compareCurrentRouteOptimizedRouteBy": "Compare current and optimized routes for each day.",
+      "compareCurrentVisitSequenceOptimizedVisit": "Compare the current visit sequence with the optimized visit sequence."
+    },
+    "formatDayStatus": {
+      "text": {
+        "beforeRunning": "Before running",
+        "failure": "Failed",
+        "optimized": "Optimized",
+        "preparingRun": "Preparing to run",
+        "resultMaintenanceRerunFailure": "Result maintenance/rerun failure",
+        "running": "Running {{progress}}%"
+      }
+    },
+    "getValidationResolution": {
+      "text": {
+        "addAtLeastTwoLocationsThis": "Add at least two places for this day, including the departure and arrival points.",
+        "checkLocationSBusinessHoursStay": "Please check the location's business hours and stay time and try again.",
+        "enterStartTime10MinuteIncrements": "Please enter the start time in 10-minute increments, such as 09:00.",
+        "selectDifferentLocationsCurrentDayAs": "Select different places in the current day as the departure and arrival points.",
+        "selectPlaceDisplayedPlaceSearchAgain": "Please select the place displayed in Place Search again to save its Google Place ID.",
+        "setDaySModeTransportationAs": "Please set Day's mode of transportation as public transportation, car, walking, or bicycle."
+      }
+    },
+    "optimizationSettings": {
+      "ariaLabel": {
+        "fixedStartTime": "Fixed start time",
+        "routeOptimizationTransportation": "Route optimization transportation"
+      },
+      "description": {
+        "enter10MinuteIncrements": "Enter in 10-minute increments",
+        "sameAppliesOptimizationRequestsComparisonMaps": "Same applies to optimization requests and comparison maps.",
+        "setMethodFindingDepartureTimeMeans": "Set the method of finding departure time and means of transportation.",
+        "startingEndingPointsCanBeSpecified": "Select the departure and arrival points on the map or schedule in the route comparison below."
+      },
+      "label": {
+        "startupMethod": "Departure-time setting"
+      },
+      "text": {
+        "exploreEarliestPossibleScheduleStartTime": "Explore the earliest possible schedule start time.",
+        "exploreLatestPossibleEventStartTime": "Find the latest possible schedule start time.",
+        "firstLocationScheduleStartsAtTime": "The first location schedule starts at the time you enter.",
+        "meansTransportation": "Transportation",
+        "startTime": "Start time"
+      },
+      "title": {
+        "departureConditions": "Departure conditions",
+        "optimizationSettings": "Optimization settings"
+      }
+    },
+    "optimizationValidationPanel": {
+      "text": {
+        "unableRunOptimization": "Unable to run optimization"
+      }
+    },
+    "tRAVELMODEOPTIONS": {
+      "label": {
+        "bicycle": "Bicycle",
+        "car": "Car",
+        "publicTransportation": "Public transportation",
+        "walk": "Walk"
+      }
+    },
+    "text": {
+      "awaitingOptimizationResults": "Awaiting optimization results.",
+      "currentVisitOrderCurrentSchedule": "Current visit order · Current schedule",
+      "failedApplyOptimizationResultsDay": "Failed to apply optimization results to Day.",
+      "noBusinessHoursInformationOptimizationRequests": "No business hours information: {{placeNames}}. Optimization requests use a temporary 00:00–23:50 window.",
+      "notExecutable": "Not executable · {{inputIssue}}",
+      "optimizationVisitOrderOptimizationSchedule": "Optimized visit order · Optimized schedule",
+      "pathOptimization": "{{title}} route optimization",
+      "routeOptimizationRequestFailed": "The route optimization request failed.",
+      "selectDay": "Select Day",
+      "where": "{{length}} places"
+    },
+    "title": {
+      "pathComparison": "Route comparison",
+      "routeOptimization": "Route optimization"
+    },
+    "tooltip": {
+      "itCannotBeAppliedBecauseSchedule": "It cannot be applied because the schedule information of the optimization result cannot be confirmed."
+    }
+  },
+  "routeOptimizationProgressDialog": {
+    "action": {
+      "canceling": "Canceling"
+    },
+    "ariaLabel": {
+      "pathOptimizationPhase": "Route optimization phase"
+    },
+    "description": {
+      "routeOptimizationRequestCouldNotBe": "The route optimization request could not be completed."
+    },
+    "formatServerStatus": {
+      "text": {
+        "running": "Running",
+        "waiting": "Pending"
+      }
+    },
+    "formatStageMessage": {
+      "text": {
+        "waitingServerSProgress": "Waiting for the server's progress."
+      }
+    },
+    "formatStepState": {
+      "text": {
+        "canceled": "Cancelled",
+        "done": "Complete",
+        "progress": "In progress",
+        "waiting": "Waiting"
+      }
+    },
+    "getMessage": {
+      "text": {
+        "cleaningUpConnectionsBetweenRunningRequests": "Cleaning up connections between running requests and progress.",
+        "optimizationComplete": "Optimization is complete.",
+        "optimizationHasBeenCancelled": "Optimization has been cancelled.",
+        "sendingOptimizationRequest": "Sending an optimization request.",
+        "youCanRetryRequestClosePop": "You can retry the request or close the pop-up."
+      }
+    },
+    "getTitle": {
+      "text": {
+        "cancelingOptimization": "Canceling optimization",
+        "optimizationComplete": "Optimization is complete",
+        "optimizationHasBeenCanceled": "Optimization has been canceled",
+        "optimizingRoute": "Optimizing the route",
+        "pathOptimizationFailed": "Route optimization failed"
+      }
+    },
+    "pROGRESSSTEPS": {
+      "label": {
+        "chooseOptimalRoute": "Choose the optimal route",
+        "constructingTravelTimeMatrix": "Constructing a travel time matrix",
+        "generateInitialRouteCandidates": "Generate initial route candidates",
+        "generateResults": "generate results",
+        "inputValidation": "Input validation",
+        "preparingCheckTravelTime": "Preparing to check travel time",
+        "requestReceived": "Request received",
+        "scheduleCalculation": "Calculate schedule",
+        "scheduleConstraintVerification": "Schedule constraint verification",
+        "selectRouteProvider": "Select route provider",
+        "travelTimeInquiry": "Travel time inquiry"
+      },
+      "message": {
+        "comparingCandidatePaths": "Comparing candidate paths.",
+        "optimizationRequestHasBeenReceived": "Your optimization request has been received.",
+        "weCalculatingItineraryVisit": "Calculating the visit schedule.",
+        "weConstructingTravelTimeMatrix": "We are constructing a travel time matrix.",
+        "weGeneratingInitialRouteCandidates": "Generating initial route candidates.",
+        "weLookingUpTravelTimesBetween": "We are looking up travel times between locations.",
+        "weOptimizingOrderVisits": "We are optimizing the order of visits.",
+        "weOrganizingOptimizationResults": "We are organizing the optimization results.",
+        "wePreparingCheckTravelTimesBetween": "We are preparing to check travel times between locations.",
+        "weVerifyingBusinessHoursResidenceTime": "We are verifying business hours and residence time restrictions.",
+        "weVerifyingLocationScheduleConditions": "Verifying place and schedule conditions.",
+        "youSelectingRouteProvider": "Selecting a route provider."
+      }
+    },
+    "text": {
+      "message": "{{percentage}}%",
+      "processing": "Processing",
+      "routeOptimizationProgress": "Route optimization in progress",
+      "routeOptimizationProgress2": "Route optimization progress {{percentage}}%",
+      "serverStatus": "Server Status: {{status}}"
+    }
+  },
+  "routeSchedulePreview": {
+    "afterSchedule": {
+      "description": {
+        "afterOptimizingYouCanSeeItinerary": "After optimization, you can view the visit schedule for each place.",
+        "previewCannotBeCreatedBecauseItinerary": "A preview cannot be created because the schedule does not match the visit order.",
+        "weCalculatingOptimizedSchedule": "We are calculating an optimized schedule."
+      },
+      "text": {
+        "move": "move",
+        "optimizationSchedule": "Optimized schedule"
+      }
+    },
+    "beforeSchedule": {
+      "text": {
+        "currentSchedule": "Current schedule",
+        "untilNextSchedule": "Until the next schedule"
+      },
+      "tooltip": {
+        "schedule": "Schedule"
+      }
+    },
+    "scheduleLeg": {
+      "text": {
+        "minutes": "{{minutes}} minutes"
+      }
+    },
+    "schedulePlace": {
+      "action": {
+        "arrival": "Arrival point",
+        "start": "Departure point"
+      },
+      "ariaLabel": {
+        "setAsDestination": "Set {{name}} as the arrival point",
+        "setAsStartingPoint": "Set {{name}} as the departure point"
+      },
+      "text": {
+        "message": "{{time}} ~ {{departureTime}}",
+        "timeNotSet": "Time not set"
+      }
+    },
+    "text": {
+      "arrival": "Arrival {{arrivalTime}}",
+      "departure": "Departure {{departureTime}}",
+      "minutesStay": "Stay: {{stayMinutes}} minutes",
+      "waitMinutes": "Wait {{waitMinutes}} minutes"
+    }
+  },
+  "scheduleLegTimeline": {
+    "ariaLabel": {
+      "minutes": "{{label}} {{startTime}} to {{endTime}}, {{durationMinutes}} minutes"
+    },
+    "text": {
+      "noTimeInformation": "No time information",
+      "noTravelTimeInformation": "No travel time information"
+    }
+  }
+}

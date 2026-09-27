@@ -1,8 +1,8 @@
 import {
-  getPlaceCategoryLabel,
   resolvePlaceCategoryFromTypes,
   type PlaceCategory,
 } from '@/entities/place';
+import { useL, type Localize } from '@/shared/i18n';
 
 type Props = {
   types?: readonly string[];
@@ -39,8 +39,9 @@ const CATEGORY_ICON_PATHS: Record<PlaceCategory, readonly string[]> = {
 };
 
 export function PlaceTypeIcon({ types = [], primaryType, className }: Props) {
+  const L = useL();
   const category = resolvePlaceCategoryFromTypes([primaryType, ...types]);
-  const label = getPlaceCategoryLabel(category);
+  const label = getPlaceCategoryLabel(category, L);
 
   return (
     <span
@@ -55,4 +56,35 @@ export function PlaceTypeIcon({ types = [], primaryType, className }: Props) {
       </svg>
     </span>
   );
+}
+
+function getPlaceCategoryLabel(category: PlaceCategory, L: Localize): string {
+  switch (category) {
+    case 'food':
+      return L('place:placeCategory.pLACECATEGORYLABELS.text.restaurant');
+    case 'cafe':
+      return L('place:placeCategory.pLACECATEGORYLABELS.text.cafe');
+    case 'transit':
+      return L(
+        'place:placeCategory.pLACECATEGORYLABELS.text.transportationFacilities',
+      );
+    case 'lodging':
+      return L('place:placeCategory.pLACECATEGORYLABELS.text.accommodation');
+    case 'shopping':
+      return L('place:placeCategory.pLACECATEGORYLABELS.text.store');
+    case 'attraction':
+      return L(
+        'place:placeCategory.pLACECATEGORYLABELS.text.touristAttraction',
+      );
+    case 'park':
+      return L('place:placeCategory.pLACECATEGORYLABELS.text.park');
+    case 'medical':
+      return L('place:placeCategory.pLACECATEGORYLABELS.text.medicalFacility');
+    case 'education':
+      return L(
+        'place:placeCategory.pLACECATEGORYLABELS.text.educationalFacilities',
+      );
+    case 'default':
+      return L('place:placeCategory.pLACECATEGORYLABELS.text.place');
+  }
 }

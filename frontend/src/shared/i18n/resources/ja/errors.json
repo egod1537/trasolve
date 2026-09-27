@@ -1,0 +1,38 @@
+{
+  "chat": {
+    "error": {
+      "answerCouldNotBeRetrievedTry": "回答を呼び出せません。しばらくしてからもう一度お試しください。",
+      "chatResponseFormatIncorrect": "チャット応答形式が正しくありません。",
+      "unableConnectChatServerTryAgain": "チャットサーバーに接続できません。しばらくしてからもう一度お試しください。",
+      "waitingTimeReplyHasBeenExceeded": "回答待ち時間が超過しました。もう一度お試しください。"
+    }
+  },
+  "openwebui": {
+    "error": {
+      "modelListCouldNotBeLoaded": "モデルリストを読み込めません。",
+      "modelListResponseFormatIncorrect": "モデルリスト応答形式が正しくありません。",
+      "unableConnectModelListServer": "モデルリストサーバーに接続できません。",
+      "waitingTimeModelListHasExpired": "モデルリストの待ち時間が超過しました。"
+    }
+  },
+  "places": {
+    "error": {
+      "placeLookupFailedHttp": "場所の検索に失敗しました（HTTP{{status}}）",
+      "placeSearchResponseFormatIncorrect": "場所検索応答形式が正しくありません。",
+      "venueDetailResponseFormatIncorrect": "場所詳細応答形式が正しくありません。"
+    }
+  },
+  "routes": {
+    "error": {
+      "routeLookupFailedHttp": "パスの検索に失敗しました（HTTP{{status}}）",
+      "routeResponseFormatIncorrect": "パス応答形式が正しくありません。"
+    }
+  },
+  "trips": {
+    "error": {
+      "travelRequestCannotBeProcessed": "旅行リクエストを処理できません。",
+      "travelRequestTimedOutRefreshList": "旅行リクエストがタイムアウトしました。リストを更新して保存するかどうかを確認してください。",
+      "unableConnectTravelServer": "旅行サーバーに接続できません。"
+    }
+  }
+}
