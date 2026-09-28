@@ -1,0 +1,133 @@
+{
+  "action": {
+    "add": "Нэмэх",
+    "apply": "Хэрэглэх",
+    "cancel": "Цуцлах",
+    "close": "Хаах",
+    "copy": "Хуулбарлах",
+    "delete": "Устгах",
+    "refresh": "Шинэчлэх",
+    "retry": "Дахин оролдоно уу",
+    "save": "Хадгалах",
+    "select": "Сонгох",
+    "signOut": "Гарах"
+  },
+  "dragHandle": {
+    "ariaLabel": {
+      "changeOrder": "{{label}} дарааллыг өөрчлөх"
+    },
+    "tooltip": {
+      "changeOrderByDraggingUsingAlt": "Alt + ↑/↓ товчлууруудыг чирэх эсвэл ашиглах замаар дарааллыг өөрчлөх",
+      "orderOriginDestinationCannotBeChanged": "Гарал үүсэл болон очих газрын дарааллыг өөрчлөх боломжгүй."
+    }
+  },
+  "featureSection": {
+    "features": {
+      "description": {
+        "checkLocationMovementOrderBetweenLocations": "Хуваарийн хамт байршил болон зорчих дарааллыг харах.",
+        "organizePlacesTimesVisitByDate": "Очих газар, цагийг огноогоор нь цэгцэл.",
+        "startPlanningTripByReferringDifferent": "Аяллаа төлөвлөж эхлэхдээ өөр маршрутыг лавлагаа болгон ашиглаарай."
+      },
+      "title": {
+        "movementPath": "Аяллын маршрут",
+        "travelItinerary": "Аяллын хөтөлбөр",
+        "travelTemplate": "Аяллын загвар"
+      }
+    },
+    "title": {
+      "manageSchedulesRoutesTogether": "Хуваарь болон маршрутуудыг хамтдаа удирдах."
+    }
+  },
+  "header": {
+    "ariaLabel": {
+      "buildCommitNewTab": "Билд коммит {{sha}} (шинэ таб)",
+      "buildInformation": "Билдийн мэдээлэл",
+      "mainMenu": "Үндсэн цэс",
+      "trasolveHome": "Trasolve-н нүүр хуудас"
+    },
+    "text": {
+      "goServices": "Үйлчилгээ рүү очих"
+    }
+  },
+  "hero": {
+    "ariaLabel": {
+      "startMenu": "Эхлэх цэс"
+    },
+    "description": {
+      "makeTravelPlanByLookingAt": "Аяллын маршрутыг үзэж байхдаа аяллаа төлөвлөөрэй.",
+      "placeScheduleOnePlan": "Байршил болон хуваарийг нэг төлөвлөгөөнд нэгтгээрэй,"
+    },
+    "text": {
+      "gettingStarted": "Эхлэх",
+      "viewFeatures": "Онцлогуудыг харах"
+    },
+    "title": {
+      "organizeItAllAtOnce": "бүгд нэг дор.",
+      "travelItineraryRoute": "Аяллын хөтөлбөр болон маршрутаа төлөвлөөрэй"
+    }
+  },
+  "jobs": {
+    "jOBSTATUSLABELS": {
+      "text": {
+        "canceled": "Цуцлагдсан",
+        "done": "Дууссан",
+        "running": "Ажиллаж байна",
+        "waiting": "Хүлээгдэж буй"
+      }
+    }
+  },
+  "landingPage": {
+    "healthLabels": {
+      "text": {
+        "checkingServiceConnectionStatus": "Үйлчилгээний холболтын төлөвийг шалгаж байна",
+        "serviceApiConnectionNotPossible": "Үйлчилгээний API холболт боломжгүй байна",
+        "serviceApiConnectionPossible": "Үйлчилгээний API холболт боломжтой"
+      }
+    },
+    "render": {
+      "description": {
+        "travelPlanningServiceCurrentlyPreparation": "Аяллын төлөвлөлтийн үйлчилгээ одоогоор бэлтгэл ажилдаа ороод байна."
+      }
+    },
+    "text": {
+      "trasolve": "© {{year}} Trasolve"
+    }
+  },
+  "languageControl": {
+    "ariaLabel": {
+      "selectLanguage": "Хэл сонгох"
+    },
+    "error": {
+      "failedChangeLanguage": "Хэлийг өөрчилж чадсангүй."
+    },
+    "label": {
+      "language": "Хэл"
+    },
+    "language": {
+      "en": "Англи хэл",
+      "ja": "Япон хэл",
+      "ko": "Солонгос хэл",
+      "mn": "Монгол"
+    }
+  },
+  "routes": {
+    "loadingLabel": {
+      "pageLoading": "Хуудас ачаалагдаж байна."
+    }
+  },
+  "status": {
+    "error": "Алдаа"
+  },
+  "themeControl": {
+    "ariaLabel": {
+      "theme": "Сэдэв: {{label}}"
+    },
+    "themeOptions": {
+      "label": {
+        "dark": "Бараан",
+        "light": "Цайвар",
+        "system": "Систем"
+      }
+    }
+  }
+}

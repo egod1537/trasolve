@@ -11,7 +11,7 @@ export async function createGoogleMapRuntime(
   config: MapRuntimeConfig = {},
 ): Promise<MapRuntime> {
   signal?.throwIfAborted();
-  await loadGoogleMaps();
+  await loadGoogleMaps(config.language);
   const [maps] = await Promise.all([
     google.maps.importLibrary('maps'),
     google.maps.importLibrary('core'),

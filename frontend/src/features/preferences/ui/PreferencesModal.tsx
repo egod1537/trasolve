@@ -6,16 +6,17 @@ import { CloseIcon } from '@/shared/ui/icons';
 import {
   getLanguage,
   setLanguage,
+  SUPPORTED_LANGUAGES,
   useL,
   type Language,
   type Localize,
 } from '@/shared/i18n';
 import { useTheme } from '@/shared/theme/useTheme';
 import type { ThemeMode } from '@/shared/theme/theme';
+import { requiresGoogleMapsReload } from '@/map/runtime/googleMaps';
 import '@/features/preferences/ui/preferences-modal.css';
 
 const THEME_MODES: readonly ThemeMode[] = ['system', 'light', 'dark'];
-const PREFERENCE_LANGUAGES: readonly Language[] = ['ko', 'en'];
 
 type Props = {
   onClose: () => void;
@@ -34,6 +35,9 @@ export function PreferencesModal({ onClose }: Props) {
     setLanguageError(null);
     try {
       await setLanguage(language);
+      if (requiresGoogleMapsReload(language)) {
+        window.location.reload();
+      }
     } catch {
       setLanguageError(L('common:languageControl.error.failedChangeLanguage'));
     } finally {
@@ -87,7 +91,7 @@ export function PreferencesModal({ onClose }: Props) {
         <fieldset className="preferences-group">
           <legend>{L('common:languageControl.label.language')}</legend>
           <div className="preferences-options">
-            {PREFERENCE_LANGUAGES.map((language) => (
+            {SUPPORTED_LANGUAGES.map((language) => (
               <label className="preferences-option" key={language}>
                 <input
                   type="radio"
@@ -137,5 +141,7 @@ function getLanguageLabel(L: Localize, language: Language): string {
       return L('common:languageControl.language.ja');
     case 'en':
       return L('common:languageControl.language.en');
+    case 'mn':
+      return L('common:languageControl.language.mn');
   }
 }

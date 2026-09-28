@@ -1,6 +1,15 @@
 export { TravelMode } from './travelMode.js';
 export { CHAT_LIMITS } from './chat.js';
 export {
+  GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
+  GOOGLE_MAPS_LANGUAGE_CODES,
+  GOOGLE_MAPS_REGION_CODE,
+  getGoogleMapsLocale,
+  type GoogleMapsLanguageCode,
+  type GoogleMapsLocale,
+  type GoogleMapsRegionCode,
+} from './googleMapsLocale.js';
+export {
   TRIP_COMMAND_PLAN_FINGERPRINT_MAX_LENGTH,
   TRIP_COMMAND_PLAN_MAX_OPERATIONS,
   TRIP_COMMAND_PLAN_STEP_ID_MAX_LENGTH,
@@ -18,12 +27,26 @@ export const API_ROUTES = {
   tcacheInternalHealth: '/api/internal/tcache/health',
   tcacheInternalJobs: '/api/internal/tcache/jobs',
   trips: '/api/trips',
+  sharedTrips: '/api/shared-trips',
   routes: '/api/routes',
   placesAutocomplete: '/api/google/maps/places/autocomplete',
   places: '/api/google/maps/places',
   googleOAuthStart: '/api/auth/google/start',
   googleOAuthCallback: '/api/auth/google/callback',
   googleOAuthResult: '/api/auth/google/result',
+  authLocalLogin: '/api/auth/local',
   authMe: '/api/auth/me',
   authLogout: '/api/auth/logout',
 } as const;
+
+export const API_ROUTE_SUFFIXES = {
+  tripShare: '/share',
+} as const;
+
+export function buildTripShareApiRoute(tripId: string): string {
+  return `${API_ROUTES.trips}/${encodeURIComponent(tripId)}${API_ROUTE_SUFFIXES.tripShare}`;
+}
+
+export function buildSharedTripApiRoute(token: string): string {
+  return `${API_ROUTES.sharedTrips}/${encodeURIComponent(token)}`;
+}

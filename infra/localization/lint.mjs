@@ -8,7 +8,7 @@ const traverse = traverseModule.default ?? traverseModule;
 const root = process.cwd();
 const sourceRoot = path.join(root, 'frontend', 'src');
 const resourceRoot = path.join(sourceRoot, 'shared', 'i18n', 'resources');
-const locales = ['ko', 'ja', 'en'];
+const locales = ['ko', 'ja', 'en', 'mn'];
 const inventoryRequested = process.argv.includes('--inventory');
 const localizationKeyPattern =
   /^[A-Za-z][A-Za-z0-9-]*:[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*$/u;
@@ -250,7 +250,11 @@ function nonLocalizedReason(literal) {
   if (['HTTP', 'HTTP + SSE', 'API', 'POST', 'GET'].includes(literal)) {
     return '프로토콜, API 또는 HTTP method의 고정 기술 표기';
   }
-  if (['KO', 'JA', 'EN', '한국어', '日本語', 'English'].includes(literal)) {
+  if (
+    ['KO', 'JA', 'EN', 'MN', '한국어', '日本語', 'English', 'Монгол'].includes(
+      literal,
+    )
+  ) {
     return 'locale code 또는 언어 선택기의 고정 자칭 언어명';
   }
   if (['Enter', 'Esc'].includes(literal)) {

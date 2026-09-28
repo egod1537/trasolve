@@ -37,6 +37,7 @@ const LANGUAGE_LABELS: Record<Language, string> = {
   ko: NL('KO'),
   ja: NL('JA'),
   en: NL('EN'),
+  mn: NL('MN'),
 };
 
 const INTERPOLATION_PATTERN = /\{\{\s*-?\s*([^,}\s]+)(?:\s*,[^}]*)?\s*\}\}/gu;
@@ -356,6 +357,10 @@ export default function LocalizationTestPage() {
           <span>{L('testbed:localizationTestPage.text.numberErrors')}</span>
           <strong>{errorCount.toLocaleString()}</strong>
         </Panel>
+        <Panel>
+          <span>{L('testbed:localizationTestPage.text.numberLanguages')}</span>
+          <strong>{SUPPORTED_LANGUAGES.length.toLocaleString()}</strong>
+        </Panel>
       </section>
 
       <Panel
@@ -420,6 +425,7 @@ export default function LocalizationTestPage() {
                 <th scope="col">{LANGUAGE_LABELS.ko}</th>
                 <th scope="col">{LANGUAGE_LABELS.ja}</th>
                 <th scope="col">{LANGUAGE_LABELS.en}</th>
+                <th scope="col">{LANGUAGE_LABELS.mn}</th>
                 <th scope="col">
                   {L('testbed:localizationTestPage.text.resolved', {
                     language: LANGUAGE_LABELS[language],
@@ -447,6 +453,9 @@ export default function LocalizationTestPage() {
                   </td>
                   <td>
                     <ValueCell value={row.values.en} />
+                  </td>
+                  <td>
+                    <ValueCell value={row.values.mn} />
                   </td>
                   <td>
                     <ValueCell value={getResolvedValue(row)} />

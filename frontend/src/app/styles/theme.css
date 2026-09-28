@@ -47,6 +47,8 @@
   --shadow-floating-lg:
     0 18px 46px rgba(15, 23, 42, 0.27), 0 4px 12px rgba(15, 23, 42, 0.14);
   --shadow-map-overlay: var(--shadow-floating-md);
+  --shadow-map-overlay-menu:
+    0 14px 32px rgba(15, 23, 42, 0.28), 0 4px 10px rgba(15, 23, 42, 0.16);
   --color-primary: var(--color-accent);
   --color-primary-dark: var(--color-accent-hover);
   --color-text: var(--color-text-primary);
@@ -147,6 +149,8 @@
     0 16px 36px rgba(0, 0, 0, 0.58), 0 3px 9px rgba(0, 0, 0, 0.36);
   --shadow-floating-lg:
     0 22px 54px rgba(0, 0, 0, 0.62), 0 5px 14px rgba(0, 0, 0, 0.4);
+  --shadow-map-overlay-menu:
+    0 16px 38px rgba(0, 0, 0, 0.64), 0 5px 14px rgba(0, 0, 0, 0.42);
 }
 
 .language-control {

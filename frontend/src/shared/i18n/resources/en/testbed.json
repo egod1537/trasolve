@@ -767,7 +767,7 @@
       "namespace": "Namespace"
     },
     "placeholder": {
-      "searchKeyKoJaEn": "Search for key, KO, JA, EN",
+      "searchKeyKoJaEn": "Search for key, KO, JA, EN, MN",
       "value": "{{variable}} value"
     },
     "rowStatus": {
@@ -787,6 +787,7 @@
       "failedChangeLanguage": "Failed to change language.",
       "fullNamespace": "All namespaces",
       "numberErrors": "Errors",
+      "numberLanguages": "Number of languages",
       "numberNamespaces": "Namespaces",
       "rawJsonLanguage": "Raw JSON language",
       "rawJsonNamespace": "Raw JSON namespace",

@@ -9,7 +9,6 @@
   pointer-events: auto;
 }
 
-.map-app-menu-button,
 .map-profile-button {
   display: grid;
   place-items: center;
@@ -21,49 +20,6 @@
     background-color 0.15s ease,
     box-shadow 0.15s ease,
     transform 0.15s ease;
-}
-
-.map-theme-control .theme-control-trigger {
-  box-shadow: var(--shadow-map-overlay);
-  backdrop-filter: blur(4px);
-}
-
-.map-language-control select {
-  box-shadow: var(--shadow-map-overlay);
-  backdrop-filter: blur(4px);
-}
-
-.map-app-menu-button {
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: var(--color-surface-raised);
-  color: var(--color-text-secondary);
-  box-shadow: var(--shadow-map-overlay);
-  backdrop-filter: blur(4px);
-}
-
-.map-app-menu-button svg {
-  width: 24px;
-  height: 24px;
-  fill: currentColor;
-}
-
-.map-app-menu-button:hover {
-  background: var(--color-surface-hover);
-}
-
-.map-app-menu-button:active {
-  transform: scale(0.96);
-}
-
-.map-app-menu-button[data-open='true'] {
-  background: var(--color-surface-active);
-  color: var(--color-primary);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-primary) 35%, transparent),
-    var(--shadow-map-overlay);
 }
 
 .map-profile-button {
@@ -128,9 +84,6 @@
   object-fit: cover;
 }
 
-.map-app-menu-button:focus-visible,
-.map-language-control select:focus-visible,
-.map-theme-control .theme-control-trigger:focus-visible,
 .map-profile-button:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
@@ -257,6 +210,12 @@
 
 .map-profile-menu {
   width: 240px;
+  border-color: color-mix(
+    in srgb,
+    var(--color-floating-border) 85%,
+    var(--color-visualization-contrast) 15%
+  );
+  box-shadow: var(--shadow-map-overlay-menu);
 }
 
 .map-profile-menu-header {

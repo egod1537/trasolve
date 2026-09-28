@@ -14,12 +14,14 @@ type Props = {
   dismissRevision: number;
   mapRef: RefObject<GoogleMapHandle | null>;
   onSelectPlace: (place: PlaceDetails) => void;
+  onOpenTripPicker: () => void;
 };
 
 export const MapToolbar = memo(function MapToolbar({
   dismissRevision,
   mapRef,
   onSelectPlace,
+  onOpenTripPicker,
 }: Props) {
   const [aiOpen, setAiOpen] = useState(false);
   const [quickSearchOpen, setQuickSearchOpen] = useState(false);
@@ -49,7 +51,7 @@ export const MapToolbar = memo(function MapToolbar({
           onOpenQuickSearch={openQuickSearch}
           onSelectPlace={selectPlace}
         />
-        <MapUserControls />
+        <MapUserControls onOpenTripPicker={onOpenTripPicker} />
       </div>
       <RenderProfiler id="map-ai-panel">
         <MapAiRegion open={aiOpen} onOpenChange={setAiOpen} />

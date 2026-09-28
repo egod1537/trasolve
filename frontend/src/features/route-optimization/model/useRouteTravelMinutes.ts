@@ -1,10 +1,12 @@
 import {
   TravelMode,
+  getGoogleMapsLocale,
   type TripPlace,
   type TrouteTravelMode,
 } from '@trasolve/shared';
 import { useEffect, useRef, useState } from 'react';
 import { getDirections } from '@/shared/api/routes';
+import { getLanguage } from '@/shared/i18n';
 
 const MAX_ROUTED_SEGMENTS = 20;
 const DIRECTIONS_MODE_BY_TROUTE_MODE = {
@@ -23,7 +25,8 @@ export function useRouteTravelMinutes(
   places: readonly TripPlace[],
   travelMode: TrouteTravelMode,
 ): number | null {
-  const key = `${travelMode}::${places
+  const { languageCode, regionCode } = getGoogleMapsLocale(getLanguage());
+  const key = `${languageCode}:${regionCode}:${travelMode}::${places
     .map((place) => `${place.id}:${place.location.lat}:${place.location.lng}`)
     .join('|')}`;
   const cache = useRef(new Map<string, number | null>());

@@ -458,6 +458,10 @@ function RouteDebugDetails({
                 <dd>{String(result.debug.request.computeAlternativeRoutes)}</dd>
                 <dt>{NL('Intermediates')}</dt>
                 <dd>{result.debug.request.intermediatesCount}</dd>
+                <dt>{NL('languageCode')}</dt>
+                <dd>{result.debug.request.languageCode}</dd>
+                <dt>{NL('regionCode')}</dt>
+                <dd>{result.debug.request.regionCode}</dd>
               </dl>
               <details>
                 <summary>

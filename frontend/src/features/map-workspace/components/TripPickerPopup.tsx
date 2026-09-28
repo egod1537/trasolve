@@ -16,8 +16,10 @@ import {
 } from '@/shared/ui/icons';
 import { LoadingSpinner } from '@/shared/ui/LoadingSpinner';
 import { useL } from '@/shared/i18n';
+import type { MapWorkspaceMode } from '@/features/map-workspace/model/mapWorkspaceMode';
 
-type Props = {
+type CommonProps = {
+  mode: MapWorkspaceMode;
   trips: readonly Trip[];
   busy: boolean;
   error: string | null;
@@ -26,13 +28,29 @@ type Props = {
   onClose: () => void;
   onRefresh: () => void;
   onOpen: (id: string) => void;
-  onCreate: () => void;
-  onCreateExample: () => void;
-  onDelete: (id: string) => void;
   onLogin: () => void;
 };
 
+type Props = CommonProps &
+  (
+    | {
+        mode: 'edit';
+        onCreate: () => void;
+        onCreateSeoulExample: () => void;
+        onCreateTokyoExample: () => void;
+        onDelete: (id: string) => void;
+      }
+    | {
+        mode: 'readonly';
+        onCreate?: never;
+        onCreateSeoulExample?: never;
+        onCreateTokyoExample?: never;
+        onDelete?: never;
+      }
+  );
+
 export function TripPickerPopup({
+  mode,
   trips,
   busy,
   error,
@@ -42,7 +60,8 @@ export function TripPickerPopup({
   onRefresh,
   onOpen,
   onCreate,
-  onCreateExample,
+  onCreateSeoulExample,
+  onCreateTokyoExample,
   onDelete,
   onLogin,
 }: Props) {
@@ -101,7 +120,7 @@ export function TripPickerPopup({
             {L('auth:mapUserControls.text.signGoogle')}
           </Button>
         </div>
-      ) : authenticationStatus === 'signed-in' ? (
+      ) : authenticationStatus === 'signed-in' && mode === 'edit' ? (
         <div className="trip-map-picker-actions">
           <Button
             className="trip-map-picker-action is-primary"
@@ -114,9 +133,19 @@ export function TripPickerPopup({
           </Button>
           <Button
             className="trip-map-picker-action"
+            aria-label={L('trip:tripPickerPopup.text.createExampleTripSeoul')}
             disabled={busy}
             startIcon={<BookIcon />}
-            onClick={onCreateExample}
+            onClick={onCreateSeoulExample}
+          >
+            <span>{L('trip:tripPickerPopup.text.createExampleTripSeoul')}</span>
+          </Button>
+          <Button
+            className="trip-map-picker-action"
+            aria-label={L('trip:tripPickerPopup.text.createExampleTripTokyo')}
+            disabled={busy}
+            startIcon={<BookIcon />}
+            onClick={onCreateTokyoExample}
           >
             <span>{L('trip:tripPickerPopup.text.createExampleTripTokyo')}</span>
           </Button>
@@ -192,18 +221,20 @@ export function TripPickerPopup({
                 >
                   {L('trip:tripPickerPopup.action.open')}
                 </Button>
-                <IconButton
-                  className="trip-map-picker-item-delete"
-                  aria-label={L('trip:tripPickerPopup.ariaLabel.delete', {
-                    title: trip.title,
-                  })}
-                  title={L('common:action.delete')}
-                  variant="ghost"
-                  size="sm"
-                  icon={<TrashIcon />}
-                  disabled={busy}
-                  onClick={() => onDelete(trip.id)}
-                />
+                {mode === 'edit' && (
+                  <IconButton
+                    className="trip-map-picker-item-delete"
+                    aria-label={L('trip:tripPickerPopup.ariaLabel.delete', {
+                      title: trip.title,
+                    })}
+                    title={L('common:action.delete')}
+                    variant="ghost"
+                    size="sm"
+                    icon={<TrashIcon />}
+                    disabled={busy}
+                    onClick={() => onDelete(trip.id)}
+                  />
+                )}
               </div>
             </li>
           ))}

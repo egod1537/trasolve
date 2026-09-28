@@ -1,13 +1,18 @@
-import { Component } from 'react';
+import { Component, useEffect } from 'react';
 import type { Trip } from '@trasolve/shared';
 import { GoogleMap } from '@/map/components/GoogleMap';
 import { TripPickerPopup } from '@/features/map-workspace/components/TripPickerPopup';
 import { TripSession } from '@/features/map-workspace/components/TripSession';
 import { demoTrip } from '@/features/map-workspace/data/demoTrip';
-import { tripViewToInput } from '@/entities/trip';
+import { seoulDemoTrip } from '@/features/map-workspace/data/seoulDemoTrip';
+import { tripViewToInput, type Trip as TripView } from '@/entities/trip';
 import { HttpTripRepository } from '@/entities/trip';
 import type { TripRepository } from '@/entities/trip';
 import { selectTripById } from '@/features/map-workspace/model/selectors';
+import {
+  resolveMapWorkspaceMode,
+  type MapWorkspaceMode,
+} from '@/features/map-workspace/model/mapWorkspaceMode';
 import '@/features/map-workspace/styles/trip-maps.css';
 import { useL, type Localize } from '@/shared/i18n';
 import {
@@ -19,6 +24,7 @@ type Action = 'opening' | 'creating' | 'deleting';
 type OperationErrors = Record<Action, string | null>;
 type Props = {
   L: Localize;
+  mode: MapWorkspaceMode;
   authenticationStatus: CurrentUserState['status'];
   authNotice: string | null;
   onLogin: () => void;
@@ -39,17 +45,26 @@ type State = {
 export default function MapWorkspaceFeature() {
   const L = useL();
   const { state, login, authNotice } = useCurrentUser();
+  const mode = resolveMapWorkspaceMode(window.location.search);
+
+  useEffect(() => {
+    if (state.status === 'signed-out') {
+      window.location.replace('/');
+    }
+  }, [state.status]);
+
+  if (state.status !== 'signed-in') {
+    return <p role="status">{L('map:routes.loadingLabel.loadingTravelMap')}</p>;
+  }
+
   return (
     <MapWorkspaceFeatureView
-      key={
-        state.status === 'signed-in'
-          ? `signed-in:${state.user.id}`
-          : state.status
-      }
+      key={`signed-in:${state.user.id}`}
       L={L}
+      mode={mode}
       authenticationStatus={state.status}
       authNotice={authNotice}
-      onLogin={login}
+      onLogin={() => void login()}
     />
   );
 }
@@ -89,7 +104,7 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
   }
 
   public render() {
-    const { L, authenticationStatus, authNotice, onLogin } = this.props;
+    const { L, mode, authenticationStatus, authNotice, onLogin } = this.props;
     const {
       selectedTripId,
       sessionRevision,
@@ -103,16 +118,41 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
     } = this.state;
     const selectedTrip = selectTripById(trips, selectedTripId);
     const showPicker = pickerOpen || !selectedTrip;
+    const pickerProps = {
+      trips,
+      busy:
+        authenticationStatus === 'loading' || catalogLoading || action !== null,
+      error:
+        authNotice ||
+        (lastAction ? operationErrors[lastAction] : null) ||
+        catalogError,
+      authenticationStatus,
+      canClose: !!selectedTrip && action === null,
+      onClose: this.closePicker,
+      onRefresh: this.refreshTrips,
+      onOpen: this.openTrip,
+      onLogin,
+    };
 
     return (
       <div className="trip-maps-workspace">
         <div inert={showPicker}>
           {selectedTrip ? (
-            <TripSession
-              key={`${selectedTrip.id}:${sessionRevision}`}
-              trip={selectedTrip}
-              repository={this.repository}
-            />
+            mode === 'readonly' ? (
+              <TripSession
+                key={`${selectedTrip.id}:${sessionRevision}`}
+                mode="readonly"
+                trip={selectedTrip}
+              />
+            ) : (
+              <TripSession
+                key={`${selectedTrip.id}:${sessionRevision}`}
+                mode="edit"
+                trip={selectedTrip}
+                repository={this.repository}
+                onOpenTripPicker={this.openPicker}
+              />
+            )
           ) : (
             <main className="trip-map-empty-background">
               <GoogleMap
@@ -124,30 +164,19 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
             </main>
           )}
         </div>
-        {showPicker && (
-          <TripPickerPopup
-            trips={trips}
-            busy={
-              authenticationStatus === 'loading' ||
-              catalogLoading ||
-              action !== null
-            }
-            error={
-              authNotice ||
-              (lastAction ? operationErrors[lastAction] : null) ||
-              catalogError
-            }
-            authenticationStatus={authenticationStatus}
-            canClose={!!selectedTrip && action === null}
-            onClose={this.closePicker}
-            onRefresh={this.refreshTrips}
-            onOpen={this.openTrip}
-            onCreate={this.createTrip}
-            onCreateExample={this.createExampleTrip}
-            onDelete={this.deleteTrip}
-            onLogin={onLogin}
-          />
-        )}
+        {showPicker &&
+          (mode === 'readonly' ? (
+            <TripPickerPopup mode="readonly" {...pickerProps} />
+          ) : (
+            <TripPickerPopup
+              mode="edit"
+              {...pickerProps}
+              onCreate={this.createTrip}
+              onCreateSeoulExample={this.createSeoulExampleTrip}
+              onCreateTokyoExample={this.createTokyoExampleTrip}
+              onDelete={this.deleteTrip}
+            />
+          ))}
       </div>
     );
   }
@@ -204,6 +233,10 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
     this.setState({ pickerOpen: false });
   };
 
+  private readonly openPicker = (): void => {
+    this.setState({ pickerOpen: true });
+  };
+
   private readonly openTrip = (id: string): void => {
     void this.runAction(
       'opening',
@@ -227,13 +260,22 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
     );
   };
 
-  private readonly createExampleTrip = (): void => {
+  private readonly createSeoulExampleTrip = (): void => {
+    this.createExampleTrip(seoulDemoTrip);
+  };
+
+  private readonly createTokyoExampleTrip = (): void => {
+    this.createExampleTrip(demoTrip);
+  };
+
+  private createExampleTrip(exampleTrip: TripView): void {
     void this.runAction(
       'creating',
-      (signal) => this.repository.createTrip(tripViewToInput(demoTrip), signal),
+      (signal) =>
+        this.repository.createTrip(tripViewToInput(exampleTrip), signal),
       this.selectTrip,
     );
-  };
+  }
 
   private readonly deleteTrip = (id: string): void => {
     void this.runAction(

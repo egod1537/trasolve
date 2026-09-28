@@ -97,7 +97,6 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
       setSearchStatus('loading');
       try {
         const result = await searchPlaces(input, {
-          languageCode: 'ko',
           sessionToken,
           locationBias: getSearchBias(),
           signal: request.signal,
@@ -199,7 +198,6 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
     setSearchError('');
     try {
       const place = await getPlace(suggestion.placeId, {
-        languageCode: 'ko',
         sessionToken: sessionTokenRef.current ?? undefined,
         signal: request.signal,
       });

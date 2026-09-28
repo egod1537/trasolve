@@ -1,13 +1,28 @@
 export {
+  API_ROUTE_SUFFIXES,
   API_ROUTES,
   CHAT_LIMITS,
+  GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
+  GOOGLE_MAPS_LANGUAGE_CODES,
+  GOOGLE_MAPS_REGION_CODE,
   TRIP_COMMAND_PLAN_FINGERPRINT_MAX_LENGTH,
   TRIP_COMMAND_PLAN_MAX_OPERATIONS,
   TRIP_COMMAND_PLAN_STEP_ID_MAX_LENGTH,
   TRIP_COMMAND_PLAN_VALIDATION_MESSAGE_MAX_LENGTH,
   TRIP_COMMAND_PLAN_VERSION,
   TravelMode,
+  buildSharedTripApiRoute,
+  buildTripShareApiRoute,
+  getGoogleMapsLocale,
+  type GoogleMapsLanguageCode,
+  type GoogleMapsLocale,
+  type GoogleMapsRegionCode,
 } from './constants/index.js';
+
+export {
+  googleMapsLanguageCodeSchema,
+  googleMapsRegionCodeSchema,
+} from './schemas/googleMapsLocale.js';
 
 export {
   tripIdSchema,
@@ -43,6 +58,21 @@ export type {
   TripScheduleStopUpdate,
   TripScheduleUpdate,
 } from './types/trip.js';
+
+export {
+  sharedTripSchema,
+  tripShareOwnerSchema,
+  tripShareSettingsSchema,
+  tripShareTokenSchema,
+  updateTripShareRequestSchema,
+} from './schemas/tripSharing.js';
+
+export type {
+  SharedTrip,
+  TripShareOwner,
+  TripShareSettings,
+  UpdateTripShareRequest,
+} from './types/tripSharing.js';
 
 export {
   tripCommandPlanAddPlaceSourceSchema,

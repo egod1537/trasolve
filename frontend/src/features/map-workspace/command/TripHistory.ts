@@ -36,6 +36,11 @@ export class TripHistory {
     this.past.push(structuredClone(current));
   }
 
+  public reset(): void {
+    this.past = [];
+    this.future = [];
+  }
+
   private past: Trip[] = [];
 
   private future: Trip[] = [];

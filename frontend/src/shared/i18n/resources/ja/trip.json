@@ -1,4 +1,15 @@
 {
+  "publicSharePage": {
+    "description": {
+      "unavailable": "リンクが無効か、共有が解除されています。"
+    },
+    "status": {
+      "loading": "共有された旅行を読み込んでいます。"
+    },
+    "title": {
+      "unavailable": "共有された旅行を開けません。"
+    }
+  },
   "shareTripModal": {
     "action": {
       "shareDrive": "Driveで共有"
@@ -9,10 +20,17 @@
       "shareMapClose": "地図共有を閉じる"
     },
     "description": {
-      "anyoneAccessCanSeeNameProfile": "アクセス権を持つすべてのユーザーは、自分のマップとドライブに自分の名前とプロフィール写真を表示できます。"
+      "anyoneAccessCanSeeNameProfile": "リンクから地図を見るユーザーには、共有者の名前とプロフィール写真が表示されます。"
+    },
+    "error": {
+      "loadFailed": "共有設定を読み込めませんでした。",
+      "updateFailed": "共有設定を保存できませんでした。"
     },
     "label": {
       "shareLink": "共有リンク"
+    },
+    "status": {
+      "loading": "共有設定を読み込んでいます。"
     },
     "text": {
       "allowOthersSearchFindThisMap": "他の人がインターネット上でこの地図を検索して検索できるようにする",
@@ -46,6 +64,7 @@
       "itSBringingYouTravel": "旅行を読み込んでいます。"
     },
     "text": {
+      "createExampleTripSeoul": "ソウル旅行の例を作成",
       "createExampleTripTokyo": "東京例旅行の作成",
       "createNewTrip": "新しい旅行を作る",
       "daysLocations": "日{{dayCount}}個・{{placeCount}}個所",

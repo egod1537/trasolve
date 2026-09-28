@@ -109,6 +109,69 @@ PUT/DELETE는 동일한 strong ETag 형식의 `If-Match`를 요구하며 누락�
 Trip의 stale revision은 412입니다. DELETE 성공 응답도 trigger가 증가시킨 revision을
 ETag로 반환합니다. revision은 JavaScript number로 변환하지 않고 문자열로 유지합니다.
 
+## Trip 공유 저장과 public read-only 조회
+
+Trip 저장소와 공유 저장소는 composition root에서 하나의 persistence mode로 함께
+선택합니다. 서로 다른 mode의 repository를 섞거나 dual-write하지 않습니다.
+
+공유 domain의 `TripShare`는 `tripId`, `ownerUserId`, opaque `token`, `searchable`,
+`createdAt`, `updatedAt`만 보유하며 Trip document 안에 포함하지 않습니다. Controller가
+의존하는 `TripShareRepository` 계약은 `getByTrip`, `getByToken`, `enable`, `update`,
+`disable`로 한정됩니다. local/PostgreSQL 구현체 선택과 무관하게 owner mutation과 public
+token 조회는 동일한 controller/service 경로를 사용합니다.
+
+| mode       | Trip repository           | Share repository               | 공유 저장 위치                  |
+| ---------- | ------------------------- | ------------------------------ | ------------------------------- |
+| `local`    | `LocalFileTripRepository` | `LocalFileTripShareRepository` | `<data-root>/shares/by-trip`, `<data-root>/shares/by-token` |
+| `postgres` | `PostgresTripRepository`  | `PostgresTripShareRepository`  | `trasolve.trip_shares`          |
+
+명시적인 `TRASOLVE_PERSISTENCE_MODE=local|postgres`가 항상 우선합니다. override가
+없으면 `NODE_ENV=production`은 `postgres`, 그 외 환경은 `local`입니다. local 공유
+저장소는 Trip 및 local auth와 동일한 `resolveBackendDataRoot()`를 사용하므로 별도 공유
+경로 환경변수는 없습니다. 기본 data root는 `.local/trasolve`입니다.
+
+PostgreSQL mode에서는 HTTP listener를 열기 전에 모든 migration을 적용합니다.
+`002_trip_shares.sql`을 포함한 migration 하나라도 실패하면 database connection을 닫고
+backend 시작을 중단합니다. `trip_shares.trip_id`는 `trips.id`를 `ON DELETE CASCADE`로
+참조합니다. Trip soft delete는 row를 물리적으로 지우지 않지만 public 조회가 항상
+`trips.deleted_at IS NULL`을 검사하므로 남은 공유 row로 삭제된 Trip을 읽을 수 없습니다.
+local mode에서도 공유 token을 찾은 뒤 owner의 Trip 파일을 다시 조회하므로 Trip 파일이
+삭제되면 public 요청은 404입니다.
+
+공유 token lifecycle은 다음과 같습니다.
+
+1. 공유가 꺼진 Trip의 owner settings는 `enabled=false`, `searchable=false`, `token=null`을
+   반환합니다.
+2. OFF에서 ON으로 전환할 때 새 UUID token을 발급합니다. backend에는 origin이나 완성된
+   URL을 저장하지 않습니다.
+3. ON 상태의 `searchable` 변경은 현재 token을 유지합니다.
+4. OFF 요청은 local document와 `trip_shares`에서 해당 공유 record를 삭제합니다. 기존
+   token은 즉시 404가 됩니다.
+5. 다시 ON으로 전환하면 이전 token을 재사용하지 않고 새 token을 발급합니다.
+
+같은 backend process에서 동일 Trip의 설정 변경은 owner/Trip 단위로 직렬화합니다.
+PostgreSQL upsert도 충돌한 기존 row의 token을 덮어쓰지 않아 여러 backend instance에서
+동시에 ON 요청이 들어와도 먼저 저장된 token을 유지합니다. token unique constraint
+충돌은 다른 Trip의 token을 overwrite하지 않고 새 token으로 재시도합니다. local file의
+read-modify-write와 atomic rename도 하나의 write queue에서 처리합니다. owner 설정은
+`by-trip/<ownerUserId>/<tripId>.json`, public index는 `by-token/<token>.json`에 저장하며
+모든 lookup에서 두 파일의 identity를 교차 검증합니다. 한쪽 파일이 없거나 값이 다르면
+잘못된 공유를 허용하거나 자동 복구하지 않고 storage error로 처리합니다.
+
+Owner API는 session actor로 ownership을 결정하며 request body는 `enabled`와
+`searchable`만 허용합니다. 인증이 없으면 401, actor가 소유하지 않은 Trip은 404입니다.
+public `GET /api/shared-trips/:token`은 로그인 없이 사용할 수 있지만, 비활성·잘못된 token과
+soft-deleted Trip은 모두 404로 처리합니다. public endpoint의 GET 이외 method는 405이며
+응답 owner summary에는 display name과 선택적 avatar만 포함하고 email은 포함하지 않습니다.
+public frontend는 write repository 없이 `TripSession mode="readonly"`를 사용합니다. token,
+완성된 공유 URL 및 owner email을 backend log에 기록하지 않습니다.
+
+개발 환경에서는 owner 화면 `http://127.0.0.1:4173/map`에서 공유를 켠 뒤 생성된
+`http://127.0.0.1:4173/share/<token>`을 로그아웃 브라우저에서 열어 확인합니다. backend를
+재시작한 뒤에도 같은 URL이 열리는지, 공유를 끈 뒤에는 기존 URL이 404가 되는지 함께
+확인합니다. production smoke도 동일하게 owner login, ON, incognito public viewer, OFF,
+기존 URL 무효화 순서로 수행합니다.
+
 ## 기존 file Trip 이관
 
 운영 runtime은 `PostgresTripRepository`만 사용하며 file repository와 dual-write하지
