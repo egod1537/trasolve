@@ -1,9 +1,11 @@
-import type {
-  TrouteOptimizeResponse,
-  TrouteTravelMode,
-  TripDay,
-  TripPlace,
-  TripScheduleUpdate,
+import {
+  ANALYTICS_SCREENS,
+  ANALYTICS_TARGETS,
+  type TrouteOptimizeResponse,
+  type TrouteTravelMode,
+  type TripDay,
+  type TripPlace,
+  type TripScheduleUpdate,
 } from '@trasolve/shared';
 import {
   useCallback,
@@ -49,6 +51,7 @@ import { Dialog } from '@/shared/ui/Dialog';
 import { IconButton } from '@/shared/ui/IconButton';
 import { CloseIcon } from '@/shared/ui/icons';
 import { useL, L, type Localize } from '@/shared/i18n';
+import { screenView, trackEvent, useScreenView } from '@/shared/analytics';
 
 type Props = {
   id: string;
@@ -152,12 +155,14 @@ export function RouteOptimizationModal({
   onApply,
 }: Props) {
   const L = useL();
+  useScreenView(ANALYTICS_SCREENS.routeOptimization);
   const titleId = useId();
   const descriptionId = useId();
   const validationId = useId();
   const requestAbortControllers = useRef(new Map<string, AbortController>());
   const userCancelledDayIds = useRef(new Set<string>());
   const completionCloseTimer = useRef<number | null>(null);
+  const viewedResults = useRef(new WeakSet<object>());
   const initialSelectedDay =
     days.find((day) => day.id === initialDayId) ?? days[0]!;
   const [selectedDayId, setSelectedDayId] = useState(initialSelectedDay.id);
@@ -215,6 +220,20 @@ export function RouteOptimizationModal({
   const canApply =
     optimizedSchedule !== null &&
     isApplicableCandidate(candidate, selectedDay, selectedSettings);
+
+  useEffect(() => {
+    const result = selectedState.result;
+    if (!result || viewedResults.current.has(result)) {
+      return;
+    }
+    viewedResults.current.add(result);
+    screenView(ANALYTICS_SCREENS.routeResult);
+    trackEvent({
+      eventType: 'result_view',
+      screen: ANALYTICS_SCREENS.routeResult,
+      metadata: { source: 'route_optimization' },
+    });
+  }, [selectedState.result]);
 
   const updateSelectedSettings = (patch: Partial<DayOptimizationSettings>) => {
     if (selectedState.status === 'running' || applying) {
@@ -281,8 +300,28 @@ export function RouteOptimizationModal({
         return;
       }
       const controller = new AbortController();
-      const runState: { latestProgress: RouteOptimizationProgress | null } = {
+      const runState: {
+        latestProgress: RouteOptimizationProgress | null;
+        startTracked: boolean;
+      } = {
         latestProgress: null,
+        startTracked: false,
+      };
+      const trackOptimizationStarted = (): void => {
+        if (runState.startTracked) {
+          return;
+        }
+        runState.startTracked = true;
+        trackEvent({
+          eventType: 'optimize_start',
+          screen: ANALYTICS_SCREENS.routeOptimization,
+          target: ANALYTICS_TARGETS.optimizeStart,
+          metadata: {
+            source: 'route_optimization',
+            success: true,
+            travelMode: settings.travelMode,
+          },
+        });
       };
       requestAbortControllers.current.set(day.id, controller);
       setProgressDialog({ dayId: day.id, phase: 'submitting' });
@@ -300,6 +339,7 @@ export function RouteOptimizationModal({
         const result = await optimizeDayRoute(
           createRouteOptimizationRequest(day, settings),
           (progress) => {
+            trackOptimizationStarted();
             runState.latestProgress = progress;
             setProgressDialog((dialog) =>
               dialog?.dayId === day.id
@@ -321,6 +361,7 @@ export function RouteOptimizationModal({
         if (controller.signal.aborted) {
           return;
         }
+        trackOptimizationStarted();
         cacheResult(createDayKey(day, settings), result);
         setDayStates((states) => ({
           ...states,
@@ -334,6 +375,16 @@ export function RouteOptimizationModal({
         setProgressDialog((dialog) =>
           dialog?.dayId === day.id ? { ...dialog, phase: 'completed' } : dialog,
         );
+        trackEvent({
+          eventType: 'optimize_complete',
+          screen: ANALYTICS_SCREENS.routeOptimization,
+          target: ANALYTICS_TARGETS.optimizeStart,
+          metadata: {
+            source: 'route_optimization',
+            success: true,
+            travelMode: settings.travelMode,
+          },
+        });
         if (completionCloseTimer.current !== null) {
           window.clearTimeout(completionCloseTimer.current);
         }
@@ -764,6 +815,8 @@ export function RouteOptimizationModal({
           {L('common:action.cancel')}
         </Button>
         <Button
+          data-analytics-id={ANALYTICS_TARGETS.optimizeStart}
+          data-analytics-screen={ANALYTICS_SCREENS.routeOptimization}
           loading={selectedState.status === 'running'}
           disabled={
             Boolean(inputIssue) ||
@@ -773,7 +826,15 @@ export function RouteOptimizationModal({
           }
           aria-describedby={inputIssue ? validationId : undefined}
           title={inputIssueText ?? undefined}
-          onClick={() => void runOptimization(selectedDay, selectedSettings)}
+          onClick={() => {
+            trackEvent({
+              eventType: 'button_click',
+              screen: ANALYTICS_SCREENS.routeOptimization,
+              target: ANALYTICS_TARGETS.optimizeStart,
+              metadata: { travelMode: selectedSettings.travelMode },
+            });
+            void runOptimization(selectedDay, selectedSettings);
+          }}
         >
           {selectedState.result
             ? L('routeOptimization:routeOptimizationModal.action.runAgain')
@@ -782,6 +843,8 @@ export function RouteOptimizationModal({
               )}
         </Button>
         <Button
+          data-analytics-id={ANALYTICS_TARGETS.optimizeApply}
+          data-analytics-screen={ANALYTICS_SCREENS.routeOptimization}
           variant="primary"
           loading={applying}
           disabled={
@@ -797,7 +860,15 @@ export function RouteOptimizationModal({
                 )
               : undefined
           }
-          onClick={() => void applyCandidate()}
+          onClick={() => {
+            trackEvent({
+              eventType: 'button_click',
+              screen: ANALYTICS_SCREENS.routeResult,
+              target: ANALYTICS_TARGETS.optimizeApply,
+              metadata: { travelMode: selectedSettings.travelMode },
+            });
+            void applyCandidate();
+          }}
         >
           {L('routeOptimization:routeOptimizationModal.action.applyThisResult')}
         </Button>

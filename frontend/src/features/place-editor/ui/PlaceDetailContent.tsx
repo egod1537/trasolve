@@ -7,6 +7,8 @@ import {
   type RefObject,
 } from 'react';
 import {
+  ANALYTICS_SCREENS,
+  ANALYTICS_TARGETS,
   type PlaceStyle,
   type TripDay,
   type TripPlace,
@@ -24,6 +26,7 @@ import { PlaceOpeningHours } from '@/features/place-editor/ui/PlaceOpeningHours'
 import { PlaceOpeningHoursDetails } from '@/features/place-editor/ui/PlaceOpeningHoursDetails';
 import { SideDetailCard } from '@/shared/ui/map/SideDetailCard';
 import { useL } from '@/shared/i18n';
+import { trackEvent, useScreenView } from '@/shared/analytics';
 
 type PlaceDetailPlace = Omit<TripPlace, 'location'>;
 type PlaceDetailDay = Pick<TripDay, 'id' | 'title' | 'color'>;
@@ -73,6 +76,7 @@ export function PlaceDetailContent({
   onRemove,
 }: Props) {
   const L = useL();
+  useScreenView(ANALYTICS_SCREENS.placeDetail);
   const details = usePlaceDetails(place.placeId);
   const [timeSubmitting, setTimeSubmitting] = useState(false);
   const [titleEditing, setTitleEditing] = useState(false);
@@ -212,6 +216,15 @@ export function PlaceDetailContent({
     setRemoving(true);
     try {
       if (await onRemove(place.id)) {
+        trackEvent({
+          eventType: 'remove_place',
+          screen: ANALYTICS_SCREENS.placeDetail,
+          target: ANALYTICS_TARGETS.removePlace,
+          metadata: {
+            source: layerDetail ? 'layer_detail' : 'map_detail',
+            success: true,
+          },
+        });
         setDeleteConfirmOpen(false);
         onClose();
       }

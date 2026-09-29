@@ -1,5 +1,9 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import type { PlaceStyle } from '@trasolve/shared';
+import {
+  ANALYTICS_SCREENS,
+  ANALYTICS_TARGETS,
+  type PlaceStyle,
+} from '@trasolve/shared';
 import {
   useDayReorder,
   type DayDragState,
@@ -14,6 +18,7 @@ import {
   type SelectionProps,
 } from '@/features/map-workspace/components/layer-panel/DayLayerSection';
 import { useL } from '@/shared/i18n';
+import { trackEvent } from '@/shared/analytics';
 
 type Props = Omit<
   SelectionProps,
@@ -170,10 +175,32 @@ export const LayerPanelContent = memo(function LayerPanelContent({
   );
   const [editingPlaceId, setEditingPlaceId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const movePlaceWithAnalytics = useCallback(
+    (placeId: string, targetDayId: string, targetIndex: number): void => {
+      trackEvent({
+        eventType: 'button_click',
+        screen: ANALYTICS_SCREENS.mapWorkspace,
+        target: ANALYTICS_TARGETS.reorder,
+      });
+      onMovePlace(placeId, targetDayId, targetIndex);
+    },
+    [onMovePlace],
+  );
+  const renamePlaceWithAnalytics = useCallback(
+    (placeId: string, name: string): void => {
+      trackEvent({
+        eventType: 'button_click',
+        screen: ANALYTICS_SCREENS.mapWorkspace,
+        target: ANALYTICS_TARGETS.placeEdit,
+      });
+      onRenamePlace(placeId, name);
+    },
+    [onRenamePlace],
+  );
   const reorder = usePlaceReorder({
     days,
     scrollRef,
-    onMovePlace,
+    onMovePlace: movePlaceWithAnalytics,
   });
   const cancelLayerItemDrag = reorder.cancelDrag;
   const dayReorder = useDayReorder({
@@ -414,7 +441,7 @@ export const LayerPanelContent = memo(function LayerPanelContent({
           }
           onRenameDay={onRenameDay}
           onUpdateDayColor={onUpdateDayColor}
-          onRenamePlace={onRenamePlace}
+          onRenamePlace={renamePlaceWithAnalytics}
           onUpdatePlaceStyle={onUpdatePlaceStyle}
           onStartPlaceNameEditing={startPlaceNameEditing}
           onFinishPlaceNameEditing={finishPlaceNameEditing}

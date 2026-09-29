@@ -1,5 +1,6 @@
 import {
   API_ROUTES,
+  getGoogleMapsLocale,
   placeAutocompleteRequestSchema,
   placeAutocompleteResponseSchema,
   placeDetailsRequestSchema,
@@ -9,7 +10,7 @@ import {
   type PlaceDetails,
   type PlaceDetailsRequest,
 } from '@trasolve/shared';
-import { L } from '@/shared/i18n';
+import { getLanguage, L } from '@/shared/i18n';
 
 type SearchOptions = Omit<PlaceAutocompleteRequest, 'input'> & {
   signal?: AbortSignal;
@@ -43,7 +44,11 @@ export async function searchPlaces(
   input: string,
   { signal, ...options }: SearchOptions = {},
 ): Promise<PlaceAutocompleteResponse> {
-  const request = placeAutocompleteRequestSchema.parse({ input, ...options });
+  const request = placeAutocompleteRequestSchema.parse({
+    input,
+    ...options,
+    ...getGoogleMapsLocale(getLanguage()),
+  });
   const body = await requestPlaces(
     API_ROUTES.placesAutocomplete,
     {
@@ -66,7 +71,11 @@ export async function getPlace(
   placeId: string,
   { signal, ...options }: DetailsOptions = {},
 ): Promise<PlaceDetails> {
-  const request = placeDetailsRequestSchema.parse({ placeId, ...options });
+  const request = placeDetailsRequestSchema.parse({
+    placeId,
+    ...options,
+    ...getGoogleMapsLocale(getLanguage()),
+  });
   const query = new URLSearchParams();
   if (request.languageCode) {
     query.set('languageCode', request.languageCode);

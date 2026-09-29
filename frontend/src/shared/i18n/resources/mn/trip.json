@@ -1,0 +1,80 @@
+{
+  "publicSharePage": {
+    "description": {
+      "unavailable": "Холбоос хүчингүй эсвэл хуваалцахыг идэвхгүй болгосон байна."
+    },
+    "status": {
+      "loading": "Хуваалцсан аяллыг ачаалж байна."
+    },
+    "title": {
+      "unavailable": "Энэ хуваалцсан аялал боломжгүй байна."
+    }
+  },
+  "shareTripModal": {
+    "action": {
+      "shareDrive": "Драйв дээр хуваалцах"
+    },
+    "ariaLabel": {
+      "copyShareLink": "Холбоосыг хуулах",
+      "shareDriveFeaturePreparation": "Драйв дээр хуваалцах, функц бэлтгэгдэж байна",
+      "shareMapClose": "Газрын зургийг хуваалцах Хаах"
+    },
+    "description": {
+      "anyoneAccessCanSeeNameProfile": "Газрын зургийг холбоосоор нь үзэж буй хүмүүс эзэмшигчийн нэр болон профайл зургийг харах боломжтой."
+    },
+    "error": {
+      "loadFailed": "Хуваалцах тохиргоог ачаалж чадсангүй.",
+      "updateFailed": "Хуваалцах тохиргоог хадгалж чадсангүй."
+    },
+    "label": {
+      "shareLink": "Хуваалцах холбоос"
+    },
+    "status": {
+      "loading": "Хуваалцах тохиргоог ачаалж байна."
+    },
+    "text": {
+      "allowOthersSearchFindThisMap": "Бусдад энэ газрын зургийг интернетээс хайж олохыг зөвшөөрөх",
+      "anyoneLinkCanViewIt": "Холбоостой хэн ч үүнийг үзэж болно",
+      "copied": "Хуулагдлаа",
+      "copyFailed": "Хуулбарлах амжилтгүй боллоо"
+    },
+    "title": {
+      "shareMap": "газрын зургийг хуваалцах"
+    },
+    "tooltip": {
+      "driveSharingFeaturePreparation": "Драйв хуваалцах функц бэлтгэгдэж байна"
+    }
+  },
+  "tripMapping": {
+    "tripToView": {
+      "text": {
+        "dateBeDetermined": "Огноо тодорхойгүй"
+      }
+    }
+  },
+  "tripPickerPopup": {
+    "action": {
+      "open": "Нээх"
+    },
+    "ariaLabel": {
+      "closeTravelSelection": "Аяллын сонголтыг хаах",
+      "delete": "{{title}}-г устгах"
+    },
+    "description": {
+      "itSBringingYouTravel": "Аяллуудыг ачаалж байна."
+    },
+    "text": {
+      "createExampleTripSeoul": "Сөүлийн жишээ аялал үүсгэх",
+      "createExampleTripTokyo": "Токиогийн жишээ аялал үүсгэх",
+      "createNewTrip": "Шинэ аялал үүсгэх",
+      "daysLocations": "{{dayCount}} өдөр · {{placeCount}} байршил",
+      "makeFirstTrip": "Анхны аяллаа үүсгээрэй."
+    },
+    "title": {
+      "myTrip": "Миний аялал"
+    },
+    "tooltip": {
+      "thereNoSavedTrips": "Хадгалсан аялал байхгүй байна."
+    }
+  }
+}

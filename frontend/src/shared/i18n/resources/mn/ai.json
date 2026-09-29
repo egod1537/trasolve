@@ -1,0 +1,102 @@
+{
+  "chatMarkdown": {
+    "components": {
+      "ariaLabel": {
+        "table": "ширээ"
+      }
+    }
+  },
+  "mapAiButton": {
+    "actionLabel": {
+      "text": {
+        "closeAiPanel": "Хиймэл оюун ухааны самбарыг хаах",
+        "openAiPanel": "Нээлттэй хиймэл оюун ухааны самбар"
+      }
+    },
+    "label": {
+      "text": {
+        "generatingAiResponse": "Хиймэл оюун ухааны хариу үйлдэл үүсгэж байна · {{actionLabel}}"
+      }
+    }
+  },
+  "mapAiPanel": {
+    "action": {
+      "creating": "Бүтээж байна",
+      "transfer": "Илгээх"
+    },
+    "ariaLabel": {
+      "aiChatList": "Хиймэл оюун ухааны чатын жагсаалт",
+      "closeAiAssistant": "Хиймэл оюун ухааны туслахыг хаах",
+      "closeChatList": "Чат жагсаалтыг хаах",
+      "currentConversation": "одоогийн яриа",
+      "openChatList": "Чат жагсаалтыг нээх",
+      "saveAsMarkdown": "Markdown хэлбэрээр хадгалах",
+      "trasolveAiTravelAssistant": "Trasolve AI аяллын туслах"
+    },
+    "createThread": {
+      "title": {
+        "newChat": "Шинэ чат"
+      }
+    },
+    "description": {
+      "thereNoDialogue": "Харилцан яриа байхгүй.",
+      "travelAssistant": "Аяллын туслах",
+      "weWillHelpYouPlanTrip": "Бид газрын зураг болон хуваарийг үзэж байхдаа аяллаа төлөвлөхөд тань туслах болно."
+    },
+    "formatRelativeTime": {
+      "text": {
+        "daysAgo": "{{elapsedDays}} өдрийн өмнө",
+        "hoursAgo": "{{elapsedHours}} цагийн өмнө",
+        "justNow": "Дөнгөж сая",
+        "minutesAgo": "{{elapsedMinutes}} минутын өмнө"
+      }
+    },
+    "label": {
+      "sendMessageAiTravelAssistant": "Хиймэл оюун ухааны аяллын туслах руугаа мессеж илгээнэ үү"
+    },
+    "placeholder": {
+      "askAboutTravel": "Аяллын талаар асуу"
+    },
+    "renderThread": {
+      "action": {
+        "cancelCreation": "Бүтээлийг цуцлах",
+        "changeName": "нэр солих",
+        "storage": "Архив",
+        "unarchive": "архиваас гаргах"
+      },
+      "ariaLabel": {
+        "chatName": "чатын нэр",
+        "generatingAiResponse": "Хиймэл оюун ухааны хариу үйлдэл үүсгэх",
+        "menu": "{{title}} цэс"
+      },
+      "tooltip": {
+        "chatMenu": "Чатын цэс"
+      }
+    },
+    "submitMessage": {
+      "error": {
+        "answerCouldNotBeRetrievedTry": "Хариултыг авч чадсангүй. Дахин оролдоно уу."
+      }
+    },
+    "text": {
+      "chatSearch": "Чат хайлт",
+      "iMThinkingAnswer": "Би хариулт бодож байна."
+    },
+    "title": {
+      "archived": "Архивлагдсан",
+      "recentConversations": "Саяхны харилцан ярианууд",
+      "trasolveAi": "Trasolve AI"
+    }
+  },
+  "mapAiUnreadPreviews": {
+    "ariaLabel": {
+      "openUnconfirmedAiResponse": "{{threadTitle}}-д баталгаажаагүй хиймэл оюун ухааны хариултыг нээх",
+      "unconfirmedAiResponse": "Хиймэл оюун ухааны баталгаажаагүй хариу үйлдэл"
+    },
+    "toPreviewText": {
+      "text": {
+        "code": "код"
+      }
+    }
+  }
+}

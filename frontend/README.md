@@ -72,7 +72,10 @@ marker.remove();
 
 const preview = runtime.objects.addPolyline({
   layer: 'ai-preview',
-  path: [{ lat: 35.6586, lng: 139.7454 }, { lat: 35.6812, lng: 139.7671 }],
+  path: [
+    { lat: 35.6586, lng: 139.7454 },
+    { lat: 35.6812, lng: 139.7671 },
+  ],
   style: { color: '#2563eb', width: 5, opacity: 0.85 },
 });
 preview.setStyle({ opacity: 0.5 });
@@ -244,7 +247,9 @@ the requested fields. Empty route results and API failures are displayed separat
 The browser key needs only **Maps JavaScript API**, with HTTP referrer restrictions
 for the app. Copy `backend/.env.example` to `backend/.env.local`, set
 `GOOGLE_ROUTES_API_KEY` for **Routes API** and `GOOGLE_PLACES_API_KEY` for
-**Places API (New)**, and restart `npm run dev`. The backend loads this file
+**Places API (New)**, optionally `GOOGLE_STATIC_MAPS_API_KEY` for **Maps Static API**
+(trip list thumbnails; the list falls back to an SVG preview without it), and restart
+`npm run dev`. The backend loads this file
 relative to its own directory; existing process environment values take priority.
 Do not prefix either server key with `VITE_`. For deployment, set both variables
 in the host's `~/.config/jjs/deploy.env`; Compose passes them only to the backend.

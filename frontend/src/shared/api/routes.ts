@@ -3,11 +3,12 @@ import {
   directionsErrorResponseSchema,
   directionsRequestSchema,
   directionsResultSchema,
+  getGoogleMapsLocale,
   type DirectionsDebugDetails,
   type DirectionsRequest,
   type DirectionsResult,
 } from '@trasolve/shared';
-import { L } from '@/shared/i18n';
+import { getLanguage, L } from '@/shared/i18n';
 
 export class DirectionsApiError extends Error {
   public constructor(
@@ -26,10 +27,14 @@ export async function getDirections(
   signal?: AbortSignal,
 ): Promise<DirectionsResult> {
   const timeout = AbortSignal.timeout(20000);
+  const localizedRequest = directionsRequestSchema.parse({
+    ...request,
+    ...getGoogleMapsLocale(getLanguage()),
+  });
   const response = await fetch(API_ROUTES.routes, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(directionsRequestSchema.parse(request)),
+    body: JSON.stringify(localizedRequest),
     signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
   });
   const body: unknown = await response.json();

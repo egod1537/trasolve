@@ -1,0 +1,32 @@
+export const ANALYTICS_SCREENS = {
+  landing: 'landing',
+  mapWorkspace: 'map_workspace',
+  tripPicker: 'trip_picker',
+  placeSearch: 'place_search',
+  placeDetail: 'place_detail',
+  routeOptimization: 'route_optimization',
+  routeResult: 'route_result',
+  preferences: 'preferences',
+  shareTrip: 'share_trip',
+  sharedTripViewer: 'shared_trip_viewer',
+} as const;
+
+export const ANALYTICS_TARGETS = {
+  landingLogin: 'landing_login',
+  landingEnterMap: 'landing_enter_map',
+  tripPickerLogin: 'trip_picker_login',
+  tripCreate: 'trip_create',
+  tripSelect: 'trip_select',
+  preferencesOpen: 'preferences_open',
+  addPlace: 'add_place',
+  placeSearch: 'place_search',
+  placeSelect: 'place_select',
+  placeEdit: 'place_edit',
+  reorder: 'reorder',
+  removePlace: 'remove_place',
+  optimizeStart: 'optimize_start',
+  optimizeApply: 'optimize_apply',
+  shareOpen: 'share_open',
+  shareToggle: 'share_toggle',
+  copyShareLink: 'copy_share_link',
+} as const;

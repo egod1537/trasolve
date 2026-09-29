@@ -1,5 +1,9 @@
 import { directionsRequestSchema } from '../schemas/routes.js';
 import type {
+  GoogleMapsLanguageCode,
+  GoogleMapsRegionCode,
+} from '../constants/googleMapsLocale.js';
+import type {
   DirectionsRequest,
   RouteLocation,
   TravelMode,
@@ -34,6 +38,16 @@ export class DirectionsRequestBuilder {
 
   public setComputeAlternativeRoutes(computeAlternativeRoutes: boolean): this {
     this.request.computeAlternativeRoutes = computeAlternativeRoutes;
+    return this;
+  }
+
+  public setLanguageCode(languageCode: GoogleMapsLanguageCode): this {
+    this.request.languageCode = languageCode;
+    return this;
+  }
+
+  public setRegionCode(regionCode: GoogleMapsRegionCode): this {
+    this.request.regionCode = regionCode;
     return this;
   }
 

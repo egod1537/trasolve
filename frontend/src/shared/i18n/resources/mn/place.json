@@ -1,0 +1,316 @@
+{
+  "googlePlaceCard": {
+    "action": {
+      "addSchedule": "хуваарьт нэмэх",
+      "adding": "Нэмэж байна..."
+    },
+    "description": {
+      "failedAddLocation": "Байршил нэмж чадсангүй.",
+      "failedLoadLocationInformation": "Байршлын мэдээллийг ачаалж чадсангүй.",
+      "loadingLocationInformation": "Байршлын мэдээллийг ачаалж байна."
+    },
+    "rating": {
+      "ariaLabel": {
+        "ratingPoints": "Үнэлгээний оноо {{toFixed}}{{value}}",
+        "reviews": ", {{format}} сэтгэгдэл"
+      }
+    },
+    "text": {
+      "addAnotherLayer": "Өөр давхарга нэмнэ үү",
+      "address": "хаяг",
+      "closeGooglePlacesDetailCard": "Google Places-н дэлгэрэнгүй картыг хаах",
+      "phoneNumber": "утасны дугаар",
+      "reviews": "{{reviewCount}} сэтгэгдэл",
+      "selectDifferentLocationTryAgainLater": "Өөр байршил сонгоод дараа дахин оролдоно уу.",
+      "viewGoogleMaps": "Google Maps дээр харах",
+      "website": "вэбсайт"
+    },
+    "tooltip": {
+      "locationInformation": "Байршлын мэдээлэл"
+    }
+  },
+  "mapSearchToolbar": {
+    "ariaLabel": {
+      "mapPlaceSearch": "газрын зургийн хайлт",
+      "openQuickSearch": "Шуурхай хайлтыг нээх ({{quickSearchShortcutLabel}})",
+      "placeSearchResults": "Байршлын хайлтын үр дүн",
+      "search": "хайлт",
+      "searchPlace": "Газар хайх"
+    },
+    "description": {
+      "noSearchResults": "Хайлтын үр дүн алга",
+      "searchingLocation": "Байршил хайж байна."
+    },
+    "runSearch": {
+      "text": {
+        "enterAtLeastTwoCharactersAs": "Хайлтын нэр томьёо болгон дор хаяж хоёр тэмдэгт оруулна уу."
+      }
+    },
+    "searchAutocomplete": {
+      "text": {
+        "locationSearchFailedTryAgain": "Байршлын хайлт амжилтгүй боллоо. Дахин оролдоно уу."
+      }
+    },
+    "selectSuggestion": {
+      "text": {
+        "failedLoadLocationInformationSelectAgain": "Байршлын мэдээллийг ачаалж чадсангүй. Дахин сонгоно уу."
+      }
+    },
+    "text": {
+      "noAddressInformation": "Хаягийн мэдээлэл байхгүй"
+    },
+    "tooltip": {
+      "quickSearch": "Түргэн хайлт ({{quickSearchShortcutLabel}})"
+    }
+  },
+  "placeCategory": {
+    "pLACECATEGORYLABELS": {
+      "text": {
+        "accommodation": "байр",
+        "cafe": "кафе",
+        "educationalFacilities": "боловсролын байгууламжууд",
+        "medicalFacility": "эмнэлгийн байгууламж",
+        "park": "цэцэрлэгт хүрээлэн",
+        "place": "газар",
+        "restaurant": "ресторан",
+        "store": "дэлгүүр",
+        "touristAttraction": "жуулчдын сонирхол татахуйц газар",
+        "transportationFacilities": "тээврийн байгууламжууд"
+      }
+    }
+  },
+  "placeDeleteConfirmCard": {
+    "action": {
+      "deleting": "Устгаж байна…"
+    },
+    "ariaLabel": {
+      "confirmDeletion": "{{placeName}}-г устгахыг баталгаажуулна уу",
+      "removeFromCalendar": "{{placeName}}-г хуанлиас хасах"
+    },
+    "text": {
+      "willBeRemovedFromCurrentSchedule": "“ {{placeName}} ” нь таны одоогийн хуваариас устах болно.",
+      "youSureYouWantDeleteIt": "Та үүнийг хуанлиасаа устгахдаа итгэлтэй байна уу?"
+    }
+  },
+  "placeDetailContent": {
+    "ariaLabel": {
+      "edit": "Засварлах",
+      "editPlaceName": "{{name}} газрын нэрийг засах",
+      "memo": "{{name}} тэмдэглэл {{value}}",
+      "notes": "{{name}} тэмдэглэл",
+      "removeFromCalendar": "Хуанлигаас хасах"
+    },
+    "description": {
+      "doubleClickEnterNote": "Тэмдэглэл оруулахын тулд давхар товшино уу",
+      "noNotes": "тэмдэглэлгүй",
+      "setTimeYouWillStayAt": "Энэ байршилд байрлах цагаа тохируулна уу"
+    },
+    "text": {
+      "changeVenueStyle": "Байршлын хэв маягийг өөрчлөх",
+      "closeBusinessHoursDetails": "Ажиллах цагийн дэлгэрэнгүй мэдээлэл",
+      "closeLocationDetailsCard": "Байршлын дэлгэрэнгүй картыг хаах",
+      "savingNote": "Тэмдэглэл хадгалж байна."
+    },
+    "title": {
+      "desiredStayTime": "Хүссэн байрлах хугацаа",
+      "memo": "тэмдэглэл"
+    },
+    "tooltip": {
+      "businessHours": "Ажлын цаг",
+      "doubleClickEdit": "Засварлахын тулд давхар товшино уу",
+      "doubleClickEditPlaceName": "Газрын нэрийг засахын тулд давхар товшино уу"
+    }
+  },
+  "placeDuration": {
+    "formatDurationMinutes": {
+      "text": {
+        "hours": "{{hours}} цаг",
+        "hoursMinutes": "{{hours}} цаг {{minutes}} минут",
+        "minutes": "{{minutes}} минут"
+      }
+    }
+  },
+  "placeDurationControl": {
+    "ariaLabel": {
+      "desiredLengthStay": "Хүссэн хугацаа: {{value}}",
+      "selectDesiredStayTime": "Хүссэн байрлах хугацаагаа сонгоно уу"
+    },
+    "formatDurationOption": {
+      "text": {
+        "minutes": "{{durationMinutes}} минут"
+      }
+    },
+    "text": {
+      "dwellTimeEnterManually": "Гараар оруулахад хүлээх хугацаа",
+      "enterDirectlyMinutes": "Шууд оруулна уу ({{stepMinutes}} минутын дараа)",
+      "minutes": "минут",
+      "notSet": "Тохируулаагүй байна",
+      "selectTime": "Цаг сонгоно уу",
+      "set2": "багц"
+    }
+  },
+  "placeOpeningHours": {
+    "ariaLabel": {
+      "viewAllBusinessHours": "Бүх ажлын цагийг харах"
+    },
+    "description": {
+      "locationOpeningHoursCouldNotBe": "Байршлын ажиллах цагийн мэдээллийг авах боломжгүй байна."
+    },
+    "formatDuration": {
+      "text": {
+        "hoursMinutes": "{{hours}} цаг {{remainingMinutes}} минут",
+        "minutes": "{{rounded}} минут"
+      }
+    },
+    "formatNextOpen": {
+      "text": {
+        "open": "{{prefix}} {{formatClockTime}} нээлттэй",
+        "today": "өнөөдөр",
+        "tomorrow": "маргааш"
+      }
+    },
+    "formatTodayHours": {
+      "text": {
+        "after": "{{formatClockTime}}-н дараа",
+        "message": "{{formatClockTime}} ~ {{value}}{{formatClockTime}}",
+        "message2": "{{formatClockTime}} ~ {{formatClockTime}}",
+        "nextDay": "дараагийн өдөр"
+      }
+    },
+    "formatWeeklyHours": {
+      "text": {
+        "closed": "Хаалттай",
+        "open24HoursFromMondaySunday": "Даваагаас Ням гараг хүртэл 24 цаг нээлттэй"
+      }
+    },
+    "getPlaceOpeningStatus": {
+      "text": {
+        "businessStartsAfter": "Бизнес {{formatDuration}}-с хойш эхэлнэ",
+        "closedAfter": "{{formatDuration}}-с хойш хаагдсан",
+        "noRealTimeStatusCalculatedAs": "Тухайн байршлын орон нутгийн цагийн бүсийн мэдээлэл байхгүй тул бодит цагийн төлөвийг тооцоолоогүй болно."
+      }
+    },
+    "shortWeekdayLabels": {
+      "text": {
+        "angry": "Мягмар",
+        "gold": "Баасан гараг",
+        "month": "Даваа гараг",
+        "neck": "Пүрэв гараг",
+        "number": "Лхагва гараг",
+        "sat": "Бямба",
+        "work": "Ням"
+      }
+    },
+    "text": {
+      "beforeSales": "Борлуулалтын өмнө",
+      "businessHoursToday": "Өнөөдрийн ажиллах цаг: {{value}}",
+      "closed": "Хаалттай",
+      "dueSoon": "Удахгүй төлөх ёстой",
+      "from": "{{startText}}-с {{endText}} хүртэл",
+      "loadingBusinessHours": "Ажлын цагийг ачаалж байна",
+      "needCheckBusinessHours": "Ажлын цагийг шалгах шаардлагатай",
+      "noBusinessHoursInformation": "Ажлын цагийн мэдээлэл алга",
+      "noOpeningsToday": "Өнөөдөр нээлттэй цаг байхгүй",
+      "open": "Нээлттэй",
+      "open24Hours": "24 цаг нээлттэй"
+    },
+    "weekdayLabels": {
+      "text": {
+        "friday": "Баасан гараг",
+        "monday": "Даваа гараг",
+        "saturday": "Бямба гараг",
+        "sunday": "ням гараг",
+        "thursday": "Пүрэв гараг",
+        "tuesday": "Мягмар гараг",
+        "wednesday": "Лхагва гараг"
+      }
+    }
+  },
+  "placeOpeningHoursDetails": {
+    "description": {
+      "weeklyBusinessHoursInformationNotAvailable": "Долоо хоногийн ажлын цагийн мэдээлэл байхгүй байна."
+    },
+    "label": {
+      "businessHoursToday": "Өнөөдрийн ажиллах цаг"
+    },
+    "title": {
+      "businessHoursByDay": "Ажлын цагаар өдөр бүр"
+    }
+  },
+  "placeStyle": {
+    "pLACESTYLEOPTIONS": {
+      "label": {
+        "entertainment": "зугаа цэнгэл",
+        "generalPlace": "ерөнхий газар",
+        "guitar": "гитар",
+        "landmark": "газрын тэмдэглэгээ",
+        "museumCulture": "Музей/Соёл",
+        "observatory": "ажиглалтын газар",
+        "parksNature": "Паркууд/Байгаль",
+        "shopping": "дэлгүүр хэсэх",
+        "transportationStation": "Тээвэр/Буудал"
+      }
+    }
+  },
+  "placeStyleControl": {
+    "ariaLabel": {
+      "changeIconColor": "{{placeName}} дүрс тэмдэг болон өнгийг өөрчлөх",
+      "closeStyleSettings": "Загварын тохиргоог хаах",
+      "color": "{{color}} өнгө",
+      "setIconColor": "{{placeName}} дүрс тэмдэг болон өнгийг тохируулах"
+    },
+    "label": {
+      "color": "өнгө",
+      "locationType": "Байршлын төрөл"
+    },
+    "tooltip": {
+      "changeIconsColors": "Дүрс болон өнгийг өөрчлөх"
+    }
+  },
+  "placeTimeTimeline": {
+    "ariaLabel": {
+      "visitVisitDuration": "{{formatClockTime}}-д зочлох, зочлох хугацаа {{formatDurationMinutes}}",
+      "visitingHoursHaveNotBeenSet": "Айлчлалын цагийг тохируулаагүй байна. Цагийн хуваариас айлчлалынхаа эхлэх цагийг сонгоно уу."
+    },
+    "createTimelineModel": {
+      "text": {
+        "fromSales": "Борлуулалтын {{startText}}-с {{endText}} хүртэл",
+        "visit": "{{arrivalText}}-д зочлоорой",
+        "visitDuration": "Зочлох хугацаа {{formatDurationMinutes}}"
+      }
+    },
+    "expandedTimeline": {
+      "ariaLabel": {
+        "timeTimeline": "цагийн хуваарь"
+      },
+      "description": {
+        "clickTimelineSetVisitTimes": "Айлчлалын цагийг тохируулахын тулд цагийн хуваарь дээр дарна уу"
+      },
+      "text": {
+        "youSavingTime": "Та цаг хэмнэж байна."
+      },
+      "title": {
+        "time": "цаг хугацаа"
+      }
+    },
+    "formatCompactDuration": {
+      "text": {
+        "minutes": "{{remainder}} минут"
+      }
+    },
+    "text": {
+      "visit": "{{formatCompactDuration}}-д зочлоорой"
+    }
+  },
+  "timeRangeTimeline": {
+    "ariaLabel": {
+      "adjustVisitStartTime": "Айлчлал эхлэх цагийг тохируулах",
+      "adjustmentStayEndTime": "Буудал дуусах хугацааг тохируулах",
+      "selectVisitStartTime": "Айлчлал эхлэх цагийг сонгоно уу"
+    },
+    "tooltip": {
+      "adjustByDraggingUsingLeftRight": "Зүүн ба баруун сумны товчлууруудыг чирэх эсвэл ашиглах замаар тохируулна уу",
+      "selectVisitStartTimeByClicking": "Айлчлал эхлэх цагийг сумтай товчнууд болон Enter товчийг дарж эсвэл ашиглан сонгоно уу."
+    }
+  }
+}

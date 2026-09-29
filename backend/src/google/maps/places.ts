@@ -1,6 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
 import {
+  GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
+  GOOGLE_MAPS_REGION_CODE,
   placeAutocompleteRequestSchema,
   placeAutocompleteResponseSchema,
   placeDetailsRequestSchema,
@@ -33,8 +35,8 @@ export class Places {
         'suggestions.placePrediction.placeId,suggestions.placePrediction.structuredFormat.mainText.text,suggestions.placePrediction.structuredFormat.secondaryText.text,suggestions.placePrediction.types',
       body: JSON.stringify({
         input: input.input,
-        languageCode: input.languageCode ?? 'ko',
-        regionCode: input.regionCode ?? 'JP',
+        languageCode: input.languageCode ?? GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
+        regionCode: input.regionCode ?? GOOGLE_MAPS_REGION_CODE,
         sessionToken: input.sessionToken,
         includeQueryPredictions: false,
         locationBias: input.locationBias
@@ -65,8 +67,8 @@ export class Places {
   public async getPlace(request: PlaceDetailsRequest): Promise<PlaceDetails> {
     const input = this.validateRequest(placeDetailsRequestSchema, request);
     const query = new URLSearchParams({
-      languageCode: input.languageCode ?? 'ko',
-      regionCode: input.regionCode ?? 'JP',
+      languageCode: input.languageCode ?? GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
+      regionCode: input.regionCode ?? GOOGLE_MAPS_REGION_CODE,
     });
     if (input.sessionToken) {
       query.set('sessionToken', input.sessionToken);
@@ -82,7 +84,7 @@ export class Places {
     const place = this.validateResponse(Places.detailsSchema, raw);
     return this.validateResponse(placeDetailsSchema, {
       id: place.id,
-      name: place.displayName?.text ?? place.formattedAddress ?? '선택한 장소',
+      name: place.displayName?.text ?? place.formattedAddress ?? input.placeId,
       address: place.formattedAddress,
       location: {
         lat: place.location.latitude,

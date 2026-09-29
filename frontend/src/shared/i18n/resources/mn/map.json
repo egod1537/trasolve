@@ -1,0 +1,465 @@
+{
+  "bottomContextPanel": {
+    "ariaLabel": {
+      "dayInformation": "{{title}} Өдрийн мэдээлэл"
+    },
+    "label": {
+      "day": "Өдөр"
+    },
+    "text": {
+      "locations": "{{length}} байршил"
+    }
+  },
+  "dayColorControl": {
+    "ariaLabel": {
+      "changeColor": "{{dayTitle}} өнгийг өөрчлөх",
+      "clickShowHidePressHoldChange": "{{dayTitle}} {{value}}. Дарна уу: Харуулах/Нуух · Дарж барина уу: Өнгийг өөрчлөх",
+      "hiddenStatus": "нуугдсан төлөв",
+      "message": "{{label}} {{value}}",
+      "showing": "Үзүүлж байна"
+    },
+    "dAYCOLORLABELS": {
+      "text": {
+        "blue": "цэнхэр",
+        "green": "ногоон",
+        "look": "Хар",
+        "meeting": "уулзалт",
+        "namhoe": "Намхо",
+        "orange": "улбар шар",
+        "pink": "ягаан",
+        "red": "улаан",
+        "teal": "нил ягаан",
+        "yellow": "шар"
+      }
+    },
+    "text": {
+      "dayColor": "Өдрийн өнгө"
+    },
+    "tooltip": {
+      "clickShowHidePressHoldChange": "Дарах: Харуулах/Нуух · Дарж барих: Өнгийг өөрчлөх"
+    }
+  },
+  "dayLayerSection": {
+    "ariaLabel": {
+      "editName": "{{title}} Нэрийг засах"
+    },
+    "text": {
+      "expand": "Өргөжүүлэх",
+      "fold": "нугалах",
+      "message": "{{title}} {{value}}",
+      "putHere": "энд тавь",
+      "thereNoRegisteredItems": "Бүртгэгдсэн зүйл байхгүй."
+    }
+  },
+  "googleMap": {
+    "ariaLabel": {
+      "map": "газрын зураг"
+    },
+    "description": {
+      "mapCannotBeLoadedCheckConnection": "Газрын зургийг ачаалж чадсангүй. Холболтоо шалгана уу.",
+      "setUpMapConnection": "Газрын зургийн холболтыг тохируулна уу."
+    },
+    "text": {
+      "googleMapsAuthenticationFailed": "Google Maps баталгаажуулалт амжилтгүй боллоо."
+    }
+  },
+  "layer": {
+    "add": "Давхарга нэмэх"
+  },
+  "layerBulkActionBar": {
+    "action": {
+      "deleting": "Устгаж байна…"
+    },
+    "ariaLabel": {
+      "batchOperationsSelections": "Сонголтууд дээрх багц үйлдлүүд",
+      "bulkChangeMeansTransportation": "Тээврийн хэрэгслийг бөөнөөр нь солих",
+      "changeSelectedRouteTransportationMethod": "Сонгосон маршрутын тээврийн аргыг өөрчлөх",
+      "deleteSelectedLocations": "Сонгосон {{length}} байршлыг устгах"
+    },
+    "description": {
+      "connectionRoutesAutomaticallyReorganizedMatchOrder": "Холболтын маршрутууд нь газруудын дарааллыг тохируулахын тулд автоматаар дахин зохион байгуулагддаг."
+    },
+    "text": {
+      "failedChangeModeTransportation": "Тээврийн хэлбэрийг өөрчилж чадсангүй.",
+      "failedDeleteSelectedLocation": "Сонгосон байршлыг устгаж чадсангүй.",
+      "meansTransportation": "тээврийн хэрэгсэл",
+      "paths": "· {{length}} замууд",
+      "selected": "{{totalCount}} сонгосон",
+      "taskFailed": "даалгавар амжилтгүй болсон",
+      "transportationMixed": "Тээвэр · Холимог",
+      "youSureYouWantDeleteSelected": "Та сонгосон {{length}} байршлыг устгахдаа итгэлтэй байна уу?"
+    }
+  },
+  "layerPanel": {
+    "ariaLabel": {
+      "travelItinerary": "аяллын хөтөлбөр"
+    }
+  },
+  "layerPanelContent": {
+    "description": {
+      "thereNoTravelPlansYet": "Одоогоор аяллын төлөвлөгөө алга байна."
+    }
+  },
+  "layerPanelHeader": {
+    "action": {
+      "changeTourName": "Аяллын нэрийг өөрчлөх"
+    },
+    "ariaLabel": {
+      "editTravelPlanName": "Аяллын төлөвлөгөөний нэрийг засах",
+      "shareTrip": "Аяллаа хуваалцаарай",
+      "travelOptions": "Аяллын сонголтууд"
+    },
+    "formatSavedAt": {
+      "label": {
+        "lastSaved": "Хамгийн сүүлд хадгалсан {{value}}",
+        "message": "{{date}} {{time}}",
+        "saved": "хадгалагдсан"
+      },
+      "title": {
+        "koKr": "ко-КР"
+      }
+    },
+    "saveLabel": {
+      "text": {
+        "saveFailed": "хадгалах амжилтгүй боллоо",
+        "saving": "Хадгалж байна…",
+        "waitingSave": "Хадгалахыг хүлээж байна"
+      }
+    },
+    "text": {
+      "dayPcsPlacePcs": "{{length}} өдөр · {{placeCount}} газар",
+      "share": "Хуваалцах"
+    },
+    "tooltip": {
+      "doubleClickEditTripName": "Аяллын нэрийг засахын тулд давхар товшино уу"
+    }
+  },
+  "layerValidationIndicator": {
+    "text": {
+      "caution": "сэрэмжлүүлэг",
+      "error": "Алдаа"
+    }
+  },
+  "mapCanvas": {
+    "ariaLabel": {
+      "travelLocationMap": "аяллын байршлын газрын зураг"
+    },
+    "renderMapStatus": {
+      "description": {
+        "checkMapConnectionTryAgainYou": "Газрын зургийн холболтоо шалгаад дахин оролдоно уу. Та хуваарийн жагсаалтыг шалгаж болно.",
+        "onceYouVeEstablishedMapConnection": "Та газрын зургийн холболт тогтоосны дараа таны аяллын маршрутын байршил болон маршрутууд харагдах болно. Та зүүн талд байгаа аяллын маршрутын жишээг үзэж болно.",
+        "waitMoment": "Түр хүлээнэ үү."
+      },
+      "title": {
+        "canTLoadMap": "Газрын зургийг ачаалж чадсангүй",
+        "mapLoading": "Газрын зургийг ачаалж байна"
+      }
+    }
+  },
+  "mapToolPanel": {
+    "ariaLabel": {
+      "mapTool": "газрын зургийн хэрэгсэл"
+    },
+    "text": {
+      "moveMap": "Пан газрын зураг",
+      "routeOptimization": "Маршрутын оновчлол",
+      "runAgain": "Дахин хийх",
+      "undo": "Буцаах"
+    }
+  },
+  "mapWorkspacePage": {
+    "render": {
+      "ariaLabel": {
+        "travelSelectionMapBackground": "аяллын сонголтын газрын зургийн дэвсгэр зураг"
+      }
+    },
+    "runAction": {
+      "text": {
+        "travelRequestFailed": "Таны аяллын хүсэлт амжилтгүй боллоо."
+      }
+    },
+    "text": {
+      "listCouldNotBeLoaded": "Жагсаалтыг ачаалж чадсангүй."
+    },
+    "title": {
+      "newTravel": "шинэ аялал"
+    }
+  },
+  "place": {
+    "welcome": "{{name}}, очих газраа сонгоно уу"
+  },
+  "placeLayerItem": {
+    "content": {
+      "ariaLabel": {
+        "editName": "{{name}} нэрийг засах"
+      },
+      "text": {
+        "arrivalLocation": "Ирэх байршил",
+        "departureLocation": "Хөдлөх байршил"
+      }
+    },
+    "text": {
+      "changeIconColor": "{{name}} дүрс тэмдэг болон өнгийг өөрчлөх",
+      "details": "{{name}} Дэлгэрэнгүй мэдээлэл {{value}}",
+      "open": "нээлттэй",
+      "stay": "{{formatDurationMinutes}} хэвээр үлдэнэ үү"
+    }
+  },
+  "polylineLayerItem": {
+    "ariaLabel": {
+      "fromFrom": "{{fromName}}-с {{toName}} хүртэл болон {{formatClockTime}}-с {{formatClockTime}} хүртэл"
+    },
+    "fromName": {
+      "text": {
+        "unknownPlace": "үл мэдэгдэх газар"
+      }
+    },
+    "text": {
+      "betweenPlaces": "· {{formatDurationMinutes}} газруудын хооронд",
+      "details": "{{connectionName}} Дэлгэрэнгүй мэдээлэл {{value}}"
+    }
+  },
+  "polylineMetrics": {
+    "formatPolylineDistance": {
+      "text": {
+        "noRouteInformation": "Маршрутын мэдээлэл алга"
+      }
+    }
+  },
+  "polylineMode": {
+    "pOLYLINEMODEOPTIONS": {
+      "label": {
+        "car": "машин",
+        "publicTransportation": "нийтийн тээвэр",
+        "straightLine": "шулуун шугам",
+        "walk": "алхах"
+      }
+    }
+  },
+  "quickSearch": {
+    "ariaLabel": {
+      "closeQuickSearch": "Шуурхай хайлтыг хаах",
+      "enter": "{{label}} оруулна уу",
+      "searchMode": "Хайлтын горим: {{label}}",
+      "searchMode2": "хайлтын горим"
+    },
+    "sEARCHMODES": {
+      "label": {
+        "askAi": "Хиймэл оюун ухаанаас асуу",
+        "searchMySchedule": "Миний хуваарийг хайх",
+        "searchPlace": "Газар хайх"
+      },
+      "placeholder": {
+        "askQuestionAboutTravelPlans": "Аяллын төлөвлөгөөнийхөө талаар асуулт асуугаарай",
+        "searchCurrentTravelItinerariesLocations": "Одоогийн аяллын хөтөлбөр болон байршлыг хайх"
+      },
+      "text": {
+        "aiResponse": "Хиймэл оюун ухааны хариу үйлдэл",
+        "enterPlaceYouWantSearch": "Хайхыг хүссэн газраа оруулна уу.",
+        "enterQuestionAboutTravelPlans": "Аяллын төлөвлөгөөнийхөө талаар асуулт оруулна уу.",
+        "enterScheduleLocationYouWantSearch": "Хайхыг хүссэн хуваарь эсвэл байршлаа оруулна уу.",
+        "placeSearchResults": "Байршлын хайлтын үр дүн",
+        "scheduleSearchResults": "Хайлтын үр дүнг хуваарьлах"
+      }
+    },
+    "text": {
+      "functionNotYetConnected": "{{label}} функц хараахан холбогдоогүй байна.",
+      "modeSwitching": "горим солих",
+      "move": "нүүх",
+      "willAppearHere": "{{resultsTitle}} энд гарч ирнэ."
+    },
+    "title": {
+      "quickSearch": "Түргэн хайлт"
+    }
+  },
+  "route": {
+    "summary": "{{from}}-с {{to}} хүртэл {{minutes}} минут"
+  },
+  "routeSettingsCard": {
+    "ariaLabel": {
+      "chooseMethodTravel": "Аялал жуулчлалын аргаа сонгоно уу",
+      "message": "{{label}}, {{durationAriaLabel}}",
+      "routeSettings": "маршрутын тохиргоо"
+    },
+    "description": {
+      "weReSavingWayMoving": "Бид таны хөдлөх замыг аварч байна."
+    },
+    "mODEDESCRIPTIONS": {
+      "text": {
+        "straightLineConnectsTwoPlaces": "Шулуун шугам нь хоёр газрыг холбодог.",
+        "useCarTravelRoutes": "Машинаар аялах маршрутыг ашиглаарай.",
+        "usePublicTransportationRoutes": "Нийтийн тээврийн маршрутуудыг ашиглаарай.",
+        "useWalkingRoutes": "Явган алхах замыг ашиглаарай."
+      }
+    },
+    "resolveDurationPresentation": {
+      "ariaLabel": {
+        "estimatedTime": "Тооцоолсон хугацаа {{label}}",
+        "noEstimatedTime": "Тооцоолсон хугацаа байхгүй",
+        "viewingEstimatedTime": "Тооцоолсон хугацааг үзэж байна"
+      }
+    }
+  },
+  "routes": {
+    "loadingLabel": {
+      "loadingTravelMap": "Аяллын газрын зургийг ачаалж байна."
+    }
+  },
+  "search": {
+    "placeholder": "Газар хайх",
+    "result_count": "{{count}} хайлтын үр дүн"
+  },
+  "tripCommandDispatcher": {
+    "applyCommands": {
+      "error": {
+        "travelChangeValueIncorrect": "Аяллын өөрчлөлтийн утга буруу байна."
+      }
+    },
+    "applyHistoryOperation": {
+      "error": {
+        "tripChangeHistoryCannotBeRestored": "Аяллын өөрчлөлтийн түүхийг сэргээх боломжгүй."
+      }
+    }
+  },
+  "tripCommandPlanAdapter": {
+    "error": {
+      "durationVisit": "Айлчлалын үргэлжлэх хугацаа",
+      "unsupportedTravelOrder": "Дэмжигдээгүй аяллын захиалга.",
+      "visitStartTime": "Зочлох эхлэх цаг"
+    },
+    "missingVisitField": {
+      "text": {
+        "placesWithoutRetainTheirExistingValues": "{{field}}-гүй газрууд одоо байгаа утгуудаа хадгалж, өөрчлөх боломжгүй."
+      }
+    }
+  },
+  "tripCommandPlanError": {
+    "normalizeTripCommandPlanError": {
+      "message": {
+        "travelOrderPlanCannotBeSafely": "Аяллын захиалгын төлөвлөгөөг аюулгүйгээр бэлтгэж чадахгүй."
+      }
+    }
+  },
+  "tripCommandPlanExecutor": {
+    "error": {
+      "someSelectedLocationsNotCurrentlyTrip": "Сонгосон зарим байршил одоогоор таны аялалд байхгүй байна.",
+      "thereDuplicateIdsSelectedPlacesList": "Сонгосон газруудын жагсаалтад давхардсан ID байна.",
+      "thereDuplicateStepIdTravelCommand": "Аяллын командын төлөвлөгөөнд давхардсан алхамын ID байна.",
+      "travelOrderPlansDoNotCurrently": "Аяллын захиалгын төлөвлөгөөнд одоогоор аяллын зардал хамаарахгүй.",
+      "tripHasChangedSinceCommandPlans": "Командын төлөвлөгөө гарснаас хойш аялал өөрчлөгдсөн."
+    },
+    "executePreparedTripCommandPlan": {
+      "message": {
+        "preparedTravelCommandCannotBeSafely": "Бэлтгэсэн аяллын командыг аюулгүй гүйцэтгэх боломжгүй.",
+        "tripHasChangedSinceItWas": "Аялал төлөвлөснөөсөө хойш өөрчлөгдсөн."
+      }
+    },
+    "prepareTripCommandPlan": {
+      "message": {
+        "containsUnsupportedTravelCommands": "Дэмжигдээгүй аяллын командуудыг агуулж байна.",
+        "travelCommandPlanFormatIncorrect": "Аяллын команд төлөвлөгөөний формат буруу байна."
+      }
+    }
+  },
+  "tripCommandPlanPlaceLookup": {
+    "error": {
+      "iCanTFindPlaceAdd": "Би үүнийг нэмэх газар олж чадахгүй байна.",
+      "privilegedLocationInformationCouldNotBe": "Давуу эрхтэй байршлын мэдээллийг авч чадсангүй.",
+      "thereWasNoSingleSearchResult": "Нэмэх газрын ганц хайлтын үр дүн олдсонгүй."
+    }
+  },
+  "tripCommandPlanResolver": {
+    "error": {
+      "connectorDestinationDoesNotExistCurrent": "Одоогийн аяллын холбогч очих газар байхгүй байна.",
+      "connectorTargetNotFound": "Холбогчийн зорилтот хэсэг олдсонгүй.",
+      "currentStepCannotReferLaterSteps": "Одоогийн алхам нь дараагийн алхамууд эсвэл өөрийг нь зааж болохгүй.",
+      "dateDestinationDoesNotExistCurrent": "Одоогийн аяллын очих газар байхгүй байна.",
+      "dateTargetNotFound": "Огнооны зорилтот түвшин олдсонгүй.",
+      "iCanTDecideWhichOrder": "Би ямар дарааллаар очихоо шийдэж чадахгүй байна.",
+      "locationDestinationDoesNotCurrentlyExist": "Аялалд очих газар одоогоор байхгүй байна.",
+      "locationDestinationNotFound": "Байршил олох боломжгүй байна.",
+      "noPlaceFoundMatchingName": "Таарах нэртэй газар олдсонгүй.",
+      "previousStepReferencedDoesNotExist": "Өмнөх дурдсан алхам байхгүй байна.",
+      "previousStepResultsNotAvailable": "Өмнөх алхамын үр дүн байхгүй байна.",
+      "requestedDateSequenceOutsideCurrentTravel": "Хүссэн огнооны дараалал нь одоогийн аяллын хүрээнээс гадуур байна.",
+      "requestedPlaceSequenceOutsideCurrentDate": "Хүссэн газрын дараалал нь одоогийн огнооны хязгаараас гадуур байна.",
+      "resultingFormatFromPreviousStepNot": "Өмнөх алхамаас үүссэн формат нь одоогийн зорилтот хэмжээтэй нийцэхгүй байна.",
+      "selectedLocationDestinationCannotBeFound": "Сонгосон байршлын очих газар олдсонгүй.",
+      "thereMultiplePlacesMatchingNames": "Тохирох нэртэй олон газар бий.",
+      "unableDetermineOrderDatesMove": "Нүүлгэх огнооны дарааллыг тодорхойлох боломжгүй байна."
+    }
+  },
+  "tripCommands": {
+    "error": {
+      "canTFindPlaceMove": "Нүүх газар олдохгүй байна.",
+      "confirmDateOrderMovement": "Хөдөлгөөний огноо болон дарааллыг баталгаажуулна уу.",
+      "connectorNotFound": "Холбогч олдсонгүй.",
+      "dateWhichScheduleAppliesCannotBe": "Хуваарь хэрэгжих огноог олж чадсангүй.",
+      "iCanTFindDateChange": "Би нэрээ солих огноог олж чадахгүй байна.",
+      "iCanTFindDateChange2": "Өнгийг нь өөрчлөх огноог олж чадахгүй байна.",
+      "iCanTFindDateChange3": "Би захиалгыг өөрчлөх огноог олж чадахгүй байна.",
+      "locationNotFound": "Байршил олдсонгүй.",
+      "locationStartEndPointOptimizationSchedule": "Оновчлолын хуваарийн байршил эсвэл эхлэх/дуусах цэг нь одоогийн өдөртэй таарахгүй байна.",
+      "newTripItemIdIncorrect": "Аяллын барааны шинэ дугаар буруу байна.",
+      "orderPlacesOptimizationResultsDoesNot": "Оновчлолын үр дүнгийн байршлын дараалал нь одоогийн Өдөртэй таарахгүй байна.",
+      "selectDateYouWouldLikeAdd": "Байршил нэмэхийг хүссэн огноог сонгоно уу."
+    }
+  },
+  "tripEditController": {
+    "error": {
+      "savedTripDifferentFromCurrentSession": "Хадгалсан аялал нь одоогийн уулзалтаас өөр байна."
+    },
+    "executeTripCommandString": {
+      "error": {
+        "youCannotRunCommandsClosedTrip": "Та хаалттай аяллын засварлагч дээр командуудыг ажиллуулж чадахгүй."
+      }
+    },
+    "getCommandExecutionError": {
+      "text": {
+        "commandExecutionFailed": "Тушаалыг гүйцэтгэх амжилтгүй боллоо.",
+        "thereNoChangeHistoryRedo": "Дахин хийх өөрчлөлтийн түүх байхгүй байна.",
+        "thereNoChangeHistoryRevert": "Буцаах өөрчлөлтийн түүх байхгүй."
+      }
+    },
+    "runSave": {
+      "error": {
+        "failedSaveTrip": "Аяллыг хадгалж чадсангүй."
+      }
+    }
+  },
+  "tripLayer": {
+    "toTripLayerModel": {
+      "title": {
+        "message": "{{title}} · {{order}}. {{name}}"
+      }
+    }
+  },
+  "tripPolylineCard": {
+    "ariaLabel": {
+      "changeModeTransportation": "Тээврийн хэлбэрийг өөрчлөх: {{formatPolylineMode}}"
+    },
+    "description": {
+      "movementSection": "· Хөдөлгөөний хэсэг"
+    },
+    "label": {
+      "distance": "зай",
+      "estimatedTravelTime": "Аяллын тооцоолсон хугацаа",
+      "memo": "тэмдэглэл"
+    },
+    "text": {
+      "beforeRouteCalculation": "Маршрутыг тооцоолохоос өмнө",
+      "closeTravelMethodSettings": "Аяллын аргын тохиргоог хаах",
+      "closeTripRouteCard": "Аяллын маршрутын картыг хаах",
+      "movementSection": "{{title}} · Хөдөлгөөний хэсэг",
+      "notSet": "Тохируулаагүй байна"
+    },
+    "tooltip": {
+      "wayMoving": "хөдлөх арга"
+    }
+  },
+  "useTrip": {
+    "error": {
+      "tripproviderRequired": "TripProvider шаардлагатай."
+    }
+  }
+}

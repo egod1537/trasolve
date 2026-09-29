@@ -1,0 +1,1234 @@
+{
+  "aiChatTestPage": {
+    "aiChatTestContent": {
+      "action": {
+        "loading": "Ачааллаж байна...",
+        "resetConversation": "Харилцан яриаг дахин тохируулах",
+        "viewModelList": "Загварын жагсаалтыг харах"
+      },
+      "description": {
+        "checkConversationsWaitResponsesDisplayErrors": "Жинхэнэ чатын API ашиглан харилцан яриаг шалгаж, хариултыг хүлээж, алдааг харуулна уу.",
+        "sendEnterBreakLineShiftEnter": "Enter ашиглан илгээх · Shift+Enter ашиглан мөр таслах · Reset нь мөн хийгдэж буй аливаа хүсэлтийг цуцална.",
+        "thereNoModelsAvailable": "Бэлэн загвар байхгүй байна."
+      },
+      "label": {
+        "requestModel": "хүсэлтийн загвар"
+      },
+      "text": {
+        "modelListCouldNotBeLoaded": "Загварын жагсаалтыг ачаалж чадсангүй.",
+        "serverDefaultModelOpenwebuiModel": "Серверийн анхдагч загвар (OPENWEBUI_MODEL)",
+        "testbedList": "← Туршилтын тавцангийн жагсаалт"
+      },
+      "title": {
+        "aiChatTestBed": "Хиймэл оюун ухааны чат туршилтын ор",
+        "openwebuiModels": "OpenWebUI загварууд"
+      }
+    }
+  },
+  "appHeader": {
+    "ariaLabel": {
+      "api": "API {{healthLabel}}",
+      "refreshApiStatus": "API-г шинэчлэх төлөв",
+      "refreshTcacheStatus": "tcache-н төлөвийг шинэчлэх",
+      "returnTestbedList": "Туршилтын талбайн жагсаалт руу буцах",
+      "tcache": "tcache {{healthLabel}}"
+    },
+    "tHEMEOPTIONS": {
+      "label": {
+        "dark": "харанхуй",
+        "light": "гэрэл",
+        "system": "систем"
+      }
+    },
+    "text": {
+      "apiPost": "/api · ШУУДАН",
+      "checking": "Шалгаж байна",
+      "connectionFailed": "Холболт амжилтгүй боллоо",
+      "normal": "хэвийн",
+      "offline": "офлайн",
+      "online": "онлайн",
+      "trasolveTcacheRouteTestbed": "Trasolve · tcache Route Testbed",
+      "trasolveTestbed": "трасолве туршилтын талбай"
+    },
+    "themeMenu": {
+      "ariaLabel": {
+        "theme": "сэдэв",
+        "theme2": "Сэдэв: {{label}}"
+      }
+    }
+  },
+  "cancelJobDialog": {
+    "description": {
+      "calculationsRecordsThatHaveAlreadyBeen": "Өмнө нь хийгдсэн тооцоолол болон бүртгэлийг хадгалж, ажлаас халагдсаны дараа дахин ажиллуулахын тулд шинэ ажил үүсгэх шаардлагатай.",
+      "finalStatusReflectedAfterCancellationResponse": "Эцсийн төлөвийг цуцлах хариу эсвэл SSE төлөвийг баталгаажуулсны дараа тусгана.",
+      "terminatesCurrentlyRunningJob": "Одоо ажиллаж байгаа ажлыг дуусгана.",
+      "youSureYouWantCancelOperation": "Та үйлдлийг цуцлахыг хүсэж байгаадаа итгэлтэй байна уу?"
+    },
+    "tooltip": {
+      "cancelRouteOperation": "Маршрутын үйлдлийг цуцлах",
+      "forceQuitJob": "Ажлаас хүчээр гарах"
+    }
+  },
+  "debugPanel": {
+    "ariaLabel": {
+      "request": "Хүсэлт"
+    },
+    "debugPanelContent": {
+      "ariaLabel": {
+        "eventLog": "үйл явдлын бүртгэл"
+      },
+      "title": {
+        "requestLastRequestValue": "Хүсэлт · Сүүлийн хүсэлтийн утга"
+      }
+    },
+    "logText": {
+      "text": {
+        "waitingEvent": "үйл явдлыг хүлээж байна"
+      }
+    },
+    "requestJson": {
+      "text": {
+        "waitingRequest": "хүсэлтийг хүлээж байна"
+      }
+    },
+    "text": {
+      "debugApiInformation": "Алдаа засах/API мэдээлэл",
+      "routePolylineCoordinates": "Маршрутын олон шугам ({{coordinateCount}} координат)"
+    }
+  },
+  "directionsPanel": {
+    "action": {
+      "addWaypoint": "+ Замын цэг нэмэх",
+      "requesting": "Хүсэлт гаргаж байна..."
+    },
+    "ariaLabel": {
+      "deleteWaypoint": "Замын цэгийг устгах {{value}}"
+    },
+    "describeEndpoint": {
+      "text": {
+        "addressString": "хаягийн мөр",
+        "coordinates": "Координатууд: {{lat}}, {{lng}}",
+        "selectedPlacePlaceid": "Сонгосон газар · placeId: {{placeId}}"
+      }
+    },
+    "label": {
+      "directions": "Чиглэл"
+    },
+    "text": {
+      "description": "{{inputId}}-тайлбар",
+      "mapsTestIntermediate": "газрын зургийн туршилтын завсрын түвшин-{{id}}",
+      "waypoint": "замын цэг {{value}}"
+    }
+  },
+  "gatewayResultModel": {
+    "describeCancelError": {
+      "text": {
+        "jobForceTerminationResponseFormatIncorrect": "Ажлын байрны халагдсаны хариуны формат буруу байна.",
+        "requestForceTerminateJobFailed": "Ажлыг албадан цуцлах хүсэлт амжилтгүй боллоо."
+      }
+    },
+    "describeGatewayError": {
+      "text": {
+        "responseValidationFailed": "Хариу баталгаажуулалт амжилтгүй боллоо: {{value}}",
+        "successResponseDoesNotMatchTroute": "Амжилтын хариу нь хулд загасны гэрээтэй таарахгүй байна.",
+        "trasolveBackendRequestFailed": "Trasolve backend хүсэлт амжилтгүй боллоо."
+      }
+    }
+  },
+  "googleMapsTestPage": {
+    "googleMapsTestContent": {
+      "ariaLabel": {
+        "mapControl": "газрын зургийн хяналт"
+      },
+      "description": {
+        "playgroundDevelopmentRealGoogleApi": "Хөгжүүлэлтийн тоглоомын талбай · Жинхэнэ Google API"
+      },
+      "text": {
+        "mapClick": "Газрын зургийн товшилт: {{lat}}, {{lng}}{{value}}",
+        "mapReady": "Газрын зураг бэлэн боллоо",
+        "selectLocation": "Байршил сонгох: {{name}}"
+      },
+      "title": {
+        "googleMapsTestBed": "Google Maps туршилтын талбар"
+      }
+    }
+  },
+  "googleOAuthTestPage": {
+    "googleOAuthTestContent": {
+      "action": {
+        "loginGoogle": "Google-ээр нэвтрэх"
+      },
+      "description": {
+        "developmentOnlyBackendOauthFlowVerification": "Зөвхөн хөгжүүлэлтэд зориулсан арын хэсгийн OAuth урсгалын баталгаажуулалт."
+      },
+      "title": {
+        "googleOauthTest": "Google OAuth тест"
+      }
+    },
+    "oAuthResultView": {
+      "description": {
+        "backendGoogleOauthConfigurationUnavailable": "Google OAuth-н арын хэсгийн тохиргоог ашиглах боломжгүй байна.",
+        "idleNoOauthResultRequested": "Идэвхгүй — OAuth үр дүн хүссэнгүй.",
+        "loadingOauthResult": "OAuth үр дүнг ачаалж байна…",
+        "oneTimeOauthResultMissingHas": "Нэг удаагийн OAuth үр дүн байхгүй эсвэл хугацаа нь дууссан байна.",
+        "sanitizedOauthResultCouldNotBe": "Цэвэршүүлсэн OAuth үр дүнг уншиж чадсангүй."
+      },
+      "label": {
+        "email": "И-мэйл",
+        "emailVerified": "И-мэйл баталгаажсан",
+        "name": "Нэр",
+        "pictureUrl": "Зургийн URL"
+      },
+      "status": {
+        "success": "Амжилт"
+      },
+      "text": {
+        "no": "Үгүй",
+        "yes": "Тийм"
+      },
+      "title": {
+        "oauthFailed": "OAuth амжилтгүй боллоо",
+        "oauthUnavailable": "OAuth боломжгүй",
+        "resultMissing": "Үр дүн байхгүй байна",
+        "resultRequestFailed": "Үр дүнгийн хүсэлт амжилтгүй боллоо"
+      }
+    }
+  },
+  "googlePlaceSearch": {
+    "label": {
+      "searchPlace": "Газар хайх"
+    },
+    "placeholder": {
+      "enterPlaceAddress": "Газар эсвэл хаяг оруулна уу"
+    },
+    "selectSuggestion": {
+      "text": {
+        "selected": "{{name}} сонгогдсон"
+      }
+    },
+    "text": {
+      "enterAtLeast2Characters": "Дор хаяж 2 тэмдэгт оруулна уу.",
+      "locationSearchFailed": "Байршлын хайлт амжилтгүй боллоо.",
+      "noSearchResults": "Хайлтын үр дүн алга.",
+      "thereSearchResults": "{{length}} хайлтын үр дүн байна."
+    },
+    "updateInput": {
+      "text": {
+        "searchingLocation": "Байршил хайж байна."
+      }
+    }
+  },
+  "jobBuilderDialog": {
+    "addPlace": {
+      "message": {
+        "youHaveSelectedPlaceThatAlready": "Та байршлын жагсаалтад аль хэдийн байгаа газрыг сонгосон байна."
+      }
+    },
+    "applyRawToForm": {
+      "message": {
+        "rawJsonHasLocationsNotSelected": "Raw JSON нь газрын зураг дээр сонгоогүй байршлуудтай бөгөөд харааны горим руу хөрвүүлэх боломжгүй. Raw JSON горимд ажил үүсгэх эсвэл шинэ харааны бүтээгч эхлүүлнэ үү.",
+        "rawJsonWasAppliedForm": "Маягтад түүхий JSON ашигласан."
+      }
+    },
+    "parseRaw": {
+      "message": {
+        "jsonParsingFailed": "JSON задлан шинжлэх амжилтгүй боллоо: {{value}}",
+        "makeSureItSValidJson": "Хүчинтэй JSON эсэхийг шалгаарай."
+      }
+    },
+    "rawJsonEditor": {
+      "action": {
+        "applyForm": "Маягтад өргөдөл гаргах",
+        "format": "Форматлах",
+        "restoreFromForm": "Маягтаас сэргээх"
+      },
+      "ariaLabel": {
+        "requestJson": "JSON хүсэлт гаргах"
+      },
+      "description": {
+        "displaysRequestLikeFormIfYou": "Хүсэлтийг маягт шиг харуулна. Хэрэв та JSON-г өөрчилж, маягтад хэрэглэвэл хоёр чиглэлд хөрвүүлэгдэнэ."
+      },
+      "title": {
+        "rawJson": "Түүхий JSON"
+      }
+    },
+    "tooltip": {
+      "applyRawJsonChangesFormFirst": "Эхлээд маягтад Raw JSON өөрчлөлтийг хэрэглэнэ үү."
+    },
+    "validateVisual": {
+      "message": {
+        "jobAlreadyExistsCurrentSession": "\"{{job_id}}\" ажил одоогийн сессэд аль хэдийн байна.",
+        "requestValid": "Таны хүсэлт хүчинтэй байна.",
+        "requestValidationFailed": "Хүсэлтийн баталгаажуулалт амжилтгүй боллоо: {{formatSchemaIssues}}"
+      }
+    }
+  },
+  "jobBuilderLocationList": {
+    "action": {
+      "middleOrderShuffle": "дунд зэргийн холимог"
+    },
+    "ariaLabel": {
+      "shuffleIntermediatePositions": "Завсрын байрлалуудыг холино уу"
+    },
+    "jobBuilderLocationItem": {
+      "ariaLabel": {
+        "businessClosingTime": "{{name}} бизнесийн хаалтын цаг",
+        "businessStartTime": "{{name}} бизнес эхлэх цаг",
+        "dwellTimeMinutes": "{{name}} байх хугацаа (минут)",
+        "id": "{{name}} дугаар",
+        "name": "{{name}} нэр",
+        "placeId": "{{name}} Газрын дугаар",
+        "remove": "{{name}}-г хасах"
+      },
+      "text": {
+        "businessHours": "ажлын цаг",
+        "id": "ID",
+        "location": "{{name}} байршил",
+        "name": "нэр",
+        "placeIdOptional": "Газрын дугаар (заавал биш)",
+        "residenceTime": "оршин суух хугацаа"
+      },
+      "tooltip": {
+        "remove": "устгах"
+      }
+    },
+    "text": {
+      "dog": "нохой",
+      "firstPositionFixedStartLastPosition": "Эхний байрлал нь тогтмол эхлэл, сүүлийн байрлал нь тогтмол очих газар байна. Зөвхөн завсрын байрлалуудыг дахин эрэмбэлж болох бөгөөд цагийг {{value}} {{VISIT_TIME_GRANULARITY_MINUTES}} минутаар оруулна.",
+      "message": "{{length}}",
+      "youNeedAtLeastTwoLocations": "Танд гарал үүсэл болон очих газар гэсэн дор хаяж хоёр байршил хэрэгтэй."
+    },
+    "tooltip": {
+      "noLocationsHaveBeenAdded": "Байршил нэмэгдээгүй байна."
+    }
+  },
+  "jobBuilderMap": {
+    "action": {
+      "addJob": "Ажлын байранд нэмэх",
+      "selectAddedLocation": "Нэмэлт байршлыг сонгох"
+    },
+    "ariaLabel": {
+      "jobLocationSelectionMap": "Ажлын байрны сонголтын газрын зураг"
+    }
+  },
+  "jobBuilderMatrixGenerator": {
+    "getTravelTimeMatrixGeneratorError": {
+      "text": {
+        "enterSeedAsIntegerGreaterThan": "Seed-г 0-ээс их бүхэл тоо хэлбэрээр оруулна уу.",
+        "enterTravelTimeRangeAsInteger": "Аяллын хугацааны хязгаарыг 0-ээс их буюу тэнцүү бүхэл тоо хэлбэрээр оруулна уу.",
+        "matrixCreationPatternNotSupported": "Матриц үүсгэх загварыг дэмжихгүй.",
+        "minimumTravelTimeCannotBeGreater": "Аяллын хамгийн бага хугацаа нь аяллын хамгийн их хугацаанаас их байж болохгүй.",
+        "numberPlacesMustBeIntegerGreater": "Орон тооны тоо нь 0-ээс их буюу тэнцүү бүхэл тоо байх ёстой."
+      }
+    }
+  },
+  "jobBuilderPresetPicker": {
+    "action": {
+      "load": "ачаа"
+    },
+    "label": {
+      "testCase": "Туршилтын тохиолдол"
+    },
+    "text": {
+      "locations": "{{locationCount}} байршил · {{sourceLabel}} · {{value}} {{description}}"
+    }
+  },
+  "jobBuilderSettings": {
+    "description": {
+      "directMatrixValuesPreservedButNot": "Шууд матрицад утгууд хадгалагддаг боловч бодит чиглүүлэлтийн хайлтад ашиглагддаггүй.",
+      "solverSearchesLatestPossibleDepartureTime": "Бодлого тайлагч нь энэ хугацаанаас хойшхи хамгийн сүүлийн боломжит хөдлөх хугацааг хайна.",
+      "thisTestbedOnlyOptionTestProgress": "Энэ нь зөвхөн туршилтын талбайд ашиглах сонголт юм. Ажлыг хамгийн бага тодорхой хугацаанд ажиллуулснаар явц болон SSE заалтуудыг шалгана. Маршрутын үр дүнг холих нь эхлэх цэг болон очих газрыг хадгалж, завсрын зогсолтын үр дүнгийн дарааллыг санамсаргүй байдлаар холино.",
+      "thisTransportationMethodUsedByTcache": "Энэ бол tcache-ийн бодит аяллын хугацааг шалгахад ашигладаг тээврийн арга юм.",
+      "uniqueIdThatIdentifiesTrouteJob": "Хулд загасны ажлыг тодорхойлдог өвөрмөц ID."
+    },
+    "text": {
+      "debugMode": "дибаг хийх горим",
+      "minimumDepartureTime": "Хамгийн бага хөдлөх хугацаа"
+    },
+    "title": {
+      "advancedDebug": "Дэвшилтэт дибаг",
+      "basicInformation": "үндсэн мэдээлэл"
+    }
+  },
+  "jobBuilderTravelTimeSource": {
+    "description": {
+      "checkActualTravelTimeUsingPlace": "Байршлын дугаар болон тээврийн хэрэгслийг ашиглан аяллын бодит хугацааг шалгана уу.",
+      "enteredMatrixUsedAsTcacheSearch": "Оруулсан матрицыг байгаагаар нь ашиглаж, tcache хайлтыг орхигдуулна.",
+      "placeIdRequiredAllLocationsRequest": "Бүх байршилд Газрын ID шаардлагатай бөгөөд хүсэлтэд аяллын_цаг_матриц ороогүй болно. troute нь Газрын ID болон тээврийн хэрэгслийг ашиглан чиглүүлсэн матриц үүсгэдэг.",
+      "searchTravelTimeUsingActualPlace": "Бодит газрын ID ашиглан аяллын хугацааг хайх эсвэл бодогч руу дамжуулах чиглүүлсэн матрицыг шууд оруулна уу."
+    },
+    "label": {
+      "seed": "Үр",
+      "travelTimeSource": "аяллын цагийн эх сурвалж"
+    },
+    "mATRIXPATTERNOPTIONS": {
+      "label": {
+        "clustered": "Бөөгнөрсөн",
+        "directedUniform": "Зохиолчийн дүрэмт хувцас",
+        "nearSymmetric": "Бараг тэгш хэмтэй",
+        "shortMovesLongOutliers": "Богино хөдөлгөөн + урт хугацааны гажуудал",
+        "symmetric": "Тэгш хэмтэй"
+      }
+    },
+    "text": {
+      "directMatrix": "Шууд матриц"
+    },
+    "title": {
+      "travelTimeSource": "Аяллын цагийн эх сурвалж"
+    },
+    "travelTimeMatrixEditor": {
+      "action": {
+        "empty": "Хоосон",
+        "fullRegeneration": "бүрэн нөхөн төлжилт",
+        "randomlyFillEmptyCells": "Хоосон нүднүүдийг санамсаргүй байдлаар бөглөнө үү"
+      },
+      "ariaLabel": {
+        "matrixRandomGeneration": "Матрицын санамсаргүй үүсэлт",
+        "randomMatrixGenerationPattern": "Санамсаргүй матрицын үүслийн хэв маяг",
+        "randomMatrixMaximumMovementTime": "Санамсаргүй матрицын хамгийн их хөдөлгөөний хугацаа",
+        "randomMatrixMinimumTravelTime": "Санамсаргүй матриц Хамгийн бага аяллын хугацаа",
+        "randomMatrixSeed": "Санамсаргүй матрицын үр",
+        "travelTimeFrom": "{{name}}-с {{name}} хүртэл аяллын хугацаа"
+      },
+      "description": {
+        "editMatrixAddLocation": "Матриксийг засахын тулд байршил нэмнэ үү.",
+        "itNNDirectedMatrixDiagonal": "Энэ нь N × N чиглэлтэй матриц юм. Диагональ нь 0 дээр тогтмол бөгөөд A→B болон B→A нь бие даасан байна. travel_mode утга хадгалагдах боловч бодит чиглүүлэлтийн хайлтад ашиглагдахгүй."
+      },
+      "text": {
+        "pattern": "хээ",
+        "rangeMinutes": "Хүрээ (минут)",
+        "travelTimeMatrixByLocation": "Байршлаар аялах хугацааны матриц"
+      }
+    }
+  },
+  "jobBuilderValidation": {
+    "validateJobBuilderDraft": {
+      "text": {
+        "checkInputValuesEachLocation": "Байршил бүрийн оролтын утгыг шалгана уу.",
+        "endTimeCannotBeEarlierThan": "Дуусах цаг нь эхлэх цагаас өмнө байж болохгүй.",
+        "enterBusinessStartTimeMinutes": "Бизнес эхлэх цагийг {{VISIT_TIME_GRANULARITY_MINUTES}} минутын дараа оруулна уу.",
+        "enterClosingTimeMinutes": "Хаалтын цагийг {{VISIT_TIME_GRANULARITY_MINUTES}} минутын дараа оруулна уу.",
+        "enterIdThatDoesNotOverlap": "Бусад байршилтай давхцахгүй ID оруулна уу.",
+        "enterIntegerGreaterThanEqual0": "Матрицын диагональ бус нүд бүрт 0-ээс их буюу тэнцүү бүхэл тоог шууд оруулна уу.",
+        "enterLocationId": "Байршлын дугаараа оруулна уу.",
+        "enterMinimumDepartureTimeMinutes": "Хөдлөх хамгийн бага хугацааг {{VISIT_TIME_GRANULARITY_MINUTES}} минутын дотор оруулна уу.",
+        "enterMinutesBetweenMinutes": "{{MAX_STAY_MINUTES}} болон {{VISIT_TIME_GRANULARITY_MINUTES}} минутын хооронд {{minimumStayMinutes}} минут оруулна уу.",
+        "enterPlaceIdThatDoesNot": "Бусад байршилтай давхцахгүй газрын дугаар оруулна уу.",
+        "jobAlreadyExistsCurrentSession": "\"{{jobId}}\" ажил одоогийн сессэд аль хэдийн байна.",
+        "locationIdsMustBeNonEmpty": "Байршлын ID нь хоосон биш, өөр байх ёстой.",
+        "minimumExecutionTimeMustBeInteger": "Хамгийн бага гүйцэтгэх хугацаа нь 0-ээс {{TROUTE_MAX_DEBUG_JOB_DURATION_MS}}мс хооронд бүхэл тоо байх ёстой.",
+        "placeIdEachLocationMustBe": "Байршил бүрийн place_id нь өөр байх ёстой.",
+        "placeIdRequired": "{{name}}: байршлын_ид ​​шаардлагатай.",
+        "request": "Хүсэлт {{value}}: {{message}}",
+        "tcacheLookupRequiresPlaceId": "tcache хайлт нь Place ID шаарддаг."
+      }
+    }
+  },
+  "jobBuilderValidationIndicator": {
+    "sTATUSDETAILS": {
+      "label": {
+        "requestValid": "Таны хүсэлт хүчинтэй байна",
+        "thereItemsThatNeedCorrection": "Засаж залруулах шаардлагатай зүйлс байна",
+        "verifying": "Баталгаажуулж байна",
+        "waitingVerification": "Баталгаажуулалтыг хүлээж байна"
+      }
+    },
+    "text": {
+      "message": "{{label}} ({{errorCount}})"
+    }
+  },
+  "jobDetail": {
+    "formatDuration": {
+      "text": {
+        "hoursMinutes": "{{floor}} цаг {{round}} минут",
+        "minutes": "{{round}} минут"
+      }
+    },
+    "formatStreamState": {
+      "text": {
+        "connected": "холбогдсон",
+        "connecting": "Холбогдож байна",
+        "connectionLost": "холболт тасарсан",
+        "reconnecting": "Дахин холбогдож байна",
+        "waiting": "Хүлээж байна"
+      }
+    },
+    "overview": {
+      "label": {
+        "cache": "Кэш",
+        "provider": "Нийлүүлэгч",
+        "status": "байдал"
+      },
+      "text": {
+        "communicationMethod": "харилцаа холбооны арга",
+        "completionTime": "дуусгах хугацаа",
+        "creationTime": "бүтээлийн цаг",
+        "currentStage": "одоогийн үе шат",
+        "jobId": "Ажлын дугаар",
+        "progress": "ахиц дэвшил"
+      },
+      "title": {
+        "overview": "Тойм"
+      }
+    },
+    "progress": {
+      "label": {
+        "stage": "Тайз"
+      }
+    },
+    "progressSection": {
+      "text": {
+        "recentEvents": "Саяхны үйл явдлууд"
+      },
+      "title": {
+        "progress": "ахиц дэвшил"
+      }
+    },
+    "rawSection": {
+      "text": {
+        "originalJson": "Жинхэнэ JSON"
+      }
+    },
+    "requestSection": {
+      "description": {
+        "departureTime": "Хөдлөх цаг:",
+        "notSpecified": "Тодорхойлоогүй байна"
+      },
+      "text": {
+        "coordinatesAddress": "Координат/Хаяг",
+        "location": "байршил",
+        "order": "захиалга",
+        "placeId": "Газрын дугаар",
+        "role": "үүрэг"
+      },
+      "title": {
+        "request": "хүсэлт"
+      }
+    },
+    "result": {
+      "label": {
+        "distance": "Зай",
+        "duration": "Үргэлжлэх хугацаа",
+        "latency": "Хоцрогдол"
+      }
+    },
+    "resultSection": {
+      "description": {
+        "noRouteResultsHaveBeenReceived": "Маршрутын үр дүн хараахан ирээгүй байна."
+      },
+      "text": {
+        "rawResult": "Түүхий үр дүн",
+        "routeCount": "Маршрутын тоо"
+      },
+      "title": {
+        "result": "үр дүн"
+      }
+    },
+    "text": {
+      "existingGatewayResultsTimelineMaintained": "{{inspectionError}} Одоо байгаа гарцын үр дүн болон цагийн хуваарийг хадгалж байна.",
+      "newJobsAppearListLeftAs": "Шинэ ажлын байрууд үүссэн даруйд зүүн талын жагсаалтад гарч ирнэ.",
+      "newTasksAutomaticallySelectedImmediatelyAfter": "Шинэ даалгаврууд үүсгэсний дараа шууд автоматаар сонгогддог.",
+      "optimizationResultsJobQueryResultGateway": "Ажлын асуулгын үр дүн болон гарцын хариултын оновчлолын үр дүн өөр байна. Ажлын хайлтын үр дүнг эхлээд харуулна.",
+      "retryingConnection": "Дахин холболт хийхийг оролдож байна",
+      "sse": "SSE {{formatStreamState}}",
+      "trasolveGatewayObservationInformation": "Trasolve гарцын ажиглалтын мэдээлэл",
+      "trasolveTcacheCommunicationObservationInformation": "Trasolve → tcache харилцаа холбооны ажиглалтын мэдээлэл"
+    },
+    "timelineSection": {
+      "description": {
+        "noCommunicationEventsObserved": "Харилцаа холбооны үйл явдал ажиглагдаагүй."
+      },
+      "title": {
+        "timeline": "цагийн хуваарь"
+      }
+    },
+    "title": {
+      "jobDetails": "Ажлын дэлгэрэнгүй мэдээлэл"
+    },
+    "tooltip": {
+      "forceTerminationJobFailed": "Ажлын байрыг хүчээр цуцлах амжилтгүй боллоо.",
+      "requestFailed": "хүсэлт амжилтгүй боллоо",
+      "resultDiscrepancy": "үр дүнгийн зөрүү",
+      "selectJobCheckExecutionInformation": "Гүйцэтгэлийн мэдээллийг шалгахын тулд ажлыг сонгоно уу.",
+      "selectRouteOperationYouWantCheck": "Шалгахыг хүссэн маршрутын үйлдлээ сонгоно уу.",
+      "taskFailed": "даалгавар амжилтгүй болсон"
+    }
+  },
+  "jobList": {
+    "ariaLabel": {
+      "testbedJobs": "Туршилтын талбайн ажлууд"
+    },
+    "text": {
+      "createNewJobRunOptimizationRequest": "Шинэ ажил үүсгэж, оновчлолын хүсэлтийг ажиллуулна уу."
+    },
+    "tooltip": {
+      "thereNoJobsYet": "Одоогоор ажлын байр алга байна."
+    }
+  },
+  "jobRequestLocationTable": {
+    "text": {
+      "businessHours": "Ажлын цаг",
+      "inputOrder": "Оролтын дараалал",
+      "locationId": "Байршлын дугаар",
+      "minutes": "минут",
+      "minutes2": "{{stay_minutes}} минут",
+      "stay": "үлдэх"
+    }
+  },
+  "jobRequestSummary": {
+    "action": {
+      "copied": "хуулбарлагдсан"
+    },
+    "ariaLabel": {
+      "copyRequestJson": "Хуулбарлах хүсэлт JSON",
+      "requestJsonCopied": "JSON-г хуулах хүсэлт",
+      "requestLocationInputOrder": "Байршил оруулах дарааллыг хүсэх"
+    },
+    "description": {
+      "jobDebugPathShufflingEnabledKeep": "Алдаа засах замыг солих функцийг идэвхжүүлсэн ажил. Эхлэл болон очих газрын байршлыг хадгалж, завсрын зогсоолуудын үр дүнгийн дарааллыг холино."
+    },
+    "label": {
+      "meansTransportation": "тээврийн хэрэгсэл",
+      "minimumExecutionTime": "Хамгийн бага гүйцэтгэлийн хугацаа",
+      "shufflePathResults": "Замын холилтын үр дүн",
+      "shuffleSeed": "Үрийг холино",
+      "startTime": "эхлэх цаг",
+      "startupMethod": "Эхлүүлэх арга"
+    },
+    "sTARTPOLICYLABELS": {
+      "text": {
+        "asLateAsPossible": "аль болох хожуу",
+        "asSoonAsPossible": "аль болох хурдан",
+        "designatedTime": "тогтоосон цаг"
+      }
+    },
+    "text": {
+      "disabled": "Хөгжлийн бэрхшээлтэй",
+      "expand": "Өргөжүүлэх",
+      "fold": "нугалах",
+      "ms": "хатагтай",
+      "ms2": "{{min_job_duration_ms}} мс",
+      "rawJsonView": "Түүхий JSON харагдац",
+      "savedOriginalRequests": "Хадгалсан анхны хүсэлтүүд",
+      "shufflePaths": "замуудыг холих",
+      "use": "ашиглах"
+    },
+    "title": {
+      "inputPath": "оролтын зам"
+    }
+  },
+  "jobResultMapComparison": {
+    "ariaLabel": {
+      "inputVisitOrderMap": "Айлчлалын захиалгын газрын зургийг оруулна уу",
+      "optimizedVisitOrderMap": "Оновчтой айлчлалын захиалгын газрын зураг"
+    },
+    "comparisonPanel": {
+      "ariaLabel": {
+        "path": "{{title}} зам"
+      }
+    },
+    "description": {
+      "linesComparisonVisitOrderNotActual": "Шугамууд нь айлчлалын дарааллыг харьцуулах зориулалттай бөгөөд бодит зам/нийтийн маршрут биш юм."
+    },
+    "locationSequence": {
+      "label": {
+        "arrival": "ирэх",
+        "departure": "явах"
+      }
+    },
+    "mapValidationError": {
+      "tooltip": {
+        "mapValidationError": "Газрын зургийн баталгаажуулалтын алдаа"
+      }
+    },
+    "title": {
+      "input": "Оролт",
+      "optimized": "Оновчтой болгосон"
+    },
+    "tooltip": {
+      "loadingLocationInformation": "Байршлын мэдээллийг ачаалж байна."
+    },
+    "useRequestPlaces": {
+      "message": {
+        "failedLoadLocationCoordinates": "Байршлын координатыг ачаалж чадсангүй."
+      },
+      "text": {
+        "mapDisplayRequiresValidPlaceId": "Газрын зургийг харуулахын тулд хүчинтэй Газрын ID шаардлагатай: {{value}}"
+      }
+    }
+  },
+  "jobResultMapModel": {
+    "createOptimizedMapContent": {
+      "message": {
+        "optimizationResultReferencesLocationIdThat": "Оновчлолын үр дүн нь хүсэлтэд байхгүй location_id-г лавлаж байна: {{value}}",
+        "thereNoOptimizationResultsCompletedJob": "Дууссан ажлын оновчлолын үр дүн байхгүй байна."
+      }
+    },
+    "getStatusMessage": {
+      "text": {
+        "jobHasBeenCanceledResultingMap": "Ажлыг цуцалсан бөгөөд үүссэн газрын зургийг харуулах боломжгүй байна.",
+        "optimizationProgress": "Оновчлол хийгдэж байна.",
+        "resultingMapCannotBeDisplayedBecause": "Оновчлол амжилтгүй болсон тул үүссэн газрын зургийг харуулах боломжгүй.",
+        "waitingOptimizationRun": "Оновчлол ажиллахыг хүлээж байна."
+      }
+    }
+  },
+  "jobResultSummary": {
+    "ariaLabel": {
+      "resultsVisitOrder": "Үр дүнгийн зочлох захиалга"
+    },
+    "text": {
+      "compareInputSequenceOptimizationResults": "Оролтын дараалал болон оновчлолын үр дүнг харьцуул.",
+      "finalRoute": "эцсийн зам",
+      "minutes": "{{total_travel_minutes}} минут",
+      "totalTravelTime": "нийт аяллын хугацаа"
+    },
+    "title": {
+      "inputVsOptimized": "Оролт ба Оновчлол"
+    }
+  },
+  "jobSidebar": {
+    "action": {
+      "newRequest": "шинэ хүсэлт"
+    },
+    "ariaLabel": {
+      "refreshRouteTaskList": "Маршрутын даалгаврын жагсаалтыг шинэчлэх",
+      "refreshingJobList": "Ажлын жагсаалтыг шинэчилж байна",
+      "tcacheRouteTaskList": "tcache Даалгаврын жагсаалтыг чиглүүлэх"
+    },
+    "text": {
+      "cache": "· Кэш {{toUpperCase}}",
+      "newJob": "Шинэ ажил",
+      "progress": "{{id}} явц",
+      "refreshJobList": "Ажлын жагсаалтыг шинэчлэх",
+      "tcacheRouteJobs": "tcache Маршрутын Ажлын Байр",
+      "testTrasolveTcacheCommunicationByCreating": "Шинэ хүсэлт үүсгэх замаар Trasolve болон tcache харилцааг туршина уу."
+    },
+    "title": {
+      "jobs": "Ажлын байр",
+      "pathOperation": "замын ажиллагаа"
+    },
+    "tooltip": {
+      "noTcacheRouteTaskWasCreated": "tcache Route даалгавар үүсгээгүй байна."
+    }
+  },
+  "jobStatusBadge": {
+    "sTATUSLABELS": {
+      "text": {
+        "canceled": "Цуцлагдсан",
+        "done": "Дууссан",
+        "failure": "Амжилтгүй болсон",
+        "running": "Гүйлт"
+      }
+    }
+  },
+  "jobSummary": {
+    "formatElapsed": {
+      "text": {
+        "minutesSeconds": "{{minutes}} минут {{padStart}} секунд",
+        "seconds": "{{toFixed}}секунд"
+      }
+    },
+    "label": {
+      "elapsedTime": "өнгөрсөн цаг хугацаа",
+      "message": "мессеж",
+      "step": "алхам"
+    },
+    "text": {
+      "jobIdFrontendObservationJob": "job_id · Фронтенд ажиглалтын ажил",
+      "jobProgress": "Ажлын явц {{progress}}%"
+    }
+  },
+  "jobTimeline": {
+    "text": {
+      "httpSseInstancesObservedBrowsers": "Хөтөчүүдэд HTTP/SSE {{length}} тохиолдлууд ажиглагдсан"
+    },
+    "tooltip": {
+      "noRequestsHaveBeenObservedYet": "Одоогоор ямар ч хүсэлт ажиглагдаагүй байна."
+    }
+  },
+  "localizationTestPage": {
+    "ariaLabel": {
+      "resourceFilter": "Нөөцийн шүүлтүүр",
+      "resourceSummary": "Нөөцийн хураангуй",
+      "selectCurrentLanguage": "Одоогийн хэлийг сонгоно уу"
+    },
+    "description": {
+      "comparesResourcesLoadedCurrentLocalizationRuntime": "Одоогийн нутагшуулалтын ажиллах хугацаанд ачаалагдсан нөөцийг харьцуулдаг.",
+      "ifYouSelectKeyYouCan": "Хэрэв та түлхүүр сонговол доорх интерполяцийг харж болно.",
+      "noKeySelected": "Түлхүүр сонгоогүй байна",
+      "selectKeyFromTable": "Хүснэгтээс түлхүүр сонгоно уу.",
+      "thereNoInterpolationVariableThisKey": "Энэ түлхүүрт интерполяцийн хувьсагч байхгүй байна.",
+      "thereNoLocalizationKeyThatMatches": "Нөхцөлд тохирох байршлын түлхүүр байхгүй байна."
+    },
+    "label": {
+      "currentLanguage": "одоогийн хэл",
+      "localizationKeyTranslationSearch": "Локалчлалын түлхүүр эсвэл орчуулгын хайлт",
+      "namespace": "Нэрийн орон зай"
+    },
+    "placeholder": {
+      "searchKeyKoJaEn": "KO, JA, EN, MN түлхүүрийг хайх",
+      "value": "{{variable}} утга"
+    },
+    "rowStatus": {
+      "label": {
+        "empty": "хоосон · {{localeList}}",
+        "fallbackEn": "нөөц · {{language}} → EN",
+        "missing": "дутуу · {{localeList}}"
+      }
+    },
+    "table": {
+      "column": {
+        "key": "Түлхүүр",
+        "status": "Статус"
+      }
+    },
+    "text": {
+      "failedChangeLanguage": "Хэлийг өөрчилж чадсангүй.",
+      "fullNamespace": "Бүх нэршлийн орон зай",
+      "numberErrors": "Алдаанууд",
+      "numberLanguages": "Дэмжигдсэн хэлний тоо",
+      "numberNamespaces": "Нэрийн орон зай",
+      "rawJsonLanguage": "Түүхий JSON хэл",
+      "rawJsonNamespace": "Түүхий JSON нэрийн орон зай",
+      "resolved": "Шийдэгдсэн ({{language}})",
+      "show": "{{count}}-г харуулах",
+      "totalNumberKeys": "Түлхүүрийн нийт тоо"
+    },
+    "title": {
+      "interpolationPreview": "Интерполяцийн урьдчилсан тойм",
+      "localeComparison": "Локал харьцуулалт",
+      "localizationTestBed": "Байршлын туршилтын талбай",
+      "rawNamespaceJson": "JSON нэршлийн орон зай"
+    },
+    "value": {
+      "empty": "Хоосон",
+      "missing": "Алга болсон"
+    }
+  },
+  "mapPanel": {
+    "ariaLabel": {
+      "mapsCameras": "газрын зураг болон камерууд"
+    },
+    "description": {
+      "waitingMapBeReady": "Газрын зураг бэлэн болохыг хүлээж байна",
+      "zoom": "томруулах:"
+    },
+    "label": {
+      "camera": "Камер"
+    }
+  },
+  "presets": {
+    "jOBBUILDERPRESETS": {
+      "description": {
+        "fastestSmokeTestUsingRealPlace": "Жинхэнэ Place ID ашиглан утааны хамгийн хурдан туршилт",
+        "generalTcCheckDifferenceBetweenInput": "Оролтын дараалал болон оновчлолын дарааллын хоорондох ялгааг шалгах ерөнхий TC",
+        "smokeTestQuicklyConfirmed3Key": "Сөүлийн гурван гол байршилд утааны шинжилгээ хурдан батлагдсан",
+        "tcCheckPairQueriesOptimizationResults": "Сөүлийн янз бүрийн бүс нутагт хос асуулга болон оновчлолын үр дүнг шалгах TC",
+        "tcConfirmingGeneralOptimizationByMixing": "Гангбук болон Ганнамыг холих замаар ерөнхий оновчлолыг баталгаажуулсан TC",
+        "tcThatQuicklyVerifiesOnlySolver": "Зөвхөн тэгш бус чиглэлтэй матрицтай шийдэгчийг хурдан баталгаажуулдаг TC",
+        "tcVerifyDifferentOperatingHoursResidence": "Ажиллах цаг болон оршин суух цагийн хязгаарлалтыг баталгаажуулахын тулд TC"
+      }
+    }
+  },
+  "routeResultModel": {
+    "buildRouteItinerary": {
+      "text": {
+        "arrival": "{{arrivalTime}} Ирэх",
+        "boardingStationUnknown": "Суух буудал тодорхойгүй",
+        "departure": "{{departureTime}} Хөдлөх цаг",
+        "dropOffStationUnknown": "Буух буудал тодорхойгүй",
+        "stops": "{{stopCount}}Зогсолтууд",
+        "towards": "{{headsign}} руу"
+      }
+    },
+    "formatDuration": {
+      "text": {
+        "hours": "{{hours}} цаг",
+        "hoursMinutes": "{{hours}} цаг {{remainingMinutes}} минут",
+        "minutes": "{{minutes}} минут"
+      }
+    },
+    "getTravelModeLabel": {
+      "text": {
+        "move": "нүүх",
+        "twoWheeler": "хоёр дугуйт"
+      }
+    },
+    "nOTAVAILABLE": {
+      "text": {
+        "notProvided": "Өгөгдөөгүй"
+      }
+    },
+    "vehicleLabels": {
+      "text": {
+        "bus": "автобус",
+        "cableCar": "кабель зам",
+        "ferry": "гатлага онгоц",
+        "funicular": "фуликулер",
+        "gondola": "гондола",
+        "highSpeedRail": "өндөр хурдны төмөр зам",
+        "intercityBus": "хот хоорондын автобус",
+        "longDistanceTrain": "холын зайн галт тэрэг",
+        "monorail": "монорэйл",
+        "railway": "төмөр зам",
+        "sharedTaxi": "хамтын такси",
+        "subway": "метро",
+        "train": "галт тэрэг",
+        "tram": "трамвай",
+        "trolleybus": "троллейбус"
+      }
+    }
+  },
+  "routeResultPanel": {
+    "action": {
+      "fitMapSelectedRoute": "Газрын зургийг сонгосон маршрутад тохируулна уу"
+    },
+    "ariaLabel": {
+      "directionsResults": "Чиглэлийн үр дүн",
+      "section": "{{title}}-с {{title}} хүртэлх хэсэг",
+      "selectRoute": "Маршрут сонгох"
+    },
+    "description": {
+      "noPathWasReturned": "· Буцах зам байгаагүй.",
+      "path": "зам",
+      "routesApi": "Чиглүүлэлтийн API"
+    },
+    "routeDebugDetails": {
+      "ariaLabel": {
+        "googleRequestDiagnostics": "Google Хүсэлтийн Оношлогоо",
+        "selectionPathSourceField": "Сонголтын зам Эх сурвалжийн талбар"
+      },
+      "label": {
+        "coordinates": "координатууд",
+        "description": "Тайлбар"
+      },
+      "text": {
+        "debugDetails": "Алдааны дэлгэрэнгүй мэдээлэл",
+        "none": "Байхгүй",
+        "rawApiResponse": "Түүхий API хариу",
+        "warnings": "· {{length}} анхааруулга",
+        "yes": "Тийм"
+      }
+    },
+    "routeErrorDetails": {
+      "description": {
+        "ifRouteJapanYouMayBe": "Хэрэв таны маршрут Японд байгаа бол Google Maps Platform Routes API нь Япон дахь Google Transit түншүүдийг дэмждэггүй хязгаарлалтад хамрагдаж магадгүй."
+      },
+      "label": {
+        "backendHttp": "Арын төгсгөлийн HTTP",
+        "destinationType": "Очих газрын төрөл",
+        "googleHttp": "Google HTTP",
+        "googleMessage": "Google мессеж",
+        "googleStatus": "Google-ийн статус",
+        "originType": "Гарал үүслийн төрөл",
+        "travelMode": "Аяллын горим"
+      },
+      "text": {
+        "failureDebugDetails": "Алдааны алдаа засах дэлгэрэнгүй мэдээлэл",
+        "googleRequestBody": "Google хүсэлтийн үндсэн хэсэг",
+        "googleSourceErrorEmptyResponse": "Google Эх сурвалжийн Алдаа/Хоосон Хариулт",
+        "noneResponse": "Хариулт алга",
+        "unableConfirm": "Баталгаажуулах боломжгүй байна"
+      }
+    },
+    "routeSummary": {
+      "text": {
+        "estimatedCost": "тооцоолсон өртөг",
+        "totalDistance": "нийт зай",
+        "totalTimeRequired": "Нийт шаардлагатай хугацаа"
+      }
+    },
+    "text": {
+      "path": "зам {{value}}",
+      "pathFindingFailure": "Зам олоход алдаа гарлаа · {{code}}",
+      "pathSummary": "Замын {{value}} хураангуй"
+    },
+    "title": {
+      "routeBySection": "Хэсэг тус бүрээр чиглүүлэх",
+      "routeResult": "маршрутын үр дүн"
+    }
+  },
+  "routes": {
+    "loadingLabel": {
+      "loadingGoogleMapsTestbed": "Google Maps туршилтын талбарыг ачаалж байна.",
+      "loadingGoogleOauthTestPage": "Google OAuth туршилтын хуудсыг ачаалж байна.",
+      "loadingLocalizationTestbed": "Локалчлалын туршилтын хэсгийг ачаалж байна.",
+      "loadingOurAiChatTestbed": "Манай хиймэл оюун ухааны чатын тестийн хэсгийг ачаалж байна.",
+      "loadingTcacheRouteTestPage": "tcache маршрутын туршилтын хуудсыг ачаалж байна.",
+      "loadingTestbedList": "Туршилтын талбайн жагсаалтыг ачаалж байна.",
+      "trouteIntegrationTestPageLoading": "Хулд загасны интеграцийн туршилтын хуудсыг ачаалж байна."
+    }
+  },
+  "selectionPanel": {
+    "ariaLabel": {
+      "lastMapClick": "Газрын зургийн сүүлийн товшилт",
+      "selectedLocation": "сонгосон байршил"
+    },
+    "description": {
+      "clickMapUseCoordinatesDirections": "Координатуудыг ашиглан чиглэлийг тодорхойлохын тулд газрын зураг дээр дарна уу.",
+      "selectLocationFromSearchResults": "Хайлтын үр дүнгээс байршлыг сонгоно уу."
+    },
+    "label": {
+      "address": "хаяг",
+      "placeId": "газрын дугаар"
+    },
+    "text": {
+      "noneClickLocationIcon": "Байхгүй · Байршлын дүрс дээр дарна уу."
+    },
+    "title": {
+      "lastMapClickSelectCoordinates": "Газрын зургийн сүүлийн товшилт · Координатуудыг сонгох",
+      "placeChoice": "сонгосон газар"
+    }
+  },
+  "tcacheJobBuilderDialog": {
+    "text": {
+      "needsModification": "Өөрчлөлт шаардлагатай",
+      "valid": "хүчинтэй"
+    },
+    "title": {
+      "requestPreview": "Урьдчилж харах хүсэлт"
+    },
+    "tooltip": {
+      "confirmRequest": "Хүсэлтээ баталгаажуулна уу.",
+      "requestNewTcachePath": "Шинэ tcache зам хүсэх"
+    }
+  },
+  "tcacheJobBuilderModel": {
+    "validateTcacheJobBuilder": {
+      "text": {
+        "checkInvalidLocation": "Буруу байршлыг шалгана уу.",
+        "enterLanguagecode": "Хэлний кодыг оруулна уу.",
+        "enterValidDepartureDateTime": "Хөдлөх огноо, цагийг зөв оруулна уу.",
+        "samePlaceIdDuplicated": "Ижил газрын ID давхардсан байна.",
+        "selectLocationUsingLocationSearch": "Байршлын хайлтыг ашиглан байршлыг сонгоно уу.",
+        "youCanAddUpLocations": "Та {{MAX_TCACHE_LOCATIONS}} хүртэлх байршил нэмж болно.",
+        "youNeedAtLeastTwoLocations": "Танд гарал үүсэл болон очих газар гэсэн дор хаяж хоёр байршил хэрэгтэй."
+      }
+    }
+  },
+  "tcacheLocationList": {
+    "action": {
+      "addLocation": "Байршил нэмэх"
+    },
+    "ariaLabel": {
+      "delete": "{{value}}-г устгах",
+      "thLocationAddress": "{{value}}-р байршлын хаяг"
+    },
+    "description": {
+      "firstLocationOriginLastLocationDestination": "Эхний байршил нь гарал үүсэл, сүүлийн байршил нь очих газар юм."
+    },
+    "placeholder": {
+      "enterAddressDirectlySelectFromMap": "Хаягийг шууд оруулах эсвэл газрын зургаас сонгоно уу"
+    },
+    "text": {
+      "addMoreThanOneLocation": "Нэгээс олон байршил нэмнэ үү.",
+      "changeOrderPositions": "{{value}} байрлалын дарааллыг өөрчлөх",
+      "message2": "{{lat}}, {{lng}}",
+      "thPosition": "{{value}}-р байрлал"
+    },
+    "title": {
+      "locationList": "Байршлын жагсаалт"
+    },
+    "tooltip": {
+      "thereNoLocation": "Байршил байхгүй."
+    }
+  },
+  "tcacheResultMap": {
+    "ariaLabel": {
+      "resultMap": "{{label}} Үр дүнгийн газрын зураг"
+    },
+    "createMarkerModels": {
+      "label": {
+        "e": "З",
+        "s": "С"
+      }
+    },
+    "description": {
+      "resultsContainNoPathPolylineCoordinates": "Үр дүнд газрын зураг дээр харуулах зам/полишугамын координатууд агуулаагүй байна."
+    }
+  },
+  "tcacheRoute": {
+    "cancelTcacheRouteJob": {
+      "label": {
+        "postCancel": "цуцлах"
+      }
+    },
+    "parseLeg": {
+      "text": {
+        "interval": "Интервал {{value}}"
+      }
+    }
+  },
+  "tcacheRouteMap": {
+    "action": {
+      "addAsStopover": "Зогсоол болгон нэмэх",
+      "setAsDeparturePoint": "Хөдлөх цэг болгон тохируулах",
+      "setAsDestination": "Очих газар болгон тохируулах"
+    },
+    "ariaLabel": {
+      "closeSelectedCoordinates": "Сонгосон координатуудыг хаах",
+      "closeSelectedPlace": "Сонгосон газрыг хаах",
+      "tcacheRouteRequestLocationMap": "tcache маршрутын хүсэлтийн байршлын газрын зураг"
+    },
+    "description": {
+      "failedLoadLocationInformation": "Байршлын мэдээллийг ачаалж чадсангүй.",
+      "loadingLocationInformation": "Байршлын мэдээллийг ачаалж байна."
+    },
+    "text": {
+      "mapCoordinates": "газрын зургийн координатууд",
+      "noAddressInformation": "Хаягийн мэдээлэл байхгүй"
+    }
+  },
+  "tcacheRouteOptions": {
+    "mODES": {
+      "label": {
+        "bicycle": "дугуй",
+        "car": "машин",
+        "publicTransportation": "нийтийн тээвэр",
+        "walk": "алхах"
+      }
+    },
+    "text": {
+      "advancedOptions": "дэвшилтэт сонголтууд",
+      "alternateRouteRequest": "Өөр маршрутын хүсэлт",
+      "departureTime": "хөдлөх цаг",
+      "meansTransportation": "тээврийн хэрэгсэл"
+    },
+    "title": {
+      "requestSettings": "Хүсэлтийн тохиргоо"
+    }
+  },
+  "tcacheRouteTestbed": {
+    "applyStreamEvent": {
+      "error": {
+        "tcacheRouteJobFailed": "tcache Чиглүүлэлтийн ажил амжилтгүй боллоо."
+      }
+    },
+    "errorMessage": {
+      "text": {
+        "unknownErrorOccurred": "Үл мэдэгдэх алдаа гарлаа."
+      }
+    },
+    "label": {
+      "resultError": "Үр дүнгийн алдаа",
+      "resultRequest": "Үр дүнгийн хүсэлт",
+      "resultResponse": "Үр дүнгийн хариу",
+      "sseDisconnect": "SSE холболтын тасалдал",
+      "sseOpen": "SSE нээлттэй",
+      "sseReconnect": "SSE дахин холбогдоно уу"
+    }
+  },
+  "testbedPage": {
+    "render": {
+      "ariaLabel": {
+        "testbedList": "Туршилтын талбайн жагсаалт"
+      },
+      "description": {
+        "thisDebugPageDevelopmentWhereYou": "Энэ бол хөгжүүлэлтийн дибаг хуудас бөгөөд та функцуудыг шууд ажиллуулж, шалгаж болно."
+      },
+      "text": {
+        "openTestbed": "Нээлттэй туршилтын тавцан →",
+        "trasolveHome": "Trasolve-н нүүр хуудас"
+      },
+      "title": {
+        "testBed": "Туршилтын ор"
+      }
+    },
+    "testbeds": {
+      "description": {
+        "checkLocaleSpecificResourcesFallbackInterpolation": "Одоогийн ажиллах хугацаанд ачаалагдсан локал онцлог нөөц, нөөц нөөц, интерполяци болон нэршлийн орон зайн эх сурвалж JSON-г шалгана уу.",
+        "checkRequestProgressResultsCommunicationTimeline": "Trasolve backend-ээр дамжуулан tcache чиглүүлэлтийн ажлын хүсэлт, явц, үр дүн, харилцаа холбооны хугацааг шалгана уу.",
+        "runPlaceSearchesMapEventsRoute": "Жинхэнэ Google API-уудыг ашиглан газар хайх, газрын зургийн үйл явдал, маршрутын навигацийг ажиллуулж, үр дүн болон алдаа засах бүртгэлийг харах боломжтой.",
+        "runRealGoogleOauthLoginFlow": "Жинхэнэ Google OAuth нэвтрэх урсгалыг ажиллуулж, ариутгасан хэрэглэгчийн мэдээлэл болон аюулгүй алдааны нөхцөл байдлыг шалгана уу.",
+        "sendReceiveConversationsUsingRealChat": "Жинхэнэ чатын API ашиглан харилцан яриа илгээх болон хүлээн авах, хариу хүлээлтийн анимаци, харилцан ярианы түүх болон алдааны дэлгэцийг шалгах.",
+        "trouteOptimizeRequestsThroughTrasolveBackend": "Troute нь Trasolve backend-ээр дамжуулан хүсэлтүүдийг оновчтой болгож, анхны хариулт, HTTP төлөв болон хоёр талын аяллын хугацааг шалгадаг."
+      },
+      "title": {
+        "aiChat": "Хиймэл оюун ухааны чат",
+        "googleMaps": "Google Maps",
+        "googleOauth": "Google OAuth",
+        "tcacheRoute": "tcache маршрут",
+        "trouteIntegration": "хулд интеграцчилал"
+      }
+    }
+  },
+  "timelineEntry": {
+    "ariaLabel": {
+      "copyTimelineItems": "Цаг хугацааны шугамын зүйлсийг хуулах"
+    },
+    "detail": {
+      "label": {
+        "body": "Бие",
+        "headers": "Толгой хэсгүүд",
+        "query": "Асуулга"
+      }
+    },
+    "detailValue": {
+      "text": {
+        "empty": "(хоосон)"
+      }
+    },
+    "requestDetail": {
+      "tooltip": {
+        "rawPayload": "Түүхий ачаа"
+      }
+    },
+    "responseDetail": {
+      "tooltip": {
+        "httpStatus": "HTTP төлөв",
+        "rawResponse": "Түүхий хариу үйлдэл"
+      }
+    }
+  },
+  "troute": {
+    "optimizeRouteWithTroute": {
+      "text": {
+        "responseJobIdDoesNotMatch": "Хариу job_id нь request job_id-тэй таарахгүй байна."
+      }
+    }
+  },
+  "trouteTestbed": {
+    "message": {
+      "althoughGatewayConnectionLostRemoteJob": "Хэдийгээр гарц холболт тасарсан ч алсын ажлын статусын лавлагаа үргэлжилсээр байна.",
+      "gatewayResponseFailsButContinuesQuery": "Гарцын хариу амжилтгүй болсон ч алсын ажлын төлөвийн талаар асуусаар байна.",
+      "trasolveGatewayRequestCompleted": "Trasolve гарцын хүсэлтийг биелүүлсэн.",
+      "trasolveGatewayRequestFailed": "Trasolve гарцын хүсэлт амжилтгүй боллоо.",
+      "waitingTrasolveGatewayRequestBeExecuted": "Trasolve гарцын хүсэлтийг гүйцэтгэхийг хүлээж байна."
+    },
+    "text": {
+      "thisJobHasAlreadyEnded": "Энэ ажил аль хэдийн дууссан.",
+      "unknownErrorOccurredDuringTrasolveBackend": "Trasolve backend хүсэлтийн үед тодорхойгүй алдаа гарлаа.",
+      "unknownErrorOccurredWhileForcingJob": "Ажлыг зогсооход хүргэх үед үл мэдэгдэх алдаа гарлаа."
+    }
+  },
+  "useDirectionsState": {
+    "text": {
+      "directionsResponseRoutes": "Чиглэлийн хариулт: {{length}} маршрутууд",
+      "googleResponseHttpStatusMessage": "Google-ийн хариу: HTTP {{httpStatus}}; status={{value}}; message={{value}}",
+      "message": "東京駅、日本",
+      "message2": "東京タワー、日本",
+      "pathfindingFailed": "Зам хайх амжилтгүй боллоо: {{code}}: {{message}}",
+      "requestDirectionsOriginDestinationIntermediatesAlternatives": "Чиглэл хүсэх: {{travelMode}}; origin={{type}}; destination={{type}}; intermediates={{length}}; alternatives={{alternatives}}"
+    }
+  },
+  "useTrouteJobEventStream": {
+    "text": {
+      "jobCannotProcessRealTimeEvents": "Ажил нь бодит цагийн үйл явдлуудыг боловсруулж чадахгүй.",
+      "jobStatusCannotBeResynchronized": "Ажлын төлөвийг дахин синхрончлох боломжгүй.",
+      "liveConnectionWasLostBeingReconnected": "Шууд холболт тасарсан бөгөөд дахин холбогдож байна."
+    }
+  },
+  "useTrouteJobListPolling": {
+    "text": {
+      "trouteJobListCouldNotBe": "Troute-н ажлын жагсаалтыг ачаалж чадсангүй."
+    }
+  },
+  "viewModel": {
+    "getTcacheRouteLocationRole": {
+      "text": {
+        "stopover": "зогсолт"
+      }
+    }
+  }
+}

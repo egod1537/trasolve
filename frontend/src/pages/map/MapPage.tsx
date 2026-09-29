@@ -1,5 +1,9 @@
-import { MapWorkspaceFeature } from '@/features/map-workspace';
+import {
+  MapWorkspaceFeature,
+  resolveMapWorkspaceRouteState,
+} from '@/features/map-workspace';
 
 export default function MapPage() {
-  return <MapWorkspaceFeature />;
+  const routeState = resolveMapWorkspaceRouteState(window.location.search);
+  return <MapWorkspaceFeature {...routeState} />;
 }

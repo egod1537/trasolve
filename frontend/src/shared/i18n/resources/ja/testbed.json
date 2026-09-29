@@ -767,7 +767,7 @@
       "namespace": "名前空間"
     },
     "placeholder": {
-      "searchKeyKoJaEn": "key, KO, JA, EN 検索",
+      "searchKeyKoJaEn": "key, KO, JA, EN, MN 検索",
       "value": "{{variable}} 値"
     },
     "rowStatus": {
@@ -787,6 +787,7 @@
       "failedChangeLanguage": "言語の変更に失敗しました。",
       "fullNamespace": "すべての名前空間",
       "numberErrors": "エラー数",
+      "numberLanguages": "対応言語数",
       "numberNamespaces": "名前空間数",
       "rawJsonLanguage": "Raw JSON言語",
       "rawJsonNamespace": "生の JSON 名前空間",

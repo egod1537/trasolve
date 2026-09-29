@@ -503,6 +503,12 @@
 .trip-day-color-control:hover {
   background: color-mix(in srgb, var(--day-color) 10%, transparent);
 }
+.trip-day-color-control.is-readonly {
+  cursor: default;
+}
+.trip-day-color-control.is-readonly:hover {
+  background: transparent;
+}
 .trip-day-color-control:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--day-color) 38%, transparent);
   outline-offset: -2px;
@@ -1266,8 +1272,14 @@
   white-space: nowrap;
 }
 .trip-polyline-mode {
+  overflow: hidden;
   color: var(--color-muted);
   font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trip-polyline-mode.is-route-error {
+  color: var(--color-warning-strong);
 }
 .trip-polyline-time-summary {
   display: block;

@@ -5,13 +5,13 @@ import {
   useState,
   type RefObject,
 } from 'react';
+import type { TripPolyline, TripPolylineMode } from '@trasolve/shared';
+import { calculatePolylineDistanceMeters } from '@/features/map-workspace/domain/polylineMetrics';
 import {
-  TravelMode,
-  type RouteLocation,
-  type TripPolyline,
-  type TripPolylineMode,
-} from '@trasolve/shared';
-import type { QueryRouteDuration } from '@/features/map-workspace/domain/routeDuration';
+  createRouteSegmentQuery,
+  ROUTABLE_MODES,
+  type RouteSegmentState,
+} from '@/features/map-workspace/domain/routeSegment';
 import {
   formatPolylineMode,
   formatRouteDuration,
@@ -19,6 +19,14 @@ import {
 import type { TripPlace } from '@/entities/trip';
 import { useLayerDetailCardPlacement } from '@/features/map-workspace/components/layer-panel/LayerDetailCard';
 import { PolylineModeIcon } from '@/features/map-workspace/components/PolylineModeIcon';
+import {
+  RouteSegmentItinerary,
+  RouteSegmentMetrics,
+} from '@/features/map-workspace/components/route-segment/RouteSegmentDetails';
+import {
+  useRouteSegmentSnapshot,
+  useRouteSegmentStore,
+} from '@/features/map-workspace/hooks/useRouteSegments';
 import { useL, L } from '@/shared/i18n';
 
 const ROUTE_SETTINGS_CARD_WIDTH = 442;
@@ -29,18 +37,6 @@ const ROUTE_MODE_ORDER = [
   'transit',
   'driving',
 ] as const satisfies ReadonlyArray<TripPolylineMode>;
-
-const ROUTABLE_MODES = [
-  'walking',
-  'transit',
-  'driving',
-] as const satisfies ReadonlyArray<RoutableMode>;
-
-const TRAVEL_MODE_BY_POLYLINE_MODE: Record<RoutableMode, TravelMode> = {
-  walking: TravelMode.WALKING,
-  transit: TravelMode.TRANSIT,
-  driving: TravelMode.DRIVING,
-};
 
 const MODE_DESCRIPTIONS: Record<TripPolylineMode, string> = {
   get straight() {
@@ -69,21 +65,6 @@ type RouteModeOptionViewModel = {
   selected: boolean;
 };
 
-type RoutableMode = Exclude<TripPolylineMode, 'straight'>;
-
-type DurationState =
-  | { status: 'loading' }
-  | { status: 'ready'; label: string }
-  | { status: 'error' };
-
-type DurationStates = Record<RoutableMode, DurationState>;
-
-const INITIAL_DURATION_STATES: DurationStates = {
-  walking: { status: 'loading' },
-  transit: { status: 'loading' },
-  driving: { status: 'loading' },
-};
-
 type Props = {
   polyline: TripPolyline;
   fromPlace: TripPlace;
@@ -91,7 +72,6 @@ type Props = {
   anchorKey: string;
   busy: boolean;
   sidebarRef: RefObject<HTMLElement | null>;
-  onQueryRouteDuration: QueryRouteDuration;
   onClose: () => void;
   onUpdateMode: (
     polylineId: string,
@@ -99,22 +79,11 @@ type Props = {
   ) => Promise<boolean>;
 };
 
-function resolveRouteLocation(
-  placeId: string | undefined,
-  lat: number,
-  lng: number,
-): RouteLocation {
-  if (placeId) {
-    return { type: 'place', placeId };
-  }
-  return { type: 'coordinates', lat, lng };
-}
-
-function resolveDurationPresentation(state: DurationState): {
+function resolveDurationPresentation(state: RouteSegmentState | undefined): {
   label: string;
   ariaLabel: string;
 } {
-  if (state.status === 'loading') {
+  if (!state || state.status === 'loading') {
     return {
       label: '…',
       ariaLabel: L(
@@ -122,7 +91,7 @@ function resolveDurationPresentation(state: DurationState): {
       ),
     };
   }
-  if (state.status === 'error') {
+  if (state.status === 'error' || state.detail.durationMillis === null) {
     return {
       label: '—',
       ariaLabel: L(
@@ -130,11 +99,12 @@ function resolveDurationPresentation(state: DurationState): {
       ),
     };
   }
+  const label = formatRouteDuration(state.detail.durationMillis);
   return {
-    label: state.label,
+    label,
     ariaLabel: L(
       'map:routeSettingsCard.resolveDurationPresentation.ariaLabel.estimatedTime',
-      { label: state.label },
+      { label },
     ),
   };
 }
@@ -146,15 +116,13 @@ export function RouteSettingsCard({
   anchorKey,
   busy,
   sidebarRef,
-  onQueryRouteDuration,
   onClose,
   onUpdateMode,
 }: Props) {
   const L = useL();
   const [submitting, setSubmitting] = useState(false);
-  const [durationStates, setDurationStates] = useState<DurationStates>(
-    INITIAL_DURATION_STATES,
-  );
+  const routeSegments = useRouteSegmentStore();
+  const routeSnapshot = useRouteSegmentSnapshot();
   const {
     placeId: fromPlaceId,
     lat: fromPlaceLat,
@@ -168,13 +136,37 @@ export function RouteSettingsCard({
     onClose,
     width: ROUTE_SETTINGS_CARD_WIDTH,
   });
+  const routeQueries = useMemo(() => {
+    const from = {
+      placeId: fromPlaceId,
+      location: { lat: fromPlaceLat, lng: fromPlaceLng },
+    };
+    const to = {
+      placeId: toPlaceId,
+      location: { lat: toPlaceLat, lng: toPlaceLng },
+    };
+    return {
+      walking: createRouteSegmentQuery(from, to, 'walking'),
+      transit: createRouteSegmentQuery(from, to, 'transit'),
+      driving: createRouteSegmentQuery(from, to, 'driving'),
+    };
+  }, [
+    fromPlaceId,
+    fromPlaceLat,
+    fromPlaceLng,
+    toPlaceId,
+    toPlaceLat,
+    toPlaceLng,
+  ]);
   const modeOptions = useMemo<ReadonlyArray<RouteModeOptionViewModel>>(
     () =>
       ROUTE_MODE_ORDER.map((mode) => {
         const duration =
           mode === 'straight'
             ? undefined
-            : resolveDurationPresentation(durationStates[mode]);
+            : resolveDurationPresentation(
+                routeSnapshot.get(routeQueries[mode].key),
+              );
         return {
           mode,
           label: formatPolylineMode(mode, L),
@@ -183,66 +175,30 @@ export function RouteSettingsCard({
           selected: mode === polyline.mode,
         };
       }),
-    [durationStates, L, polyline.mode],
+    [L, polyline.mode, routeQueries, routeSnapshot],
   );
+  const selectedQuery =
+    polyline.mode === 'straight' ? null : routeQueries[polyline.mode];
+  const selectedRoute = selectedQuery
+    ? (routeSnapshot.get(selectedQuery.key) ?? { status: 'loading' as const })
+    : null;
+  const straightDistanceMeters = calculatePolylineDistanceMeters([
+    { lat: fromPlaceLat, lng: fromPlaceLng },
+    { lat: toPlaceLat, lng: toPlaceLng },
+  ]);
 
   useEffect(() => {
-    const request = new AbortController();
-    const origin = resolveRouteLocation(
-      fromPlaceId,
-      fromPlaceLat,
-      fromPlaceLng,
-    );
-    const destination = resolveRouteLocation(toPlaceId, toPlaceLat, toPlaceLng);
+    // Mode comparisons share the session cache with the map geometry.
+    for (const mode of ROUTABLE_MODES) {
+      routeSegments.ensure(routeQueries[mode]);
+    }
+  }, [routeQueries, routeSegments]);
 
-    void Promise.allSettled(
-      ROUTABLE_MODES.map(async (mode) => {
-        try {
-          const durationMillis = await onQueryRouteDuration(
-            {
-              origin,
-              destination,
-              travelMode: TRAVEL_MODE_BY_POLYLINE_MODE[mode],
-            },
-            request.signal,
-          );
-          if (request.signal.aborted) {
-            return;
-          }
-
-          setDurationStates((current) => ({
-            ...current,
-            [mode]:
-              durationMillis === null || durationMillis === undefined
-                ? { status: 'error' }
-                : {
-                    status: 'ready',
-                    label: formatRouteDuration(durationMillis, L),
-                  },
-          }));
-        } catch {
-          if (request.signal.aborted) {
-            return;
-          }
-          setDurationStates((current) => ({
-            ...current,
-            [mode]: { status: 'error' },
-          }));
-        }
-      }),
-    );
-
-    return () => request.abort();
-  }, [
-    fromPlaceId,
-    fromPlaceLat,
-    fromPlaceLng,
-    L,
-    onQueryRouteDuration,
-    toPlaceId,
-    toPlaceLat,
-    toPlaceLng,
-  ]);
+  const retrySelectedRoute = useCallback(() => {
+    if (selectedQuery) {
+      routeSegments.retry(selectedQuery);
+    }
+  }, [routeSegments, selectedQuery]);
 
   const selectMode = useCallback(
     async (mode: TripPolylineMode) => {
@@ -315,6 +271,26 @@ export function RouteSettingsCard({
           <strong>{formatPolylineMode(polyline.mode, L)}</strong>
           <p>{MODE_DESCRIPTIONS[polyline.mode]}</p>
         </div>
+      </section>
+
+      <section className="route-settings-detail" aria-label="경로 정보">
+        <RouteSegmentMetrics
+          mode={polyline.mode}
+          state={selectedRoute}
+          straightDistanceMeters={straightDistanceMeters}
+          onRetry={retrySelectedRoute}
+        />
+        {selectedRoute?.status === 'ready' &&
+          selectedRoute.detail.steps.length > 0 && (
+            <>
+              <h3>경로 상세</h3>
+              <RouteSegmentItinerary
+                detail={selectedRoute.detail}
+                fromName={fromPlace.name}
+                toName={toPlace.name}
+              />
+            </>
+          )}
       </section>
 
       {submitting && (

@@ -1,3 +1,4 @@
+import type { GoogleMapsLanguageCode } from '@trasolve/shared';
 import type { MapAdapter } from '@/map/adapters/MapAdapter';
 import type { MapOverlayHost } from '@/map/adapters/MapOverlayHost';
 import type { MapObjectController } from '@/map/adapters/MapObjectController';
@@ -21,6 +22,7 @@ export type MapRuntimeConfig = {
   center?: LatLng;
   zoom?: number;
   mapId?: string;
+  language?: GoogleMapsLanguageCode;
   theme?: MapTheme;
   options?: MapOptions;
 };

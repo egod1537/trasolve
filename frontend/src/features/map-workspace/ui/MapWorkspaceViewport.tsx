@@ -55,6 +55,10 @@ type Props = Omit<ComponentProps<typeof MapCanvas>, 'mapRef' | 'overlay'> & {
   selectedItemCount: number;
   tripMutationBusy: boolean;
   tripMutationError: string | null;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
   onCloseTripPlace: () => void;
   onUpdateTripPlaceVisitTimeRange: (
     placeId: string,
@@ -80,6 +84,7 @@ type Props = Omit<ComponentProps<typeof MapCanvas>, 'mapRef' | 'overlay'> & {
   ) => Promise<boolean>;
   onRemoveSelectedPlaces: (placeIds: readonly string[]) => Promise<boolean>;
   onClearSelection: () => void;
+  onOpenTripPicker: () => void;
   onApplyOptimizedSchedule: (
     dayId: string,
     schedule: TripScheduleUpdate,
@@ -99,6 +104,10 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
   selectedItemCount,
   tripMutationBusy,
   tripMutationError,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
   onCloseTripPlace,
   onUpdateTripPlaceVisitTimeRange,
   onUpdateTripPlacePreferredDuration,
@@ -111,6 +120,7 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
   onUpdateSelectedPolylineModes,
   onRemoveSelectedPlaces,
   onClearSelection,
+  onOpenTripPicker,
   onApplyOptimizedSchedule,
   onSelectPlace,
   onSelectPolyline,
@@ -305,6 +315,10 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
         selectedPolylines={bulkSelectedPolylines}
         busy={tripMutationBusy}
         mutationError={tripMutationError}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={onUndo}
+        onRedo={onRedo}
         onSelectMapTool={selectMapTool}
         onToggleRouteOptimization={toggleRouteOptimization}
         onCloseRouteOptimization={closeRouteOptimization}
@@ -317,6 +331,7 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
         dismissRevision={transient.searchDismissRevision}
         mapRef={mapRef}
         onSelectPlace={onSelectSearchedGooglePlace}
+        onOpenTripPicker={onOpenTripPicker}
       />
     </div>
   );

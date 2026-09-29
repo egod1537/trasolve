@@ -5,14 +5,14 @@ import {
   USER_PREFERENCE_KEYS,
 } from '@/shared/preferences/preferenceRepository';
 
-export const SUPPORTED_LANGUAGES = ['ko', 'ja', 'en'] as const;
+export const SUPPORTED_LANGUAGES = ['ko', 'ja', 'en', 'mn'] as const;
 export const DEFAULT_LANGUAGE: Language = 'ko';
 export const FALLBACK_LANGUAGE: Language = 'en';
 
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
 const RESOURCE_PATH_PATTERN =
-  /^\.\/(?:resources|generated-local)\/(ko|ja|en)\/([^/]+)\.json$/u;
+  /^\.\/(?:resources|generated-local)\/([^/]+)\/([^/]+)\.json$/u;
 
 function isLanguage(value: string | undefined): value is Language {
   return SUPPORTED_LANGUAGES.some((language) => language === value);
@@ -66,6 +66,9 @@ function collectResources(
         throw new Error(`Localization resource must be a JSON object: ${path}`);
       }
       const [, language, namespace] = match;
+      if (!isLanguage(language)) {
+        throw new Error(`Unsupported localization resource language: ${path}`);
+      }
       resources[language]![namespace] = resource;
     }
   }

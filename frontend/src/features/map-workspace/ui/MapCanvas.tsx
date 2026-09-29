@@ -14,6 +14,7 @@ import {
 } from '@/features/map-workspace/domain/cameraPolicy';
 import type { MapFocusTarget } from '@/features/map-workspace/domain/mapUiTypes';
 import { TripLayer } from '@/features/map-workspace/ui/TripLayer';
+import { useTripRoutePaths } from '@/features/map-workspace/hooks/useRouteSegments';
 import { useL, L } from '@/shared/i18n';
 
 type TripObjectsProps = {
@@ -48,6 +49,7 @@ const TripObjects = memo(function TripObjects({
   sidebarRef,
 }: TripObjectsProps) {
   const { adapter, objects, canvasRef, isZooming } = useGoogleMap();
+  const routePaths = useTripRoutePaths(trip);
 
   useEffect(() => {
     if (!canvasRef.current) {
@@ -100,6 +102,7 @@ const TripObjects = memo(function TripObjects({
       <TripLayer
         objects={objects}
         trip={trip}
+        routePaths={routePaths}
         selectedPlaceId={selectedPlaceId}
         selectedPolylineId={selectedPolylineId}
         selectedDayId={selectedDayId}

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import {
+  GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
+  GOOGLE_MAPS_REGION_CODE,
   TravelMode,
   type DirectionsDebugDetails,
   type DirectionsRequest,
@@ -234,6 +236,8 @@ export class GoogleRoutesProvider implements RouteProvider {
       destination,
       travelMode: TravelMode.TRANSIT,
       computeAlternativeRoutes: false,
+      languageCode: request.languageCode,
+      regionCode: request.regionCode,
     }));
     try {
       const results = await Promise.all(
@@ -344,8 +348,8 @@ export class GoogleRoutesProvider implements RouteProvider {
         ],
       computeAlternativeRoutes: request.computeAlternativeRoutes ?? false,
       polylineEncoding: 'GEO_JSON_LINESTRING',
-      languageCode: 'ko',
-      regionCode: 'JP',
+      languageCode: request.languageCode ?? GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
+      regionCode: request.regionCode ?? GOOGLE_MAPS_REGION_CODE,
     };
   }
 
@@ -450,6 +454,8 @@ export class GoogleRoutesProvider implements RouteProvider {
         destinationType: request.destination.type,
         computeAlternativeRoutes: request.computeAlternativeRoutes ?? false,
         intermediatesCount: request.intermediates?.length ?? 0,
+        languageCode: request.languageCode ?? GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
+        regionCode: request.regionCode ?? GOOGLE_MAPS_REGION_CODE,
       },
       upstream: {
         httpStatus,

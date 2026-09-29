@@ -12,6 +12,7 @@ const LANGUAGE_LABELS: Record<Language, string> = {
   ko: NL('한국어'),
   ja: NL('日本語'),
   en: NL('English'),
+  mn: NL('Монгол'),
 };
 
 type LanguageControlProps = {

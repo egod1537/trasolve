@@ -1,4 +1,15 @@
 {
+  "publicSharePage": {
+    "description": {
+      "unavailable": "The link is invalid or sharing has been disabled."
+    },
+    "status": {
+      "loading": "Loading shared trip."
+    },
+    "title": {
+      "unavailable": "This shared trip is unavailable."
+    }
+  },
   "shareTripModal": {
     "action": {
       "shareDrive": "Share on Drive"
@@ -9,10 +20,17 @@
       "shareMapClose": "Share Map Close"
     },
     "description": {
-      "anyoneAccessCanSeeNameProfile": "Anyone with access can see your name and profile picture in My Maps and Drive."
+      "anyoneAccessCanSeeNameProfile": "People viewing the map through its link can see the owner’s name and profile picture."
+    },
+    "error": {
+      "loadFailed": "Could not load sharing settings.",
+      "updateFailed": "Could not save sharing settings."
     },
     "label": {
       "shareLink": "share link"
+    },
+    "status": {
+      "loading": "Loading sharing settings."
     },
     "text": {
       "allowOthersSearchFindThisMap": "Allow others to search and find this map on the Internet",
@@ -46,6 +64,7 @@
       "itSBringingYouTravel": "Loading trips."
     },
     "text": {
+      "createExampleTripSeoul": "Create an example trip to Seoul",
       "createExampleTripTokyo": "Create an example trip to Tokyo",
       "createNewTrip": "Create a new trip",
       "daysLocations": "{{dayCount}} days · {{placeCount}} locations",

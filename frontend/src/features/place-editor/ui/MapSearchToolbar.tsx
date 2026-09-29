@@ -6,15 +6,18 @@ import {
   useState,
   type FormEvent,
 } from 'react';
-import type {
-  PlaceAutocompleteRequest,
-  PlaceAutocompleteSuggestion,
-  PlaceDetails,
+import {
+  ANALYTICS_SCREENS,
+  ANALYTICS_TARGETS,
+  type PlaceAutocompleteRequest,
+  type PlaceAutocompleteSuggestion,
+  type PlaceDetails,
 } from '@trasolve/shared';
 import { getPlace, searchPlaces } from '@/shared/api/places';
 import { PlaceTypeIcon } from '@/features/place-editor/ui/PlaceTypeIcon';
 import '@/features/place-editor/ui/map-toolbar.css';
 import { useL } from '@/shared/i18n';
+import { screenView, trackEvent } from '@/shared/analytics';
 
 type SearchStatus = 'idle' | 'loading' | 'ready' | 'selecting' | 'error';
 type SearchBias = PlaceAutocompleteRequest['locationBias'];
@@ -95,9 +98,9 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
       sessionTokenRef.current = sessionToken;
       searchRequestRef.current = request;
       setSearchStatus('loading');
+      screenView(ANALYTICS_SCREENS.placeSearch);
       try {
         const result = await searchPlaces(input, {
-          languageCode: 'ko',
           sessionToken,
           locationBias: getSearchBias(),
           signal: request.signal,
@@ -170,6 +173,11 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
 
   const runSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    trackEvent({
+      eventType: 'button_click',
+      screen: ANALYTICS_SCREENS.mapWorkspace,
+      target: ANALYTICS_TARGETS.placeSearch,
+    });
     const input = query.trim();
     clearSearchDebounce();
     searchRequestRef.current?.abort();
@@ -189,6 +197,11 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
   };
 
   const selectSuggestion = async (suggestion: PlaceAutocompleteSuggestion) => {
+    trackEvent({
+      eventType: 'button_click',
+      screen: ANALYTICS_SCREENS.placeSearch,
+      target: ANALYTICS_TARGETS.placeSelect,
+    });
     searchRequestRef.current?.abort();
     searchRequestRef.current = null;
     clearSearchDebounce();
@@ -199,7 +212,6 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
     setSearchError('');
     try {
       const place = await getPlace(suggestion.placeId, {
-        languageCode: 'ko',
         sessionToken: sessionTokenRef.current ?? undefined,
         signal: request.signal,
       });
@@ -283,6 +295,8 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
               />
               <button
                 type="submit"
+                data-analytics-id={ANALYTICS_TARGETS.placeSearch}
+                data-analytics-screen={ANALYTICS_SCREENS.mapWorkspace}
                 aria-label={L('place:mapSearchToolbar.ariaLabel.search')}
                 title={L('place:mapSearchToolbar.ariaLabel.searchPlace')}
                 disabled={
@@ -325,6 +339,8 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
                       <li key={suggestion.placeId}>
                         <button
                           type="button"
+                          data-analytics-id={ANALYTICS_TARGETS.placeSelect}
+                          data-analytics-screen={ANALYTICS_SCREENS.placeSearch}
                           role="option"
                           aria-selected="false"
                           disabled={searchStatus === 'selecting'}

@@ -1,0 +1,303 @@
+.analytics-funnel-explorer {
+  display: grid;
+  gap: 24px;
+}
+
+.analytics-funnel-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.analytics-funnel-toolbar label {
+  display: grid;
+  gap: 7px;
+  min-width: min(100%, 320px);
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.analytics-funnel-toolbar select {
+  min-height: 42px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  padding: 0 38px 0 12px;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.analytics-funnel-kpis {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.analytics-funnel-kpis > div {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 16px;
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-sm);
+}
+
+.analytics-funnel-kpis dt,
+.analytics-funnel-step dt,
+.analytics-funnel-detail dt {
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+}
+
+.analytics-funnel-kpis dd {
+  margin: 8px 0 0;
+  color: var(--color-text);
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: 750;
+}
+
+.analytics-funnel-kpis small {
+  display: block;
+  overflow: hidden;
+  margin-top: 5px;
+  color: var(--color-warning-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analytics-funnel-steps {
+  display: flex;
+  overflow-x: auto;
+  align-items: stretch;
+  gap: 0;
+  margin: 0;
+  padding: 5px 2px 14px;
+  list-style: none;
+}
+
+.analytics-funnel-steps > li {
+  display: flex;
+  flex: 1 0 auto;
+  align-items: center;
+}
+
+.analytics-funnel-step {
+  position: relative;
+  display: grid;
+  flex: 0 0 210px;
+  gap: 13px;
+  min-height: 220px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 18px;
+  text-align: left;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.analytics-funnel-step:hover,
+.analytics-funnel-step.is-selected {
+  border-color: var(--color-primary);
+  background: var(--color-accent-soft);
+}
+
+.analytics-funnel-step.is-largest-drop-off {
+  border-color: var(--color-warning);
+  box-shadow:
+    inset 0 3px 0 var(--color-warning),
+    var(--shadow-sm);
+}
+
+.analytics-funnel-step-index {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-accent-contrast);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.analytics-funnel-step strong {
+  min-width: 0;
+  min-height: 2.5em;
+  font-size: 0.98rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.analytics-funnel-step dl,
+.analytics-funnel-detail dl {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+}
+
+.analytics-funnel-step dl > div,
+.analytics-funnel-detail dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.analytics-funnel-step dd,
+.analytics-funnel-detail dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.analytics-funnel-connector {
+  position: relative;
+  display: grid;
+  flex: 0 0 118px;
+  place-items: center;
+  gap: 5px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.analytics-funnel-connector::before {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  left: 12px;
+  z-index: 0;
+  height: 2px;
+  background: var(--color-border-strong);
+  content: '';
+}
+
+.analytics-funnel-connector::after {
+  position: absolute;
+  top: calc(50% - 4px);
+  right: 8px;
+  border-width: 5px 0 5px 7px;
+  border-style: solid;
+  border-color: transparent transparent transparent var(--color-border-strong);
+  content: '';
+}
+
+.analytics-funnel-connector span,
+.analytics-funnel-connector small {
+  z-index: 1;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--color-background);
+}
+
+.analytics-funnel-connector span {
+  font-weight: 800;
+}
+
+.analytics-funnel-detail {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px;
+  background: var(--color-surface-raised);
+}
+
+.analytics-funnel-detail h2 {
+  margin: 0 0 18px;
+  font-size: 1rem;
+}
+
+.analytics-funnel-detail dl {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.analytics-funnel-detail dl > div {
+  border-top: 1px solid var(--color-border);
+  padding-top: 10px;
+}
+
+.analytics-funnel-status {
+  display: grid;
+  min-height: 220px;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  margin: 0;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 16px;
+  color: var(--color-text-muted);
+  background: var(--color-surface-subtle);
+}
+
+.analytics-funnel-status p {
+  margin: 0;
+}
+
+.analytics-funnel-status button {
+  border: 0;
+  border-radius: 9px;
+  padding: 9px 14px;
+  background: var(--color-primary);
+  color: var(--color-accent-contrast);
+  cursor: pointer;
+}
+
+@media (max-width: 1000px) {
+  .analytics-funnel-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .analytics-funnel-toolbar,
+  .analytics-funnel-toolbar label {
+    width: 100%;
+  }
+
+  .analytics-funnel-steps {
+    display: grid;
+    overflow: visible;
+    gap: 0;
+  }
+
+  .analytics-funnel-steps > li {
+    display: grid;
+  }
+
+  .analytics-funnel-step {
+    width: 100%;
+    min-height: 0;
+  }
+
+  .analytics-funnel-connector {
+    width: 100%;
+    height: 76px;
+  }
+
+  .analytics-funnel-connector::before {
+    top: 8px;
+    right: auto;
+    bottom: 8px;
+    left: 50%;
+    width: 2px;
+    height: auto;
+  }
+
+  .analytics-funnel-connector::after {
+    top: auto;
+    right: auto;
+    bottom: 4px;
+    left: calc(50% - 4px);
+    border-width: 7px 5px 0;
+    border-color: var(--color-border-strong) transparent transparent;
+  }
+
+  .analytics-funnel-detail dl {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-funnel-kpis {
+    grid-template-columns: 1fr;
+  }
+}

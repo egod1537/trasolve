@@ -15,8 +15,6 @@ const RouteOptimizationModal = lazy(() =>
   })),
 );
 
-const noop = () => undefined;
-
 type Props = {
   activeDay: TripDay | null;
   days: readonly TripDay[];
@@ -29,6 +27,10 @@ type Props = {
   selectedPolylines: readonly TripPolyline[];
   busy: boolean;
   mutationError: string | null;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
   onSelectMapTool: (tool: 'pan') => void;
   onToggleRouteOptimization: () => void;
   onCloseRouteOptimization: () => void;
@@ -56,6 +58,10 @@ export const MapOverlayHost = memo(function MapOverlayHost({
   selectedPolylines,
   busy,
   mutationError,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
   onSelectMapTool,
   onToggleRouteOptimization,
   onCloseRouteOptimization,
@@ -81,11 +87,11 @@ export const MapOverlayHost = memo(function MapOverlayHost({
         <div className="bottom-map-controls">
           <BottomContextPanel activeDay={activeDay} />
           <MapToolPanel
-            canUndo={false}
-            canRedo={false}
+            canUndo={canUndo}
+            canRedo={canRedo}
             activeTool={activeMapTool}
-            onUndo={noop}
-            onRedo={noop}
+            onUndo={onUndo}
+            onRedo={onRedo}
             onSelectTool={onSelectMapTool}
             onOpenRouteTools={
               days.length > 0 ? onToggleRouteOptimization : undefined

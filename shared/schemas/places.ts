@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import {
+  googleMapsLanguageCodeSchema,
+  googleMapsRegionCodeSchema,
+} from './googleMapsLocale.js';
 
 export const placeIdSchema = z
   .string()
@@ -7,15 +11,8 @@ export const placeIdSchema = z
   .regex(/^[A-Za-z0-9_-]+$/);
 
 const placeOptions = {
-  languageCode: z
-    .string()
-    .regex(/^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8})*$/)
-    .max(35)
-    .optional(),
-  regionCode: z
-    .string()
-    .regex(/^[a-zA-Z]{2}$/)
-    .optional(),
+  languageCode: googleMapsLanguageCodeSchema.optional(),
+  regionCode: googleMapsRegionCodeSchema.optional(),
   sessionToken: z
     .string()
     .min(1)

@@ -8,7 +8,6 @@ import {
   type RefObject,
 } from 'react';
 import type { PlaceStyle, TripPolylineMode } from '@trasolve/shared';
-import type { QueryRouteDuration } from '@/features/map-workspace/domain/routeDuration';
 import type { LayerValidationByItemKey, Trip } from '@/entities/trip';
 import { RouteSettingsCard } from '@/features/map-workspace/components/RouteSettingsCard';
 import type { SelectionProps } from '@/features/map-workspace/components/layer-panel/DayLayerSection';
@@ -22,6 +21,7 @@ type DetailTarget =
   { type: 'place'; id: string } | { type: 'polyline'; id: string } | null;
 
 type Props = SelectionProps & {
+  tripId: string;
   trip: Trip;
   busy: boolean;
   saveStatus: 'ready' | 'dirty' | 'saving' | 'error';
@@ -43,7 +43,6 @@ type Props = SelectionProps & {
     polylineId: string,
     mode: TripPolylineMode,
   ) => Promise<boolean>;
-  onQueryRouteDuration: QueryRouteDuration;
   onUpdatePlaceVisitTimeRange: (
     placeId: string,
     time: string,
@@ -61,6 +60,7 @@ type Props = SelectionProps & {
 };
 
 export const LayerPanel = memo(function LayerPanel({
+  tripId,
   trip,
   busy,
   saveStatus,
@@ -76,7 +76,6 @@ export const LayerPanel = memo(function LayerPanel({
   onUpdatePlaceStyle,
   onRemovePlace,
   onUpdatePolylineMode,
-  onQueryRouteDuration,
   onSelectPlace,
   onSelectPlaceForDetails,
   onSelectPolyline,
@@ -268,12 +267,13 @@ export const LayerPanel = memo(function LayerPanel({
           anchorKey={`polyline:${detailPolylineContext.polyline.id}`}
           busy={busy}
           sidebarRef={sidebarRef}
-          onQueryRouteDuration={onQueryRouteDuration}
           onClose={closeDetails}
           onUpdateMode={onUpdatePolylineMode}
         />
       )}
-      {shareModalOpen && <ShareTripModal onClose={closeShareModal} />}
+      {shareModalOpen && (
+        <ShareTripModal tripId={tripId} onClose={closeShareModal} />
+      )}
     </>
   );
 });
