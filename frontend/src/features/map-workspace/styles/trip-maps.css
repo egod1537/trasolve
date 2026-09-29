@@ -189,36 +189,48 @@
 .trip-map-picker-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 10px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--color-surface-raised);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.trip-map-picker-item:hover {
+.trip-map-picker-item:hover,
+.trip-map-picker-item:focus-within {
   border-color: color-mix(
     in srgb,
     var(--color-primary) 30%,
     var(--color-border)
   );
   background: var(--color-surface-subtle);
+  box-shadow: var(--shadow-map-overlay);
 }
 
-.trip-map-picker-item-icon {
+.trip-map-picker-item-preview {
+  display: block;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  background: var(--color-accent-soft);
+  overflow: hidden;
+}
+
+.trip-map-picker-item-preview.is-empty {
   display: grid;
   place-items: center;
-  flex: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  background: var(--color-accent-soft);
   color: var(--color-primary);
 }
 
-.trip-map-picker-item-icon svg {
-  width: 19px;
-  height: 19px;
+.trip-map-picker-item-preview.is-empty svg {
+  width: 22px;
+  height: 22px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -230,7 +242,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  gap: 2px;
+  gap: 3px;
   flex: 1;
 }
 
@@ -252,11 +264,12 @@
   display: flex;
   align-items: center;
   flex: none;
-  gap: 4px;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .trip-map-picker-item-open {
-  height: 32px;
+  height: 28px;
   padding: 0 12px;
   border: 0;
   border-radius: 999px;
@@ -276,8 +289,8 @@
 .trip-map-picker-item-delete {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: 0;
   border-radius: 8px;
   background: transparent;
