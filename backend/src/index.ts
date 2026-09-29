@@ -24,6 +24,8 @@ import type { TripShareRepository } from './share/tripShareRepository.js';
 import { PostgresTripShareRepository } from './share/repositories/postgresTripShareRepository.js';
 import { TripShareController } from './trip-sharing/tripShareController.js';
 import { TripShareHttpService } from './trip-sharing/tripShareHttpService.js';
+import { GoogleStaticMapsProvider } from './trip-preview/googleStaticMapsProvider.js';
+import { TripPreviewHttpService } from './trip-preview/tripPreviewHttpService.js';
 import type { AnalyticsRepository } from './analytics/analyticsEventRepository.js';
 import { PostgresAnalyticsRepository } from './analytics/postgresAnalyticsRepository.js';
 import { AnalyticsEventHttpService } from './analytics/analyticsEventHttpService.js';
@@ -67,6 +69,13 @@ async function startBackend(): Promise<void> {
           persistence.auth,
         ),
         currentUser,
+      ),
+      new TripPreviewHttpService(
+        tripController,
+        currentUser,
+        new GoogleStaticMapsProvider(
+          process.env.GOOGLE_STATIC_MAPS_API_KEY ?? '',
+        ),
       ),
       new AnalyticsEventHttpService(persistence.analytics, currentUser),
       new AnalyticsQueryHttpService(persistence.analytics, {

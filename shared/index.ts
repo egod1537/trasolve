@@ -16,6 +16,7 @@ export {
   buildAnalyticsFunnelApiRoute,
   buildAnalyticsSessionEventsRoute,
   buildSharedTripApiRoute,
+  buildTripPreviewApiRoute,
   buildTripShareApiRoute,
   getGoogleMapsLocale,
   type GoogleMapsLanguageCode,

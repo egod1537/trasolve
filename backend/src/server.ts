@@ -9,6 +9,7 @@ import type { GoogleOAuthHttpFlow } from './googleOAuthHttp.js';
 import type { API } from './instances.js';
 import type { TripHttpService } from './trip/tripHttpService.js';
 import type { TripShareHttpService } from './trip-sharing/tripShareHttpService.js';
+import type { TripPreviewHttpService } from './trip-preview/tripPreviewHttpService.js';
 import type { AnalyticsEventHttpService } from './analytics/analyticsEventHttpService.js';
 import type { AnalyticsQueryHttpService } from './analytics/analyticsQueryHttpService.js';
 
@@ -17,6 +18,7 @@ export function createBackendServer(
   googleOAuthHttpFlow: GoogleOAuthHttpFlow,
   tripHttp: TripHttpService,
   tripShareHttp: TripShareHttpService,
+  tripPreviewHttp: TripPreviewHttpService,
   analyticsEventHttp: AnalyticsEventHttpService,
   analyticsQueryHttp: AnalyticsQueryHttpService,
 ): Server {
@@ -86,6 +88,16 @@ export function createBackendServer(
     );
     if (tripShareId !== null) {
       void tripShareHttp.handleOwner(request, response, tripShareId);
+      return;
+    }
+
+    const tripPreviewId = matchSinglePathSegment(
+      pathname,
+      `${API_ROUTES.trips}/`,
+      API_ROUTE_SUFFIXES.tripPreview,
+    );
+    if (tripPreviewId !== null) {
+      void tripPreviewHttp.handle(request, response, tripPreviewId);
       return;
     }
 

@@ -1,90 +1,105 @@
+import { useId, useMemo } from 'react';
 import type { Trip } from '@trasolve/shared';
+import {
+  createTripPreviewModel,
+  type TripPreviewModel,
+} from '@/features/map-workspace/domain/tripPreviewViewport';
 import { LocationIcon } from '@/shared/ui/icons';
 
 type Props = {
-  trip: Trip;
+  trip: Pick<Trip, 'days'>;
 };
 
-const VIEW_SIZE = 100;
-const PADDING = 14;
+// 16:10 frame; the card sizes the SVG, the viewBox keeps the geometry.
+const PREVIEW_WIDTH = 160;
+const PREVIEW_HEIGHT = 100;
+const PREVIEW_PADDING = 16;
 
+function buildPreviewModel(trip: Pick<Trip, 'days'>): TripPreviewModel {
+  try {
+    return createTripPreviewModel(trip, {
+      width: PREVIEW_WIDTH,
+      height: PREVIEW_HEIGHT,
+      padding: PREVIEW_PADDING,
+    });
+  } catch {
+    // A broken preview must never break the card; fall back to placeholder.
+    return { status: 'empty' };
+  }
+}
+
+/**
+ * Lightweight SVG thumbnail of a Trip's places. It creates no map instance, so
+ * many cards can render at once; a static-image renderer can replace it later
+ * without changing the card.
+ */
 export function TripMapPreview({ trip }: Props) {
-  const days = trip.days.filter((day) => day.places.length > 0);
-  const points = days.flatMap((day) =>
-    day.places.map((place) => place.location),
-  );
+  const patternId = useId();
+  const model = useMemo(() => buildPreviewModel(trip), [trip]);
 
-  if (points.length === 0) {
+  if (model.status === 'empty') {
     return (
-      <div className="trip-map-picker-item-preview is-empty" aria-hidden="true">
+      <div className="trip-map-preview is-empty" aria-hidden="true">
         <LocationIcon />
       </div>
     );
   }
 
-  const lats = points.map((point) => point.lat);
-  const lngs = points.map((point) => point.lng);
-  const minLat = Math.min(...lats);
-  const maxLat = Math.max(...lats);
-  const minLng = Math.min(...lngs);
-  const maxLng = Math.max(...lngs);
-  const latSpan = maxLat - minLat || 1;
-  const lngSpan = maxLng - minLng || 1;
-  const span = Math.max(latSpan, lngSpan);
-  const usable = VIEW_SIZE - PADDING * 2;
-
-  const project = (point: { lat: number; lng: number }) => {
-    const x = PADDING + ((point.lng - minLng) / span) * usable;
-    // Latitude increases northward, SVG y increases downward.
-    const y = PADDING + ((maxLat - point.lat) / span) * usable;
-    return { x, y };
-  };
+  const markerRadius =
+    model.routes.reduce((count, route) => count + route.points.length, 0) > 20
+      ? 2.4
+      : 3.4;
 
   return (
     <svg
-      className="trip-map-picker-item-preview"
-      viewBox={`0 0 ${VIEW_SIZE} ${VIEW_SIZE}`}
-      role="img"
-      aria-label={`${trip.title} 경로 미리보기`}
+      className="trip-map-preview"
+      viewBox={`0 0 ${model.width} ${model.height}`}
+      preserveAspectRatio="xMidYMid meet"
+      aria-hidden="true"
+      focusable="false"
     >
-      {days.map((day) => {
-        const path = day.places
-          .slice()
-          .sort((a, b) => a.order - b.order)
-          .map((place) => project(place.location));
-        if (path.length === 0) {
-          return null;
-        }
-        const linePoints = path
-          .map((point) => `${point.x},${point.y}`)
-          .join(' ');
-        return (
-          <g key={day.id}>
-            {path.length > 1 && (
-              <polyline
-                points={linePoints}
-                fill="none"
-                stroke={day.color}
-                strokeWidth={2.5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                opacity={0.75}
-              />
-            )}
-            {path.map((point, index) => (
-              <circle
-                key={`${day.id}-${index}`}
-                cx={point.x}
-                cy={point.y}
-                r={points.length > 20 ? 2 : 3}
-                fill={day.color}
-                stroke="var(--color-surface-raised, #fff)"
-                strokeWidth={1}
-              />
-            ))}
-          </g>
-        );
-      })}
+      <defs>
+        <pattern
+          id={patternId}
+          width="20"
+          height="20"
+          patternUnits="userSpaceOnUse"
+        >
+          <path d="M20 0H0V20" className="trip-map-preview-grid" />
+        </pattern>
+      </defs>
+      <rect
+        width={model.width}
+        height={model.height}
+        fill={`url(#${patternId})`}
+      />
+      {model.routes.map((route) => (
+        <g key={route.dayId}>
+          {route.points.length > 1 && (
+            <polyline
+              points={route.points
+                .map((point) => `${point.x},${point.y}`)
+                .join(' ')}
+              fill="none"
+              stroke={route.color}
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity={0.8}
+            />
+          )}
+          {route.points.map((point, index) => (
+            <circle
+              key={index}
+              cx={point.x}
+              cy={point.y}
+              r={markerRadius}
+              fill={route.color}
+              className="trip-map-preview-marker"
+            />
+          ))}
+        </g>
+      ))}
     </svg>
   );
 }

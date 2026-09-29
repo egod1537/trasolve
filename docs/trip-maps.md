@@ -38,13 +38,22 @@ optional fields are removed and omitted days/places are deleted.
 
 ## HTTP contract
 
-| Method | Endpoint             | Success                          |
-| ------ | -------------------- | -------------------------------- |
-| GET    | `/api/trips`         | 200, Trip[] for the current user |
-| POST   | `/api/trips`         | 201, created Trip                |
-| GET    | `/api/trips/:tripId` | 200, Trip                        |
-| PUT    | `/api/trips/:tripId` | 200, saved Trip                  |
-| DELETE | `/api/trips/:tripId` | 204, no body                     |
+| Method | Endpoint                     | Success                          |
+| ------ | ---------------------------- | -------------------------------- |
+| GET    | `/api/trips`                 | 200, Trip[] for the current user |
+| POST   | `/api/trips`                 | 201, created Trip                |
+| GET    | `/api/trips/:tripId`         | 200, Trip                        |
+| PUT    | `/api/trips/:tripId`         | 200, saved Trip                  |
+| DELETE | `/api/trips/:tripId`         | 204, no body                     |
+| GET    | `/api/trips/:tripId/preview` | 200, map thumbnail image         |
+
+The preview endpoint is owner-only. It renders the stored Trip's places with the
+Maps Static API using the server key `GOOGLE_STATIC_MAPS_API_KEY`, caches the image
+per stored revision in memory and relays it as an opaque image; Google's response
+never becomes domain data. Clients add `?v=<updatedAt>` only to bust the browser
+cache. Errors use the JSON error shape: 404 TRIP_NOT_FOUND / TRIP_PREVIEW_EMPTY,
+503 TRIP_PREVIEW_NOT_CONFIGURED, 502 TRIP_PREVIEW_UNAVAILABLE, 504
+TRIP_PREVIEW_TIMEOUT. The trip list falls back to its SVG preview on any error.
 
 POST/PUT accept TripInput as JSON, for example:
 

@@ -47,10 +47,23 @@ export const API_ROUTES = {
 
 export const API_ROUTE_SUFFIXES = {
   tripShare: '/share',
+  tripPreview: '/preview',
 } as const;
 
 export function buildTripShareApiRoute(tripId: string): string {
   return `${API_ROUTES.trips}/${encodeURIComponent(tripId)}${API_ROUTE_SUFFIXES.tripShare}`;
+}
+
+/**
+ * Map thumbnail of an owned Trip. `version` (e.g. updatedAt) only busts the
+ * browser cache; the server always renders the stored Trip.
+ */
+export function buildTripPreviewApiRoute(
+  tripId: string,
+  version?: string,
+): string {
+  const route = `${API_ROUTES.trips}/${encodeURIComponent(tripId)}${API_ROUTE_SUFFIXES.tripPreview}`;
+  return version ? `${route}?v=${encodeURIComponent(version)}` : route;
 }
 
 export function buildSharedTripApiRoute(token: string): string {

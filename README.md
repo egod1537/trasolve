@@ -230,6 +230,9 @@ Maps JavaScript API 전용으로 HTTP referrer 제한을 적용합니다.
 요청·응답 계약은 `shared/schemas/routes.ts`, `shared/schemas/places.ts`에 있습니다.
 Google Routes 구현은 `backend/src/routes/providers/`에, Google Places 구현은
 `backend/src/google/maps/`에 있습니다.
+여행 목록의 지도 썸네일은 선택 사항인 `GOOGLE_STATIC_MAPS_API_KEY`(Maps Static API)를
+사용하며 `GET /api/trips/:tripId/preview`가 서버에서 이미지를 받아 전달합니다
+(`backend/src/trip-preview/`). 키가 없으면 목록은 SVG 프리뷰로 표시됩니다.
 
 프런트엔드의 두 Google 연결 경로는 분리합니다.
 
