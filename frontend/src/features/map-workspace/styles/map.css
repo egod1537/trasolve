@@ -1272,8 +1272,14 @@
   white-space: nowrap;
 }
 .trip-polyline-mode {
+  overflow: hidden;
   color: var(--color-muted);
   font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trip-polyline-mode.is-route-error {
+  color: var(--color-warning-strong);
 }
 .trip-polyline-time-summary {
   display: block;

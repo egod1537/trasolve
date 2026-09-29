@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { selectTripPlace, selectTripPolyline } from '@/entities/trip';
-import type { QueryRouteDuration } from '@/features/map-workspace/domain/routeDuration';
 import { tripToView } from '@/entities/trip';
 import { useMapWorkspace } from '@/features/map-workspace/model/useMapWorkspace';
 import { useSelectedGooglePlace } from '@/features/place-editor';
@@ -22,12 +21,10 @@ import { useL } from '@/shared/i18n';
 type Props =
   | {
       mode: 'edit';
-      onQueryRouteDuration: QueryRouteDuration;
       onOpenTripPicker: () => void;
     }
   | {
       mode: 'readonly';
-      onQueryRouteDuration?: never;
       onOpenTripPicker?: never;
     };
 
@@ -35,18 +32,13 @@ export function MapWorkspace(props: Props) {
   return props.mode === 'readonly' ? (
     <ReadonlyMapWorkspace />
   ) : (
-    <EditableMapWorkspace
-      onQueryRouteDuration={props.onQueryRouteDuration}
-      onOpenTripPicker={props.onOpenTripPicker}
-    />
+    <EditableMapWorkspace onOpenTripPicker={props.onOpenTripPicker} />
   );
 }
 
 function EditableMapWorkspace({
-  onQueryRouteDuration,
   onOpenTripPicker,
 }: {
-  onQueryRouteDuration: QueryRouteDuration;
   onOpenTripPicker: () => void;
 }) {
   const L = useL();
@@ -97,7 +89,6 @@ function EditableMapWorkspace({
             saveStatus={status}
             savedAt={trip.updatedAt}
             mutationError={error}
-            onQueryRouteDuration={onQueryRouteDuration}
             sidebarRef={sidebarRef}
             selectionRevision={ui.selectionRevision}
             selectedPlaceId={ui.selectedPlaceId}

@@ -13,17 +13,29 @@ import type { GeoPoint } from '@/shared/types/mapTypes';
 import { PolylineModeIcon } from '@/features/map-workspace/components/PolylineModeIcon';
 import { PolylineModeOptions } from '@/features/map-workspace/components/PolylineModeOptions';
 import { calculatePolylineDistanceMeters } from '@/features/map-workspace/domain/polylineMetrics';
+import { formatPolylineMode } from '@/features/map-workspace/lib/mapFormatters';
 import {
-  formatPolylineDistance,
-  formatPolylineMode,
-} from '@/features/map-workspace/lib/mapFormatters';
+  RouteSegmentItinerary,
+  RouteSegmentMetrics,
+} from '@/features/map-workspace/components/route-segment/RouteSegmentDetails';
+import {
+  usePolylineRouteQuery,
+  useRouteSegment,
+  useRouteSegmentStore,
+} from '@/features/map-workspace/hooks/useRouteSegments';
 import { MapPopupCardShell } from '@/shared/ui/map/MapPopupCardShell';
 import { SideDetailCard } from '@/shared/ui/map/SideDetailCard';
 import { useL } from '@/shared/i18n';
 
 type PolylineCardPlace =
-  | { name: string; location: GeoPoint }
-  | { name: string; location?: GeoPoint; lat: number; lng: number };
+  | { name: string; placeId?: string; location: GeoPoint }
+  | {
+      name: string;
+      placeId?: string;
+      location?: GeoPoint;
+      lat: number;
+      lng: number;
+    };
 
 type Props = {
   day: { title: string };
@@ -48,6 +60,8 @@ type Props = {
 export type TripPolylineCardHandle = {
   openModeEditor: () => void;
 };
+
+type SidePanel = 'mode' | 'route' | null;
 
 function resolveLocation(place: PolylineCardPlace): GeoPoint {
   if ('lat' in place) {
@@ -76,29 +90,43 @@ export const TripPolylineCard = forwardRef<TripPolylineCardHandle, Props>(
     ref,
   ) {
     const L = useL();
-    const [modeEditorOpen, setModeEditorOpen] = useState(false);
+    const [sidePanel, setSidePanel] = useState<SidePanel>(null);
+    const modeEditorOpen = sidePanel === 'mode';
     const [submitting, setSubmitting] = useState(false);
     const groupRef = useRef<HTMLDivElement>(null);
     const internalMainCardRef = useRef<HTMLElement>(null);
     const mainCardRef = cardRef ?? internalMainCardRef;
     const modeCardId = useId();
+    const routeCardId = useId();
     const disabled = busy || submitting;
-    const path = polyline.path ?? [
-      resolveLocation(fromPlace),
-      resolveLocation(toPlace),
-    ];
-    const distance = formatPolylineDistance(
-      calculatePolylineDistanceMeters(path),
-      L,
+    const fromLocation = resolveLocation(fromPlace);
+    const toLocation = resolveLocation(toPlace);
+    const straightDistanceMeters = calculatePolylineDistanceMeters([
+      fromLocation,
+      toLocation,
+    ]);
+    const routeSegments = useRouteSegmentStore();
+    const routeQuery = usePolylineRouteQuery(
+      { placeId: fromPlace.placeId, location: fromLocation },
+      { placeId: toPlace.placeId, location: toLocation },
+      polyline.mode,
     );
-    const closeModeEditor = useCallback(() => setModeEditorOpen(false), []);
+    const routeState = useRouteSegment(routeQuery);
+    const routeDetail =
+      routeState?.status === 'ready' ? routeState.detail : null;
+    const closeSidePanel = useCallback(() => setSidePanel(null), []);
+    const retryRoute = useCallback(() => {
+      if (routeQuery) {
+        routeSegments.retry(routeQuery);
+      }
+    }, [routeQuery, routeSegments]);
 
     useImperativeHandle(
       ref,
       () => ({
         openModeEditor: () => {
           if (!disabled && !readOnly) {
-            setModeEditorOpen(true);
+            setSidePanel('mode');
           }
         },
       }),
@@ -154,7 +182,9 @@ export const TripPolylineCard = forwardRef<TripPolylineCardHandle, Props>(
                 aria-controls={modeCardId}
                 title={formatPolylineMode(polyline.mode, L)}
                 disabled={disabled}
-                onClick={() => setModeEditorOpen((open) => !open)}
+                onClick={() =>
+                  setSidePanel((panel) => (panel === 'mode' ? null : 'mode'))
+                }
               >
                 <PolylineModeIcon mode={polyline.mode} />
                 <svg
@@ -169,15 +199,28 @@ export const TripPolylineCard = forwardRef<TripPolylineCardHandle, Props>(
           }
         >
           <div className="trip-polyline-card-body">
+            <RouteSegmentMetrics
+              mode={polyline.mode}
+              state={routeState}
+              straightDistanceMeters={straightDistanceMeters}
+              onRetry={retryRoute}
+            />
+            {routeDetail && routeDetail.steps.length > 0 && (
+              <button
+                type="button"
+                className="trip-polyline-route-detail-trigger"
+                aria-haspopup="dialog"
+                aria-expanded={sidePanel === 'route'}
+                aria-controls={routeCardId}
+                onClick={() =>
+                  setSidePanel((panel) => (panel === 'route' ? null : 'route'))
+                }
+              >
+                경로 상세 보기
+                <span aria-hidden="true">›</span>
+              </button>
+            )}
             <dl className="trip-polyline-details">
-              <div>
-                <dt>{L('map:tripPolylineCard.label.distance')}</dt>
-                <dd>{distance}</dd>
-              </div>
-              <div>
-                <dt>{L('map:tripPolylineCard.label.estimatedTravelTime')}</dt>
-                <dd>{L('map:tripPolylineCard.text.beforeRouteCalculation')}</dd>
-              </div>
               <div>
                 <dt>{L('map:tripPolylineCard.label.memo')}</dt>
                 <dd className="is-empty">
@@ -208,13 +251,32 @@ export const TripPolylineCard = forwardRef<TripPolylineCardHandle, Props>(
             closeLabel={L(
               'map:tripPolylineCard.text.closeTravelMethodSettings',
             )}
-            onClose={closeModeEditor}
+            onClose={closeSidePanel}
           >
             <div className="trip-polyline-mode-card-body">
               <PolylineModeOptions
                 mode={polyline.mode}
                 busy={disabled}
                 onSelect={(mode) => void saveMode(mode)}
+              />
+            </div>
+          </SideDetailCard>
+        )}
+
+        {sidePanel === 'route' && routeDetail && (
+          <SideDetailCard
+            id={routeCardId}
+            title={`경로 상세 · ${formatPolylineMode(polyline.mode, L)}`}
+            groupRef={groupRef}
+            mainCardRef={mainCardRef}
+            closeLabel="경로 상세 닫기"
+            onClose={closeSidePanel}
+          >
+            <div className="trip-polyline-route-card-body">
+              <RouteSegmentItinerary
+                detail={routeDetail}
+                fromName={fromPlace.name}
+                toName={toPlace.name}
               />
             </div>
           </SideDetailCard>

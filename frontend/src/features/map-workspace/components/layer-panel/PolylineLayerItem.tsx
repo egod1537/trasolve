@@ -10,12 +10,21 @@ import {
   type TimeRangeTimelineRange,
 } from '@/features/place-editor';
 import type { LayerSelectionModifiers } from '@/features/map-workspace/model/useMapWorkspace';
-import { formatPolylineMode } from '@/features/map-workspace/lib/mapFormatters';
+import {
+  formatPolylineDistance,
+  formatPolylineMode,
+  formatRouteDuration,
+} from '@/features/map-workspace/lib/mapFormatters';
+import type { RouteSegmentState } from '@/features/map-workspace/domain/routeSegment';
+import {
+  usePolylineRouteQuery,
+  useRouteSegment,
+} from '@/features/map-workspace/hooks/useRouteSegments';
 import { LayerItemChevron } from '@/features/map-workspace/components/layer-panel/LayerItemChevron';
 import { LayerItemShell } from '@/features/map-workspace/components/layer-panel/LayerItemShell';
 import { LayerTypeIcon } from '@/features/map-workspace/components/layer-panel/LayerTypeIcon';
 import { LayerValidationIndicator } from '@/features/map-workspace/components/layer-panel/LayerValidationIndicator';
-import { useL } from '@/shared/i18n';
+import { useL, type Localize } from '@/shared/i18n';
 import { formatDurationMinutes } from '@/shared/i18n/formatters';
 
 const MINUTES_PER_DAY = 24 * 60;
@@ -63,6 +72,28 @@ function getPolylineScheduleRange(
   };
 }
 
+function formatRouteSummary(
+  state: RouteSegmentState | null,
+  L: Localize,
+): string | null {
+  if (!state) {
+    return null;
+  }
+  if (state.status === 'loading') {
+    return '경로 계산 중';
+  }
+  if (state.status === 'error') {
+    return '경로 없음';
+  }
+  const { durationMillis, distanceMeters } = state.detail;
+  return [
+    durationMillis === null ? null : formatRouteDuration(durationMillis, L),
+    distanceMeters === null ? null : formatPolylineDistance(distanceMeters, L),
+  ]
+    .filter((value): value is string => value !== null)
+    .join(' · ');
+}
+
 type Props = {
   dayId: string;
   polyline: TripPolyline;
@@ -96,6 +127,19 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
   const connectionName = `${fromName} → ${toName}`;
   const scheduleRange = getPolylineScheduleRange(fromPlace, toPlace);
   const openDetails = () => onOpenDetails(polyline.id);
+  const routeQuery = usePolylineRouteQuery(
+    fromPlace && {
+      placeId: fromPlace.placeId,
+      location: { lat: fromPlace.lat, lng: fromPlace.lng },
+    },
+    toPlace && {
+      placeId: toPlace.placeId,
+      location: { lat: toPlace.lat, lng: toPlace.lng },
+    },
+    polyline.mode,
+  );
+  const routeState = useRouteSegment(routeQuery);
+  const routeSummary = formatRouteSummary(routeState, L);
   return (
     <LayerItemShell
       type="polyline"
@@ -139,8 +183,13 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
         <LayerTypeIcon type="polyline" mode={polyline.mode} />
         <span className="trip-polyline-content">
           <span className="trip-polyline-name">{connectionName}</span>
-          <span className="trip-polyline-mode">
+          <span
+            className={`trip-polyline-mode${
+              routeState?.status === 'error' ? ' is-route-error' : ''
+            }`}
+          >
             {formatPolylineMode(polyline.mode, L)}
+            {routeSummary && ` · ${routeSummary}`}
             {scheduleRange
               ? L('map:polylineLayerItem.text.betweenPlaces', {
                   formatDurationMinutes: formatDurationMinutes(

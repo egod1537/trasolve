@@ -19,6 +19,8 @@ import { L } from '@/shared/i18n';
 type Props = {
   objects: MapObjectController;
   trip: Trip;
+  /** Computed road/transit geometry by polyline ID; absent IDs stay straight. */
+  routePaths: ReadonlyMap<string, readonly GeoPoint[]>;
   selectedPlaceId: string | null;
   selectedPolylineId: string | null;
   selectedDayId: string | null;
@@ -31,7 +33,11 @@ type Props = {
 function getPolylinePath(
   day: TripDay,
   polyline: TripPolyline,
+  routePath: readonly GeoPoint[] | undefined,
 ): Array<{ lat: number; lng: number }> {
+  if (routePath && polyline.mode !== 'straight') {
+    return routePath.map((point) => ({ ...point }));
+  }
   if (polyline.path) {
     return polyline.path.map((point) => ({ ...point }));
   }
@@ -169,7 +175,10 @@ type TripLayerModel = {
   }>;
 };
 
-function toTripLayerModel(trip: Trip): TripLayerModel {
+function toTripLayerModel(
+  trip: Trip,
+  routePaths: ReadonlyMap<string, readonly GeoPoint[]>,
+): TripLayerModel {
   const markers: TripLayerModel['markers'] = [];
   const polylines: TripLayerModel['polylines'] = [];
   for (const day of trip.days) {
@@ -200,7 +209,7 @@ function toTripLayerModel(trip: Trip): TripLayerModel {
         dayId: day.id,
         mode: polyline.mode,
         order: layerOrder.get(`polyline:${polyline.id}`) ?? polyline.order,
-        path: getPolylinePath(day, polyline),
+        path: getPolylinePath(day, polyline, routePaths.get(polyline.id)),
       });
     }
   }
@@ -282,6 +291,7 @@ function getPolylineVisibility(
 export const TripLayer = memo(function TripLayer({
   objects,
   trip,
+  routePaths,
   selectedPlaceId,
   selectedPolylineId,
   selectedDayId,
@@ -299,7 +309,10 @@ export const TripLayer = memo(function TripLayer({
     polylineSelection.current = onSelectPolyline;
   }, [onSelectPlace, onSelectPolyline]);
   const tripId = trip.id;
-  const layerModel = useMemo(() => toTripLayerModel(trip), [trip]);
+  const layerModel = useMemo(
+    () => toTripLayerModel(trip, routePaths),
+    [routePaths, trip],
+  );
   const selectedPlaceIdRef = useRef(selectedPlaceId);
   const selectedPolylineIdRef = useRef(selectedPolylineId);
   const selectedDayIdRef = useRef(selectedDayId);

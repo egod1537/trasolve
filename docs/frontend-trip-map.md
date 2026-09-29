@@ -81,6 +81,16 @@ tripToRoutes supplies the same straight visiting-order geometry for initializati
 and edits. Rollback restores matching geometry. Future road-route invalidation
 belongs in the edit controller/backend, never TripLayer.
 
+Walking/transit/driving segments use a session-scoped RouteSegmentStore created by
+TripSession (edit and readonly). It queries the backend `/api/routes` through
+`shared/api/routes`, keyed by mode and origin/destination (Google placeId or
+coordinates), so moving a place or changing a mode never reuses stale geometry.
+Results are derived view data (path, duration, distance, fare, grouped steps) and
+are never written into TripInput. MapCanvas resolves ready paths by polyline ID and
+passes them to TripLayer as `routePaths`; loading or failed segments fall back to
+stored/straight geometry. The sidebar row, RouteSettingsCard and TripPolylineCard
+read the same cache for summaries and the step-by-step itinerary panel.
+
 ## Rendering and UI
 
 TripLayer still takes Trip, routes, selection and MapObjectController. Marker handles
