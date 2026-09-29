@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
 import { buildInfo, isBuildMetadataVisible } from '@/shared/config/buildInfo';
 import { NL, useL } from '@/shared/i18n';
 
@@ -163,6 +164,8 @@ export function Header({
                   <button
                     type="button"
                     className="header-profile-menu-item"
+                    data-analytics-id={ANALYTICS_TARGETS.landingEnterMap}
+                    data-analytics-screen={ANALYTICS_SCREENS.landing}
                     role="menuitem"
                     onClick={() => {
                       setProfileMenuOpen(false);
@@ -193,6 +196,8 @@ export function Header({
             <button
               type="button"
               className="button button-small button-outline"
+              data-analytics-id={ANALYTICS_TARGETS.landingLogin}
+              data-analytics-screen={ANALYTICS_SCREENS.landing}
               disabled={actionDisabled}
               aria-busy={actionDisabled}
               onClick={onAction}

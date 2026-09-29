@@ -66,6 +66,7 @@ export class TripShareHttpService {
       }
       return this.controller.getSharedTrip(
         this.decodePublicToken(encodedToken),
+        await this.currentUser.resolve(request),
       );
     });
   }

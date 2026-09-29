@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { ANALYTICS_SCREENS } from '@trasolve/shared';
 import { Button } from '@/shared/ui/Button';
 import { Dialog } from '@/shared/ui/Dialog';
 import { IconButton } from '@/shared/ui/IconButton';
@@ -15,6 +16,7 @@ import { useTheme } from '@/shared/theme/useTheme';
 import type { ThemeMode } from '@/shared/theme/theme';
 import { requiresGoogleMapsReload } from '@/map/runtime/googleMaps';
 import '@/features/preferences/ui/preferences-modal.css';
+import { useScreenView } from '@/shared/analytics';
 
 const THEME_MODES: readonly ThemeMode[] = ['system', 'light', 'dark'];
 
@@ -24,6 +26,7 @@ type Props = {
 
 export function PreferencesModal({ onClose }: Props) {
   const L = useL();
+  useScreenView(ANALYTICS_SCREENS.preferences);
   const { themeMode, setThemeMode } = useTheme();
   const [changingLanguage, setChangingLanguage] = useState(false);
   const [languageError, setLanguageError] = useState<string | null>(null);

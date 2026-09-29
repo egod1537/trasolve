@@ -24,6 +24,10 @@ import type { TripShareRepository } from './share/tripShareRepository.js';
 import { PostgresTripShareRepository } from './share/repositories/postgresTripShareRepository.js';
 import { TripShareController } from './trip-sharing/tripShareController.js';
 import { TripShareHttpService } from './trip-sharing/tripShareHttpService.js';
+import type { AnalyticsRepository } from './analytics/analyticsEventRepository.js';
+import { PostgresAnalyticsRepository } from './analytics/postgresAnalyticsRepository.js';
+import { AnalyticsEventHttpService } from './analytics/analyticsEventHttpService.js';
+import { AnalyticsQueryHttpService } from './analytics/analyticsQueryHttpService.js';
 
 loadBackendEnvironment();
 
@@ -64,6 +68,10 @@ async function startBackend(): Promise<void> {
         ),
         currentUser,
       ),
+      new AnalyticsEventHttpService(persistence.analytics, currentUser),
+      new AnalyticsQueryHttpService(persistence.analytics, {
+        readEnabled: canUseAnalyticsReadApi(),
+      }),
     );
     await listen(server, port, host);
     console.log(`Backend: http://${host}:${port}`);
@@ -98,6 +106,7 @@ async function startBackend(): Promise<void> {
 }
 
 interface RuntimePersistence {
+  readonly analytics: AnalyticsRepository;
   readonly auth: AuthRepository;
   readonly sessions: SessionRepository;
   readonly trips: TripRepository;
@@ -108,6 +117,7 @@ interface RuntimePersistence {
 
 async function createRuntimePersistence(
   createLocalTripPersistence: (rootDir: string) => {
+    readonly analytics: AnalyticsRepository;
     readonly trips: TripRepository;
     readonly tripShares: TripShareRepository;
   },
@@ -145,6 +155,7 @@ async function createRuntimePersistence(
   }
   console.log('Persistence: PostgreSQL');
   return {
+    analytics: new PostgresAnalyticsRepository(database),
     auth: new PostgresAuthRepository(database),
     sessions: new PostgresSessionRepository(database),
     trips: new PostgresTripRepository(database),
@@ -154,6 +165,10 @@ async function createRuntimePersistence(
 }
 
 function canUseLocalDevelopmentAuthentication(): boolean {
+  return process.env.NODE_ENV !== 'production';
+}
+
+function canUseAnalyticsReadApi(): boolean {
   return process.env.NODE_ENV !== 'production';
 }
 

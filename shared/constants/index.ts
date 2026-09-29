@@ -1,5 +1,6 @@
 export { TravelMode } from './travelMode.js';
 export { CHAT_LIMITS } from './chat.js';
+export { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from './analytics.js';
 export {
   GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
   GOOGLE_MAPS_LANGUAGE_CODES,
@@ -19,6 +20,11 @@ export {
 
 export const API_ROUTES = {
   health: '/api/health',
+  analyticsEvents: '/api/analytics/events',
+  analyticsFlows: '/api/analytics/flows',
+  analyticsFunnels: '/api/analytics/funnels',
+  analyticsOverview: '/api/analytics/overview',
+  analyticsSessions: '/api/analytics/sessions',
   chat: '/api/chat',
   openWebUIModels: '/api/openwebui/models',
   trouteOptimize: '/api/troute/optimize',
@@ -49,4 +55,12 @@ export function buildTripShareApiRoute(tripId: string): string {
 
 export function buildSharedTripApiRoute(token: string): string {
   return `${API_ROUTES.sharedTrips}/${encodeURIComponent(token)}`;
+}
+
+export function buildAnalyticsSessionEventsRoute(sessionId: string): string {
+  return `${API_ROUTES.analyticsSessions}/${encodeURIComponent(sessionId)}/events`;
+}
+
+export function buildAnalyticsFunnelApiRoute(funnelId: string): string {
+  return `${API_ROUTES.analyticsFunnels}/${encodeURIComponent(funnelId)}`;
 }

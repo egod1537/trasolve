@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
 import { useCurrentUser } from '@/features/auth/model/useCurrentUser';
 import { useTripShareSettings } from '@/features/map-workspace/hooks/useTripShareSettings';
 import { Button } from '@/shared/ui/Button';
@@ -8,6 +9,7 @@ import { CloseIcon } from '@/shared/ui/icons';
 import { LoadingSpinner } from '@/shared/ui/LoadingSpinner';
 import '@/features/map-workspace/components/share/share-trip-modal.css';
 import { useL } from '@/shared/i18n';
+import { trackEvent, useScreenView } from '@/shared/analytics';
 
 type Props = {
   tripId: string;
@@ -18,6 +20,7 @@ type CopyStatus = 'idle' | 'copied' | 'failed';
 
 export function ShareTripModal({ tripId, onClose }: Props) {
   const L = useL();
+  useScreenView(ANALYTICS_SCREENS.shareTrip);
   const { state: currentUser } = useCurrentUser();
   const { settings, loading, saving, error, saveSettings } =
     useTripShareSettings(tripId);
@@ -45,9 +48,22 @@ export function ShareTripModal({ tripId, onClose }: Props) {
     if (!shareUrl) {
       return;
     }
+    trackEvent({
+      eventType: 'button_click',
+      screen: ANALYTICS_SCREENS.shareTrip,
+      target: ANALYTICS_TARGETS.copyShareLink,
+    });
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopyStatus('copied');
+      if (settings?.shareId) {
+        trackEvent({
+          eventType: 'share_link_copy',
+          screen: ANALYTICS_SCREENS.shareTrip,
+          target: ANALYTICS_TARGETS.copyShareLink,
+          metadata: { shareId: settings.shareId },
+        });
+      }
     } catch {
       setCopyStatus('failed');
     }
@@ -91,16 +107,35 @@ export function ShareTripModal({ tripId, onClose }: Props) {
               <label className="share-trip-option">
                 <input
                   type="checkbox"
+                  data-analytics-id={ANALYTICS_TARGETS.shareToggle}
+                  data-analytics-screen={ANALYTICS_SCREENS.shareTrip}
                   checked={settings?.enabled ?? false}
                   disabled={!settings || saving}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    trackEvent({
+                      eventType: 'button_click',
+                      screen: ANALYTICS_SCREENS.shareTrip,
+                      target: ANALYTICS_TARGETS.shareToggle,
+                      metadata: { enabled: event.currentTarget.checked },
+                    });
+                    const enabled = event.currentTarget.checked;
                     void saveSettings({
-                      enabled: event.currentTarget.checked,
-                      searchable: event.currentTarget.checked
+                      enabled,
+                      searchable: enabled
                         ? (settings?.searchable ?? false)
                         : false,
-                    }).then(() => setCopyStatus('idle'))
-                  }
+                    }).then((nextSettings) => {
+                      setCopyStatus('idle');
+                      if (enabled && nextSettings?.shareId) {
+                        trackEvent({
+                          eventType: 'share_enable',
+                          screen: ANALYTICS_SCREENS.shareTrip,
+                          target: ANALYTICS_TARGETS.shareToggle,
+                          metadata: { shareId: nextSettings.shareId },
+                        });
+                      }
+                    });
+                  }}
                 />
                 <span className="share-trip-switch" aria-hidden="true" />
                 <span>{L('trip:shareTripModal.text.anyoneLinkCanViewIt')}</span>
@@ -165,6 +200,8 @@ export function ShareTripModal({ tripId, onClose }: Props) {
                 />
                 <Button
                   className="share-trip-copy-button"
+                  data-analytics-id={ANALYTICS_TARGETS.copyShareLink}
+                  data-analytics-screen={ANALYTICS_SCREENS.shareTrip}
                   aria-label={L('trip:shareTripModal.ariaLabel.copyShareLink')}
                   disabled={!shareUrl || saving}
                   onClick={() => void copyShareUrl()}

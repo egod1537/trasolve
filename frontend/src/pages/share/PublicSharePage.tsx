@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
-import type { SharedTrip, Trip } from '@trasolve/shared';
+import {
+  ANALYTICS_SCREENS,
+  type SharedTrip,
+  type Trip,
+} from '@trasolve/shared';
 import { TripSession } from '@/features/map-workspace';
 import { getSharedTrip } from '@/shared/api/tripSharing';
 import { NL, useL } from '@/shared/i18n';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { LoadingSpinner } from '@/shared/ui/LoadingSpinner';
+import { trackEvent } from '@/shared/analytics';
 import '@/pages/share/public-share.css';
 
 type LoadState =
@@ -25,7 +30,10 @@ export default function PublicSharePage() {
       return () => controller.abort();
     }
     void getSharedTrip(token, controller.signal)
-      .then((sharedTrip) => setState({ status: 'ready', sharedTrip }))
+      .then((sharedTrip) => {
+        trackSharedTripViewOnce(sharedTrip);
+        setState({ status: 'ready', sharedTrip });
+      })
       .catch(() => {
         if (!controller.signal.aborted) {
           setState({ status: 'error' });
@@ -74,6 +82,21 @@ export default function PublicSharePage() {
       </header>
     </main>
   );
+}
+
+const trackedShareViews = new Set<string>();
+
+function trackSharedTripViewOnce(sharedTrip: SharedTrip): void {
+  const { shareId, viewerType } = sharedTrip.attribution;
+  if (trackedShareViews.has(shareId)) {
+    return;
+  }
+  trackedShareViews.add(shareId);
+  trackEvent({
+    eventType: 'shared_trip_view',
+    screen: ANALYTICS_SCREENS.sharedTripViewer,
+    metadata: { shareId, viewerType },
+  });
 }
 
 function getToken(pathname: string): string | null {

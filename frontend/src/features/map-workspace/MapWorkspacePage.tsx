@@ -9,22 +9,21 @@ import { tripViewToInput, type Trip as TripView } from '@/entities/trip';
 import { HttpTripRepository } from '@/entities/trip';
 import type { TripRepository } from '@/entities/trip';
 import { selectTripById } from '@/features/map-workspace/model/selectors';
-import {
-  resolveMapWorkspaceMode,
-  type MapWorkspaceMode,
-} from '@/features/map-workspace/model/mapWorkspaceMode';
+import { type MapWorkspaceMode } from '@/features/map-workspace/model/mapWorkspaceMode';
 import '@/features/map-workspace/styles/trip-maps.css';
 import { useL, type Localize } from '@/shared/i18n';
 import {
   useCurrentUser,
   type CurrentUserState,
 } from '@/features/auth/model/useCurrentUser';
+import { AnalyticsOverlay } from '@/features/analytics-overlay';
 
 type Action = 'opening' | 'creating' | 'deleting';
 type OperationErrors = Record<Action, string | null>;
 type Props = {
   L: Localize;
   mode: MapWorkspaceMode;
+  analyticsMode: boolean;
   authenticationStatus: CurrentUserState['status'];
   authNotice: string | null;
   onLogin: () => void;
@@ -42,10 +41,15 @@ type State = {
   operationErrors: OperationErrors;
 };
 
-export default function MapWorkspaceFeature() {
+export default function MapWorkspaceFeature({
+  mode,
+  analyticsMode,
+}: {
+  mode: MapWorkspaceMode;
+  analyticsMode: boolean;
+}) {
   const L = useL();
   const { state, login, authNotice } = useCurrentUser();
-  const mode = resolveMapWorkspaceMode(window.location.search);
 
   useEffect(() => {
     if (state.status === 'signed-out') {
@@ -62,6 +66,7 @@ export default function MapWorkspaceFeature() {
       key={`signed-in:${state.user.id}`}
       L={L}
       mode={mode}
+      analyticsMode={analyticsMode}
       authenticationStatus={state.status}
       authNotice={authNotice}
       onLogin={() => void login()}
@@ -104,7 +109,14 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
   }
 
   public render() {
-    const { L, mode, authenticationStatus, authNotice, onLogin } = this.props;
+    const {
+      L,
+      mode,
+      analyticsMode,
+      authenticationStatus,
+      authNotice,
+      onLogin,
+    } = this.props;
     const {
       selectedTripId,
       sessionRevision,
@@ -177,6 +189,7 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
               onDelete={this.deleteTrip}
             />
           ))}
+        {analyticsMode ? <AnalyticsOverlay /> : null}
       </div>
     );
   }

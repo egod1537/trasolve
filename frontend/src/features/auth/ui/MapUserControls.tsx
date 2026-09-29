@@ -1,9 +1,11 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
 import '@/features/auth/ui/map-user-controls.css';
 import { useCurrentUser } from '@/features/auth/model/useCurrentUser';
 import { AccountSettingsModal } from '@/features/auth/ui/AccountSettingsModal';
 import { PreferencesModal } from '@/features/preferences/ui/PreferencesModal';
 import { useL } from '@/shared/i18n';
+import { trackEvent } from '@/shared/analytics';
 
 function initialOf(name: string): string {
   return name.trim().slice(0, 1).toUpperCase() || '?';
@@ -224,8 +226,15 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
             <button
               type="button"
               className="map-user-menu-item"
+              data-analytics-id={ANALYTICS_TARGETS.preferencesOpen}
+              data-analytics-screen={ANALYTICS_SCREENS.mapWorkspace}
               role="menuitem"
               onClick={() => {
+                trackEvent({
+                  eventType: 'button_click',
+                  screen: ANALYTICS_SCREENS.mapWorkspace,
+                  target: ANALYTICS_TARGETS.preferencesOpen,
+                });
                 setProfileMenuOpen(false);
                 setPreferencesOpen(true);
               }}

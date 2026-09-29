@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Trip } from '@trasolve/shared';
+import { ANALYTICS_SCREENS, type Trip } from '@trasolve/shared';
 import { getDirections } from '@/shared/api/routes';
 import { TripEditController } from '@/features/map-workspace/controller/TripEditController';
 import type { QueryRouteDuration } from '@/features/map-workspace/domain/routeDuration';
@@ -8,6 +8,7 @@ import { createTripStore } from '@/features/map-workspace/store/createTripStore'
 import { TripProvider } from '@/features/map-workspace/store/TripProvider';
 import { MapWorkspace } from '@/features/map-workspace/ui/MapWorkspace';
 import { toRouteSummaryViewModel } from '@/features/map-workspace/model/routeViewModel';
+import { useScreenView } from '@/shared/analytics';
 
 const queryRouteDuration: QueryRouteDuration = async (request, signal) => {
   const result = await getDirections(request, signal);
@@ -50,6 +51,7 @@ function EditTripSession({
   repository,
   onOpenTripPicker,
 }: EditTripSessionProps) {
+  useScreenView(ANALYTICS_SCREENS.mapWorkspace);
   const [application] = useState(() => {
     const store = createTripStore(trip);
     return {

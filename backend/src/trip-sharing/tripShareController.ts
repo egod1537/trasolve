@@ -8,6 +8,7 @@ import {
   type SharedTrip,
   type TripShareOwner,
   type TripShareSettings,
+  type ShareViewerType,
   type UpdateTripShareRequest,
 } from '@trasolve/shared';
 import type { AuthRepository } from '../auth/authRepository.js';
@@ -24,6 +25,7 @@ import {
   tripShareStorageUnavailable,
   tripShareTokenConflict,
 } from './errors.js';
+import { createShareAttributionId } from './shareAttribution.js';
 
 const TOKEN_GENERATION_ATTEMPTS = 3;
 
@@ -106,7 +108,10 @@ export class TripShareController {
     });
   }
 
-  public async getSharedTrip(token: string): Promise<SharedTrip> {
+  public async getSharedTrip(
+    token: string,
+    viewerUserId?: string,
+  ): Promise<SharedTrip> {
     const parsedToken = tripShareTokenSchema.safeParse(token);
     if (!parsedToken.success) {
       throw tripShareNotFound();
@@ -124,7 +129,14 @@ export class TripShareController {
       throw tripShareNotFound();
     }
     const owner = await this.getOwner(share.ownerUserId);
-    return sharedTripSchema.parse({ trip: publicTrip, owner });
+    return sharedTripSchema.parse({
+      trip: publicTrip,
+      owner,
+      attribution: {
+        shareId: createShareAttributionId(share.token),
+        viewerType: this.resolveViewerType(viewerUserId, share.ownerUserId),
+      },
+    });
   }
 
   private readonly mutations = new Map<string, Promise<unknown>>();
@@ -157,7 +169,20 @@ export class TripShareController {
       enabled: record !== null,
       searchable: record?.searchable ?? false,
       token: record?.token ?? null,
+      shareId: record ? createShareAttributionId(record.token) : null,
     });
+  }
+
+  private resolveViewerType(
+    viewerUserId: string | undefined,
+    ownerUserId: string,
+  ): ShareViewerType {
+    if (viewerUserId === undefined) {
+      return 'anonymous';
+    }
+    return viewerUserId === ownerUserId
+      ? 'owner_self'
+      : 'external_authenticated';
   }
 
   private async serialize<Result>(

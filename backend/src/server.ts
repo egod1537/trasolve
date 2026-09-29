@@ -9,17 +9,75 @@ import type { GoogleOAuthHttpFlow } from './googleOAuthHttp.js';
 import type { API } from './instances.js';
 import type { TripHttpService } from './trip/tripHttpService.js';
 import type { TripShareHttpService } from './trip-sharing/tripShareHttpService.js';
+import type { AnalyticsEventHttpService } from './analytics/analyticsEventHttpService.js';
+import type { AnalyticsQueryHttpService } from './analytics/analyticsQueryHttpService.js';
 
 export function createBackendServer(
   api: typeof API,
   googleOAuthHttpFlow: GoogleOAuthHttpFlow,
   tripHttp: TripHttpService,
   tripShareHttp: TripShareHttpService,
+  analyticsEventHttp: AnalyticsEventHttpService,
+  analyticsQueryHttp: AnalyticsQueryHttpService,
 ): Server {
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? '/', 'http://localhost');
     const { pathname } = requestUrl;
     response.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+    if (pathname === API_ROUTES.analyticsEvents) {
+      void analyticsEventHttp.handle(request, response);
+      return;
+    }
+
+    if (pathname === API_ROUTES.analyticsFlows) {
+      void analyticsQueryHttp.handleFlows(request, response, requestUrl);
+      return;
+    }
+
+    if (pathname === API_ROUTES.analyticsFunnels) {
+      void analyticsQueryHttp.handleFunnels(request, response, requestUrl);
+      return;
+    }
+
+    const analyticsFunnelId = matchSinglePathSegment(
+      pathname,
+      `${API_ROUTES.analyticsFunnels}/`,
+    );
+    if (analyticsFunnelId !== null) {
+      void analyticsQueryHttp.handleFunnelResult(
+        request,
+        response,
+        requestUrl,
+        analyticsFunnelId,
+      );
+      return;
+    }
+
+    if (pathname === API_ROUTES.analyticsOverview) {
+      void analyticsQueryHttp.handleOverview(request, response, requestUrl);
+      return;
+    }
+
+    if (pathname === API_ROUTES.analyticsSessions) {
+      void analyticsQueryHttp.handleSessions(request, response, requestUrl);
+      return;
+    }
+
+    const analyticsSessionId = matchSinglePathSegment(
+      pathname,
+      `${API_ROUTES.analyticsSessions}/`,
+      '/events',
+    );
+    if (analyticsSessionId !== null) {
+      void analyticsQueryHttp.handleSessionEvents(
+        request,
+        response,
+        requestUrl,
+        analyticsSessionId,
+      );
+      return;
+    }
 
     const tripShareId = matchSinglePathSegment(
       pathname,

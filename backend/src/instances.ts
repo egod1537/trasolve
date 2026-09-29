@@ -27,6 +27,8 @@ import { LocalFileTripRepository } from './trip/repositories/localFileTripReposi
 import type { TripRepository } from './trip/tripRepository.js';
 import type { TripShareRepository } from './share/tripShareRepository.js';
 import { LocalFileTripShareRepository } from './trip-sharing/localFileTripShareRepository.js';
+import { LocalNdjsonAnalyticsEventRepository } from './analytics/localNdjsonAnalyticsEventRepository.js';
+import type { AnalyticsRepository } from './analytics/analyticsEventRepository.js';
 
 // Preserve direct module use while the normal bootstrap loads configuration
 // before running database migrations and importing these instances.
@@ -110,6 +112,7 @@ try {
 const tcacheJobHttp = new TcacheJobHttpService(tcache);
 
 export interface LocalTripPersistence {
+  readonly analytics: AnalyticsRepository;
   readonly trips: TripRepository;
   readonly tripShares: TripShareRepository;
 }
@@ -118,6 +121,7 @@ export function createLocalTripPersistence(
   rootDir: string,
 ): LocalTripPersistence {
   return {
+    analytics: new LocalNdjsonAnalyticsEventRepository({ rootDir }),
     trips: new LocalFileTripRepository({ rootDir }),
     tripShares: new LocalFileTripShareRepository({ rootDir }),
   };

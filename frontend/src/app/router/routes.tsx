@@ -4,6 +4,7 @@ import { L } from '@/shared/i18n';
 
 const MapPage = lazy(() => import('@/pages/map/MapPage'));
 const PublicSharePage = lazy(() => import('@/pages/share/PublicSharePage'));
+const AnalyticsPage = lazy(() => import('@/pages/analytics/AnalyticsPage'));
 const TestbedPage = lazy(() => import('@/pages/testbed/TestbedPage'));
 const GoogleMapsTestPage = lazy(
   () => import('@/pages/testbed/GoogleMapsTestPage'),
@@ -36,6 +37,12 @@ export const routes: Record<string, RouteDefinition> = {
     Component: MapPage,
     get loadingLabel() {
       return L('map:routes.loadingLabel.loadingTravelMap');
+    },
+  },
+  '/analytics': {
+    Component: AnalyticsPage,
+    get loadingLabel() {
+      return L('analytics:routes.loadingLabel.analytics');
     },
   },
   '/testbed': {

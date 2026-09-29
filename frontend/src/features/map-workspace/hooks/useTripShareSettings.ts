@@ -14,7 +14,9 @@ type TripShareSettingsState = {
   loading: boolean;
   saving: boolean;
   error: string | null;
-  saveSettings: (input: UpdateTripShareRequest) => Promise<boolean>;
+  saveSettings: (
+    input: UpdateTripShareRequest,
+  ) => Promise<TripShareSettings | null>;
 };
 
 export function useTripShareSettings(tripId: string): TripShareSettingsState {
@@ -45,15 +47,18 @@ export function useTripShareSettings(tripId: string): TripShareSettingsState {
   }, [L, tripId]);
 
   const saveSettings = useCallback(
-    async (input: UpdateTripShareRequest): Promise<boolean> => {
+    async (
+      input: UpdateTripShareRequest,
+    ): Promise<TripShareSettings | null> => {
       setSaving(true);
       setError(null);
       try {
-        setSettings(await updateTripShareSettings(tripId, input));
-        return true;
+        const nextSettings = await updateTripShareSettings(tripId, input);
+        setSettings(nextSettings);
+        return nextSettings;
       } catch {
         setError(L('trip:shareTripModal.error.updateFailed'));
-        return false;
+        return null;
       } finally {
         setSaving(false);
       }

@@ -7,7 +7,9 @@ import {
   type CSSProperties,
   type RefObject,
 } from 'react';
+import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
 import { useL } from '@/shared/i18n';
+import { trackEvent } from '@/shared/analytics';
 
 type Props = {
   id: string;
@@ -232,13 +234,22 @@ export function PlaceDeleteConfirmCard({
         <button
           type="button"
           className="is-destructive"
+          data-analytics-id={ANALYTICS_TARGETS.removePlace}
+          data-analytics-screen={ANALYTICS_SCREENS.placeDetail}
           aria-label={L(
             'place:placeDeleteConfirmCard.ariaLabel.removeFromCalendar',
             { placeName: placeName },
           )}
           aria-busy={busy}
           disabled={confirmDisabled}
-          onClick={onConfirm}
+          onClick={() => {
+            trackEvent({
+              eventType: 'button_click',
+              screen: ANALYTICS_SCREENS.placeDetail,
+              target: ANALYTICS_TARGETS.removePlace,
+            });
+            onConfirm();
+          }}
         >
           {busy
             ? L('place:placeDeleteConfirmCard.action.deleting')

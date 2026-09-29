@@ -1,10 +1,12 @@
 import heroMap from '@/shared/assets/hero-map.png';
+import { ANALYTICS_SCREENS, type AnalyticsTarget } from '@trasolve/shared';
 import { HeroVisual } from '@/pages/landing/components/HeroVisual';
 import { useL } from '@/shared/i18n';
 
 type Props = {
   authNotice: string | null;
   primaryActionLabel: string;
+  primaryActionTarget: AnalyticsTarget;
   primaryActionDisabled: boolean;
   onPrimaryAction: () => void;
 };
@@ -12,6 +14,7 @@ type Props = {
 export function Hero({
   authNotice,
   primaryActionLabel,
+  primaryActionTarget,
   primaryActionDisabled,
   onPrimaryAction,
 }: Props) {
@@ -40,6 +43,8 @@ export function Hero({
           <button
             type="button"
             className="button button-primary"
+            data-analytics-id={primaryActionTarget}
+            data-analytics-screen={ANALYTICS_SCREENS.landing}
             disabled={primaryActionDisabled}
             aria-busy={primaryActionDisabled}
             onClick={onPrimaryAction}
