@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>오사카/교토 4박5일 (R3-KML benchmark evidence)</name>
+    <Folder>
+      <name>1일차</name>
+      <Placemark>
+        <name>간사이 국제공항</name>
+        <ExtendedData>
+          <Data name="order"><value>1</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.2304,34.432,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>교토역</name>
+        <ExtendedData>
+          <Data name="order"><value>2</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.7588,34.9858,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>기온 거리 / 하나미코지</name>
+        <ExtendedData>
+          <Data name="order"><value>3</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.775,35.0037,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>폰토초</name>
+        <ExtendedData>
+          <Data name="order"><value>4</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.7707,35.0052,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>야사카 신사</name>
+        <ExtendedData>
+          <Data name="order"><value>5</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.7785,35.0037,0</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>2일차</name>
+      <Placemark>
+        <name>후시미 이나리 신사</name>
+        <ExtendedData>
+          <Data name="order"><value>1</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.7727,34.9671,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>청수사 (키요미즈데라)</name>
+        <ExtendedData>
+          <Data name="order"><value>2</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.785,34.9949,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>산넨자카 · 닌넨자카</name>
+        <ExtendedData>
+          <Data name="order"><value>3</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.7816,34.9972,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>니시키 시장</name>
+        <ExtendedData>
+          <Data name="order"><value>4</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.7649,35.005,0</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>3일차</name>
+      <Placemark>
+        <name>아라시야마 치쿠린 (대나무숲)</name>
+        <ExtendedData>
+          <Data name="order"><value>1</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.6713,35.0171,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>도게츠교</name>
+        <ExtendedData>
+          <Data name="order"><value>2</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.6777,35.0128,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>도톤보리</name>
+        <ExtendedData>
+          <Data name="order"><value>3</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.5013,34.6687,0</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>4일차</name>
+      <Placemark>
+        <name>오사카성 천수각</name>
+        <ExtendedData>
+          <Data name="order"><value>1</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.5262,34.6873,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>우메다 한큐 백화점</name>
+        <ExtendedData>
+          <Data name="order"><value>2</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.4983,34.7027,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>신세카이 &amp; 통천각</name>
+        <ExtendedData>
+          <Data name="order"><value>3</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.5063,34.6525,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>우메다 스카이빌딩 공중정원</name>
+        <ExtendedData>
+          <Data name="order"><value>4</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.4896,34.7053,0</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>5일차</name>
+      <Placemark>
+        <name>쿠로몬 시장</name>
+        <ExtendedData>
+          <Data name="order"><value>1</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.507,34.6654,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>난바역</name>
+        <ExtendedData>
+          <Data name="order"><value>2</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.5022,34.6628,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>간사이 국제공항</name>
+        <ExtendedData>
+          <Data name="order"><value>3</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>135.2304,34.432,0</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>
