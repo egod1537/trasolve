@@ -1,5 +1,6 @@
 import { API_ROUTES } from '@trasolve/shared';
 import { L } from '@/shared/i18n';
+import { captureUnexpectedApiException } from '@/shared/observability/sentry';
 
 const HEALTH_TIMEOUT_MS = 5_000;
 const REQUEST_TIMEOUT_MS = 10_000;
@@ -160,12 +161,17 @@ export async function subscribeTcacheRouteJobEvents(
   if (!response.ok) {
     const body = await readBody(response);
     const normalized = parseError(body);
-    throw new TcacheApiError(
+    const error = new TcacheApiError(
       response.status,
       normalized.code,
       normalized.message,
       normalized.upstreamStatus,
     );
+    captureUnexpectedApiException(new Error('TCACHE_UNEXPECTED_HTTP_ERROR'), {
+      operation: 'tcache.subscribe-events',
+      httpStatus: response.status,
+    });
+    throw error;
   }
   if (
     response.body === null ||
@@ -174,11 +180,15 @@ export async function subscribeTcacheRouteJobEvents(
       ?.toLowerCase()
       .startsWith('text/event-stream')
   ) {
-    throw new TcacheApiError(
+    const error = new TcacheApiError(
       502,
       'TCACHE_INVALID_SSE_RESPONSE',
       L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
     );
+    captureUnexpectedApiException(error, {
+      operation: 'tcache.validate-event-stream',
+    });
+    throw error;
   }
 
   options.onOpen();
@@ -225,12 +235,17 @@ async function requestJson(
   const durationMs = Math.round(performance.now() - startedAt);
   if (!response.ok) {
     const normalized = parseError(body);
-    throw new TcacheApiError(
+    const error = new TcacheApiError(
       response.status,
       normalized.code,
       normalized.message,
       normalized.upstreamStatus,
     );
+    captureUnexpectedApiException(new Error('TCACHE_UNEXPECTED_HTTP_ERROR'), {
+      operation: 'tcache.request',
+      httpStatus: response.status,
+    });
+    throw error;
   }
   return { httpStatus: response.status, body, durationMs };
 }

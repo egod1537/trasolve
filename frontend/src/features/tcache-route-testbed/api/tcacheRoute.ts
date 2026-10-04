@@ -19,6 +19,7 @@ import type {
   TcacheRouteResult,
 } from '@/features/tcache-route-testbed/model/types';
 import { L } from '@/shared/i18n';
+import { captureUnexpectedApiException } from '@/shared/observability/sentry';
 
 export const TCACHE_ROUTE_API = {
   health: API_ROUTES.tcacheInternalHealth,
@@ -41,7 +42,8 @@ export async function listTcacheRouteJobs(
       ? body.jobs
       : null;
   if (!source) {
-    throw new Error(
+    throw tcacheContractViolation(
+      'tcache.validate-job-list',
       L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
     );
   }
@@ -75,7 +77,8 @@ export async function createTcacheRouteJob(
       ? readString(value, ['job_id', 'jobId', 'id'])
       : '';
     if (!jobId) {
-      throw new Error(
+      throw tcacheContractViolation(
+        'tcache.validate-created-job',
         L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
       );
     }
@@ -240,7 +243,16 @@ export async function getTcacheRouteResult(
 }
 
 export function parseTcacheRouteJobEvent(data: string): TcacheRouteJob {
-  return parseJob(unwrapJob(JSON.parse(data) as unknown));
+  let body: unknown;
+  try {
+    body = JSON.parse(data) as unknown;
+  } catch (cause) {
+    captureUnexpectedApiException(cause, {
+      operation: 'tcache.parse-job-event',
+    });
+    throw cause;
+  }
+  return parseJob(unwrapJob(body));
 }
 
 function toCreateLocation(
@@ -268,7 +280,8 @@ function unwrapJob(value: unknown): unknown {
 
 function parseJob(value: unknown): TcacheRouteJob {
   if (!isRecord(value)) {
-    throw new Error(
+    throw tcacheContractViolation(
+      'tcache.validate-job',
       L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
     );
   }
@@ -349,7 +362,8 @@ function parseRequest(value: unknown): TcacheRouteRequest {
     return { locations: [], mode: 'TRANSIT', departureTime: '' };
   }
   if (!isRecord(value) || !Array.isArray(value.locations)) {
-    throw new Error(
+    throw tcacheContractViolation(
+      'tcache.validate-job-request',
       L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
     );
   }
@@ -411,7 +425,8 @@ function readRequestStringOption(
 
 function parseLocation(value: unknown, index: number) {
   if (!isRecord(value)) {
-    throw new Error(
+    throw tcacheContractViolation(
+      'tcache.validate-job-location',
       L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
     );
   }
@@ -727,7 +742,8 @@ function readStatus(value: unknown): TcacheRouteJob['status'] {
   if (value === 'pending' || value === 'accepted') {
     return 'queued';
   }
-  throw new Error(
+  throw tcacheContractViolation(
+    'tcache.validate-job-status',
     L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
   );
 }
@@ -748,7 +764,8 @@ function readCacheStatus(value: unknown): TcacheRouteJob['cacheStatus'] {
 function readString(value: Record<string, unknown>, keys: string[]): string {
   const result = readOptionalString(value, keys);
   if (result === undefined) {
-    throw new Error(
+    throw tcacheContractViolation(
+      'tcache.validate-required-field',
       L('testbed:tcacheRouteTestbed.errorMessage.text.unknownErrorOccurred'),
     );
   }
@@ -816,4 +833,10 @@ function readOptionalTimestamp(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function tcacheContractViolation(operation: string, message: string): Error {
+  const error = new Error(message);
+  captureUnexpectedApiException(error, { operation });
+  return error;
 }

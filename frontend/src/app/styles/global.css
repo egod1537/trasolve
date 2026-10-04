@@ -62,6 +62,32 @@ button:disabled {
   border: 0;
 }
 
+.app-error-fallback {
+  display: grid;
+  min-height: 100vh;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+}
+
+.app-error-fallback h1,
+.app-error-fallback pre {
+  margin: 0;
+}
+
+.app-error-fallback button {
+  padding: 8px 16px;
+}
+
+.app-error-fallback pre {
+  max-width: min(90vw, 960px);
+  overflow: auto;
+  text-align: start;
+  white-space: pre-wrap;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

@@ -13,6 +13,7 @@
   "dependencies": {
     "@blueprintjs/core": "^6.18.0",
     "@blueprintjs/icons": "^6.13.0",
+    "@sentry/react": "^11.4.0",
     "@trasolve/shared": "0.0.0",
     "cytoscape": "^3.34.3",
     "cytoscape-dagre": "^4.0.1",

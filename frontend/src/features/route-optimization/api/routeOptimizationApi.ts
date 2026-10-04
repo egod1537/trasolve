@@ -15,6 +15,7 @@ import {
   type TrouteOptimizeResponse,
 } from '@trasolve/shared';
 import { L } from '@/shared/i18n';
+import { captureUnexpectedApiException } from '@/shared/observability/sentry';
 
 const ROUTE_OPTIMIZATION_API_CONFIG = {
   requestTimeoutMs: 120_000,
@@ -75,7 +76,7 @@ export async function optimizeDayRoute(
     });
     const responseBody = await readResponseBody(response);
     if (!response.ok) {
-      throw new RouteOptimizationApiError(
+      const error = new RouteOptimizationApiError(
         readApiError(
           responseBody.body,
           L(
@@ -85,9 +86,18 @@ export async function optimizeDayRoute(
           parsedRequest.data,
         ),
       );
+      captureUnexpectedApiException(
+        new Error('ROUTE_OPTIMIZATION_UNEXPECTED_HTTP_ERROR'),
+        {
+          operation: 'route-optimization.submit',
+          httpStatus: response.status,
+        },
+      );
+      throw error;
     }
     if (!responseBody.isJson) {
-      throw new RouteOptimizationApiError(
+      throw captureContractViolation(
+        'route-optimization.parse-submission',
         L(
           'routeOptimization:routeOptimizationApi.error.optimizationRequestResponseFormatIncorrect',
         ),
@@ -103,14 +113,16 @@ export async function optimizeDayRoute(
       responseBody.body,
     );
     if (!submission.success) {
-      throw new RouteOptimizationApiError(
+      throw captureContractViolation(
+        'route-optimization.validate-submission',
         L(
           'routeOptimization:routeOptimizationApi.error.optimizationRequestResponseFormatIncorrect',
         ),
       );
     }
     if (submission.data.job_id !== parsedRequest.data.job_id) {
-      throw new RouteOptimizationApiError(
+      throw captureContractViolation(
+        'route-optimization.validate-job-id',
         L(
           'routeOptimization:routeOptimizationApi.error.optimizationJobIdDoesNotMatch',
         ),
@@ -158,7 +170,7 @@ async function streamOptimizationJob(
   );
   if (!response.ok) {
     const responseBody = await readResponseBody(response);
-    throw new RouteOptimizationApiError(
+    const error = new RouteOptimizationApiError(
       readApiError(
         responseBody.body,
         L(
@@ -167,6 +179,14 @@ async function streamOptimizationJob(
         ),
       ),
     );
+    captureUnexpectedApiException(
+      new Error('ROUTE_OPTIMIZATION_UNEXPECTED_HTTP_ERROR'),
+      {
+        operation: 'route-optimization.stream',
+        httpStatus: response.status,
+      },
+    );
+    throw error;
   }
   if (
     response.body === null ||
@@ -175,7 +195,8 @@ async function streamOptimizationJob(
       ?.toLowerCase()
       .startsWith('text/event-stream')
   ) {
-    throw new RouteOptimizationApiError(
+    throw captureContractViolation(
+      'route-optimization.validate-stream',
       L(
         'routeOptimization:routeOptimizationApi.error.optimizationProgressResponseFormatIncorrect',
       ),
@@ -213,7 +234,7 @@ async function getOptimizationJobState(
   );
   const responseBody = await readResponseBody(response);
   if (!response.ok) {
-    throw new RouteOptimizationApiError(
+    const error = new RouteOptimizationApiError(
       readApiError(
         responseBody.body,
         L(
@@ -222,10 +243,19 @@ async function getOptimizationJobState(
         ),
       ),
     );
+    captureUnexpectedApiException(
+      new Error('ROUTE_OPTIMIZATION_UNEXPECTED_HTTP_ERROR'),
+      {
+        operation: 'route-optimization.get-job',
+        httpStatus: response.status,
+      },
+    );
+    throw error;
   }
   const parsed = trouteJobStateSchema.safeParse(responseBody.body);
   if (!responseBody.isJson || !parsed.success || parsed.data.job_id !== jobId) {
-    throw new RouteOptimizationApiError(
+    throw captureContractViolation(
+      'route-optimization.validate-job',
       L(
         'routeOptimization:routeOptimizationApi.error.optimizationStatusResponseFormatIncorrect',
       ),
@@ -239,7 +269,8 @@ function getOptimizationResult(state: TrouteJobState): TrouteOptimizeResponse {
     if (state.result) {
       return state.result;
     }
-    throw new RouteOptimizationApiError(
+    throw captureContractViolation(
+      'route-optimization.completed-without-result',
       L(
         'routeOptimization:routeOptimizationApi.error.completedOptimizationJobHasNoResults',
       ),
@@ -257,7 +288,8 @@ function getOptimizationResult(state: TrouteJobState): TrouteOptimizeResponse {
       ),
     );
   }
-  throw new RouteOptimizationApiError(
+  throw captureContractViolation(
+    'route-optimization.non-terminal-result',
     L(
       'routeOptimization:routeOptimizationApi.error.optimizationProgressConnectionTerminatedWithoutResult',
     ),
@@ -273,7 +305,8 @@ function parseOptimizationJobEvent(
   try {
     body = JSON.parse(data) as unknown;
   } catch {
-    throw new RouteOptimizationApiError(
+    throw captureContractViolation(
+      'route-optimization.parse-event',
       L(
         'routeOptimization:routeOptimizationApi.error.optimizationProgressDataNotJsonFormat',
       ),
@@ -291,7 +324,8 @@ function parseOptimizationJobEvent(
     rawState.job_id !== jobId ||
     (!envelope.success && !eventMatchesState(type, rawState))
   ) {
-    throw new RouteOptimizationApiError(
+    throw captureContractViolation(
+      'route-optimization.validate-event',
       L(
         'routeOptimization:routeOptimizationApi.error.optimizationProgressDataFormatIncorrect',
       ),
@@ -568,6 +602,15 @@ function readApiError(
     );
   }
   return message;
+}
+
+function captureContractViolation(
+  operation: string,
+  message: string,
+): RouteOptimizationApiError {
+  const error = new RouteOptimizationApiError(message);
+  captureUnexpectedApiException(error, { operation });
+  return error;
 }
 
 function isProviderConfigurationError(code: string): boolean {

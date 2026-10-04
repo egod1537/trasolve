@@ -22,6 +22,7 @@ import type {
   TrouteGatewayResult,
 } from '@/entities/route-job';
 import { L } from '@/shared/i18n';
+import { captureUnexpectedApiException } from '@/shared/observability/sentry';
 
 const REQUEST_TIMEOUT_MS = 35_000;
 const JOB_INSPECTION_TIMEOUT_MS = 5_000;
@@ -84,7 +85,8 @@ export function parseTrouteJobEvent(
   try {
     body = JSON.parse(data) as unknown;
   } catch {
-    throw new Error(
+    throw trouteContractViolation(
+      'troute.parse-job-event',
       L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
     );
   }
@@ -106,7 +108,8 @@ export function parseTrouteJobEvent(
   if (rawState.success && eventMatchesState(type, rawState.data)) {
     return { state: rawState.data };
   }
-  throw new Error(
+  throw trouteContractViolation(
+    'troute.validate-job-event',
     L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
   );
 }
@@ -137,6 +140,17 @@ export async function cancelTrouteJob(
   }
 
   const responseBody = parseResponseBody(rawResponse);
+  if (!response.ok) {
+    captureUnexpectedApiException(
+      new Error(
+        L('testbed:trouteTestbed.text.unknownErrorOccurredWhileForcingJob'),
+      ),
+      {
+        operation: 'troute.cancel-job',
+        httpStatus: response.status,
+      },
+    );
+  }
   const parsedState = response.ok
     ? trouteJobStateSchema.safeParse(responseBody)
     : null;
@@ -166,14 +180,20 @@ export async function getTrouteJob(
     { signal: requestSignal },
   );
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
     );
+    captureUnexpectedApiException(error, {
+      operation: 'troute.get-job',
+      httpStatus: response.status,
+    });
+    throw error;
   }
 
   const parsed = trouteJobStateSchema.safeParse(await response.json());
   if (!parsed.success) {
-    throw new Error(
+    throw trouteContractViolation(
+      'troute.validate-job',
       L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
     );
   }
@@ -192,16 +212,22 @@ export async function listTrouteJobs(
     { signal: requestSignal },
   );
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
     );
+    captureUnexpectedApiException(error, {
+      operation: 'troute.list-jobs',
+      httpStatus: response.status,
+    });
+    throw error;
   }
 
   const parsed = trouteJobHistoryResponseSchema.safeParse(
     await response.json(),
   );
   if (!parsed.success) {
-    throw new Error(
+    throw trouteContractViolation(
+      'troute.validate-job-list',
       L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
     );
   }
@@ -257,6 +283,36 @@ export async function optimizeRouteWithTroute(
   const parsedError = response.ok
     ? null
     : apiErrorSchema.safeParse(responseBody);
+  const responseValidationError =
+    parsedSubmission?.success && acceptedJobId === null
+      ? L(
+          'testbed:troute.optimizeRouteWithTroute.text.responseJobIdDoesNotMatch',
+        )
+      : parsed && !parsed.success && !parsedSubmission?.success
+        ? parsed.error.issues
+            .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+            .join('; ')
+        : null;
+  if (!response.ok) {
+    captureUnexpectedApiException(
+      new Error(
+        L(
+          'testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend',
+        ),
+      ),
+      {
+        operation: 'troute.optimize',
+        httpStatus: response.status,
+      },
+    );
+  } else if (responseValidationError) {
+    captureUnexpectedApiException(
+      new Error('TROUTE_RESPONSE_CONTRACT_VIOLATION'),
+      {
+        operation: 'troute.validate-optimization-response',
+      },
+    );
+  }
 
   return {
     httpStatus: response.status,
@@ -268,16 +324,7 @@ export async function optimizeRouteWithTroute(
     errorResponse: parsedError?.success ? parsedError.data : null,
     acceptedJobId,
     optimization: parsed?.success ? parsed.data : null,
-    responseValidationError:
-      parsedSubmission?.success && acceptedJobId === null
-        ? L(
-            'testbed:troute.optimizeRouteWithTroute.text.responseJobIdDoesNotMatch',
-          )
-        : parsed && !parsed.success && !parsedSubmission?.success
-          ? parsed.error.issues
-              .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-              .join('; ')
-          : null,
+    responseValidationError,
   };
 }
 
@@ -329,4 +376,10 @@ function parseResponseBody(rawResponse: string): unknown {
   } catch {
     return rawResponse;
   }
+}
+
+function trouteContractViolation(operation: string, message: string): Error {
+  const error = new Error(message);
+  captureUnexpectedApiException(error, { operation });
+  return error;
 }
