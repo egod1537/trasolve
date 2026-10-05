@@ -1,10 +1,11 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { ThemeControl } from '@/shared/theme/ThemeControl';
+import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
 import '@/features/auth/ui/map-user-controls.css';
 import { useCurrentUser } from '@/features/auth/model/useCurrentUser';
 import { AccountSettingsModal } from '@/features/auth/ui/AccountSettingsModal';
 import { PreferencesModal } from '@/features/preferences/ui/PreferencesModal';
-import { LanguageControl, useL } from '@/shared/i18n';
+import { useL } from '@/shared/i18n';
+import { trackEvent } from '@/shared/analytics';
 
 function initialOf(name: string): string {
   return name.trim().slice(0, 1).toUpperCase() || '?';
@@ -14,18 +15,6 @@ function Icon({ children }: { children: ReactNode }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       {children}
-    </svg>
-  );
-}
-
-function NineDotIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      {[5, 12, 19].flatMap((cy) =>
-        [5, 12, 19].map((cx) => (
-          <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.35" />
-        )),
-      )}
     </svg>
   );
 }
@@ -86,21 +75,22 @@ function PersonIcon() {
   );
 }
 
-type OpenMenu = 'app' | 'profile' | null;
+type Props = {
+  onOpenTripPicker: () => void;
+};
 
-export function MapUserControls() {
+export function MapUserControls({ onOpenTripPicker }: Props) {
   const L = useL();
   const { state, login, logout, authNotice } = useCurrentUser();
-  const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const appMenuId = useId();
   const profileMenuId = useId();
 
   useEffect(() => {
-    if (!openMenu) {
+    if (!profileMenuOpen) {
       return;
     }
     const closeOnOutsidePointerDown = (event: PointerEvent) => {
@@ -108,7 +98,7 @@ export function MapUserControls() {
         event.target instanceof Node &&
         !rootRef.current?.contains(event.target)
       ) {
-        setOpenMenu(null);
+        setProfileMenuOpen(false);
       }
     };
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -116,7 +106,7 @@ export function MapUserControls() {
         return;
       }
       event.preventDefault();
-      setOpenMenu(null);
+      setProfileMenuOpen(false);
     };
     document.addEventListener('pointerdown', closeOnOutsidePointerDown);
     document.addEventListener('keydown', closeOnEscape);
@@ -124,19 +114,16 @@ export function MapUserControls() {
       document.removeEventListener('pointerdown', closeOnOutsidePointerDown);
       document.removeEventListener('keydown', closeOnEscape);
     };
-  }, [openMenu]);
-
-  const toggleMenu = (menu: OpenMenu) => {
-    setOpenMenu((current) => (current === menu ? null : menu));
-  };
+  }, [profileMenuOpen]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
     try {
       await logout();
+      window.location.assign('/');
     } finally {
       setLoggingOut(false);
-      setOpenMenu(null);
+      setProfileMenuOpen(false);
       setAccountSettingsOpen(false);
       setPreferencesOpen(false);
     }
@@ -155,48 +142,6 @@ export function MapUserControls() {
       role="group"
       aria-label={L('auth:mapUserControls.ariaLabel.userMenu')}
     >
-      <LanguageControl className="map-language-control" />
-      <ThemeControl className="map-theme-control" />
-      <span className="map-user-control-anchor">
-        <button
-          type="button"
-          className="map-app-menu-button"
-          aria-label={L('auth:mapUserControls.ariaLabel.appMenu')}
-          title={L('auth:mapUserControls.ariaLabel.appMenu')}
-          aria-haspopup="menu"
-          aria-expanded={openMenu === 'app'}
-          aria-controls={openMenu === 'app' ? appMenuId : undefined}
-          data-open={openMenu === 'app'}
-          onClick={() => toggleMenu('app')}
-        >
-          <NineDotIcon />
-        </button>
-        {openMenu === 'app' && (
-          <div id={appMenuId} className="map-user-menu" role="menu">
-            <a className="map-user-menu-item" role="menuitem" href="/">
-              <HomeIcon />
-              <span>{L('auth:mapUserControls.text.goHome')}</span>
-            </a>
-            <a className="map-user-menu-item" role="menuitem" href="/map">
-              <MapPinIcon />
-              <span>{L('auth:mapUserControls.text.myTravelMap')}</span>
-            </a>
-            <div className="map-user-menu-divider" role="separator" />
-            <button
-              type="button"
-              className="map-user-menu-item"
-              role="menuitem"
-              onClick={() => {
-                setOpenMenu(null);
-                setPreferencesOpen(true);
-              }}
-            >
-              <GearIcon />
-              <span>{L('auth:mapUserControls.text.preferences')}</span>
-            </button>
-          </div>
-        )}
-      </span>
       <span className="map-user-control-anchor">
         <button
           type="button"
@@ -204,12 +149,12 @@ export function MapUserControls() {
           aria-label={profileLabel}
           title={profileLabel}
           aria-haspopup="menu"
-          aria-expanded={openMenu === 'profile'}
-          aria-controls={openMenu === 'profile' ? profileMenuId : undefined}
+          aria-expanded={profileMenuOpen}
+          aria-controls={profileMenuOpen ? profileMenuId : undefined}
           disabled={state.status === 'loading'}
-          data-open={openMenu === 'profile'}
+          data-open={profileMenuOpen}
           data-status={state.status}
-          onClick={() => toggleMenu('profile')}
+          onClick={() => setProfileMenuOpen((current) => !current)}
         >
           {user ? (
             user.pictureUrl ? (
@@ -226,13 +171,13 @@ export function MapUserControls() {
             <PersonIcon />
           )}
         </button>
-        {openMenu === 'profile' &&
-          (state.status === 'signed-in' ? (
-            <div
-              id={profileMenuId}
-              className="map-user-menu map-profile-menu"
-              role="menu"
-            >
+        {profileMenuOpen && (
+          <div
+            id={profileMenuId}
+            className="map-user-menu map-profile-menu"
+            role="menu"
+          >
+            {state.status === 'signed-in' ? (
               <div className="map-profile-menu-header">
                 <span className="map-profile-menu-avatar" aria-hidden="true">
                   {state.user.pictureUrl ? (
@@ -252,60 +197,99 @@ export function MapUserControls() {
                   </span>
                 </span>
               </div>
-              <button
-                type="button"
-                className="map-user-menu-item"
-                role="menuitem"
-                onClick={() => {
-                  setOpenMenu(null);
-                  setAccountSettingsOpen(true);
-                }}
-              >
-                <GearIcon />
-                <span>
-                  {L('auth:accountSettingsModal.title.accountSettings')}
-                </span>
-              </button>
-              <button
-                type="button"
-                className="map-user-menu-item is-danger"
-                role="menuitem"
-                disabled={loggingOut}
-                onClick={() => void handleLogout()}
-              >
-                <LogoutIcon />
-                <span>
-                  {loggingOut
-                    ? L('auth:accountSettingsModal.action.loggingOut')
-                    : L('common:action.signOut')}
-                </span>
-              </button>
-            </div>
-          ) : (
-            <div
-              id={profileMenuId}
-              className="map-user-menu map-profile-menu"
-              role="menu"
+            ) : authNotice ? (
+              <p className="map-profile-menu-notice" role="alert">
+                {authNotice}
+              </p>
+            ) : null}
+            <a
+              className="map-user-menu-item"
+              role="menuitem"
+              href="/"
+              onClick={() => setProfileMenuOpen(false)}
             >
-              {authNotice && (
-                <p className="map-profile-menu-notice" role="alert">
-                  {authNotice}
-                </p>
-              )}
+              <HomeIcon />
+              <span>{L('auth:mapUserControls.text.goHome')}</span>
+            </a>
+            <button
+              type="button"
+              className="map-user-menu-item"
+              role="menuitem"
+              onClick={() => {
+                setProfileMenuOpen(false);
+                onOpenTripPicker();
+              }}
+            >
+              <MapPinIcon />
+              <span>{L('auth:mapUserControls.text.myTravelMap')}</span>
+            </button>
+            <button
+              type="button"
+              className="map-user-menu-item"
+              data-analytics-id={ANALYTICS_TARGETS.preferencesOpen}
+              data-analytics-screen={ANALYTICS_SCREENS.mapWorkspace}
+              role="menuitem"
+              onClick={() => {
+                trackEvent({
+                  eventType: 'button_click',
+                  screen: ANALYTICS_SCREENS.mapWorkspace,
+                  target: ANALYTICS_TARGETS.preferencesOpen,
+                });
+                setProfileMenuOpen(false);
+                setPreferencesOpen(true);
+              }}
+            >
+              <GearIcon />
+              <span>{L('auth:mapUserControls.text.preferences')}</span>
+            </button>
+            <div className="map-user-menu-divider" role="separator" />
+            {state.status === 'signed-in' ? (
+              <>
+                <button
+                  type="button"
+                  className="map-user-menu-item"
+                  role="menuitem"
+                  onClick={() => {
+                    setProfileMenuOpen(false);
+                    setAccountSettingsOpen(true);
+                  }}
+                >
+                  <GearIcon />
+                  <span>
+                    {L('auth:accountSettingsModal.title.accountSettings')}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="map-user-menu-item is-danger"
+                  role="menuitem"
+                  disabled={loggingOut}
+                  onClick={() => void handleLogout()}
+                >
+                  <LogoutIcon />
+                  <span>
+                    {loggingOut
+                      ? L('auth:accountSettingsModal.action.loggingOut')
+                      : L('common:action.signOut')}
+                  </span>
+                </button>
+              </>
+            ) : (
               <button
                 type="button"
                 className="map-user-menu-item is-accent"
                 role="menuitem"
                 onClick={() => {
-                  setOpenMenu(null);
-                  login();
+                  setProfileMenuOpen(false);
+                  void login();
                 }}
               >
                 <LoginIcon />
                 <span>{L('auth:mapUserControls.text.signGoogle')}</span>
               </button>
-            </div>
-          ))}
+            )}
+          </div>
+        )}
       </span>
       {accountSettingsOpen && state.status === 'signed-in' && (
         <AccountSettingsModal

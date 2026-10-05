@@ -1,0 +1,413 @@
+{
+  "comparison": {
+    "label": {
+      "after": "Дараа нь",
+      "before": "Өмнө нь"
+    }
+  },
+  "routeComparisonMap": {
+    "ariaLabel": {
+      "enlargeRouteMap": "{{title}} Маршрутын газрын зургийг томруулах"
+    },
+    "comparisonMarkers": {
+      "text": {
+        "arrivalPoint": "· Ирэх цэг",
+        "startingPoint": "· Хөдлөх цэг"
+      }
+    },
+    "text": {
+      "currentVisitOrder": "Одоогийн айлчлалын дараалал",
+      "destination": "Очих газар",
+      "map": "Газрын зураг",
+      "optimizedVisitOrder": "Оновчтой айлчлалын дараалал",
+      "startingPoint": "Хөдлөх цэг"
+    }
+  },
+  "routeEndpointContextMenu": {
+    "action": {
+      "destinationPoint": "✓ Хүрэх цэг",
+      "setAsDestination": "Очих газар болгон тохируулах",
+      "setAsStartingPoint": "Хөдлөх цэг болгон тохируулах",
+      "startingPoint": "✓ Хөдлөх цэг"
+    },
+    "ariaLabel": {
+      "setStartingEndingPoints": "{{placeName}}-н хөдлөх болон ирэх цэгүүдийг тохируулах"
+    }
+  },
+  "routeMapComparisonDialog": {
+    "ariaLabel": {
+      "closeRouteMapComparison": "Маршрутын газрын зургийн харьцуулалтыг хаах",
+      "currentVisitOrderExpandedMap": "{{dayTitle}} одоогийн айлчлалын захиалгын өргөтгөсөн газрын зураг",
+      "optimizedVisitOrderExpansionMap": "{{dayTitle}} Оновчтой айлчлалын захиалгын өргөтгөлийн газрын зураг"
+    },
+    "text": {
+      "comparesVisitOrder": "{{dayTitle}}-н айлчлалын дарааллыг харьцуулна уу.",
+      "noOptimizationHasBeenRunYet": "Одоогоор оновчлол хийгдээгүй байна."
+    },
+    "title": {
+      "routeMapComparison": "Маршрутын газрын зургийн харьцуулалт"
+    }
+  },
+  "routeOptimization": {
+    "error": {
+      "routeOptimizationRequestValueIncorrect": "Маршрутын оновчлолын хүсэлтийн утга буруу байна."
+    },
+    "getLocationConstraint": {
+      "text": {
+        "stayTimeMustBe10Minute": "{{name}}-ийн байрлах хугацаа 10 минутын зайтай байх ёстой: {{stayMinutes}} минут"
+      }
+    },
+    "getOpeningWindow": {
+      "text": {
+        "closingTimeMustBe10Minute": "{{name}}-н хаалтын цаг 10 минутын зайтай байх ёстой: {{endText}}",
+        "hasNoValidBusinessHoursSelected": "Сонгосон өдөр {{name}}-н ажиллах цагийн хуваарь хүчинтэй биш байна.",
+        "nextBusinessHoursNotCurrentlySupported": "{{name}}-н дараагийн ажлын цагийг одоогоор маршрутын оновчлол дэмждэггүй.",
+        "openingTimeMustBe10Minute": "{{name}}-н нээлтийн цаг нь 10 минутын зайтай байх ёстой: {{startText}}"
+      }
+    },
+    "getRouteOptimizationIssue": {
+      "text": {
+        "endpointMustBeLocationIncludedCurrent": "Ирэх цэг нь тухайн өдрийн байршил байх ёстой.",
+        "placeIdRequiredCheckActualTravel": "Аяллын бодит хугацааг шалгахын тулд газрын дугаар шаардлагатай: {{value}}",
+        "routeOptimizationRequiresTwoMoreLocations": "Маршрутын оновчлол нь хоёр буюу түүнээс дээш байршил шаарддаг.",
+        "specifiedStartTimeMustBe10": "Заасан эхлэх цаг нь 10 минутын зайтай байх ёстой.",
+        "specifiedTimeStartRequiresStartTime": "Заасан эхлэх цаг нь HH:mm форматаар эхлэх цагийг шаарддаг.",
+        "startingEndingPointsMustBeDifferent": "Хөдлөх болон ирэх цэгүүд өөр өөр газар байх ёстой.",
+        "startingPointMustBeLocationIncluded": "Хөдлөх цэг нь тухайн өдрийн байршил байх ёстой.",
+        "thisStartupMethodNotSupported": "Энэ хөдлөх цагийн тохиргоог дэмжихгүй байна.",
+        "thisTransportationMethodNotSupported": "Энэ тээвэрлэлтийн аргыг дэмжихгүй байна: {{String}}"
+      }
+    }
+  },
+  "routeOptimizationApi": {
+    "createAbortError": {
+      "text": {
+        "routeOptimizationRequestHasBeenCancelled": "Маршрутын оновчлолын хүсэлтийг цуцалсан.",
+        "routeOptimizationRequestTimeExceededSeconds": "Маршрутын оновчлолын хүсэлтийн хугацаа {{value}} секундээс хэтэрсэн."
+      }
+    },
+    "error": {
+      "completedOptimizationJobHasNoResults": "Дууссан оновчлолын ажил ямар ч үр дүнгүй байна.",
+      "errorOccurredWhileCommunicatingTroute": "Хулд загастай холбогдох үед алдаа гарлаа.",
+      "optimizationJobIdDoesNotMatch": "Оновчлолын ажлын ID нь хүсэлттэй таарахгүй байна.",
+      "optimizationProgressConnectionFailedHttp": "HTTP {{status}}-тай холболт амжилтгүй боллоо. Оновчлолын явц.",
+      "optimizationProgressConnectionTerminatedWithoutResult": "Оновчлол хийгдэж байна. Холболт үр дүнгүй тасарлаа.",
+      "optimizationProgressDataFormatIncorrect": "Оновчлолын явцын өгөгдлийн формат буруу байна.",
+      "optimizationProgressDataNotJsonFormat": "Оновчлолын явцын өгөгдөл нь JSON форматаар биш байна.",
+      "optimizationProgressResponseFormatIncorrect": "Оновчлолын явцын хариу үйлдлийн формат буруу байна.",
+      "optimizationRequestFailedHttp": "HTTP {{status}}-тай оновчлолын хүсэлт амжилтгүй боллоо.",
+      "optimizationRequestResponseFormatIncorrect": "Оновчлолын хүсэлтийн хариуны формат буруу байна.",
+      "optimizationStatusQueryFailedHttp": "HTTP {{status}}-тай оновчлолын төлөвийн асуулга амжилтгүй боллоо.",
+      "optimizationStatusResponseFormatIncorrect": "Оновчлолын төлөвийн хариуны формат буруу байна.",
+      "routeOptimizationHasBeenCancelled": "Маршрутын оновчлолыг цуцалсан.",
+      "routeOptimizationRequestDataIncorrect": "Маршрутын оновчлолын хүсэлтийн өгөгдөл буруу байна."
+    },
+    "formatOptimizationJobError": {
+      "text": {
+        "failedRetrieveTravelTimeFromTcache": "tcache эсвэл Google Routes-оос аяллын хугацааг авахад алдаа гарлаа.",
+        "googleRoutesDidnTReturnDirections": "Google Routes нь тухайн газар эсвэл тээврийн хэрэгслийн чиглэлийг харуулаагүй.",
+        "locationOpeningHoursVisitingHoursRange": "Байршлын ажиллах цаг эсвэл айлчлалын цагийн хязгаар буруу байна.",
+        "noRouteLookupProviderSetUp": "Маршрут хайлтын үйлчилгээ үзүүлэгч тохируулагдаагүй байна. Серверийнхээ тохиргоог шалгана уу.",
+        "pathOptimizationFailed": "Маршрутын оновчлол амжилтгүй боллоо.",
+        "routeOptimizationProcessingTimedOut": "Маршрутын оновчлолын боловсруулалтын хугацаа дууссан.",
+        "routeSearchFailedBecauseThereWas": "Газрын ID хүчингүй тул маршрутыг олох боломжгүй байна.",
+        "travelTimeCouldNotBeRetrieved": "tcache сервер холбогдож чадаагүй тул аяллын хугацааг олж чадсангүй.",
+        "weCouldNotFindPossibleRoute": "Одоогийн ажлын цаг болон байрлах нөхцөл байдлыг харгалзан үзвэл бид боломжит маршрутыг олж чадсангүй."
+      }
+    },
+    "formatStartPolicy": {
+      "text": {
+        "asLateAsPossible": "Аль болох хожуу",
+        "asSoonAsPossible": "Аль болох хурдан",
+        "designatedTime": "Тогтмол хугацаа",
+        "selected": "Сонгогдсон"
+      }
+    },
+    "readApiError": {
+      "text": {
+        "routeOptimizationRequestTimedOut": "Маршрутын оновчлолын хүсэлтийн хугацаа дууссан.",
+        "routeOptimizationServerNotSetUp": "Маршрутын оновчлолын сервер тохируулагдаагүй байна.",
+        "startupMethodNotCurrentlySupportedBy": "{{formatStartPolicy}} хөөрөх цагийн тохиргоог одоогоор троут сервер дэмждэггүй.",
+        "unableConnectRouteOptimizationServer": "Маршрут оновчлолын серверт холбогдож чадсангүй."
+      }
+    }
+  },
+  "routeOptimizationMetrics": {
+    "createMetrics": {
+      "label": {
+        "scheduleEndTime": "Дуусах цагийг төлөвлөх",
+        "scheduleStartTime": "Эхлэх цагийг хуваарьлах",
+        "totalTravelTime": "нийт аяллын хугацаа",
+        "totalWaitingTime": "нийт хүлээлгийн хугацаа"
+      }
+    },
+    "describeMetricDelta": {
+      "label": {
+        "decrease": "бууралт",
+        "faster": "илүү хурдан",
+        "increase": "нэмэгдүүлэх",
+        "late": "хоцорсон",
+        "matchesSpecifiedTime": "Тодорхойлсон цагтай таарч байна",
+        "minutes": "{{absolute}} минут {{value}}",
+        "noChange": "өөрчлөлтгүй",
+        "noComparativeData": "Харьцуулсан мэдээлэл байхгүй"
+      }
+    },
+    "description": {
+      "calculatingRouteMetrics": "Маршрутын үзүүлэлтүүдийг тооцоолох.",
+      "compareKeyFiguresFromCurrentSchedule": "Одоогийн хуваарийн гол үзүүлэлтүүд болон оновчлолын үр дүнг харьцуул.",
+      "whenYouRunOptimizationYouCan": "Та оновчлолыг ажиллуулахдаа Өмнөх/Дараагийн үзүүлэлтүүдийг харьцуулж болно."
+    },
+    "formatMetricValue": {
+      "text": {
+        "minutes": "{{value}} минут"
+      }
+    },
+    "title": {
+      "indicatorChange": "Метрийн өөрчлөлтүүд"
+    }
+  },
+  "routeOptimizationModal": {
+    "action": {
+      "applyThisResult": "Энэ үр дүнг хэрэгжүүлэх",
+      "optimizationRun": "Оновчлолыг ажиллуулах",
+      "runAgain": "Дахин гүйх"
+    },
+    "ariaLabel": {
+      "closeRouteOptimization": "Маршрутын оновчлолыг хаах",
+      "currentVisitOrderMap": "{{title}} одоогийн айлчлалын захиалгын газрын зураг",
+      "optimizedVisitOrderMap": "{{title}} Зочлох захиалгын газрын зургийг оновчтой болгосон"
+    },
+    "dayList": {
+      "ariaLabel": {
+        "selectDay": "Өдөр сонгох"
+      },
+      "text": {
+        "inputConfirmationRequired": "Оролтын баталгаажуулалт шаардлагатай"
+      }
+    },
+    "description": {
+      "anyExistingSuccessResultsWillRemain": "Одоо байгаа аливаа амжилтын үр дүн хэвээр байх болно.",
+      "compareCurrentRouteOptimizedRouteBy": "Өдөр бүрийн одоогийн болон оновчтой маршрутуудыг харьцуул.",
+      "compareCurrentVisitSequenceOptimizedVisit": "Одоогийн айлчлалын дарааллыг оновчтой айлчлалын дараалалтай харьцуулна уу."
+    },
+    "formatDayStatus": {
+      "text": {
+        "beforeRunning": "Гүйхээс өмнө",
+        "failure": "Амжилтгүй болсон",
+        "optimized": "Оновчтой болгосон",
+        "preparingRun": "Гүйхэд бэлдэж байна",
+        "resultMaintenanceRerunFailure": "Үр дүн засвар үйлчилгээ/дахин ажиллуулахад алдаа гарлаа",
+        "running": "Ажиллаж байгаа {{progress}}%"
+      }
+    },
+    "getValidationResolution": {
+      "text": {
+        "addAtLeastTwoLocationsThis": "Энэ өдөр хөдлөх болон ирэх цэгүүдийг оруулаад дор хаяж хоёр газрыг нэмнэ үү.",
+        "checkLocationSBusinessHoursStay": "Тус байршлын ажиллах цаг болон байрлах цагийг шалгаад дахин оролдоно уу.",
+        "enterStartTime10MinuteIncrements": "Эхлэх цагийг 09:00 гэх мэт 10 минутын зайтай оруулна уу.",
+        "selectDifferentLocationsCurrentDayAs": "Одоогийн өдрийн өөр өөр газруудыг хөдлөх болон ирэх цэг болгон сонгоно уу.",
+        "selectPlaceDisplayedPlaceSearchAgain": "Google Газрын ID-г хадгалахын тулд Газрын Хайлтад харагдаж буй газрыг дахин сонгоно уу.",
+        "setDaySModeTransportationAs": "Өдрийн тээврийн хэрэгслийг нийтийн тээвэр, машин, явган эсвэл дугуйгаар тохируулна уу."
+      }
+    },
+    "optimizationSettings": {
+      "ariaLabel": {
+        "fixedStartTime": "Тогтмол эхлэх цаг",
+        "routeOptimizationTransportation": "Тээврийн маршрутын оновчлол"
+      },
+      "description": {
+        "enter10MinuteIncrements": "10 минутын зайтай оруулна уу",
+        "sameAppliesOptimizationRequestsComparisonMaps": "Энэ нь оновчлолын хүсэлт болон харьцуулах газрын зурагт мөн адил хамаарна.",
+        "setMethodFindingDepartureTimeMeans": "Хөдлөх цаг болон тээврийн хэрэгслийг олох аргыг тохируулна уу.",
+        "startingEndingPointsCanBeSpecified": "Доорх маршрутын харьцуулалтаас газрын зураг эсвэл хуваарь дээрээс хөдлөх болон ирэх цэгүүдийг сонгоно уу."
+      },
+      "label": {
+        "startupMethod": "Хөдлөх цагийн тохиргоо"
+      },
+      "text": {
+        "exploreEarliestPossibleScheduleStartTime": "Хуваарийн эхлэх хугацааг аль болох эрт судлаарай.",
+        "exploreLatestPossibleEventStartTime": "Хамгийн сүүлийн хуваарийн эхлэх цагийг олоорой.",
+        "firstLocationScheduleStartsAtTime": "Эхний байршлын хуваарь таныг орох мөчөөс эхэлнэ.",
+        "meansTransportation": "Тээвэр",
+        "startTime": "Эхлэх цаг"
+      },
+      "title": {
+        "departureConditions": "Явах нөхцөл",
+        "optimizationSettings": "Оновчлолын тохиргоо"
+      }
+    },
+    "optimizationValidationPanel": {
+      "text": {
+        "unableRunOptimization": "Оновчлолыг ажиллуулах боломжгүй байна"
+      }
+    },
+    "tRAVELMODEOPTIONS": {
+      "label": {
+        "bicycle": "Дугуй",
+        "car": "Машин",
+        "publicTransportation": "Нийтийн тээвэр",
+        "walk": "Алхах"
+      }
+    },
+    "text": {
+      "awaitingOptimizationResults": "Оновчлолын үр дүнг хүлээж байна.",
+      "currentVisitOrderCurrentSchedule": "Одоогийн айлчлалын захиалга · Одоогийн хуваарь",
+      "failedApplyOptimizationResultsDay": "Өдрийн оновчлолын үр дүнг хэрэглэж чадсангүй.",
+      "noBusinessHoursInformationOptimizationRequests": "Ажлын цагийн мэдээлэл алга байна: {{placeNames}}. Оновчлолын хүсэлтүүд нь түр зуурын 00:00–23:50 цонхыг ашигладаг.",
+      "notExecutable": "Ажиллуулах боломжгүй · {{inputIssue}}",
+      "optimizationVisitOrderOptimizationSchedule": "Оновчтой айлчлалын дараалал · Оновчтой хуваарь",
+      "pathOptimization": "{{title}} маршрутын оновчлол",
+      "routeOptimizationRequestFailed": "Маршрутын оновчлолын хүсэлт амжилтгүй боллоо.",
+      "selectDay": "Өдөр сонгох",
+      "where": "{{length}} газар"
+    },
+    "title": {
+      "pathComparison": "Маршрутын харьцуулалт",
+      "routeOptimization": "Маршрутын оновчлол"
+    },
+    "tooltip": {
+      "itCannotBeAppliedBecauseSchedule": "Оновчлолын үр дүнгийн хуваарийн мэдээллийг баталгаажуулж чадаагүй тул үүнийг хэрэгжүүлэх боломжгүй."
+    }
+  },
+  "routeOptimizationProgressDialog": {
+    "action": {
+      "canceling": "Цуцалж байна"
+    },
+    "ariaLabel": {
+      "pathOptimizationPhase": "Маршрутын оновчлолын үе шат"
+    },
+    "description": {
+      "routeOptimizationRequestCouldNotBe": "Маршрутын оновчлолын хүсэлтийг биелүүлж чадсангүй."
+    },
+    "formatServerStatus": {
+      "text": {
+        "running": "Гүйлт",
+        "waiting": "Хүлээгдэж буй"
+      }
+    },
+    "formatStageMessage": {
+      "text": {
+        "waitingServerSProgress": "Серверийн явцыг хүлээж байна."
+      }
+    },
+    "formatStepState": {
+      "text": {
+        "canceled": "Цуцлагдсан",
+        "done": "Дууссан",
+        "progress": "Үргэлжилж байна",
+        "waiting": "Хүлээж байна"
+      }
+    },
+    "getMessage": {
+      "text": {
+        "cleaningUpConnectionsBetweenRunningRequests": "Ажиллаж буй хүсэлтүүд болон явцын хоорондох холболтыг цэвэрлэх.",
+        "optimizationComplete": "Оновчлол дууссан.",
+        "optimizationHasBeenCancelled": "Оновчлолыг цуцалсан.",
+        "sendingOptimizationRequest": "Оновчлолын хүсэлт илгээж байна.",
+        "youCanRetryRequestClosePop": "Та хүсэлтийг дахин оролдох эсвэл попап цонхыг хааж болно."
+      }
+    },
+    "getTitle": {
+      "text": {
+        "cancelingOptimization": "Оновчлолыг цуцалж байна",
+        "optimizationComplete": "Оновчлол дууссан",
+        "optimizationHasBeenCanceled": "Оновчлолыг цуцалсан",
+        "optimizingRoute": "Маршрутыг оновчтой болгох",
+        "pathOptimizationFailed": "Маршрутын оновчлол амжилтгүй боллоо"
+      }
+    },
+    "pROGRESSSTEPS": {
+      "label": {
+        "chooseOptimalRoute": "Хамгийн оновчтой замыг сонгох",
+        "constructingTravelTimeMatrix": "Аяллын хугацааны матрицыг бүтээх",
+        "generateInitialRouteCandidates": "Анхны маршрутын нэр дэвшигчдийг үүсгэх",
+        "generateResults": "үр дүн гаргах",
+        "inputValidation": "Оролтын баталгаажуулалт",
+        "preparingCheckTravelTime": "Аяллын цагийг шалгахад бэлдэж байна",
+        "requestReceived": "Хүсэлтийг хүлээн авсан",
+        "scheduleCalculation": "Хуваарийг тооцоолох",
+        "scheduleConstraintVerification": "Хуваарийн хязгаарлалтын баталгаажуулалт",
+        "selectRouteProvider": "Маршрут үйлчилгээ үзүүлэгчийг сонгох",
+        "travelTimeInquiry": "Аяллын цагийн лавлагаа"
+      },
+      "message": {
+        "comparingCandidatePaths": "Нэр дэвшигчдийн замыг харьцуулах.",
+        "optimizationRequestHasBeenReceived": "Таны оновчлолын хүсэлтийг хүлээн авлаа.",
+        "weCalculatingItineraryVisit": "Айлчлалын хуваарийг тооцоолох.",
+        "weConstructingTravelTimeMatrix": "Бид аяллын хугацааны матрицыг бүтээж байна.",
+        "weGeneratingInitialRouteCandidates": "Анхны маршрутын нэр дэвшигчдийг үүсгэж байна.",
+        "weLookingUpTravelTimesBetween": "Бид байршлуудын хоорондох аяллын хугацааг хайж байна.",
+        "weOptimizingOrderVisits": "Бид айлчлалын дарааллыг оновчтой болгож байна.",
+        "weOrganizingOptimizationResults": "Бид оновчлолын үр дүнг зохион байгуулж байна.",
+        "wePreparingCheckTravelTimesBetween": "Бид байршлуудын хоорондох аяллын хугацааг шалгахаар бэлтгэж байна.",
+        "weVerifyingBusinessHoursResidenceTime": "Бид ажлын цаг болон оршин суух цагийн хязгаарлалтыг баталгаажуулж байна.",
+        "weVerifyingLocationScheduleConditions": "Байршил болон хуваарийн нөхцөлийг баталгаажуулж байна.",
+        "youSelectingRouteProvider": "Маршрут үйлчилгээ үзүүлэгчийг сонгох."
+      }
+    },
+    "text": {
+      "message": "{{percentage}}%",
+      "processing": "Боловсруулж байна",
+      "routeOptimizationProgress": "Маршрутын оновчлол хийгдэж байна",
+      "routeOptimizationProgress2": "Маршрутын оновчлолын явц {{percentage}}%",
+      "serverStatus": "Серверийн төлөв: {{status}}"
+    }
+  },
+  "routeSchedulePreview": {
+    "afterSchedule": {
+      "description": {
+        "afterOptimizingYouCanSeeItinerary": "Оновчлол хийсний дараа та газар бүрийн айлчлалын хуваарийг харах боломжтой.",
+        "previewCannotBeCreatedBecauseItinerary": "Хуваарь нь айлчлалын дараалалтай таарахгүй байгаа тул урьдчилж харахыг үүсгэх боломжгүй байна.",
+        "weCalculatingOptimizedSchedule": "Бид оновчтой хуваарийг тооцоолж байна."
+      },
+      "text": {
+        "move": "нүүх",
+        "optimizationSchedule": "Оновчтой хуваарь"
+      }
+    },
+    "beforeSchedule": {
+      "text": {
+        "currentSchedule": "Одоогийн хуваарь",
+        "untilNextSchedule": "Дараагийн хуваарь хүртэл"
+      },
+      "tooltip": {
+        "schedule": "Хуваарь"
+      }
+    },
+    "scheduleLeg": {
+      "text": {
+        "minutes": "{{minutes}} минут"
+      }
+    },
+    "schedulePlace": {
+      "action": {
+        "arrival": "Ирэх цэг",
+        "start": "Хөдлөх цэг"
+      },
+      "ariaLabel": {
+        "setAsDestination": "{{name}}-г ирэх цэг болгон тохируулна уу",
+        "setAsStartingPoint": "{{name}}-г хөдлөх цэг болгон тохируулна уу"
+      },
+      "text": {
+        "message": "{{time}} ~ {{departureTime}}",
+        "timeNotSet": "Цагийг тохируулаагүй байна"
+      }
+    },
+    "text": {
+      "arrival": "Ирэх {{arrivalTime}}",
+      "departure": "Хөдлөх цаг {{departureTime}}",
+      "minutesStay": "Байх хугацаа: {{stayMinutes}} минут",
+      "waitMinutes": "{{waitMinutes}} минут хүлээнэ үү"
+    }
+  },
+  "scheduleLegTimeline": {
+    "ariaLabel": {
+      "minutes": "{{label}} {{startTime}}-с {{endTime}} хүртэл, {{durationMinutes}} минут"
+    },
+    "text": {
+      "noTimeInformation": "Цагийн мэдээлэл алга",
+      "noTravelTimeInformation": "Аяллын цагийн мэдээлэл алга"
+    }
+  }
+}

@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import { TravelMode } from '../constants/travelMode.js';
+import {
+  googleMapsLanguageCodeSchema,
+  googleMapsRegionCodeSchema,
+} from './googleMapsLocale.js';
 
 const coordinatesSchema = z.object({
   lat: z.number().min(-90).max(90),
@@ -27,6 +31,8 @@ export const directionsRequestSchema = z.strictObject({
   travelMode: z.enum(TravelMode).optional(),
   intermediates: z.array(routeLocationSchema).max(25).optional(),
   computeAlternativeRoutes: z.boolean().optional(),
+  languageCode: googleMapsLanguageCodeSchema.optional(),
+  regionCode: googleMapsRegionCodeSchema.optional(),
 });
 
 export const routeRequestDiagnosticsSchema = z.strictObject({
@@ -35,6 +41,8 @@ export const routeRequestDiagnosticsSchema = z.strictObject({
   destinationType: z.enum(['address', 'place', 'coordinates']),
   computeAlternativeRoutes: z.boolean(),
   intermediatesCount: z.number().int().nonnegative(),
+  languageCode: googleMapsLanguageCodeSchema,
+  regionCode: googleMapsRegionCodeSchema,
 });
 
 export const routeUpstreamDiagnosticsSchema = z.strictObject({

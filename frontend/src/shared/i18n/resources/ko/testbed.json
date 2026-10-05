@@ -767,7 +767,7 @@
       "namespace": "네임스페이스"
     },
     "placeholder": {
-      "searchKeyKoJaEn": "key, KO, JA, EN 검색",
+      "searchKeyKoJaEn": "key, KO, JA, EN, MN 검색",
       "value": "{{variable}} 값"
     },
     "rowStatus": {
@@ -787,6 +787,7 @@
       "failedChangeLanguage": "언어를 변경하지 못했습니다.",
       "fullNamespace": "전체 namespace",
       "numberErrors": "오류 수",
+      "numberLanguages": "지원 언어 수",
       "numberNamespaces": "namespace 수",
       "rawJsonLanguage": "Raw JSON 언어",
       "rawJsonNamespace": "원시 JSON 네임스페이스",

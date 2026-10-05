@@ -1,13 +1,32 @@
 export {
+  API_ROUTE_SUFFIXES,
   API_ROUTES,
+  ANALYTICS_SCREENS,
+  ANALYTICS_TARGETS,
   CHAT_LIMITS,
+  GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
+  GOOGLE_MAPS_LANGUAGE_CODES,
+  GOOGLE_MAPS_REGION_CODE,
   TRIP_COMMAND_PLAN_FINGERPRINT_MAX_LENGTH,
   TRIP_COMMAND_PLAN_MAX_OPERATIONS,
   TRIP_COMMAND_PLAN_STEP_ID_MAX_LENGTH,
   TRIP_COMMAND_PLAN_VALIDATION_MESSAGE_MAX_LENGTH,
   TRIP_COMMAND_PLAN_VERSION,
   TravelMode,
+  buildAnalyticsFunnelApiRoute,
+  buildAnalyticsSessionEventsRoute,
+  buildSharedTripApiRoute,
+  buildTripShareApiRoute,
+  getGoogleMapsLocale,
+  type GoogleMapsLanguageCode,
+  type GoogleMapsLocale,
+  type GoogleMapsRegionCode,
 } from './constants/index.js';
+
+export {
+  googleMapsLanguageCodeSchema,
+  googleMapsRegionCodeSchema,
+} from './schemas/googleMapsLocale.js';
 
 export {
   tripIdSchema,
@@ -43,6 +62,24 @@ export type {
   TripScheduleStopUpdate,
   TripScheduleUpdate,
 } from './types/trip.js';
+
+export {
+  sharedTripSchema,
+  tripShareOwnerSchema,
+  tripShareSettingsSchema,
+  tripShareTokenSchema,
+  shareAttributionIdSchema,
+  shareViewerTypeSchema,
+  updateTripShareRequestSchema,
+} from './schemas/tripSharing.js';
+
+export type {
+  SharedTrip,
+  TripShareOwner,
+  TripShareSettings,
+  UpdateTripShareRequest,
+  ShareViewerType,
+} from './types/tripSharing.js';
 
 export {
   tripCommandPlanAddPlaceSourceSchema,
@@ -171,6 +208,84 @@ export type {
   OpenWebUIModel,
   OpenWebUIModelListResponse,
 } from './types/openwebui.js';
+
+export {
+  ANALYTICS_EVENT_BODY_LIMIT,
+  ANALYTICS_DOMAIN_EVENT_TYPES,
+  ANALYTICS_DURATION_BUCKETS,
+  ANALYTICS_EVENT_TYPES,
+  ANALYTICS_LOCALES,
+  ANALYTICS_METADATA_SOURCES,
+  analyticsDomainEventTypeSchema,
+  analyticsEventPageSchema,
+  analyticsEventMetadataSchema,
+  analyticsEventRequestMetadataSchema,
+  analyticsEventRequestSchema,
+  analyticsEventSchema,
+  analyticsEventTypeSchema,
+  analyticsFlowResponseSchema,
+  analyticsLocaleSchema,
+  analyticsOverviewResponseSchema,
+  analyticsScreenSchema,
+  analyticsSessionPageSchema,
+  analyticsSessionSummarySchema,
+  analyticsTargetSchema,
+} from './schemas/analytics.js';
+
+export {
+  analyticsFunnelListResponseSchema,
+  analyticsFunnelResultResponseSchema,
+  funnelAggregationFiltersSchema,
+  funnelDefinitionSchema,
+  funnelResultSchema,
+  funnelStepConditionSchema,
+  funnelStepResultSchema,
+  funnelStepSchema,
+  tripShareAttributionResultSchema,
+} from './schemas/analyticsFunnel.js';
+
+export type {
+  AnalyticsEvent,
+  AnalyticsEventPage,
+  AnalyticsEventMetadata,
+  AnalyticsEventRequestMetadata,
+  AnalyticsEventRequest,
+  AnalyticsDomainEventType,
+  AnalyticsFlowDomainEventNode,
+  AnalyticsFlowEdge,
+  AnalyticsFlowNode,
+  AnalyticsFlowNodeMode,
+  AnalyticsFlowResult,
+  AnalyticsFlowResponse,
+  AnalyticsFlowScreenNode,
+  AnalyticsFlowSummary,
+  AnalyticsLocale,
+  AnalyticsFunnelStageResult,
+  AnalyticsFunnelTransitionResult,
+  AnalyticsQualityAnalysisResult,
+  AnalyticsQualitySummary,
+  AnalyticsOverviewResponse,
+  AnalyticsScreen,
+  AnalyticsSessionPage,
+  AnalyticsSessionSummary,
+  AnalyticsTarget,
+  AnalyticsEventType,
+} from './types/analytics.js';
+
+export type {
+  AnalyticsFunnelListResponse,
+  AnalyticsFunnelResultResponse,
+  FunnelAggregationFilters,
+  FunnelDefinition,
+  FunnelMatchedStep,
+  FunnelProgressionResult,
+  FunnelResult,
+  FunnelSessionProgression,
+  FunnelStep,
+  FunnelStepCondition,
+  FunnelStepResult,
+  TripShareAttributionResult,
+} from './types/analyticsFunnel.js';
 
 export {
   TROUTE_MAX_DEBUG_JOB_DURATION_MS,

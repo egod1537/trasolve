@@ -6,6 +6,7 @@ import {
 } from '@/features/auth/api/googleOAuth';
 import {
   fetchCurrentUser,
+  loginAsLocalGuest,
   logout as requestLogout,
 } from '@/features/auth/api/auth';
 import { L } from '@/shared/i18n';
@@ -111,9 +112,25 @@ export function useCurrentUser() {
     };
   }, [refresh]);
 
-  const login = useCallback(() => {
+  const login = useCallback(async (returnTo = window.location.pathname) => {
     setAuthNotice(null);
-    startGoogleOAuth(window.location.pathname);
+    if (!import.meta.env.DEV) {
+      startGoogleOAuth(returnTo);
+      return;
+    }
+
+    try {
+      const user = await loginAsLocalGuest();
+      setState({ status: 'signed-in', user });
+      if (returnTo !== window.location.pathname) {
+        window.location.assign(returnTo);
+      }
+    } catch {
+      setState({ status: 'signed-out' });
+      setAuthNotice(
+        L('auth:useCurrentUser.text.failedLoadLoginResultsTryAgain'),
+      );
+    }
   }, []);
 
   const logout = useCallback(async () => {

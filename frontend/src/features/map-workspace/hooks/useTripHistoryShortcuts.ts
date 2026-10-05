@@ -28,10 +28,11 @@ export function useTripHistoryShortcuts(controller: TripEditController): void {
       const undoRequested = key === 'z' && !event.shiftKey;
       const redoRequested =
         (key === 'z' && event.shiftKey) || (key === 'y' && !event.shiftKey);
-      if (undoRequested && controller.canUndo) {
+      const { canUndo, canRedo } = controller.getHistorySnapshot();
+      if (undoRequested && canUndo) {
         event.preventDefault();
         void controller.undo();
-      } else if (redoRequested && controller.canRedo) {
+      } else if (redoRequested && canRedo) {
         event.preventDefault();
         void controller.redo();
       }

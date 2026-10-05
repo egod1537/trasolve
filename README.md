@@ -415,7 +415,8 @@ chmod 600 ~/.config/jjs/deploy.env
 ```
 
 `~/.config/jjs/deploy.env`의 `/Users/you`를 Mac mini의 절대 경로로 바꾸고 GitHub token,
-Cloudflare 파일 경로, `JJS_GOOGLE_MAPS_API_KEY`를 설정합니다.
+Cloudflare 파일 경로, `JJS_GOOGLE_MAPS_API_KEY`, `JJS_SENTRY_DSN`을 설정합니다.
+`JJS_SENTRY_DSN`은 선택값이며 비어 있으면 frontend Error Monitoring만 비활성화됩니다.
 `JJS_GOOGLE_MAPS_MAP_ID`는 별도 Map ID가 없을 때 `DEMO_MAP_ID`를 사용할 수 있습니다.
 Google Maps 브라우저 키는 Maps JavaScript API와 실제 production/preview HTTP referrer로
 제한합니다. 이 파일은 shell 문법으로 읽는 운영자 소유 파일이므로 신뢰할 수 있는 내용만

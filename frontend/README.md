@@ -356,3 +356,27 @@ from the UI; if both are missing, the whole metadata area is hidden.
 The existing branch deployment script passes its resolved branch, exact commit,
 channel, and repository URL through Compose build args to the frontend image. No
 runtime hostname detection is used.
+
+# Frontend error monitoring
+
+The frontend initializes the Sentry Cloud SDK before React renders. Sentry stays
+disabled when `VITE_SENTRY_DSN` is empty and is enabled in local, preview, and
+production builds whenever a DSN is present. The existing build channel is used as
+the Sentry environment, the existing full Git SHA is used as the release, and the
+branch and channel are attached as tags.
+
+Only error monitoring is configured. Replay, profiling, and tracing integrations
+are excluded. Request bodies, query strings, cookies, credentials, AI content, and
+precise location fields are filtered before an event is sent. Expected 4xx API
+responses are not captured; unexpected 5xx responses and response contract failures
+are captured at their API boundary.
+
+For a local end-to-end check, put the Sentry Cloud project DSN in `.env.local`,
+temporarily trigger an exception from application code, and remove that temporary
+code after confirming the event and its scrubbed payload in Sentry Issues. No test
+route, button, or error helper is included in the application.
+
+Mac mini deployments read `JJS_SENTRY_DSN` from the host-owned `deploy.env` and pass
+it into the frontend image as a build argument. The DSN is embedded at build time,
+not read from the running Caddy container. Source map upload is intentionally outside
+this integration and requires a separate server-side token and pipeline design.

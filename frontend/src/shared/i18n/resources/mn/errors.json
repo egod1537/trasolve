@@ -1,0 +1,38 @@
+{
+  "chat": {
+    "error": {
+      "answerCouldNotBeRetrievedTry": "Хариултыг авч чадсангүй. Дараа дахин оролдоно уу.",
+      "chatResponseFormatIncorrect": "Чатын хариултын формат буруу байна.",
+      "unableConnectChatServerTryAgain": "Чатын серверт холбогдох боломжгүй байна. Дараа дахин оролдоно уу.",
+      "waitingTimeReplyHasBeenExceeded": "Хариу хүлээх хугацаа хэтэрсэн байна. Дахин оролдоно уу."
+    }
+  },
+  "openwebui": {
+    "error": {
+      "modelListCouldNotBeLoaded": "Загварын жагсаалтыг ачаалж чадсангүй.",
+      "modelListResponseFormatIncorrect": "Загварын жагсаалтын хариултын формат буруу байна.",
+      "unableConnectModelListServer": "Загварын жагсаалтын серверт холбогдох боломжгүй байна.",
+      "waitingTimeModelListHasExpired": "Загварын жагсаалтыг хүлээх хугацаа дууссан."
+    }
+  },
+  "places": {
+    "error": {
+      "placeLookupFailedHttp": "Газрын хайлт амжилтгүй боллоо (HTTP {{status}})",
+      "placeSearchResponseFormatIncorrect": "Газрын хайлтын хариултын формат буруу байна.",
+      "venueDetailResponseFormatIncorrect": "Байршлын дэлгэрэнгүй хариултын формат буруу байна."
+    }
+  },
+  "routes": {
+    "error": {
+      "routeLookupFailedHttp": "Чиглэл хайх амжилтгүй боллоо (HTTP {{status}})",
+      "routeResponseFormatIncorrect": "Маршрутын хариултын формат буруу байна."
+    }
+  },
+  "trips": {
+    "error": {
+      "travelRequestCannotBeProcessed": "Таны аяллын хүсэлтийг боловсруулж чадсангүй.",
+      "travelRequestTimedOutRefreshList": "Аяллын хүсэлтийн хугацаа дууссан. Хадгалах эсэхээ шалгахын тулд жагсаалтыг шинэчилнэ үү.",
+      "unableConnectTravelServer": "Аяллын серверт холбогдох боломжгүй байна."
+    }
+  }
+}

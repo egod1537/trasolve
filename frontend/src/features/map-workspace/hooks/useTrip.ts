@@ -1,12 +1,19 @@
 import { createContext, useContext, useSyncExternalStore } from 'react';
 import type { TripEditController } from '@/features/map-workspace/controller/TripEditController';
+import type { MapWorkspaceMode } from '@/features/map-workspace/model/mapWorkspaceMode';
 import type { TripStore } from '@/features/map-workspace/store/TripStore';
 import { L } from '@/shared/i18n';
 
-export type TripContextValue = {
-  store: TripStore;
-  controller: TripEditController;
-};
+export type TripContextValue =
+  | {
+      mode: 'edit';
+      store: TripStore;
+      controller: TripEditController;
+    }
+  | {
+      mode: 'readonly';
+      store: TripStore;
+    };
 
 export const TripContext = createContext<TripContextValue | null>(null);
 
@@ -24,5 +31,13 @@ export function useTripState() {
 }
 
 export function useTripEditController() {
-  return useApplication().controller;
+  const application = useApplication();
+  if (application.mode !== 'edit') {
+    throw new Error(L('map:useTrip.error.tripproviderRequired'));
+  }
+  return application.controller;
+}
+
+export function useTripMode(): MapWorkspaceMode {
+  return useApplication().mode;
 }

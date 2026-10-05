@@ -22,17 +22,41 @@ type QueuedOperation = {
   resolve: (success: boolean) => void;
 };
 
+export type TripHistorySnapshot = Readonly<{
+  canUndo: boolean;
+  canRedo: boolean;
+}>;
+
+const EMPTY_HISTORY_SNAPSHOT: TripHistorySnapshot = Object.freeze({
+  canUndo: false,
+  canRedo: false,
+});
+
 export class TripCommandDispatcher {
   public constructor(private readonly store: TripStore) {
     this.history = new TripHistory();
   }
 
   public get canUndo(): boolean {
-    return this.history.canUndo;
+    return this.historySnapshot.canUndo;
   }
 
   public get canRedo(): boolean {
-    return this.history.canRedo;
+    return this.historySnapshot.canRedo;
+  }
+
+  public subscribeHistory(listener: () => void): () => void {
+    this.historyListeners.add(listener);
+    return () => this.historyListeners.delete(listener);
+  }
+
+  public getHistorySnapshot(): TripHistorySnapshot {
+    return this.historySnapshot;
+  }
+
+  public resetHistory(): void {
+    this.history.reset();
+    this.publishHistorySnapshot();
   }
 
   public execute(command: TripCommand): Promise<boolean> {
@@ -56,9 +80,13 @@ export class TripCommandDispatcher {
 
   private readonly history: TripHistory;
 
+  private readonly historyListeners = new Set<() => void>();
+
   private readonly queue: QueuedOperation[] = [];
 
   private executing = false;
+
+  private historySnapshot = EMPTY_HISTORY_SNAPSHOT;
 
   private enqueue(
     operation: CommandOperation | HistoryOperation,
@@ -78,6 +106,7 @@ export class TripCommandDispatcher {
       }
       this.history.record(current.trip);
       this.store.setState({ trip: next, status: 'dirty', error: null });
+      this.publishHistorySnapshot();
       return true;
     } catch {
       this.store.setState({
@@ -109,6 +138,7 @@ export class TripCommandDispatcher {
         this.history.commitRedo(current.trip);
       }
       this.store.setState({ trip: next, status: 'dirty', error: null });
+      this.publishHistorySnapshot();
       return true;
     } catch {
       this.store.setState({
@@ -151,5 +181,20 @@ export class TripCommandDispatcher {
       reconcileDayRouteSegments(day, () => `pending-${crypto.randomUUID()}`);
     }
     return tripSchema.parse(trip);
+  }
+
+  private publishHistorySnapshot(): void {
+    const next: TripHistorySnapshot = {
+      canUndo: this.history.canUndo,
+      canRedo: this.history.canRedo,
+    };
+    if (
+      next.canUndo === this.historySnapshot.canUndo &&
+      next.canRedo === this.historySnapshot.canRedo
+    ) {
+      return;
+    }
+    this.historySnapshot = next;
+    this.historyListeners.forEach((listener) => listener());
   }
 }

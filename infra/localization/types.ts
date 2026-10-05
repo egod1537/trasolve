@@ -1,4 +1,4 @@
-export const LOCALIZATION_LOCALES = ['ko', 'ja', 'en'] as const;
+export const LOCALIZATION_LOCALES = ['ko', 'ja', 'en', 'mn'] as const;
 
 export const LOCALIZATION_HEADERS = [
   'loc_key',

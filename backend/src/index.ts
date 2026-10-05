@@ -20,6 +20,14 @@ import { PostgresTripRepository } from './trip/repositories/postgresTripReposito
 import { TripController } from './trip/tripController.js';
 import { TripHttpService } from './trip/tripHttpService.js';
 import type { TripRepository } from './trip/tripRepository.js';
+import type { TripShareRepository } from './share/tripShareRepository.js';
+import { PostgresTripShareRepository } from './share/repositories/postgresTripShareRepository.js';
+import { TripShareController } from './trip-sharing/tripShareController.js';
+import { TripShareHttpService } from './trip-sharing/tripShareHttpService.js';
+import type { AnalyticsRepository } from './analytics/analyticsEventRepository.js';
+import { PostgresAnalyticsRepository } from './analytics/postgresAnalyticsRepository.js';
+import { AnalyticsEventHttpService } from './analytics/analyticsEventHttpService.js';
+import { AnalyticsQueryHttpService } from './analytics/analyticsQueryHttpService.js';
 
 loadBackendEnvironment();
 
@@ -32,8 +40,10 @@ void startBackend().catch((cause: unknown) => {
 });
 
 async function startBackend(): Promise<void> {
-  const { API, createLocalTripRepository } = await import('./instances.js');
-  const persistence = await createRuntimePersistence(createLocalTripRepository);
+  const { API, createLocalTripPersistence } = await import('./instances.js');
+  const persistence = await createRuntimePersistence(
+    createLocalTripPersistence,
+  );
   let server: Server | undefined;
 
   try {
@@ -50,6 +60,18 @@ async function startBackend(): Promise<void> {
         persistence.localDevelopmentUserId,
       ),
       new TripHttpService(tripController, currentUser),
+      new TripShareHttpService(
+        new TripShareController(
+          persistence.trips,
+          persistence.tripShares,
+          persistence.auth,
+        ),
+        currentUser,
+      ),
+      new AnalyticsEventHttpService(persistence.analytics, currentUser),
+      new AnalyticsQueryHttpService(persistence.analytics, {
+        readEnabled: canUseAnalyticsReadApi(),
+      }),
     );
     await listen(server, port, host);
     console.log(`Backend: http://${host}:${port}`);
@@ -84,20 +106,27 @@ async function startBackend(): Promise<void> {
 }
 
 interface RuntimePersistence {
+  readonly analytics: AnalyticsRepository;
   readonly auth: AuthRepository;
   readonly sessions: SessionRepository;
   readonly trips: TripRepository;
+  readonly tripShares: TripShareRepository;
   readonly localDevelopmentUserId?: string;
   close(): Promise<void>;
 }
 
 async function createRuntimePersistence(
-  createLocalTripRepository: (rootDir: string) => TripRepository,
+  createLocalTripPersistence: (rootDir: string) => {
+    readonly analytics: AnalyticsRepository;
+    readonly trips: TripRepository;
+    readonly tripShares: TripShareRepository;
+  },
 ): Promise<RuntimePersistence> {
   const mode = resolveBackendPersistenceMode();
   if (mode === 'local') {
     const dataRoot = resolveBackendDataRoot();
     const auth = new LocalAuthRepository({ rootDir: dataRoot });
+    const tripPersistence = createLocalTripPersistence(dataRoot);
     const localDevelopmentUserId = canUseLocalDevelopmentAuthentication()
       ? await auth.ensureDevelopmentUser()
       : undefined;
@@ -108,7 +137,7 @@ async function createRuntimePersistence(
     return {
       auth,
       sessions: auth,
-      trips: createLocalTripRepository(dataRoot),
+      ...tripPersistence,
       localDevelopmentUserId,
       close: () => Promise.resolve(),
     };
@@ -126,25 +155,21 @@ async function createRuntimePersistence(
   }
   console.log('Persistence: PostgreSQL');
   return {
+    analytics: new PostgresAnalyticsRepository(database),
     auth: new PostgresAuthRepository(database),
     sessions: new PostgresSessionRepository(database),
     trips: new PostgresTripRepository(database),
+    tripShares: new PostgresTripShareRepository(database),
     close: () => database.close(),
   };
 }
 
-function hasGoogleOAuthConfiguration(): boolean {
-  return [
-    process.env.GOOGLE_OAUTH_CLIENT_ID,
-    process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-    process.env.GOOGLE_OAUTH_REDIRECT_URI,
-  ].every((value) => Boolean(value?.trim()));
+function canUseLocalDevelopmentAuthentication(): boolean {
+  return process.env.NODE_ENV !== 'production';
 }
 
-function canUseLocalDevelopmentAuthentication(): boolean {
-  return (
-    process.env.NODE_ENV !== 'production' && !hasGoogleOAuthConfiguration()
-  );
+function canUseAnalyticsReadApi(): boolean {
+  return process.env.NODE_ENV !== 'production';
 }
 
 function listen(

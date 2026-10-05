@@ -22,6 +22,7 @@ type DetailTarget =
   { type: 'place'; id: string } | { type: 'polyline'; id: string } | null;
 
 type Props = SelectionProps & {
+  tripId: string;
   trip: Trip;
   busy: boolean;
   saveStatus: 'ready' | 'dirty' | 'saving' | 'error';
@@ -61,6 +62,7 @@ type Props = SelectionProps & {
 };
 
 export const LayerPanel = memo(function LayerPanel({
+  tripId,
   trip,
   busy,
   saveStatus,
@@ -273,7 +275,9 @@ export const LayerPanel = memo(function LayerPanel({
           onUpdateMode={onUpdatePolylineMode}
         />
       )}
-      {shareModalOpen && <ShareTripModal onClose={closeShareModal} />}
+      {shareModalOpen && (
+        <ShareTripModal tripId={tripId} onClose={closeShareModal} />
+      )}
     </>
   );
 });

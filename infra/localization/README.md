@@ -44,9 +44,9 @@ or a populated `.env.local` file.
 
 Every localization tab uses these headers:
 
-| loc_key            | ko                | ja                     | en                 | context           | status   |
-| ------------------ | ----------------- | ---------------------- | ------------------ | ----------------- | -------- |
-| search.placeholder | 장소를 검색하세요 | 場所を検索してください | Search for a place | Search input hint | REVIEWED |
+| loc_key            | ko                | ja                     | en                 | mn         | context           | status   |
+| ------------------ | ----------------- | ---------------------- | ------------------ | ---------- | ----------------- | -------- |
+| search.placeholder | 장소를 검색하세요 | 場所を検索してください | Search for a place | Газар хайх | Search input hint | REVIEWED |
 
 - `loc_key` is local to the tab namespace and uses dot-separated identifier
   segments. Do not repeat the namespace in it.
@@ -70,6 +70,7 @@ frontend/src/shared/i18n/generated-local/
   ko/<namespace>.json
   ja/<namespace>.json
   en/<namespace>.json
+  mn/<namespace>.json
 ```
 
 `generated-local/` is ignored by Git. Do not import it as a production build
@@ -88,6 +89,7 @@ frontend/src/shared/i18n/resources/
   ko/<namespace>.json
   ja/<namespace>.json
   en/<namespace>.json
+  mn/<namespace>.json
 ```
 
 Both modes read the same configured spreadsheet and run the same validation and
@@ -96,7 +98,7 @@ output root differs. Files use UTF-8, two-space indentation, deterministic key
 ordering, and a trailing newline.
 
 Commit files generated in production mode to Git. Within the selected output
-root, the sync command owns all `.json` files in the `ko`, `ja`, and `en`
+root, the sync command owns all `.json` files in the `ko`, `ja`, `en`, and `mn`
 directories and removes stale namespace files after all spreadsheet data has
 passed validation.
 

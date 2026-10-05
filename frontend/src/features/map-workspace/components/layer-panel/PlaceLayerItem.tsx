@@ -1,5 +1,9 @@
 import { memo, type MouseEvent } from 'react';
-import type { PlaceStyle } from '@trasolve/shared';
+import {
+  ANALYTICS_SCREENS,
+  ANALYTICS_TARGETS,
+  type PlaceStyle,
+} from '@trasolve/shared';
 import type { usePlaceReorder } from '@/features/map-workspace/hooks/usePlaceReorder';
 import type { LayerSelectionModifiers } from '@/features/map-workspace/model/useMapWorkspace';
 import type { LayerValidationState, TripPlace } from '@/entities/trip';
@@ -111,7 +115,12 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
             onCancel={finishNameEditing}
           />
         ) : (
-          <span className="trip-place-name" onDoubleClick={startNameEditing}>
+          <span
+            className="trip-place-name"
+            data-analytics-id={ANALYTICS_TARGETS.placeEdit}
+            data-analytics-screen={ANALYTICS_SCREENS.mapWorkspace}
+            onDoubleClick={startNameEditing}
+          >
             {place.name}
           </span>
         )}

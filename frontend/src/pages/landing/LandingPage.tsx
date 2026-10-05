@@ -1,9 +1,16 @@
 import { Component } from 'react';
+import {
+  ANALYTICS_SCREENS,
+  ANALYTICS_TARGETS,
+  type AnalyticsTarget,
+} from '@trasolve/shared';
 import { checkApiHealth } from '@/shared/api/health';
 import { FeatureSection } from '@/pages/landing/components/FeatureSection';
 import { Header } from '@/pages/landing/components/Header';
 import { Hero } from '@/pages/landing/components/Hero';
+import { useCurrentUser } from '@/features/auth/model/useCurrentUser';
 import { NL, useL, type Localize } from '@/shared/i18n';
+import { trackEvent, useScreenView } from '@/shared/analytics';
 
 type ApiHealth = 'checking' | 'available' | 'unavailable';
 
@@ -11,11 +18,92 @@ interface LandingPageState {
   apiHealth: ApiHealth;
 }
 
-type LandingPageProps = { L: Localize };
+type LandingPageProps = {
+  L: Localize;
+  authNotice: string | null;
+  headerProfile: {
+    displayName: string;
+    pictureUrl?: string;
+  } | null;
+  headerActionLabel: string;
+  authLoading: boolean;
+  heroPrimaryLabel: string;
+  heroPrimaryTarget: AnalyticsTarget;
+  onHeaderAction: () => void;
+  onHeroPrimaryAction: () => void;
+  onLogout: () => Promise<void>;
+};
 
 export function LandingPage() {
   const L = useL();
-  return <LandingPageView L={L} />;
+  const { state, login, logout, authNotice } = useCurrentUser();
+  useScreenView(ANALYTICS_SCREENS.landing);
+
+  const trackLandingButton = (target: AnalyticsTarget): void => {
+    trackEvent({
+      eventType: 'button_click',
+      screen: ANALYTICS_SCREENS.landing,
+      target,
+    });
+  };
+
+  const enterService = (): void => {
+    if (state.status === 'loading') {
+      return;
+    }
+    if (state.status === 'signed-in') {
+      trackLandingButton(ANALYTICS_TARGETS.landingEnterMap);
+      window.location.assign('/map');
+      return;
+    }
+    trackLandingButton(ANALYTICS_TARGETS.landingLogin);
+    void login('/map');
+  };
+
+  const handleHeaderAction = (): void => {
+    if (state.status === 'signed-out') {
+      trackLandingButton(ANALYTICS_TARGETS.landingLogin);
+      void login();
+      return;
+    }
+    enterService();
+  };
+
+  return (
+    <LandingPageView
+      L={L}
+      authNotice={authNotice}
+      headerProfile={
+        state.status === 'signed-in'
+          ? {
+              displayName: state.user.name ?? state.user.email,
+              pictureUrl: state.user.pictureUrl,
+            }
+          : null
+      }
+      headerActionLabel={
+        state.status === 'signed-out'
+          ? L('auth:mapUserControls.text.signGoogle')
+          : L('common:header.text.goServices')
+      }
+      authLoading={state.status === 'loading'}
+      heroPrimaryLabel={
+        state.status === 'loading'
+          ? L('auth:mapUserControls.tooltip.preparing')
+          : state.status === 'signed-out'
+            ? L('auth:mapUserControls.text.signGoogle')
+            : L('common:hero.text.gettingStarted')
+      }
+      heroPrimaryTarget={
+        state.status === 'signed-in'
+          ? ANALYTICS_TARGETS.landingEnterMap
+          : ANALYTICS_TARGETS.landingLogin
+      }
+      onHeaderAction={handleHeaderAction}
+      onHeroPrimaryAction={enterService}
+      onLogout={logout}
+    />
+  );
 }
 
 class LandingPageView extends Component<LandingPageProps, LandingPageState> {
@@ -41,7 +129,18 @@ class LandingPageView extends Component<LandingPageProps, LandingPageState> {
   }
 
   public render() {
-    const { L } = this.props;
+    const {
+      L,
+      authNotice,
+      headerProfile,
+      headerActionLabel,
+      authLoading,
+      heroPrimaryLabel,
+      heroPrimaryTarget,
+      onHeaderAction,
+      onHeroPrimaryAction,
+      onLogout,
+    } = this.props;
     const { apiHealth } = this.state;
     const healthLabel = {
       checking: L(
@@ -56,9 +155,21 @@ class LandingPageView extends Component<LandingPageProps, LandingPageState> {
     }[apiHealth];
     return (
       <div className="landing-page" data-api-health={apiHealth}>
-        <Header />
+        <Header
+          actionLabel={headerActionLabel}
+          actionDisabled={authLoading}
+          profile={headerProfile}
+          onAction={onHeaderAction}
+          onLogout={onLogout}
+        />
         <main>
-          <Hero />
+          <Hero
+            authNotice={authNotice}
+            primaryActionLabel={heroPrimaryLabel}
+            primaryActionTarget={heroPrimaryTarget}
+            primaryActionDisabled={authLoading}
+            onPrimaryAction={onHeroPrimaryAction}
+          />
           <FeatureSection />
         </main>
         <footer className="site-footer">

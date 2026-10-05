@@ -103,14 +103,20 @@ export class GoogleOAuthHttpFlow {
       pathname === API_ROUTES.googleOAuthStart ||
       pathname === API_ROUTES.googleOAuthCallback ||
       pathname === API_ROUTES.googleOAuthResult;
+    const isLocalLoginRoute = pathname === API_ROUTES.authLocalLogin;
     const isAuthMeRoute = pathname === API_ROUTES.authMe;
     const isAuthLogoutRoute = pathname === API_ROUTES.authLogout;
 
-    if (!isOAuthRoute && !isAuthMeRoute && !isAuthLogoutRoute) {
+    if (
+      !isOAuthRoute &&
+      !isLocalLoginRoute &&
+      !isAuthMeRoute &&
+      !isAuthLogoutRoute
+    ) {
       return false;
     }
 
-    if (isAuthLogoutRoute) {
+    if (isLocalLoginRoute || isAuthLogoutRoute) {
       if (request.method !== 'POST') {
         response.setHeader('Allow', 'POST');
         const body: ApiErrorResponse = {
@@ -123,7 +129,11 @@ export class GoogleOAuthHttpFlow {
         return true;
       }
 
-      await this.handleLogout(request, response);
+      if (isLocalLoginRoute) {
+        await this.handleLocalLogin(response);
+      } else {
+        await this.handleLogout(request, response);
+      }
       return true;
     }
 
@@ -305,28 +315,43 @@ export class GoogleOAuthHttpFlow {
     request: IncomingMessage,
     response: ServerResponse,
   ): Promise<void> {
-    let userId = await this.currentUser.resolve(request);
-    if (!userId && this.localDevelopmentUserId) {
-      userId = this.localDevelopmentUserId;
-      const sessionSecret = await this.sessions.create(
-        userId,
-        sessionLifetimeMs,
-      );
-      response.setHeader(
-        'Set-Cookie',
-        createCookie(
-          sessionCookieName,
-          sessionSecret,
-          sessionCookiePath,
-          usesSecureOAuthCookies(),
-          sessionCookieMaxAgeSeconds,
-        ),
-      );
-    }
+    const userId = await this.currentUser.resolve(request);
     const user = userId
       ? await this.authentication.getUserById(userId)
       : undefined;
     const body: AuthMeResponse = { user: user ?? null };
+    sendJson(response, 200, body);
+  }
+
+  private async handleLocalLogin(response: ServerResponse): Promise<void> {
+    if (!this.localDevelopmentUserId) {
+      response.writeHead(404);
+      response.end();
+      return;
+    }
+
+    const user = await this.authentication.getUserById(
+      this.localDevelopmentUserId,
+    );
+    if (!user) {
+      throw new Error('Local development user is unavailable.');
+    }
+
+    const sessionSecret = await this.sessions.create(
+      user.id,
+      sessionLifetimeMs,
+    );
+    response.setHeader(
+      'Set-Cookie',
+      createCookie(
+        sessionCookieName,
+        sessionSecret,
+        sessionCookiePath,
+        usesSecureOAuthCookies(),
+        sessionCookieMaxAgeSeconds,
+      ),
+    );
+    const body: AuthMeResponse = { user };
     sendJson(response, 200, body);
   }
 

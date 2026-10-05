@@ -1,4 +1,15 @@
 {
+  "publicSharePage": {
+    "description": {
+      "unavailable": "링크가 유효하지 않거나 공유가 해제되었습니다."
+    },
+    "status": {
+      "loading": "공유 여행을 불러오는 중입니다."
+    },
+    "title": {
+      "unavailable": "공유 여행을 열 수 없습니다."
+    }
+  },
   "shareTripModal": {
     "action": {
       "shareDrive": "Drive에서 공유"
@@ -9,10 +20,17 @@
       "shareMapClose": "지도 공유 닫기"
     },
     "description": {
-      "anyoneAccessCanSeeNameProfile": "액세스 권한이 있는 모든 사용자는 내 지도 및 Drive에서 내 이름과 프로필 사진을 볼 수 있습니다."
+      "anyoneAccessCanSeeNameProfile": "링크로 지도를 보는 사용자는 공유 소유자의 이름과 프로필 사진을 볼 수 있습니다."
+    },
+    "error": {
+      "loadFailed": "공유 설정을 불러오지 못했습니다.",
+      "updateFailed": "공유 설정을 저장하지 못했습니다."
     },
     "label": {
       "shareLink": "공유 링크"
+    },
+    "status": {
+      "loading": "공유 설정을 불러오는 중입니다."
     },
     "text": {
       "allowOthersSearchFindThisMap": "다른 사람이 인터넷에서 이 지도를 검색하고 찾도록 허용",
@@ -46,6 +64,7 @@
       "itSBringingYouTravel": "여행을 불러오고 있습니다."
     },
     "text": {
+      "createExampleTripSeoul": "서울 예시 여행 만들기",
       "createExampleTripTokyo": "도쿄 예시 여행 만들기",
       "createNewTrip": "새 여행 만들기",
       "daysLocations": "Day {{dayCount}}개 · {{placeCount}}개 장소",

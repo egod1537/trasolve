@@ -17,14 +17,18 @@ import { useTheme } from '@/shared/theme/useTheme';
 import type { MapCameraState, MapPolyline } from '@/shared/types/mapTypes';
 import { useMapPolyline } from '@/map/hooks/useMapPolyline';
 import { createGoogleMapRuntime } from '@/map/runtime/createGoogleMapRuntime';
-import { mapsAuthErrorEvent, mapsConfig } from '@/map/runtime/googleMaps';
+import {
+  GoogleMapsLocaleMismatchError,
+  mapsAuthErrorEvent,
+  mapsConfig,
+} from '@/map/runtime/googleMaps';
 import type {
   GoogleMapHandle,
   GoogleMapProps,
   GoogleMapStatus,
 } from '@/map/types/googleMapComponent';
 import '@/map/components/google-map.css';
-import { useL } from '@/shared/i18n';
+import { getLanguage, useL } from '@/shared/i18n';
 
 type MapContextValue = {
   adapter: MapAdapter;
@@ -58,6 +62,7 @@ export function useGoogleMap() {
 
 export function GoogleMap(props: GoogleMapProps) {
   const L = useL();
+  const language = getLanguage();
   const { resolvedTheme } = useTheme();
   const {
     ref,
@@ -132,6 +137,7 @@ export function GoogleMap(props: GoogleMapProps) {
       zoom: preservedCamera?.zoom ?? latest.current.zoom,
       options: latest.current.options,
       mapId,
+      language,
       theme: resolvedTheme,
     }).then(
       (created) => {
@@ -148,6 +154,10 @@ export function GoogleMap(props: GoogleMapProps) {
         if (controller.signal.aborted) {
           return;
         }
+        if (error instanceof GoogleMapsLocaleMismatchError) {
+          window.location.reload();
+          return;
+        }
         setStatus('error');
         latest.current.onError?.(
           error instanceof Error ? error : new Error(String(error)),
@@ -162,7 +172,7 @@ export function GoogleMap(props: GoogleMapProps) {
       runtimeRef.current = null;
       ownedRuntime?.dispose();
     };
-  }, [L, mapId, resolvedTheme]);
+  }, [L, language, mapId, resolvedTheme]);
 
   useEffect(() => {
     if (!runtime) {

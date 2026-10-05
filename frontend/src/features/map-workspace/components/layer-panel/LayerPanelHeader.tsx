@@ -7,10 +7,12 @@ import {
   type RefObject,
   type ReactNode,
 } from 'react';
+import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
 import { LoadingSpinner } from '@/shared/ui/LoadingSpinner';
 import type { Trip } from '@/entities/trip';
 import { InlineRename } from '@/shared/ui/InlineRename';
 import { getLanguage, useL, L } from '@/shared/i18n';
+import { trackEvent } from '@/shared/analytics';
 
 type SaveStatus = 'ready' | 'dirty' | 'saving' | 'error';
 
@@ -235,9 +237,18 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
           ref={shareButtonRef}
           type="button"
           className="trip-panel-header-action"
+          data-analytics-id={ANALYTICS_TARGETS.shareOpen}
+          data-analytics-screen={ANALYTICS_SCREENS.mapWorkspace}
           aria-label={L('map:layerPanelHeader.ariaLabel.shareTrip')}
           title={L('map:layerPanelHeader.ariaLabel.shareTrip')}
-          onClick={onShareTrip}
+          onClick={() => {
+            trackEvent({
+              eventType: 'button_click',
+              screen: ANALYTICS_SCREENS.mapWorkspace,
+              target: ANALYTICS_TARGETS.shareOpen,
+            });
+            onShareTrip();
+          }}
         >
           <ActionIcon>
             <circle cx="18" cy="5" r="2.5" />

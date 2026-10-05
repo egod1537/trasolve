@@ -1,9 +1,14 @@
 import { useState, type ReactNode } from 'react';
-import type { PlaceDetails } from '@trasolve/shared';
+import {
+  ANALYTICS_SCREENS,
+  ANALYTICS_TARGETS,
+  type PlaceDetails,
+} from '@trasolve/shared';
 import type { SelectedGooglePlace } from '@/entities/place';
 import { MapPopupCardShell } from '@/shared/ui/map/MapPopupCardShell';
 import { PlaceOpeningHours } from '@/features/place-editor/ui/PlaceOpeningHours';
 import { getLanguage, useL } from '@/shared/i18n';
+import { trackEvent, useScreenView } from '@/shared/analytics';
 
 type Props = {
   selection: Exclude<SelectedGooglePlace, null>;
@@ -99,6 +104,7 @@ export function GooglePlaceCard({
   onAddToTrip,
 }: Props) {
   const L = useL();
+  useScreenView(ANALYTICS_SCREENS.placeDetail);
   const [submitting, setSubmitting] = useState(false);
   const [addFailed, setAddFailed] = useState(false);
   const place = selection.status === 'loaded' ? selection.place : null;
@@ -108,12 +114,24 @@ export function GooglePlaceCard({
     if (!place || disabled) {
       return;
     }
+    trackEvent({
+      eventType: 'button_click',
+      screen: ANALYTICS_SCREENS.placeDetail,
+      target: ANALYTICS_TARGETS.addPlace,
+    });
     setSubmitting(true);
     setAddFailed(false);
     try {
       if (!(await onAddToTrip(dayId, place))) {
         setAddFailed(true);
+        return;
       }
+      trackEvent({
+        eventType: 'add_place',
+        screen: ANALYTICS_SCREENS.placeDetail,
+        target: ANALYTICS_TARGETS.addPlace,
+        metadata: { source: 'google_place_card', success: true },
+      });
     } catch {
       setAddFailed(true);
     } finally {
@@ -229,6 +247,8 @@ export function GooglePlaceCard({
               <button
                 type="button"
                 className="place-info-add-button"
+                data-analytics-id={ANALYTICS_TARGETS.addPlace}
+                data-analytics-screen={ANALYTICS_SCREENS.placeDetail}
                 aria-busy={submitting}
                 disabled={disabled || !activeDayId}
                 onClick={() => {

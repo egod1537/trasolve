@@ -7,7 +7,10 @@ import {
   type TripScheduleUpdate,
 } from '@trasolve/shared';
 import type { TripCommand } from '@/features/map-workspace/command/TripCommand';
-import { TripCommandDispatcher } from '@/features/map-workspace/command/TripCommandDispatcher';
+import {
+  TripCommandDispatcher,
+  type TripHistorySnapshot,
+} from '@/features/map-workspace/command/TripCommandDispatcher';
 import { parseTripCommandString } from '@/features/map-workspace/command/TripCommandParser';
 import type { RegisteredTripCommand } from '@/features/map-workspace/command/TripCommandRegistry';
 import {
@@ -67,6 +70,12 @@ export class TripEditController {
     this.debouncedAutosave = options.debouncedAutosave;
     this.commandDispatcher = new TripCommandDispatcher(store);
   }
+
+  public readonly subscribeHistory = (listener: () => void): (() => void) =>
+    this.commandDispatcher.subscribeHistory(listener);
+
+  public readonly getHistorySnapshot = (): TripHistorySnapshot =>
+    this.commandDispatcher.getHistorySnapshot();
 
   public async save(): Promise<boolean> {
     if (this.destroyed) {
@@ -294,6 +303,7 @@ export class TripEditController {
 
   public destroy(): void {
     this.destroyed = true;
+    this.commandDispatcher.resetHistory();
     this.clearAutosaveTimer();
     this.flushAfterPending = false;
     const pending = this.pending;
@@ -306,7 +316,7 @@ export class TripEditController {
 
   private readonly debouncedAutosave: boolean;
 
-  private commandDispatcher: TripCommandDispatcher;
+  private readonly commandDispatcher: TripCommandDispatcher;
 
   private autosaveTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -501,7 +511,7 @@ export class TripEditController {
           status: 'error',
           error: cause.message,
         });
-        this.commandDispatcher = new TripCommandDispatcher(this.store);
+        this.commandDispatcher.resetHistory();
         return false;
       }
       const current = this.store.getState();
