@@ -28,7 +28,8 @@ validate_auto_config() {
 }
 
 run_once() {
-  local heads_file branch ref sha slug unit_dir deployed status attempted attempted_at now
+  local heads_file branch ref sha slug hostname database unit_dir compose_env
+  local deployed status attempted attempted_at now
   LOG_BRANCH=watcher
   validate_auto_config
   need_command git
@@ -56,10 +57,20 @@ run_once() {
 
     validate_branch "$branch"
     slug="$(slug_for_branch "$branch")"
+    hostname="$(hostname_for_slug "$branch" "$slug")"
+    database="$(database_for_branch "$branch" "$slug")"
     unit_dir="$DEPLOYMENTS_DIR/$slug"
+    compose_env="$unit_dir/compose.env"
+    ensure_compose_env_compatibility "$compose_env" "$hostname" "$database"
     deployed="$(read_state "$unit_dir" commit 2>/dev/null || true)"
     status="$(read_state "$unit_dir" status 2>/dev/null || true)"
-    [[ "$deployed" != "$sha" || "$status" != success ]] || continue
+    if [[ "$deployed" == "$sha" && "$status" == success ]]; then
+      if deployment_containers_healthy "$slug" "$sha"; then
+        continue
+      fi
+      LOG_BRANCH="$branch"
+      log "event=health-check scope=containers result=failed action=recover"
+    fi
 
     attempted="$(read_state "$unit_dir" auto-attempted-commit 2>/dev/null || true)"
     attempted_at="$(read_state "$unit_dir" auto-attempted-at 2>/dev/null || true)"
@@ -73,7 +84,7 @@ run_once() {
     mkdir -p "$unit_dir"
     write_state "$unit_dir" auto-attempted-commit "$sha"
     write_state "$unit_dir" auto-attempted-at "$now"
-    if "$SCRIPT_DIR/deploy.sh" "$branch" "$sha"; then
+    if "$SCRIPT_DIR/deploy.sh" "$branch" "$sha" </dev/null; then
       rm -f "$unit_dir/auto-attempted-commit" "$unit_dir/auto-attempted-at"
       log "event=auto-deploy commit=$sha result=success"
     else

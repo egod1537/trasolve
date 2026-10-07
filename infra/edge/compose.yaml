@@ -7,6 +7,27 @@ x-logging: &default-logging
     max-file: "5"
 
 services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: jjs-edge-postgres
+    environment:
+      POSTGRES_DB: trasolve
+      POSTGRES_USER: trasolve
+      POSTGRES_PASSWORD: ${JJS_POSTGRES_PASSWORD:?set JJS_POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      jjs-edge:
+        aliases: [postgres]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trasolve -d trasolve"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    logging: *default-logging
+    restart: unless-stopped
+
   caddy:
     image: caddy:2.10-alpine
     container_name: jjs-edge-caddy
@@ -48,5 +69,6 @@ networks:
     name: jjs-edge
 
 volumes:
+  postgres-data:
   caddy-data:
   caddy-config:

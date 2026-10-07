@@ -81,6 +81,8 @@ validate_config() {
     || die "JJS_EXTERNAL_HEALTHCHECK must be true or false"
   [[ "$AUTO_PROVISION_DNS" == true || "$AUTO_PROVISION_DNS" == false ]] \
     || die "JJS_AUTO_PROVISION_DNS must be true or false"
+  [[ "${JJS_POSTGRES_PASSWORD:-}" =~ ^[A-Za-z0-9]+$ ]] \
+    || die "JJS_POSTGRES_PASSWORD must be a non-empty alphanumeric value"
   if [[ "$AUTO_PROVISION_DNS" == true ]]; then
     [[ "$CLOUDFLARE_TUNNEL_ID" =~ ^[0-9a-fA-F-]{36}$ ]] \
       || die "JJS_CLOUDFLARE_TUNNEL_ID must be a tunnel UUID"
@@ -151,6 +153,15 @@ environment_for_branch() {
   fi
 }
 
+database_for_branch() {
+  local branch="$1" slug="$2"
+  if [[ "$branch" == "$MAIN_BRANCH" ]]; then
+    printf 'trasolve\n'
+  else
+    printf 'trasolve_%s\n' "${slug//-/_}"
+  fi
+}
+
 acquire_lock() {
   local name="$1" pid=""
   DEPLOY_LOCK_DIR="$LOCKS_DIR/$name.lock"
@@ -194,7 +205,8 @@ write_state() {
 }
 
 resolve_remote_commit() {
-  local branch="$1" requested="${2:-}" remote_ref="refs/remotes/origin/$branch" resolved
+  local branch="$1" requested="${2:-}" resolved
+  local remote_ref="refs/remotes/origin/$branch"
   git fetch --no-tags origin "+refs/heads/$branch:$remote_ref" >/dev/null
   resolved="$(git rev-parse --verify "$remote_ref^{commit}")"
   [[ "$resolved" =~ ^[0-9a-f]{40}$ ]] || die "could not resolve full commit SHA for origin/$branch"
@@ -219,12 +231,15 @@ prepare_worktree() {
 }
 
 write_compose_env() {
-  local path="$1" branch="$2" slug="$3" commit="$4" worktree="$5"
+  local path="$1" branch="$2" slug="$3" commit="$4" worktree="$5" hostname="$6"
+  local database="$7"
   {
     # Compose env-file syntax has interpolation characters that valid Git refs
     # may contain. The full branch is already preserved in runtime state.
     printf 'JJS_BRANCH=%s\n' "$slug"
     printf 'JJS_BRANCH_SLUG=%s\n' "$slug"
+    printf 'JJS_HOSTNAME=%s\n' "$hostname"
+    printf 'JJS_DATABASE_NAME=%s\n' "$database"
     printf 'JJS_COMMIT_SHA=%s\n' "$commit"
     printf 'JJS_WORKTREE=%s\n' "$worktree"
     printf 'JJS_BACKEND_IMAGE=jjs-%s-backend:%s\n' "$slug" "$commit"
@@ -232,9 +247,47 @@ write_compose_env() {
   } >"$path"
 }
 
+ensure_compose_env_compatibility() {
+  local path="$1" hostname="$2" database="$3"
+  [[ -f "$path" ]] || return 0
+  if ! grep -q '^JJS_HOSTNAME=' "$path"; then
+    printf 'JJS_HOSTNAME=%s\n' "$hostname" >>"$path"
+  fi
+  if ! grep -q '^JJS_DATABASE_NAME=' "$path"; then
+    printf 'JJS_DATABASE_NAME=%s\n' "$database" >>"$path"
+  fi
+}
+
 ensure_edge_network() {
   docker network inspect jjs-edge >/dev/null 2>&1 \
     || die "Docker network jjs-edge is missing; start infra/edge first"
+}
+
+ensure_branch_database() {
+  local database="$1" exists
+  [[ "$database" =~ ^[a-z][a-z0-9_]{0,62}$ ]] \
+    || die "invalid PostgreSQL database name: $database"
+  exists="$(
+    docker exec jjs-edge-postgres psql --username trasolve --dbname postgres \
+      --tuples-only --no-align \
+      --command "SELECT 1 FROM pg_database WHERE datname = '$database'"
+  )"
+  if [[ "$exists" != 1 ]]; then
+    docker exec jjs-edge-postgres createdb --username trasolve "$database"
+    log "event=database-create database=$database result=success"
+  fi
+}
+
+deployment_containers_healthy() {
+  local slug="$1" commit="$2" service details
+  for service in backend frontend; do
+    details="$(
+      docker inspect --format \
+        '{{.State.Status}}|{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}|{{index .Config.Labels "net.mangagaki.jjs.commit"}}' \
+        "jjs-$slug-$service" 2>/dev/null
+    )" || return 1
+    [[ "$details" == "running|healthy|$commit" ]] || return 1
+  done
 }
 
 edge_compose() {
@@ -262,6 +315,22 @@ verify_routed_health() {
     curl --fail --silent --show-error --max-time 20 "https://$hostname/api/health" >/dev/null
     curl --fail --silent --show-error --max-time 20 "https://$hostname/" >/dev/null
   fi
+}
+
+verify_backend_oauth_redirect() {
+  local env_file="$1"
+  local project="$2"
+  local hostname="$3"
+  local expected="https://$hostname/api/auth/google/callback"
+  local actual
+
+  actual="$(
+    docker compose --env-file "$env_file" -p "$project" -f "$DEPLOY_COMPOSE" \
+      exec -T backend node -e \
+      'process.stdout.write(process.env.GOOGLE_OAUTH_REDIRECT_URI ?? "")'
+  )"
+  [[ "$actual" == "$expected" ]] \
+    || die "backend OAuth redirect URI mismatch (expected=$expected actual=${actual:-unset})"
 }
 
 ensure_cloudflare_dns() {

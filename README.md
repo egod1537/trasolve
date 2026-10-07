@@ -371,10 +371,10 @@ GitHub <-- deployment/status reporting -- Mac mini polling watcher
                                             |
                                             v
 Internet -> Cloudflare Tunnel -> Caddy -> jjs-<slug>-frontend:3000
-                                     \----> jjs-<slug>-backend:3000
+                                     \----> jjs-<slug>-backend:3000 -> PostgreSQL
 ```
 
-- `infra/edge`: 재부팅 후에도 `unless-stopped`로 살아나는 Caddy와 cloudflared
+- `infra/edge`: 재부팅 후에도 `unless-stopped`로 살아나는 PostgreSQL, Caddy와 cloudflared
 - `infra/deploy`: polling, exact-SHA 배포, 제거, GitHub reporting
 - `infra/templates`: branch별 Compose와 Caddy route 템플릿
 - `infra/docker`: application image 정의
@@ -415,7 +415,10 @@ chmod 600 ~/.config/jjs/deploy.env
 ```
 
 `~/.config/jjs/deploy.env`의 `/Users/you`를 Mac mini의 절대 경로로 바꾸고 GitHub token,
-Cloudflare 파일 경로, `JJS_GOOGLE_MAPS_API_KEY`, `JJS_SENTRY_DSN`을 설정합니다.
+Cloudflare 파일 경로, `JJS_GOOGLE_MAPS_API_KEY`, `JJS_SENTRY_DSN`을 설정합니다. 전용
+PostgreSQL의 `JJS_POSTGRES_PASSWORD`에는 URL encoding이 필요 없는 임의의 영숫자 값을
+설정합니다. production은 `trasolve`, preview는 branch slug에서 파생한 독립 database를
+자동으로 생성하여 서로 다른 migration 이력을 격리합니다.
 `JJS_SENTRY_DSN`은 선택값이며 비어 있으면 frontend Error Monitoring만 비활성화됩니다.
 `JJS_GOOGLE_MAPS_MAP_ID`는 별도 Map ID가 없을 때 `DEMO_MAP_ID`를 사용할 수 있습니다.
 Google Maps 브라우저 키는 Maps JavaScript API와 실제 production/preview HTTP referrer로
@@ -470,14 +473,15 @@ set +a
 
 mkdir -p "$JJS_STATE_DIR/routes"
 touch "$JJS_STATE_DIR/routes/_empty.caddy"
-docker compose -p jjs-edge -f infra/edge/compose.yaml up -d
+docker compose -p jjs-edge -f infra/edge/compose.yaml up -d --wait --wait-timeout 120
 docker compose -p jjs-edge -f infra/edge/compose.yaml ps
 docker compose -p jjs-edge -f infra/edge/compose.yaml logs --tail=100
 ```
 
-`restart: unless-stopped`이므로 Docker daemon이 복구되면 Caddy와 cloudflared가 다시
-시작됩니다. 처음에는 route가 없어 cloudflared origin 요청이 실패할 수 있으며 첫 배포가
-route를 생성하면 정상화됩니다.
+`restart: unless-stopped`이므로 Docker daemon이 복구되면 PostgreSQL, Caddy와 cloudflared가
+다시 시작됩니다. PostgreSQL 데이터는 `postgres-data` named volume에 유지됩니다. 처음에는
+route가 없어 cloudflared origin 요청이 실패할 수 있으며 첫 배포가 route를 생성하면
+정상화됩니다.
 
 ## 수동 배포와 제거
 
@@ -489,7 +493,9 @@ route를 생성하면 정상화됩니다.
 
 SHA를 생략하면 현재 `origin/<branch>` head를 resolve합니다. SHA를 주면 반드시 40자 full
 SHA이고 현재 remote branch head와 일치해야 합니다. deploy script는 remote ref를 fetch한
-뒤 detached worktree에서 이미지를 build합니다.
+뒤 detached worktree에서 이미지를 build합니다. Google OAuth callback은 배포 hostname별로
+`https://<hostname>/api/auth/google/callback`을 생성하므로 Google OAuth Web client의 승인된
+redirect URI에도 production 및 사용할 preview hostname을 각각 정확히 등록해야 합니다.
 
 배포 순서:
 
@@ -497,10 +503,11 @@ SHA이고 현재 remote branch head와 일치해야 합니다. deploy script는 
 2. GitHub Deployment 생성, `in_progress`, commit `pending`
 3. detached worktree 준비, 배포 호스트의 Google Maps 설정 주입과 SHA-tagged
    frontend/backend image build
-4. 독립 Compose project를 `--wait`로 기동하고 container health 확인
-5. branch Caddy route를 atomic 교체하고 Caddy validate/reload
-6. Caddy 경유 frontend 및 `/api/health` 확인
-7. state 저장, GitHub Deployment와 commit status를 `success`로 전환
+4. branch별 PostgreSQL database를 보장하고 독립 Compose project를 `--wait`로 기동
+5. container health 및 실행 중 backend의 Google OAuth callback 확인
+6. branch Caddy route를 atomic 교체하고 Caddy validate/reload
+7. Caddy 경유 frontend 및 `/api/health` 확인
+8. state 저장, GitHub Deployment와 commit status를 `success`로 전환
 
 image build 실패 전에는 실행 중인 container를 건드리지 않습니다. 새 container 기동이나
 route 검증이 실패하면 기존 state의 image로 best-effort rollback하고 GitHub에는 `failure`를
@@ -595,7 +602,7 @@ docker logs --tail=100 jjs-edge-cloudflared
 ## 장애 확인과 재부팅 복구
 
 1. `docker info`로 Docker Desktop이 실행 중인지 확인합니다.
-2. edge `ps`/logs에서 Caddy와 cloudflared 상태를 확인합니다.
+2. edge `ps`/logs에서 PostgreSQL, Caddy와 cloudflared 상태를 확인합니다.
 3. `cloudflared tunnel ingress validate`와 Dashboard의 Tunnel connection을 확인합니다.
 4. `auto-deploy.sh --status`와 `git ls-remote --heads origin`으로 cron/Git 인증을 확인합니다.
 5. branch container health와 `~/.local/state/jjs/logs/deploy-<slug>.log`를 확인합니다.

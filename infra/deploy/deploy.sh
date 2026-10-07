@@ -22,6 +22,7 @@ validate_branch "$branch"
 slug="$(slug_for_branch "$branch")"
 hostname="$(hostname_for_slug "$branch" "$slug")"
 environment="$(environment_for_branch "$branch" "$slug")"
+database="$(database_for_branch "$branch" "$slug")"
 if [[ "$branch" == main ]]; then
   build_channel=production
 else
@@ -118,6 +119,7 @@ need_command python3
 need_command curl
 validate_frontend_build_config
 acquire_lock "deploy-$slug"
+ensure_compose_env_compatibility "$previous_env" "$hostname" "$database"
 
 if [[ -f "$unit_dir/branch" ]]; then
   recorded_branch="$(read_state "$unit_dir" branch)"
@@ -133,8 +135,11 @@ previous_status="$(read_state "$unit_dir" status 2>/dev/null || true)"
 log "event=commit-resolved commit=$commit"
 
 if [[ "$previous_commit" == "$commit" && "$previous_status" == success ]]; then
-  log "event=deployment state=unchanged commit=$commit"
-  exit 0
+  if deployment_containers_healthy "$slug" "$commit"; then
+    log "event=deployment state=unchanged commit=$commit"
+    exit 0
+  fi
+  log "event=deployment state=recovering commit=$commit reason=containers-unhealthy"
 fi
 
 write_state "$unit_dir" target-commit "$commit"
@@ -168,7 +173,7 @@ fi
 
 worktree="$WORKTREES_DIR/$slug/$commit"
 prepare_worktree "$commit" "$worktree"
-write_compose_env "$next_env" "$branch" "$slug" "$commit" "$worktree"
+write_compose_env "$next_env" "$branch" "$slug" "$commit" "$worktree" "$hostname" "$database"
 ensure_edge_network
 
 log "event=docker-build commit=$commit result=started"
@@ -179,11 +184,15 @@ VITE_BUILD_CHANNEL="$build_channel" \
   docker compose --env-file "$next_env" -p "$project" -f "$DEPLOY_COMPOSE" build --pull
 log "event=docker-build commit=$commit result=success"
 
+ensure_branch_database "$database"
+
 app_update_attempted=true
 log "event=docker-up commit=$commit result=started"
 docker compose --env-file "$next_env" -p "$project" -f "$DEPLOY_COMPOSE" \
   up -d --no-build --remove-orphans --wait --wait-timeout "$HEALTH_TIMEOUT"
 log "event=health-check scope=containers result=success"
+verify_backend_oauth_redirect "$next_env" "$project" "$hostname"
+log "event=oauth-config result=success redirect=https://$hostname/api/auth/google/callback"
 
 ensure_cloudflare_dns "$hostname"
 log "event=cloudflare-dns hostname=$hostname result=success"
