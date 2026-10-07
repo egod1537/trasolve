@@ -20,6 +20,8 @@ import type {
   TripPolyline,
 } from '@/entities/trip';
 import { InlineRename } from '@/shared/ui/InlineRename';
+import { IconButton } from '@/shared/ui/IconButton';
+import { ShuffleIcon } from '@/shared/ui/icons';
 import { DayColorControl } from '@/features/map-workspace/components/layer-panel/DayColorControl';
 import { LayerDragHandle } from '@/features/map-workspace/components/layer-panel/LayerDragHandle';
 import { LayerItemChevron } from '@/features/map-workspace/components/layer-panel/LayerItemChevron';
@@ -134,6 +136,8 @@ export const DayLayerSection = memo(function DayLayerSection({
   detailPolylineId,
   onRenameDay,
   onUpdateDayColor,
+  debugMode,
+  onShuffleDayPlaces,
   onRenamePlace,
   onUpdatePlaceStyle,
   onStartPlaceNameEditing,
@@ -168,6 +172,8 @@ export const DayLayerSection = memo(function DayLayerSection({
   detailPolylineId: string | null;
   onRenameDay: (dayId: string, title: string) => void;
   onUpdateDayColor: (dayId: string, color: string) => void;
+  debugMode: boolean;
+  onShuffleDayPlaces: (dayId: string) => void;
   onRenamePlace: (placeId: string, name: string) => void;
   onUpdatePlaceStyle: (placeId: string, style: PlaceStyle) => void;
   onStartPlaceNameEditing: (placeId: string) => void;
@@ -305,6 +311,22 @@ export const DayLayerSection = memo(function DayLayerSection({
             </span>
           )}
         </h2>
+        {debugMode && (
+          <IconButton
+            className="trip-day-shuffle"
+            icon={<ShuffleIcon />}
+            variant="ghost"
+            size="sm"
+            disabled={day.places.length < 4}
+            aria-label={L(
+              'testbed:jobBuilderLocationList.ariaLabel.shuffleIntermediatePositions',
+            )}
+            title={L(
+              'testbed:jobBuilderLocationList.ariaLabel.shuffleIntermediatePositions',
+            )}
+            onClick={() => onShuffleDayPlaces(day.id)}
+          />
+        )}
         <LayerItemChevron
           variant="day"
           expanded={expanded}

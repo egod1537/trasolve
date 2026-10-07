@@ -25,6 +25,7 @@ type Props = {
   L: Localize;
   mode: MapWorkspaceMode;
   analyticsMode: boolean;
+  debugMode: boolean;
   authenticationStatus: CurrentUserState['status'];
   authNotice: string | null;
   onLogin: () => void;
@@ -45,9 +46,11 @@ type State = {
 export default function MapWorkspaceFeature({
   mode,
   analyticsMode,
+  debugMode,
 }: {
   mode: MapWorkspaceMode;
   analyticsMode: boolean;
+  debugMode: boolean;
 }) {
   const L = useL();
   const { state, login, authNotice } = useCurrentUser();
@@ -70,6 +73,7 @@ export default function MapWorkspaceFeature({
       L={L}
       mode={mode}
       analyticsMode={analyticsMode}
+      debugMode={debugMode}
       authenticationStatus={state.status}
       authNotice={authNotice}
       onLogin={() => void login()}
@@ -116,6 +120,7 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
       L,
       mode,
       analyticsMode,
+      debugMode,
       authenticationStatus,
       authNotice,
       onLogin,
@@ -166,6 +171,7 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
                 trip={selectedTrip}
                 repository={this.repository}
                 onOpenTripPicker={this.openPicker}
+                debugMode={debugMode}
               />
             )
           ) : (

@@ -28,6 +28,7 @@ type Props = SelectionProps & {
   saveStatus: 'ready' | 'dirty' | 'saving' | 'error';
   savedAt: string;
   mutationError: string | null;
+  debugMode: boolean;
   sidebarRef: RefObject<HTMLElement | null>;
   onAddLayer: () => void;
   onRenameTrip: (title: string) => void;
@@ -39,6 +40,7 @@ type Props = SelectionProps & {
     targetDayId: string,
     targetIndex: number,
   ) => void;
+  onShuffleDayPlaces: (dayId: string) => void;
   onRenamePlace: (placeId: string, name: string) => Promise<boolean>;
   onUpdatePolylineMode: (
     polylineId: string,
@@ -68,6 +70,7 @@ export const LayerPanel = memo(function LayerPanel({
   saveStatus,
   savedAt,
   mutationError,
+  debugMode,
   sidebarRef,
   onAddLayer,
   onRenameTrip,
@@ -229,6 +232,7 @@ export const LayerPanel = memo(function LayerPanel({
         />
         <LayerPanelContent
           days={trip.days}
+          debugMode={debugMode}
           detailPlaceId={detailPlaceId}
           detailPolylineId={detailPolylineId}
           onSelectPlace={selectPlaceFromRow}

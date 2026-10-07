@@ -201,6 +201,43 @@ export function createMovePlaceCommand(
   });
 }
 
+export function createShuffleDayPlacesCommand(
+  dayId: string,
+  random: () => number = Math.random,
+): TripCommand {
+  return defineTripCommand((trip) => {
+    const day = trip.days.find((candidate) => candidate.id === dayId);
+    if (!day) {
+      throw new Error(L('map:tripCommands.error.iCanTFindDateChange3'));
+    }
+    if (day.places.length < 4) {
+      return trip;
+    }
+
+    const first = day.places[0]!;
+    const last = day.places.at(-1)!;
+    const waypoints = day.places.slice(1, -1);
+    const shuffled = [...waypoints];
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+      const sample = random();
+      const normalizedSample = Number.isFinite(sample)
+        ? Math.min(Math.max(sample, 0), 1 - Number.EPSILON)
+        : 0;
+      const targetIndex = Math.floor(normalizedSample * (index + 1));
+      [shuffled[index], shuffled[targetIndex]] = [
+        shuffled[targetIndex]!,
+        shuffled[index]!,
+      ];
+    }
+
+    if (shuffled.every((place, index) => place.id === waypoints[index]?.id)) {
+      shuffled.push(shuffled.shift()!);
+    }
+    day.places = [first, ...shuffled, last];
+    return trip;
+  });
+}
+
 export function createReorderDayPlacesCommand(
   dayId: string,
   placeIds: readonly string[],
