@@ -491,6 +491,9 @@ SHA를 생략하면 현재 `origin/<branch>` head를 resolve합니다. SHA를 �
 SHA이고 현재 remote branch head와 일치해야 합니다. deploy script는 remote ref를 fetch한
 뒤 detached worktree에서 이미지를 build합니다.
 
+preview 배포의 랜딩 URL에 `?debug=1`을 붙이면 Google OAuth 대신 branch별 debug guest로
+진입할 수 있습니다. production build에서는 같은 query flag를 무시합니다.
+
 배포 순서:
 
 1. branch/slug와 exact remote SHA 검증

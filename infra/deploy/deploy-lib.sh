@@ -220,11 +220,13 @@ prepare_worktree() {
 
 write_compose_env() {
   local path="$1" branch="$2" slug="$3" commit="$4" worktree="$5"
+  local debug_guest_auth="$6"
   {
     # Compose env-file syntax has interpolation characters that valid Git refs
     # may contain. The full branch is already preserved in runtime state.
     printf 'JJS_BRANCH=%s\n' "$slug"
     printf 'JJS_BRANCH_SLUG=%s\n' "$slug"
+    printf 'JJS_DEBUG_GUEST_AUTH=%s\n' "$debug_guest_auth"
     printf 'JJS_COMMIT_SHA=%s\n' "$commit"
     printf 'JJS_WORKTREE=%s\n' "$worktree"
     printf 'JJS_BACKEND_IMAGE=jjs-%s-backend:%s\n' "$slug" "$commit"

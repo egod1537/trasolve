@@ -24,8 +24,10 @@ hostname="$(hostname_for_slug "$branch" "$slug")"
 environment="$(environment_for_branch "$branch" "$slug")"
 if [[ "$branch" == main ]]; then
   build_channel=production
+  debug_guest_auth=false
 else
   build_channel=preview
+  debug_guest_auth=true
 fi
 deployment_url="https://$hostname"
 status_context="deploy/jjs/$slug"
@@ -168,7 +170,7 @@ fi
 
 worktree="$WORKTREES_DIR/$slug/$commit"
 prepare_worktree "$commit" "$worktree"
-write_compose_env "$next_env" "$branch" "$slug" "$commit" "$worktree"
+write_compose_env "$next_env" "$branch" "$slug" "$commit" "$worktree" "$debug_guest_auth"
 ensure_edge_network
 
 log "event=docker-build commit=$commit result=started"

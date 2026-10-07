@@ -13,9 +13,10 @@ import { type MapWorkspaceMode } from '@/features/map-workspace/model/mapWorkspa
 import '@/features/map-workspace/styles/trip-maps.css';
 import { useL, type Localize } from '@/shared/i18n';
 import {
+  isDebugGuestMode,
   useCurrentUser,
   type CurrentUserState,
-} from '@/features/auth/model/useCurrentUser';
+} from '@/features/auth';
 import { AnalyticsOverlay } from '@/features/analytics-overlay';
 
 type Action = 'opening' | 'creating' | 'deleting';
@@ -53,7 +54,9 @@ export default function MapWorkspaceFeature({
 
   useEffect(() => {
     if (state.status === 'signed-out') {
-      window.location.replace('/');
+      window.location.replace(
+        isDebugGuestMode(window.location.search) ? '/?debug=1' : '/',
+      );
     }
   }, [state.status]);
 

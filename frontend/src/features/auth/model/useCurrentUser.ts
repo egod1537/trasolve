@@ -6,7 +6,7 @@ import {
 } from '@/features/auth/api/googleOAuth';
 import {
   fetchCurrentUser,
-  loginAsLocalGuest,
+  loginAsDebugGuest,
   logout as requestLogout,
 } from '@/features/auth/api/auth';
 import { L } from '@/shared/i18n';
@@ -120,7 +120,7 @@ export function useCurrentUser() {
     }
 
     try {
-      const user = await loginAsLocalGuest();
+      const user = await loginAsDebugGuest();
       setState({ status: 'signed-in', user });
       if (returnTo !== window.location.pathname) {
         window.location.assign(returnTo);
@@ -133,13 +133,32 @@ export function useCurrentUser() {
     }
   }, []);
 
+  const loginAsGuest = useCallback(
+    async (returnTo = window.location.pathname) => {
+      setAuthNotice(null);
+      try {
+        const user = await loginAsDebugGuest();
+        setState({ status: 'signed-in', user });
+        if (returnTo !== window.location.pathname + window.location.search) {
+          window.location.assign(returnTo);
+        }
+      } catch {
+        setState({ status: 'signed-out' });
+        setAuthNotice(
+          L('auth:useCurrentUser.text.failedLoadLoginResultsTryAgain'),
+        );
+      }
+    },
+    [],
+  );
+
   const logout = useCallback(async () => {
     await requestLogout();
     setState({ status: 'signed-out' });
   }, []);
 
   return useMemo(
-    () => ({ state, login, logout, refresh, authNotice }),
-    [state, login, logout, refresh, authNotice],
+    () => ({ state, login, loginAsGuest, logout, refresh, authNotice }),
+    [state, login, loginAsGuest, logout, refresh, authNotice],
   );
 }

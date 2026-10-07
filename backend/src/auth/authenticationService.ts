@@ -7,6 +7,7 @@ import {
 } from './authRepository.js';
 
 export const canonicalGoogleIssuer = 'https://accounts.google.com';
+const debugGuestIssuer = 'urn:trasolve:local-development';
 
 export class AuthenticationService {
   public constructor(private readonly repository: AuthRepository) {}
@@ -33,6 +34,41 @@ export class AuthenticationService {
   public async getUserById(userId: string): Promise<AuthUser | undefined> {
     const user = await this.repository.getUserById(userId);
     return user ? mapAuthUser(user) : undefined;
+  }
+
+  public async ensureDebugGuest(subject: string): Promise<AuthUser> {
+    let identity = await this.repository.findIdentity(
+      debugGuestIssuer,
+      subject,
+    );
+    if (!identity) {
+      try {
+        identity = await this.repository.createUserWithIdentity({
+          issuer: debugGuestIssuer,
+          subject,
+          displayName: 'Trasolve Debug',
+          email: `debug+${subject}@localhost`,
+          emailVerified: true,
+        });
+      } catch (cause) {
+        if (!(cause instanceof AuthIdentityConflictError)) {
+          throw cause;
+        }
+        identity = await this.repository.findIdentity(
+          debugGuestIssuer,
+          subject,
+        );
+        if (!identity) {
+          throw cause;
+        }
+      }
+    }
+
+    const user = await this.repository.getUserById(identity.userId);
+    if (!user) {
+      throw new Error('Debug guest user record is unavailable.');
+    }
+    return mapAuthUser(user);
   }
 
   private async createGoogleIdentity(
