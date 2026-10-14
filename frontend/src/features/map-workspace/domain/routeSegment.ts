@@ -9,15 +9,17 @@ import type { GeoPoint } from '@/shared/types/mapTypes';
 export type RoutableMode = Exclude<TripPolylineMode, 'straight'>;
 
 export const ROUTABLE_MODES = [
-  'walking',
   'transit',
   'driving',
+  'walking',
+  'bicycling',
 ] as const satisfies ReadonlyArray<RoutableMode>;
 
 const TRAVEL_MODE_BY_ROUTABLE_MODE: Record<RoutableMode, TravelMode> = {
   walking: TravelMode.WALKING,
   transit: TravelMode.TRANSIT,
   driving: TravelMode.DRIVING,
+  bicycling: TravelMode.BICYCLING,
 };
 
 export type RouteSegmentEndpoint = {
@@ -32,11 +34,15 @@ export type RouteSegmentQuery = {
   request: DirectionsRequest;
 };
 
-export type RouteSegmentStepKind = 'walk' | 'transit' | 'drive' | 'other';
+export type RouteSegmentStepKind =
+  'walk' | 'transit' | 'drive' | 'bicycle' | 'other';
 
 export type RouteSegmentTransit = {
   lineName: string | null;
   lineShortName: string | null;
+  /** `#rrggbb` agency colors, when provided. */
+  lineColor: string | null;
+  lineTextColor: string | null;
   vehicleType: string | null;
   headsign: string | null;
   departureStop: string | null;
@@ -54,7 +60,10 @@ export type RouteSegmentStep = {
   transit: RouteSegmentTransit | null;
 };
 
+/** One candidate route between two places. */
 export type RouteSegmentDetail = {
+  /** Provider summary such as the main road; may be empty. */
+  description: string;
   distanceMeters: number | null;
   durationMillis: number | null;
   fare: { amount: number; currencyCode: string } | null;
@@ -69,7 +78,11 @@ export type RouteSegmentErrorReason =
 
 export type RouteSegmentState =
   | { status: 'loading' }
-  | { status: 'ready'; detail: RouteSegmentDetail }
+  | {
+      status: 'ready';
+      /** Provider order: the first candidate is the recommended one. */
+      candidates: readonly RouteSegmentDetail[];
+    }
   | {
       status: 'error';
       reason: RouteSegmentErrorReason;
@@ -118,9 +131,20 @@ export function createRouteSegmentQuery(
       origin,
       destination,
       travelMode: TRAVEL_MODE_BY_ROUTABLE_MODE[mode],
-      computeAlternativeRoutes: false,
+      computeAlternativeRoutes: true,
     },
   };
+}
+
+/** Selected candidate, falling back to the recommended one. */
+export function selectRouteCandidate(
+  state: RouteSegmentState | null | undefined,
+  selectedIndex: number | undefined,
+): RouteSegmentDetail | null {
+  if (state?.status !== 'ready') {
+    return null;
+  }
+  return state.candidates[selectedIndex ?? 0] ?? state.candidates[0] ?? null;
 }
 
 export function createPolylineRouteQuery(

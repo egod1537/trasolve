@@ -19,6 +19,9 @@ function toStepKind(
       return 'drive';
     case 'TRANSIT':
       return 'transit';
+    case 'BICYCLE':
+    case 'BICYCLING':
+      return 'bicycle';
     default:
       return 'other';
   }
@@ -73,15 +76,12 @@ function groupSteps(steps: readonly RouteSegmentStep[]): RouteSegmentStep[] {
   return grouped;
 }
 
-export function toRouteSegmentDetail(
-  result: DirectionsResult,
-): RouteSegmentDetail | null {
-  const route = result.routes.at(0);
-  if (!route || route.path.length < 2) {
-    return null;
-  }
-  const fallbackKind = toStepKind(result.request.travelMode);
+function toCandidate(
+  route: MapRoute,
+  fallbackKind: RouteSegmentStepKind,
+): RouteSegmentDetail {
   return {
+    description: route.description,
     distanceMeters: route.distanceMeters,
     durationMillis: route.durationMillis,
     fare: route.fare ? { ...route.fare } : null,
@@ -93,4 +93,14 @@ export function toRouteSegmentDetail(
     ),
     warnings: [...route.warnings],
   };
+}
+
+/** Every drawable route of the response, in provider (recommended) order. */
+export function toRouteSegmentCandidates(
+  result: DirectionsResult,
+): RouteSegmentDetail[] {
+  const fallbackKind = toStepKind(result.request.travelMode);
+  return result.routes
+    .filter((route) => route.path.length >= 2)
+    .map((route) => toCandidate(route, fallbackKind));
 }

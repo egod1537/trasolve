@@ -70,6 +70,9 @@ const mapRouteTransitDetailsSchema = z.object({
   arrivalTime: z.string().nullable(),
   lineName: z.string().nullable(),
   lineShortName: z.string().nullable(),
+  /** `#rrggbb` from the transit agency, when provided. */
+  lineColor: z.string().nullable().default(null),
+  lineTextColor: z.string().nullable().default(null),
   headsign: z.string().nullable(),
   stopCount: z.number().int().nonnegative().nullable(),
   vehicleType: z.string().nullable(),

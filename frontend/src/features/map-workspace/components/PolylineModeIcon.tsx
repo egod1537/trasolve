@@ -40,6 +40,13 @@ export function PolylineModeIcon({ mode }: Props) {
           <circle cx="17" cy="13" r="1" />
         </>
       )}
+      {mode === 'bicycling' && (
+        <>
+          <circle cx="6" cy="16" r="3.5" />
+          <circle cx="18" cy="16" r="3.5" />
+          <path d="m6 16 4-7h5l3 7M10 9 8.5 6.5H7M15 9l-3.5 7h-5.5M14 6.5h2.5" />
+        </>
+      )}
     </svg>
   );
 }

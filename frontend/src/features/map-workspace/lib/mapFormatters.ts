@@ -7,13 +7,18 @@ export const POLYLINE_MODES: readonly TripPolylineMode[] = [
   'walking',
   'transit',
   'driving',
+  'bicycling',
 ];
 
 export function formatPolylineMode(
   mode: TripPolylineMode,
   localize: Localize = L,
 ): string {
-  const keys: Record<TripPolylineMode, string> = {
+  if (mode === 'bicycling') {
+    // No localization key yet; add one to the Sheet before replacing this.
+    return '자전거';
+  }
+  const keys: Record<Exclude<TripPolylineMode, 'bicycling'>, string> = {
     straight: 'map:polylineMode.pOLYLINEMODEOPTIONS.label.straightLine',
     walking: 'map:polylineMode.pOLYLINEMODEOPTIONS.label.walk',
     transit: 'map:polylineMode.pOLYLINEMODEOPTIONS.label.publicTransportation',

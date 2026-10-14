@@ -3,14 +3,18 @@ import type {
   RouteSegmentQuery,
   RouteSegmentState,
 } from '@/features/map-workspace/domain/routeSegment';
-import { toRouteSegmentDetail } from '@/features/map-workspace/model/routeViewModel';
+import { toRouteSegmentCandidates } from '@/features/map-workspace/model/routeViewModel';
 
 export type QueryDirections = (
   request: DirectionsRequest,
   signal: AbortSignal,
 ) => Promise<DirectionsResult>;
 
-export type RouteSegmentSnapshot = ReadonlyMap<string, RouteSegmentState>;
+export type RouteSegmentSnapshot = {
+  states: ReadonlyMap<string, RouteSegmentState>;
+  /** Chosen candidate index per query key; absent means the first one. */
+  selections: ReadonlyMap<string, number>;
+};
 
 const MAX_CONCURRENT_REQUESTS = 3;
 const LOADING_STATE: RouteSegmentState = Object.freeze({ status: 'loading' });
@@ -41,17 +45,34 @@ export class RouteSegmentStore {
   };
 
   public ensure(query: RouteSegmentQuery): void {
-    if (this.destroyed || this.snapshot.has(query.key)) {
+    if (this.destroyed || this.snapshot.states.has(query.key)) {
       return;
     }
     this.enqueue(query);
   }
 
   public retry(query: RouteSegmentQuery): void {
-    if (this.destroyed || this.snapshot.get(query.key)?.status !== 'error') {
+    if (
+      this.destroyed ||
+      this.snapshot.states.get(query.key)?.status !== 'error'
+    ) {
       return;
     }
     this.enqueue(query);
+  }
+
+  /**
+   * Session-only candidate choice. The map and the list read it from the
+   * snapshot; it is never written into the persisted Trip.
+   */
+  public select(key: string, index: number): void {
+    if (this.destroyed || this.snapshot.selections.get(key) === index) {
+      return;
+    }
+    const selections = new Map(this.snapshot.selections);
+    selections.set(key, index);
+    this.snapshot = { ...this.snapshot, selections };
+    this.notify();
   }
 
   public destroy(): void {
@@ -61,7 +82,10 @@ export class RouteSegmentStore {
     this.listeners.clear();
   }
 
-  private snapshot: RouteSegmentSnapshot = new Map();
+  private snapshot: RouteSegmentSnapshot = {
+    states: new Map(),
+    selections: new Map(),
+  };
   private readonly listeners = new Set<() => void>();
   private readonly queue: RouteSegmentQuery[] = [];
   private readonly controller = new AbortController();
@@ -98,11 +122,11 @@ export class RouteSegmentStore {
       if (this.destroyed) {
         return;
       }
-      const detail = toRouteSegmentDetail(result);
+      const candidates = toRouteSegmentCandidates(result);
       this.publish(
         query.key,
-        detail
-          ? { status: 'ready', detail }
+        candidates.length > 0
+          ? { status: 'ready', candidates }
           : { status: 'error', reason: 'not-found', message: null },
       );
     } catch (error) {
@@ -132,9 +156,13 @@ export class RouteSegmentStore {
   }
 
   private publish(key: string, state: RouteSegmentState): void {
-    const next = new Map(this.snapshot);
-    next.set(key, state);
-    this.snapshot = next;
+    const states = new Map(this.snapshot.states);
+    states.set(key, state);
+    this.snapshot = { ...this.snapshot, states };
+    this.notify();
+  }
+
+  private notify(): void {
     for (const listener of this.listeners) {
       listener();
     }

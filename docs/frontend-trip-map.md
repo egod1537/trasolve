@@ -91,6 +91,17 @@ passes them to TripLayer as `routePaths`; loading or failed segments fall back t
 stored/straight geometry. The sidebar row, RouteSettingsCard and TripPolylineCard
 read the same cache for summaries and the step-by-step itinerary panel.
 
+Route queries request provider alternatives, so a ready segment holds several
+candidates in provider order (the first is the recommendation). The chosen
+candidate index is session-only store state keyed by the query; the map path,
+sidebar row and popup all read it, and it is never persisted. RouteSettingsCard
+hosts RouteCandidatePanel: mode tabs (transit, driving, walking, bicycling),
+origin/destination summary, options (transit vehicle filter and sort), candidate
+cards with labels, key numbers, a transit segment bar and expandable details, and
+idle/loading/no-route/unsupported/error states. Picking a candidate in another
+mode also updates the persisted segment mode. Values the provider does not return
+(tolls, fuel, crossings) keep a labelled placeholder slot.
+
 ## Rendering and UI
 
 TripLayer still takes Trip, routes, selection and MapObjectController. Marker handles

@@ -66,6 +66,7 @@ export const tripPolylineModeSchema = z.enum([
   'walking',
   'transit',
   'driving',
+  'bicycling',
 ]);
 const polylineFields = {
   fromPlaceId: tripIdSchema,

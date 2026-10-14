@@ -1254,6 +1254,9 @@
 .trip-layer-type-icon.is-polyline.is-driving {
   color: #ea580c;
 }
+.trip-layer-type-icon.is-polyline.is-bicycling {
+  color: #0e7490;
+}
 .trip-place.is-selected .trip-layer-type-icon {
   color: var(--color-primary);
 }

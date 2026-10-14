@@ -111,9 +111,8 @@ export const TripPolylineCard = forwardRef<TripPolylineCardHandle, Props>(
       { placeId: toPlace.placeId, location: toLocation },
       polyline.mode,
     );
-    const routeState = useRouteSegment(routeQuery);
-    const routeDetail =
-      routeState?.status === 'ready' ? routeState.detail : null;
+    const routeView = useRouteSegment(routeQuery);
+    const routeDetail = routeView?.selected ?? null;
     const closeSidePanel = useCallback(() => setSidePanel(null), []);
     const retryRoute = useCallback(() => {
       if (routeQuery) {
@@ -201,7 +200,7 @@ export const TripPolylineCard = forwardRef<TripPolylineCardHandle, Props>(
           <div className="trip-polyline-card-body">
             <RouteSegmentMetrics
               mode={polyline.mode}
-              state={routeState}
+              view={routeView}
               straightDistanceMeters={straightDistanceMeters}
               onRetry={retryRoute}
             />

@@ -8,6 +8,8 @@ import {
 import type { Trip, TripPolylineMode } from '@trasolve/shared';
 import {
   createPolylineRouteQuery,
+  selectRouteCandidate,
+  type RouteSegmentDetail,
   type RouteSegmentEndpoint,
   type RouteSegmentQuery,
   type RouteSegmentState,
@@ -39,16 +41,29 @@ export function useRouteSegmentSnapshot(): RouteSegmentSnapshot {
   );
 }
 
+export type RouteSegmentView = {
+  state: RouteSegmentState;
+  selectedIndex: number;
+  /** Selected candidate when ready, otherwise null. */
+  selected: RouteSegmentDetail | null;
+};
+
 /** Reads one cached route and requests it when it has not been computed yet. */
 export function useRouteSegment(
   query: RouteSegmentQuery | null,
-): RouteSegmentState | null {
+): RouteSegmentView | null {
   const store = useRouteSegmentStore();
   const key = query?.key ?? null;
+  // Select stable members separately so unrelated updates do not re-render.
   const state = useSyncExternalStore(
     store.subscribe,
-    () => (key === null ? undefined : store.getSnapshot().get(key)),
-    () => (key === null ? undefined : store.getSnapshot().get(key)),
+    () => (key === null ? undefined : store.getSnapshot().states.get(key)),
+    () => (key === null ? undefined : store.getSnapshot().states.get(key)),
+  );
+  const selectedIndex = useSyncExternalStore(
+    store.subscribe,
+    () => (key === null ? 0 : (store.getSnapshot().selections.get(key) ?? 0)),
+    () => (key === null ? 0 : (store.getSnapshot().selections.get(key) ?? 0)),
   );
 
   useEffect(() => {
@@ -60,7 +75,12 @@ export function useRouteSegment(
   if (!query) {
     return null;
   }
-  return state ?? { status: 'loading' };
+  const resolved: RouteSegmentState = state ?? { status: 'loading' };
+  return {
+    state: resolved,
+    selectedIndex,
+    selected: selectRouteCandidate(resolved, selectedIndex),
+  };
 }
 
 export function usePolylineRouteQuery(
@@ -126,9 +146,12 @@ export function useTripRoutePaths(
   return useMemo(() => {
     const paths = new Map<string, readonly GeoPoint[]>();
     for (const { polylineId, query } of queries) {
-      const state = snapshot.get(query.key);
-      if (state?.status === 'ready') {
-        paths.set(polylineId, state.detail.path);
+      const candidate = selectRouteCandidate(
+        snapshot.states.get(query.key),
+        snapshot.selections.get(query.key),
+      );
+      if (candidate) {
+        paths.set(polylineId, candidate.path);
       }
     }
     return paths;

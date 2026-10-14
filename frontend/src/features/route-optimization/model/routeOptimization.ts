@@ -574,7 +574,8 @@ function resolveTravelMode(
   }
   const routeModes = new Set<TrouteTravelMode>();
   for (const polyline of activeDay.polylines) {
-    if (polyline.mode === 'straight') {
+    // troute has no bicycle mode; treat it like an unrouted segment.
+    if (polyline.mode === 'straight' || polyline.mode === 'bicycling') {
       continue;
     }
     routeModes.add(TRAVEL_MODE_BY_POLYLINE_MODE[polyline.mode]);

@@ -62,6 +62,8 @@ export class GoogleRoutesProvider implements RouteProvider {
       .object({
         name: z.string().optional(),
         nameShort: z.string().optional(),
+        color: z.string().optional(),
+        textColor: z.string().optional(),
         vehicle: z
           .object({
             type: z.string().optional(),
@@ -170,7 +172,7 @@ export class GoogleRoutesProvider implements RouteProvider {
             'Content-Type': 'application/json',
             'X-Goog-Api-Key': this.apiKey,
             'X-Goog-FieldMask':
-              'routes.description,routes.distanceMeters,routes.duration,routes.travelAdvisory.transitFare,routes.legs.distanceMeters,routes.legs.duration,routes.legs.startLocation,routes.legs.endLocation,routes.legs.steps.distanceMeters,routes.legs.steps.staticDuration,routes.legs.steps.startLocation,routes.legs.steps.endLocation,routes.legs.steps.navigationInstruction.instructions,routes.legs.steps.travelMode,routes.legs.steps.transitDetails.stopDetails,routes.legs.steps.transitDetails.headsign,routes.legs.steps.transitDetails.transitLine.name,routes.legs.steps.transitDetails.transitLine.nameShort,routes.legs.steps.transitDetails.transitLine.vehicle.type,routes.legs.steps.transitDetails.stopCount,routes.polyline.geoJsonLinestring,routes.viewport,routes.warnings',
+              'routes.description,routes.distanceMeters,routes.duration,routes.travelAdvisory.transitFare,routes.legs.distanceMeters,routes.legs.duration,routes.legs.startLocation,routes.legs.endLocation,routes.legs.steps.distanceMeters,routes.legs.steps.staticDuration,routes.legs.steps.startLocation,routes.legs.steps.endLocation,routes.legs.steps.navigationInstruction.instructions,routes.legs.steps.travelMode,routes.legs.steps.transitDetails.stopDetails,routes.legs.steps.transitDetails.headsign,routes.legs.steps.transitDetails.transitLine.name,routes.legs.steps.transitDetails.transitLine.nameShort,routes.legs.steps.transitDetails.transitLine.color,routes.legs.steps.transitDetails.transitLine.textColor,routes.legs.steps.transitDetails.transitLine.vehicle.type,routes.legs.steps.transitDetails.stopCount,routes.polyline.geoJsonLinestring,routes.viewport,routes.warnings',
           },
           signal,
           body: JSON.stringify(upstreamRequest),
@@ -418,6 +420,12 @@ export class GoogleRoutesProvider implements RouteProvider {
                 lineName: step.transitDetails.transitLine?.name ?? null,
                 lineShortName:
                   step.transitDetails.transitLine?.nameShort ?? null,
+                lineColor: GoogleRoutesProvider.normalizeHexColor(
+                  step.transitDetails.transitLine?.color,
+                ),
+                lineTextColor: GoogleRoutesProvider.normalizeHexColor(
+                  step.transitDetails.transitLine?.textColor,
+                ),
                 headsign: step.transitDetails.headsign ?? null,
                 stopCount: step.transitDetails.stopCount ?? null,
                 vehicleType:
@@ -440,6 +448,13 @@ export class GoogleRoutesProvider implements RouteProvider {
         : null,
       warnings: route.warnings ?? [],
     }));
+  }
+
+  /** Only `#rrggbb` reaches clients; anything else is dropped. */
+  private static normalizeHexColor(value: string | undefined): string | null {
+    return value && /^#[0-9a-fA-F]{6}$/.test(value)
+      ? value.toLowerCase()
+      : null;
   }
 
   private buildDebugDetails(

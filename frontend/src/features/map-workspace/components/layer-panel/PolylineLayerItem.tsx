@@ -15,10 +15,10 @@ import {
   formatPolylineMode,
   formatRouteDuration,
 } from '@/features/map-workspace/lib/mapFormatters';
-import type { RouteSegmentState } from '@/features/map-workspace/domain/routeSegment';
 import {
   usePolylineRouteQuery,
   useRouteSegment,
+  type RouteSegmentView,
 } from '@/features/map-workspace/hooks/useRouteSegments';
 import { LayerItemChevron } from '@/features/map-workspace/components/layer-panel/LayerItemChevron';
 import { LayerItemShell } from '@/features/map-workspace/components/layer-panel/LayerItemShell';
@@ -72,23 +72,31 @@ function getPolylineScheduleRange(
   };
 }
 
+/** Compact row summary of the selected candidate: time and line or distance. */
 function formatRouteSummary(
-  state: RouteSegmentState | null,
+  view: RouteSegmentView | null,
   L: Localize,
 ): string | null {
-  if (!state) {
+  if (!view) {
     return null;
   }
-  if (state.status === 'loading') {
+  if (view.state.status === 'loading') {
     return '경로 계산 중';
   }
-  if (state.status === 'error') {
+  if (!view.selected) {
     return '경로 없음';
   }
-  const { durationMillis, distanceMeters } = state.detail;
+  const { durationMillis, distanceMeters, steps } = view.selected;
+  const lines = steps
+    .map((step) => step.transit?.lineShortName ?? step.transit?.lineName)
+    .filter((name): name is string => !!name);
   return [
     durationMillis === null ? null : formatRouteDuration(durationMillis, L),
-    distanceMeters === null ? null : formatPolylineDistance(distanceMeters, L),
+    lines.length > 0
+      ? lines.join(' → ')
+      : distanceMeters === null
+        ? null
+        : formatPolylineDistance(distanceMeters, L),
   ]
     .filter((value): value is string => value !== null)
     .join(' · ');
@@ -138,8 +146,8 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
     },
     polyline.mode,
   );
-  const routeState = useRouteSegment(routeQuery);
-  const routeSummary = formatRouteSummary(routeState, L);
+  const routeView = useRouteSegment(routeQuery);
+  const routeSummary = formatRouteSummary(routeView, L);
   return (
     <LayerItemShell
       type="polyline"
@@ -185,7 +193,7 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
           <span className="trip-polyline-name">{connectionName}</span>
           <span
             className={`trip-polyline-mode${
-              routeState?.status === 'error' ? ' is-route-error' : ''
+              routeView?.state.status === 'error' ? ' is-route-error' : ''
             }`}
           >
             {formatPolylineMode(polyline.mode, L)}

@@ -5,4 +5,5 @@ export const POLYLINE_MODES: readonly TripPolylineMode[] = [
   'walking',
   'transit',
   'driving',
+  'bicycling',
 ];

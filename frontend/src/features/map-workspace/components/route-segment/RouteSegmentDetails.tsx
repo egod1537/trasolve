@@ -13,9 +13,10 @@ import {
   formatRouteDuration,
 } from '@/features/map-workspace/lib/mapFormatters';
 import { useL, type Localize } from '@/shared/i18n';
+import type { RouteSegmentView } from '@/features/map-workspace/hooks/useRouteSegments';
 import '@/features/map-workspace/styles/route-segment.css';
 
-const VEHICLE_LABELS: Readonly<Record<string, string>> = {
+export const VEHICLE_LABELS: Readonly<Record<string, string>> = {
   BUS: '버스',
   CABLE_CAR: '케이블카',
   COMMUTER_TRAIN: '전철',
@@ -35,7 +36,7 @@ const VEHICLE_LABELS: Readonly<Record<string, string>> = {
   TROLLEYBUS: '트롤리버스',
 };
 
-function formatNullableDuration(
+export function formatNullableDuration(
   durationMillis: number | null,
   L: Localize,
 ): string {
@@ -44,12 +45,17 @@ function formatNullableDuration(
     : formatRouteDuration(durationMillis, L);
 }
 
-function formatStepLabel(step: RouteSegmentStep, L: Localize): string {
+export function formatStepLabel(
+  step: Pick<RouteSegmentStep, 'kind' | 'transit'>,
+  L: Localize,
+): string {
   switch (step.kind) {
     case 'walk':
       return formatPolylineMode('walking', L);
     case 'drive':
       return formatPolylineMode('driving', L);
+    case 'bicycle':
+      return formatPolylineMode('bicycling', L);
     case 'transit':
       return (
         (step.transit?.vehicleType &&
@@ -61,7 +67,7 @@ function formatStepLabel(step: RouteSegmentStep, L: Localize): string {
   }
 }
 
-function formatErrorMessage(
+export function formatErrorMessage(
   state: Extract<RouteSegmentState, { status: 'error' }>,
 ): string {
   switch (state.reason) {
@@ -78,7 +84,8 @@ function formatErrorMessage(
 
 type MetricsProps = {
   mode: TripPolylineMode;
-  state: RouteSegmentState | null;
+  /** Null for straight segments, which have no computed route. */
+  view: RouteSegmentView | null;
   straightDistanceMeters: number | undefined;
   onRetry?: () => void;
 };
@@ -86,11 +93,12 @@ type MetricsProps = {
 /** Duration, distance and fare of one segment, including load/error states. */
 export function RouteSegmentMetrics({
   mode,
-  state,
+  view,
   straightDistanceMeters,
   onRetry,
 }: MetricsProps) {
   const L = useL();
+  const state = view?.state ?? null;
   if (!state) {
     return (
       <div className="route-segment-metrics is-straight">
@@ -99,7 +107,7 @@ export function RouteSegmentMetrics({
           <strong>{formatPolylineDistance(straightDistanceMeters, L)}</strong>
         </div>
         <p className="route-segment-hint">
-          도보·대중교통·자동차를 선택하면 실제 경로로 표시됩니다.
+          도보·대중교통·자동차·자전거를 선택하면 실제 경로로 표시됩니다.
         </p>
       </div>
     );
@@ -134,7 +142,7 @@ export function RouteSegmentMetrics({
     );
   }
 
-  const { detail } = state;
+  const detail = view!.selected!;
   const fare = formatRouteFare(detail.fare);
   return (
     <div className="route-segment-metrics">

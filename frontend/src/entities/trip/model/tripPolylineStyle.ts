@@ -46,6 +46,14 @@ export const TRIP_POLYLINE_MODE_STYLES = {
     directionRepeatPx: 92,
     directionScale: 4.2,
   },
+  bicycling: {
+    color: '#0e7490',
+    width: 4,
+    pattern: 'short-dash',
+    patternRepeatPx: 22,
+    directionRepeatPx: 84,
+    directionScale: 3.6,
+  },
 } as const satisfies Record<TripPolylineMode, TripPolylineBaseStyle>;
 
 export function getTripPolylineStyle(
