@@ -14,24 +14,31 @@ const chatInputSchema = z.strictObject({
 });
 
 const modelsResponseSchema = z.object({
-  models: z.array(
-    z
-      .object({
-        model: z.string().trim().min(1).optional(),
-        name: z.string().trim().min(1).optional(),
-      })
-      .refine((model) => model.model !== undefined || model.name !== undefined),
+  data: z.array(
+    z.object({
+      id: z.string().trim().min(1),
+      name: z.string().trim().min(1).optional(),
+    }),
   ),
 });
 
 const chatResponseSchema = z.object({
   model: z.string().trim().min(1),
-  message: z.object({
-    role: z.literal('assistant'),
-    content: z.string(),
-  }),
-  done: z.literal(true),
-  done_reason: z.string().nullable().optional(),
+  status: z.string().trim().min(1).optional(),
+  output: z.array(
+    z.object({
+      type: z.string(),
+      role: z.string().optional(),
+      content: z
+        .array(
+          z.object({
+            type: z.string(),
+            text: z.string().optional(),
+          }),
+        )
+        .optional(),
+    }),
+  ),
 });
 
 export type OpenWebUIModel = {
@@ -97,7 +104,7 @@ export class OpenWebUIClient {
 
   public async listModels(): Promise<OpenWebUIModel[]> {
     const rawResponse = await this.requestJson(
-      'ollama/api/tags',
+      'openai/models',
       { method: 'GET' },
       this.modelsTimeoutMs,
     );
@@ -106,10 +113,10 @@ export class OpenWebUIClient {
       throw this.malformedResponse('model list');
     }
 
-    return parsed.data.models.map((model) => {
-      const id = model.model ?? model.name!;
-      return { id, name: model.name ?? id };
-    });
+    return parsed.data.data.map((model) => ({
+      id: model.id,
+      name: model.name ?? model.id,
+    }));
   }
 
   public async chat(input: OpenWebUIChatInput): Promise<OpenWebUIChatResult> {
@@ -122,11 +129,27 @@ export class OpenWebUIClient {
     }
 
     const rawResponse = await this.requestJson(
-      'ollama/api/chat',
+      'openai/responses',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...request.data, stream: false }),
+        body: JSON.stringify({
+          model: request.data.model,
+          input: request.data.messages.map((message) => ({
+            role: message.role,
+            content: [
+              {
+                type:
+                  message.role === 'assistant' ? 'output_text' : 'input_text',
+                text: message.content,
+              },
+            ],
+          })),
+          tools: [],
+          tool_choice: 'none',
+          store: false,
+          stream: false,
+        }),
       },
       this.chatTimeoutMs,
     );
@@ -135,10 +158,23 @@ export class OpenWebUIClient {
       throw this.malformedResponse('chat');
     }
 
+    const content = parsed.data.output
+      .filter((item) => item.type === 'message' && item.role === 'assistant')
+      .flatMap((item) => item.content ?? [])
+      .filter((item) => item.type === 'output_text')
+      .map((item) => item.text ?? '')
+      .join('');
+    if (!content.trim()) {
+      throw this.malformedResponse('chat');
+    }
+
     return {
       model: parsed.data.model,
-      message: parsed.data.message,
-      finishReason: parsed.data.done_reason ?? null,
+      message: { role: 'assistant', content },
+      finishReason:
+        parsed.data.status === 'completed'
+          ? 'stop'
+          : (parsed.data.status ?? null),
     };
   }
 
