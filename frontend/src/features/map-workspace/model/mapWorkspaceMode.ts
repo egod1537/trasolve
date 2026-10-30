@@ -3,6 +3,7 @@ export type MapWorkspaceMode = 'edit' | 'readonly';
 export type MapWorkspaceRouteState = {
   mode: MapWorkspaceMode;
   analyticsMode: boolean;
+  debugMode: boolean;
 };
 
 /** Development/QA presentation flag only; authorization remains server-owned. */
@@ -13,5 +14,6 @@ export function resolveMapWorkspaceRouteState(
   return {
     mode: parameters.get('readonly') === '1' ? 'readonly' : 'edit',
     analyticsMode: parameters.get('analytics') === '1',
+    debugMode: parameters.get('debug') === '1',
   };
 }

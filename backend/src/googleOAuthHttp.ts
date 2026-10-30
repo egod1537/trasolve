@@ -90,7 +90,7 @@ export class GoogleOAuthHttpFlow {
     private readonly authentication: AuthenticationService,
     private readonly sessions: SessionService,
     private readonly currentUser: CurrentUserResolver,
-    private readonly localDevelopmentUserId?: string,
+    private readonly debugGuestUserId?: string,
   ) {}
 
   public async handle(
@@ -324,17 +324,15 @@ export class GoogleOAuthHttpFlow {
   }
 
   private async handleLocalLogin(response: ServerResponse): Promise<void> {
-    if (!this.localDevelopmentUserId) {
+    if (!this.debugGuestUserId) {
       response.writeHead(404);
       response.end();
       return;
     }
 
-    const user = await this.authentication.getUserById(
-      this.localDevelopmentUserId,
-    );
+    const user = await this.authentication.getUserById(this.debugGuestUserId);
     if (!user) {
-      throw new Error('Local development user is unavailable.');
+      throw new Error('Debug guest user is unavailable.');
     }
 
     const sessionSecret = await this.sessions.create(

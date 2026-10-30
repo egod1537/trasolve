@@ -51,13 +51,16 @@ async function startBackend(): Promise<void> {
     const sessions = new SessionService(persistence.sessions);
     const currentUser = new CurrentUserResolver(sessions);
     const tripController = new TripController(persistence.trips);
+    const debugGuestUser = isDebugGuestAuthenticationEnabled()
+      ? await authentication.ensureDebugGuest(resolveDebugGuestSubject())
+      : undefined;
     server = createBackendServer(
       API,
       new GoogleOAuthHttpFlow(
         authentication,
         sessions,
         currentUser,
-        persistence.localDevelopmentUserId,
+        debugGuestUser?.id,
       ),
       new TripHttpService(tripController, currentUser),
       new TripShareHttpService(
@@ -111,7 +114,6 @@ interface RuntimePersistence {
   readonly sessions: SessionRepository;
   readonly trips: TripRepository;
   readonly tripShares: TripShareRepository;
-  readonly localDevelopmentUserId?: string;
   close(): Promise<void>;
 }
 
@@ -127,18 +129,11 @@ async function createRuntimePersistence(
     const dataRoot = resolveBackendDataRoot();
     const auth = new LocalAuthRepository({ rootDir: dataRoot });
     const tripPersistence = createLocalTripPersistence(dataRoot);
-    const localDevelopmentUserId = canUseLocalDevelopmentAuthentication()
-      ? await auth.ensureDevelopmentUser()
-      : undefined;
     console.log(`Persistence: local (${dataRoot})`);
-    if (localDevelopmentUserId) {
-      console.log('Local development authentication: enabled');
-    }
     return {
       auth,
       sessions: auth,
       ...tripPersistence,
-      localDevelopmentUserId,
       close: () => Promise.resolve(),
     };
   }
@@ -164,8 +159,28 @@ async function createRuntimePersistence(
   };
 }
 
-function canUseLocalDevelopmentAuthentication(): boolean {
-  return process.env.NODE_ENV !== 'production';
+function isDebugGuestAuthenticationEnabled(): boolean {
+  const configured = process.env.TRASOLVE_DEBUG_GUEST_AUTH?.trim();
+  if (!configured) {
+    return process.env.NODE_ENV !== 'production';
+  }
+  if (configured === 'true') {
+    return true;
+  }
+  if (configured === 'false') {
+    return false;
+  }
+  throw new Error('TRASOLVE_DEBUG_GUEST_AUTH must be true or false.');
+}
+
+function resolveDebugGuestSubject(): string {
+  const subject = process.env.TRASOLVE_DEBUG_GUEST_SUBJECT?.trim() || 'default';
+  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(subject)) {
+    throw new Error(
+      'TRASOLVE_DEBUG_GUEST_SUBJECT must use lowercase letters, digits, and hyphens.',
+    );
+  }
+  return subject;
 }
 
 function canUseAnalyticsReadApi(): boolean {

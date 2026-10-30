@@ -33,7 +33,9 @@ commit="$(read_state "$unit_dir" commit 2>/dev/null || true)"
 deployment_id="$(read_state "$unit_dir" deployment-id 2>/dev/null || true)"
 environment="$(read_state "$unit_dir" environment 2>/dev/null || environment_for_branch "$branch" "$slug")"
 hostname="$(read_state "$unit_dir" hostname 2>/dev/null || hostname_for_slug "$branch" "$slug")"
+database="$(database_for_branch "$branch" "$slug")"
 compose_env="$unit_dir/compose.env"
+ensure_compose_env_compatibility "$compose_env" "$hostname" "$database"
 
 log "event=undeploy state=started commit=${commit:-unknown}"
 if [[ -f "$compose_env" ]]; then

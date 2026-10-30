@@ -46,11 +46,6 @@ const localAuthDocumentSchema = z.strictObject({
 type LocalAuthDocument = z.infer<typeof localAuthDocumentSchema>;
 type LocalIdentity = z.infer<typeof localIdentitySchema>;
 
-const developmentIdentity = {
-  issuer: 'urn:trasolve:local-development',
-  subject: 'default',
-} as const;
-
 export class LocalAuthRepository implements AuthRepository, SessionRepository {
   public constructor(options: { rootDir: string }) {
     this.path = join(resolve(options.rootDir), 'auth', 'store.json');
@@ -198,39 +193,6 @@ export class LocalAuthRepository implements AuthRepository, SessionRepository {
         session.revokedAt = new Date().toISOString();
       }
     });
-  }
-
-  public async ensureDevelopmentUser(): Promise<string> {
-    const existing = await this.findIdentity(
-      developmentIdentity.issuer,
-      developmentIdentity.subject,
-    );
-    if (existing) {
-      return existing.userId;
-    }
-
-    try {
-      const identity = await this.createUserWithIdentity({
-        ...developmentIdentity,
-        displayName: 'Trasolve Debug',
-        email: 'debug@localhost',
-        emailVerified: true,
-      });
-      return identity.userId;
-    } catch (cause) {
-      if (!(cause instanceof AuthIdentityConflictError)) {
-        throw cause;
-      }
-
-      const identity = await this.findIdentity(
-        developmentIdentity.issuer,
-        developmentIdentity.subject,
-      );
-      if (!identity) {
-        throw cause;
-      }
-      return identity.userId;
-    }
   }
 
   private readonly path: string;

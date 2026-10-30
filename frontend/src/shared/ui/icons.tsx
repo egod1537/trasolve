@@ -44,6 +44,18 @@ export function RefreshIcon(props: Props) {
   );
 }
 
+export function ShuffleIcon(props: Props) {
+  return (
+    <Icon {...props}>
+      <path d="M4 7h2.4c4.8 0 5.2 10 10 10H20" />
+      <path d="m17 14 3 3-3 3" />
+      <path d="M4 17h2.4c1.7 0 2.8-1.3 3.8-3" />
+      <path d="M13.8 10c.8-1.7 1.7-3 3.4-3H20" />
+      <path d="m17 4 3 3-3 3" />
+    </Icon>
+  );
+}
+
 export function PlusIcon(props: Props) {
   return (
     <Icon {...props}>

@@ -22,6 +22,7 @@ import {
   createRemovePlaceCommand,
   createRemovePlacesCommand,
   createReorderDayPlacesCommand,
+  createShuffleDayPlacesCommand,
   createRenameDayCommand,
   createRenameTripCommand,
   createUpdateDayColorCommand,
@@ -235,6 +236,10 @@ export class TripEditController {
     placeIds: readonly string[],
   ): Promise<boolean> {
     return this.dispatch(createReorderDayPlacesCommand(dayId, placeIds));
+  }
+
+  public shuffleDayPlaces(dayId: string): Promise<boolean> {
+    return this.dispatch(createShuffleDayPlacesCommand(dayId));
   }
 
   public applyOptimizedSchedule(

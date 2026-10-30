@@ -18,7 +18,7 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
   return authMeResponseSchema.parse(await response.json()).user;
 }
 
-export async function loginAsLocalGuest(): Promise<AuthUser> {
+export async function loginAsDebugGuest(): Promise<AuthUser> {
   const response = await fetch(API_ROUTES.authLocalLogin, {
     method: 'POST',
     cache: 'no-store',
@@ -27,12 +27,12 @@ export async function loginAsLocalGuest(): Promise<AuthUser> {
   });
 
   if (!response.ok) {
-    throw new Error('Local guest login request failed');
+    throw new Error('Debug guest login request failed');
   }
 
   const user = authMeResponseSchema.parse(await response.json()).user;
   if (!user) {
-    throw new Error('Local guest login returned no user');
+    throw new Error('Debug guest login returned no user');
   }
   return user;
 }

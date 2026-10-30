@@ -20,6 +20,7 @@ type EditTripSessionProps = {
   trip: Trip;
   repository: TripRepository;
   onOpenTripPicker: () => void;
+  debugMode: boolean;
 };
 
 type ReadonlyTripSessionProps = {
@@ -42,6 +43,7 @@ export function TripSession(props: TripSessionProps) {
       trip={props.trip}
       repository={props.repository}
       onOpenTripPicker={props.onOpenTripPicker}
+      debugMode={props.debugMode}
     />
   );
 }
@@ -50,6 +52,7 @@ function EditTripSession({
   trip,
   repository,
   onOpenTripPicker,
+  debugMode,
 }: EditTripSessionProps) {
   useScreenView(ANALYTICS_SCREENS.mapWorkspace);
   const [application] = useState(() => {
@@ -86,6 +89,7 @@ function EditTripSession({
         mode="edit"
         onQueryRouteDuration={queryRouteDuration}
         onOpenTripPicker={onOpenTripPicker}
+        debugMode={debugMode}
       />
     </TripProvider>
   );

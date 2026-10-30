@@ -24,6 +24,7 @@ type Props =
       mode: 'edit';
       onQueryRouteDuration: QueryRouteDuration;
       onOpenTripPicker: () => void;
+      debugMode: boolean;
     }
   | {
       mode: 'readonly';
@@ -38,6 +39,7 @@ export function MapWorkspace(props: Props) {
     <EditableMapWorkspace
       onQueryRouteDuration={props.onQueryRouteDuration}
       onOpenTripPicker={props.onOpenTripPicker}
+      debugMode={props.debugMode}
     />
   );
 }
@@ -45,9 +47,11 @@ export function MapWorkspace(props: Props) {
 function EditableMapWorkspace({
   onQueryRouteDuration,
   onOpenTripPicker,
+  debugMode,
 }: {
   onQueryRouteDuration: QueryRouteDuration;
   onOpenTripPicker: () => void;
+  debugMode: boolean;
 }) {
   const L = useL();
   const { trip, status, error } = useTripState();
@@ -97,6 +101,7 @@ function EditableMapWorkspace({
             saveStatus={status}
             savedAt={trip.updatedAt}
             mutationError={error}
+            debugMode={debugMode}
             onQueryRouteDuration={onQueryRouteDuration}
             sidebarRef={sidebarRef}
             selectionRevision={ui.selectionRevision}

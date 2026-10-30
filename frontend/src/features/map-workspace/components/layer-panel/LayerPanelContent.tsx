@@ -25,6 +25,7 @@ type Props = Omit<
   'onSelectPlaceForDetails' | 'onSelectPolylineForDetails'
 > & {
   days: TripDay[];
+  debugMode: boolean;
   onMoveDay: (dayId: string, targetIndex: number) => void;
   onRenameDay: (dayId: string, title: string) => void;
   onUpdateDayColor: (dayId: string, color: string) => void;
@@ -33,6 +34,7 @@ type Props = Omit<
     targetDayId: string,
     targetIndex: number,
   ) => void;
+  onShuffleDayPlaces: (dayId: string) => void;
   onRenamePlace: (placeId: string, name: string) => void;
   onUpdatePlaceStyle: (placeId: string, style: PlaceStyle) => void;
   detailPlaceId: string | null;
@@ -138,10 +140,12 @@ function getLayerItemDayPreviewOffset(
 
 export const LayerPanelContent = memo(function LayerPanelContent({
   days,
+  debugMode,
   onMoveDay,
   onRenameDay,
   onUpdateDayColor,
   onMovePlace,
+  onShuffleDayPlaces,
   onRenamePlace,
   onUpdatePlaceStyle,
   detailPlaceId,
@@ -441,6 +445,8 @@ export const LayerPanelContent = memo(function LayerPanelContent({
           }
           onRenameDay={onRenameDay}
           onUpdateDayColor={onUpdateDayColor}
+          debugMode={debugMode}
+          onShuffleDayPlaces={onShuffleDayPlaces}
           onRenamePlace={renamePlaceWithAnalytics}
           onUpdatePlaceStyle={onUpdatePlaceStyle}
           onStartPlaceNameEditing={startPlaceNameEditing}

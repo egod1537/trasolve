@@ -441,6 +441,14 @@
   font-size: 14px;
   font-weight: 600;
 }
+.trip-day-shuffle {
+  flex: none;
+  color: var(--color-muted);
+}
+.trip-day-shuffle:hover:not(:disabled),
+.trip-day-shuffle:focus-visible {
+  color: var(--color-primary);
+}
 .trip-day.is-active .trip-day-heading {
   border-bottom-color: var(--color-border-strong);
   background: var(--color-surface-hover);

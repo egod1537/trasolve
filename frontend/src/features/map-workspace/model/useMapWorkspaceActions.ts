@@ -158,6 +158,10 @@ export function useMapWorkspaceActions(
       void controller.movePlace(placeId, targetDayId, targetIndex),
     [controller],
   );
+  const shuffleDayPlaces = useCallback(
+    (dayId: string) => void controller.shuffleDayPlaces(dayId),
+    [controller],
+  );
   const renamePlace = useCallback(
     (placeId: string, name: string) =>
       controller.updatePlace(placeId, { name }),
@@ -218,6 +222,7 @@ export function useMapWorkspaceActions(
         onRenameDay: renameDay,
         onUpdateDayColor: updateDayColor,
         onMovePlace: movePlace,
+        onShuffleDayPlaces: shuffleDayPlaces,
         onRenamePlace: renamePlace,
         onUpdatePlaceStyle: updatePlaceStyle,
         onUpdatePlaceVisitTimeRange: updateTripPlaceVisitTimeRange,
@@ -258,6 +263,7 @@ export function useMapWorkspaceActions(
       handleMapClick,
       moveDay,
       movePlace,
+      shuffleDayPlaces,
       removeTripPlace,
       removeSelectedPlaces,
       renameTrip,

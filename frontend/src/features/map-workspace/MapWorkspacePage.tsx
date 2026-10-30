@@ -13,9 +13,10 @@ import { type MapWorkspaceMode } from '@/features/map-workspace/model/mapWorkspa
 import '@/features/map-workspace/styles/trip-maps.css';
 import { useL, type Localize } from '@/shared/i18n';
 import {
+  isDebugGuestMode,
   useCurrentUser,
   type CurrentUserState,
-} from '@/features/auth/model/useCurrentUser';
+} from '@/features/auth';
 import { AnalyticsOverlay } from '@/features/analytics-overlay';
 
 type Action = 'opening' | 'creating' | 'deleting';
@@ -24,6 +25,7 @@ type Props = {
   L: Localize;
   mode: MapWorkspaceMode;
   analyticsMode: boolean;
+  debugMode: boolean;
   authenticationStatus: CurrentUserState['status'];
   authNotice: string | null;
   onLogin: () => void;
@@ -44,16 +46,20 @@ type State = {
 export default function MapWorkspaceFeature({
   mode,
   analyticsMode,
+  debugMode,
 }: {
   mode: MapWorkspaceMode;
   analyticsMode: boolean;
+  debugMode: boolean;
 }) {
   const L = useL();
   const { state, login, authNotice } = useCurrentUser();
 
   useEffect(() => {
     if (state.status === 'signed-out') {
-      window.location.replace('/');
+      window.location.replace(
+        isDebugGuestMode(window.location.search) ? '/?debug=1' : '/',
+      );
     }
   }, [state.status]);
 
@@ -67,6 +73,7 @@ export default function MapWorkspaceFeature({
       L={L}
       mode={mode}
       analyticsMode={analyticsMode}
+      debugMode={debugMode}
       authenticationStatus={state.status}
       authNotice={authNotice}
       onLogin={() => void login()}
@@ -113,6 +120,7 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
       L,
       mode,
       analyticsMode,
+      debugMode,
       authenticationStatus,
       authNotice,
       onLogin,
@@ -163,6 +171,7 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
                 trip={selectedTrip}
                 repository={this.repository}
                 onOpenTripPicker={this.openPicker}
+                debugMode={debugMode}
               />
             )
           ) : (

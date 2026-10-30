@@ -8,7 +8,7 @@ import { checkApiHealth } from '@/shared/api/health';
 import { FeatureSection } from '@/pages/landing/components/FeatureSection';
 import { Header } from '@/pages/landing/components/Header';
 import { Hero } from '@/pages/landing/components/Hero';
-import { useCurrentUser } from '@/features/auth/model/useCurrentUser';
+import { isDebugGuestMode, useCurrentUser } from '@/features/auth';
 import { NL, useL, type Localize } from '@/shared/i18n';
 import { trackEvent, useScreenView } from '@/shared/analytics';
 
@@ -36,7 +36,8 @@ type LandingPageProps = {
 
 export function LandingPage() {
   const L = useL();
-  const { state, login, logout, authNotice } = useCurrentUser();
+  const { state, login, loginAsGuest, logout, authNotice } = useCurrentUser();
+  const debugGuestMode = isDebugGuestMode(window.location.search);
   useScreenView(ANALYTICS_SCREENS.landing);
 
   const trackLandingButton = (target: AnalyticsTarget): void => {
@@ -51,9 +52,15 @@ export function LandingPage() {
     if (state.status === 'loading') {
       return;
     }
+    const mapPath = debugGuestMode ? '/map?debug=1' : '/map';
     if (state.status === 'signed-in') {
       trackLandingButton(ANALYTICS_TARGETS.landingEnterMap);
-      window.location.assign('/map');
+      window.location.assign(mapPath);
+      return;
+    }
+    if (debugGuestMode) {
+      trackLandingButton(ANALYTICS_TARGETS.landingEnterMap);
+      void loginAsGuest(mapPath);
       return;
     }
     trackLandingButton(ANALYTICS_TARGETS.landingLogin);
@@ -62,6 +69,10 @@ export function LandingPage() {
 
   const handleHeaderAction = (): void => {
     if (state.status === 'signed-out') {
+      if (debugGuestMode) {
+        enterService();
+        return;
+      }
       trackLandingButton(ANALYTICS_TARGETS.landingLogin);
       void login();
       return;
@@ -83,7 +94,9 @@ export function LandingPage() {
       }
       headerActionLabel={
         state.status === 'signed-out'
-          ? L('auth:mapUserControls.text.signGoogle')
+          ? debugGuestMode
+            ? L('common:hero.text.gettingStarted')
+            : L('auth:mapUserControls.text.signGoogle')
           : L('common:header.text.goServices')
       }
       authLoading={state.status === 'loading'}
@@ -91,11 +104,13 @@ export function LandingPage() {
         state.status === 'loading'
           ? L('auth:mapUserControls.tooltip.preparing')
           : state.status === 'signed-out'
-            ? L('auth:mapUserControls.text.signGoogle')
+            ? debugGuestMode
+              ? L('common:hero.text.gettingStarted')
+              : L('auth:mapUserControls.text.signGoogle')
             : L('common:hero.text.gettingStarted')
       }
       heroPrimaryTarget={
-        state.status === 'signed-in'
+        state.status === 'signed-in' || debugGuestMode
           ? ANALYTICS_TARGETS.landingEnterMap
           : ANALYTICS_TARGETS.landingLogin
       }
