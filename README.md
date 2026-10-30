@@ -66,7 +66,7 @@ npm run dev
 
 The development servers run at `http://127.0.0.1:5173` for the frontend and `http://127.0.0.1:43127` for the backend. Local mode uses file persistence and supports debug guest authentication. A browser-restricted Maps JavaScript API key is required to render the map; Places and Routes use separate server-side keys.
 
-AI chat, Google OAuth, PostgreSQL persistence, `troute`, and `tcache` are optional integrations with their own settings in the example environment files. The development-only random chat provider is used when no AI provider is configured. PostgreSQL users should configure `DATABASE_URL` and run `npm run db:migrate`.
+AI chat, Google OAuth, PostgreSQL persistence, `troute`, and `tcache` are optional integrations with their own settings in the example environment files. The development-only random chat provider is used when no AI provider is configured. The OpenWebUI integration discovers an accessible model through `/openai/models` and calls `/openai/responses` with server-default tools, response storage, and streaming disabled. PostgreSQL users should configure `DATABASE_URL` and run `npm run db:migrate`.
 
 Validate a production build with the repository scripts:
 
