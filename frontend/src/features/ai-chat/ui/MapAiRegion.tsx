@@ -36,13 +36,10 @@ export function MapAiRegion({ open, onOpenChange }: Props) {
     panelRef.current?.viewSelectedThread();
     onOpenChange(true);
   }, [onOpenChange, open]);
-  const openPreview = useCallback(
-    (preview: MapAiUnreadPreview) => {
-      panelRef.current?.viewThread(preview.threadId);
-      onOpenChange(true);
-    },
-    [onOpenChange],
-  );
+  const openPreview = useCallback(() => {
+    panelRef.current?.viewSelectedThread();
+    onOpenChange(true);
+  }, [onOpenChange]);
 
   return (
     <div className="map-ai-region">
@@ -58,6 +55,7 @@ export function MapAiRegion({ open, onOpenChange }: Props) {
       />
       <MapAiPanel
         ref={panelRef}
+        singleChat
         open={open}
         onGeneratingChange={setGenerating}
         onUnreadPreviewsChange={setUnreadPreviews}
