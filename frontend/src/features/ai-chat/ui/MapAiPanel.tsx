@@ -219,6 +219,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
     const [renameDraft, setRenameDraft] = useState('');
     const [listDrawerOpen, setListDrawerOpen] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const chatSearchRef = useRef<HTMLInputElement>(null);
+    const chatListToggleRef = useRef<HTMLButtonElement>(null);
+    const wasListDrawerOpenRef = useRef(false);
     const messagesRef = useRef<HTMLDivElement>(null);
     const nextThreadIdRef = useRef(2);
     const nextMessageIdRef = useRef(1);
@@ -298,6 +301,26 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
         textareaRef.current?.focus({ preventScroll: true });
       }
     }, [open, selectedThreadId]);
+
+    useEffect(() => {
+      if (singleChat) {
+        return;
+      }
+      if (listDrawerOpen) {
+        wasListDrawerOpenRef.current = true;
+        chatSearchRef.current?.focus({ preventScroll: true });
+        const closeOnEscape = (event: globalThis.KeyboardEvent) => {
+          if (event.key === 'Escape') {
+            setListDrawerOpen(false);
+          }
+        };
+        document.addEventListener('keydown', closeOnEscape);
+        return () => document.removeEventListener('keydown', closeOnEscape);
+      } else if (wasListDrawerOpenRef.current) {
+        chatListToggleRef.current?.focus({ preventScroll: true });
+      }
+      wasListDrawerOpenRef.current = listDrawerOpen;
+    }, [listDrawerOpen, singleChat]);
 
     useEffect(() => {
       messagesRef.current?.scrollTo({
@@ -860,6 +883,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                   <path d="m15.5 15.5 5 5" />
                 </svg>
                 <input
+                  ref={chatSearchRef}
                   type="search"
                   value={searchQuery}
                   placeholder={L('ai:mapAiPanel.text.chatSearch')}
@@ -898,6 +922,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
             <header className="trip-map-ai-panel-header">
               {!singleChat && (
                 <button
+                  ref={chatListToggleRef}
                   type="button"
                   className="trip-ai-chat-list-toggle"
                   aria-label={L('ai:mapAiPanel.ariaLabel.openChatList')}
