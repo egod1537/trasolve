@@ -14,12 +14,19 @@ export async function sendChat(
   const payload = chatRequestSchema.parse(request);
   const timeout = AbortSignal.timeout(130000);
   let response: Response;
+  let body: unknown;
   try {
     response = await fetch(API_ROUTES.chat, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+    });
+    body = await response.json().catch((cause: unknown) => {
+      if (signal?.aborted || timeout.aborted) {
+        throw cause;
+      }
+      return null;
     });
   } catch (cause) {
     if (signal?.aborted) {
@@ -31,7 +38,6 @@ export async function sendChat(
         : L('errors:chat.error.unableConnectChatServerTryAgain'),
     );
   }
-  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(L('errors:chat.error.answerCouldNotBeRetrievedTry'));
   }
