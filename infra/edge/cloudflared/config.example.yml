@@ -5,6 +5,8 @@ credentials-file: /etc/cloudflared/credentials.json
 ingress:
   - hostname: jjs.mangagaki.net
     service: http://caddy:80
+  - hostname: trasolve.mangagaki.net
+    service: http://caddy:80
   # Cloudflare Tunnel hostname wildcards match an entire DNS label. This rule
   # also reaches other subdomains, but Caddy only accepts generated JJS routes.
   # Use dashboard-managed individual hostnames instead if the zone-wide

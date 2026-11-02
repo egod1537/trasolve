@@ -385,11 +385,11 @@ container는 external Docker network `jjs-edge`에서 이름으로 통신합니�
 
 ## URL 및 이름 규칙
 
-| Branch      | Compose project | URL                                   | GitHub environment |
-| ----------- | --------------- | ------------------------------------- | ------------------ |
-| `main`      | `jjs-main`      | `https://jjs.mangagaki.net`           | `production`       |
-| `w1`        | `jjs-w1`        | `https://w1-jjs.mangagaki.net`        | `w1`               |
-| `feat-auth` | `jjs-feat-auth` | `https://feat-auth-jjs.mangagaki.net` | `feat-auth`        |
+| Branch      | Compose project | URL                                                             | GitHub environment |
+| ----------- | --------------- | --------------------------------------------------------------- | ------------------ |
+| `main`      | `jjs-main`      | `https://jjs.mangagaki.net`, `https://trasolve.mangagaki.net`    | `production`       |
+| `w1`        | `jjs-w1`        | `https://w1-jjs.mangagaki.net`                                  | `w1`               |
+| `feat-auth` | `jjs-feat-auth` | `https://feat-auth-jjs.mangagaki.net`                           | `feat-auth`        |
 
 이미 DNS/Docker-safe인 소문자 branch는 그대로 사용합니다. `/`, 대문자, 비 ASCII 문자,
 길이 초과 또는 `main` 충돌이 있으면 정규화한 뒤 branch SHA-256의 앞 8자를 붙입니다.
@@ -443,6 +443,7 @@ host의 `config.yml`로 복사하고 tunnel UUID를 바꿉니다. container 안�
 Cloudflare DNS/Public Hostname에는 다음 경로가 필요합니다.
 
 - `jjs.mangagaki.net` → 해당 Tunnel
+- `trasolve.mangagaki.net` → 해당 Tunnel (`main` alias)
 - preview를 위한 wildcard `*.mangagaki.net` → 해당 Tunnel
 - Tunnel origin service → `http://caddy:80`
 
@@ -451,7 +452,9 @@ partial wildcard로 격리할 수 없습니다. 기존 exact DNS record는 wildc
 zone-wide wildcard가 이미 다른 Tunnel 소유라면 그 Tunnel config에 JJS origin을 연결하거나
 `JJS_AUTO_PROVISION_DNS=true`와 Tunnel UUID/origin cert를 설정해 deploy 시 branch의 exact
 DNS record를 안전하게 생성할 수 있습니다. 기존 record는 강제로 덮어쓰지 않습니다.
-저장소의 Caddy는 생성된 정확한 JJS hostname만 받고 나머지는 응답하지 않습니다.
+저장소의 Caddy는 생성된 정확한 JJS hostname과 `JJS_MAIN_ALIASES`에 지정한 `main`
+alias만 받고 나머지는 응답하지 않습니다. Alias DNS는 다른 서비스의 기존 레코드를 배포
+스크립트가 강제로 덮어쓰지 않으므로 Cloudflare에서 해당 Tunnel로 명시적으로 이전합니다.
 
 설정 검증:
 

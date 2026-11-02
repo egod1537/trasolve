@@ -21,6 +21,8 @@ validate_branch "$branch"
 
 slug="$(slug_for_branch "$branch")"
 hostname="$(hostname_for_slug "$branch" "$slug")"
+hostnames="$(hostnames_for_slug "$branch" "$slug")"
+hostnames_csv="${hostnames//$'\n'/,}"
 environment="$(environment_for_branch "$branch" "$slug")"
 database="$(database_for_branch "$branch" "$slug")"
 if [[ "$branch" == main ]]; then
@@ -207,14 +209,14 @@ if [[ -f "$route_file" ]]; then
   route_had_previous=true
 fi
 route_tmp="$(mktemp "$ROUTES_DIR/.${slug}.XXXXXX")"
-render_route "$hostname" "$slug" "$route_tmp"
+render_route "$hostnames" "$slug" "$route_tmp"
 mv "$route_tmp" "$route_file"
 route_changed=true
 
 reload_caddy
-log "event=caddy-reload result=success hostname=$hostname"
-verify_routed_health "$hostname"
-log "event=health-check scope=route result=success url=$deployment_url"
+log "event=caddy-reload result=success hostnames=$hostnames_csv"
+verify_routed_health "$hostnames"
+log "event=health-check scope=route result=success hostnames=$hostnames_csv"
 
 mv "$next_env" "$previous_env"
 if [[ -z "$deployment_id" ]]; then
@@ -222,6 +224,7 @@ if [[ -z "$deployment_id" ]]; then
 fi
 write_state "$unit_dir" commit "$commit"
 write_state "$unit_dir" hostname "$hostname"
+write_state "$unit_dir" hostnames "$hostnames_csv"
 write_state "$unit_dir" environment "$environment"
 write_state "$unit_dir" deployed-at "$(timestamp)"
 write_state "$unit_dir" status success

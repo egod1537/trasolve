@@ -1,4 +1,4 @@
-http://__HOSTNAME__ {
+__HOSTNAMES__ {
 	handle /api/* {
 		reverse_proxy jjs-__SLUG__-backend:3000
 	}

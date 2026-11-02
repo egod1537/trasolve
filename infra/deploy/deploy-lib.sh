@@ -25,6 +25,7 @@ DOMAIN="${JJS_DOMAIN:-mangagaki.net}"
 SERVICE_NAME="${JJS_SERVICE_NAME:-jjs}"
 MAIN_BRANCH="${JJS_MAIN_BRANCH:-main}"
 MAIN_HOSTNAME="${JJS_MAIN_HOSTNAME:-$SERVICE_NAME.$DOMAIN}"
+MAIN_ALIASES="${JJS_MAIN_ALIASES-trasolve.$DOMAIN}"
 GITHUB_REPOSITORY="${JJS_GITHUB_REPOSITORY:-egod1537/trasolve}"
 GITHUB_REPORTING_REQUIRED="${JJS_GITHUB_REPORTING_REQUIRED:-false}"
 HEALTH_TIMEOUT="${JJS_HEALTH_TIMEOUT_SEC:-120}"
@@ -67,12 +68,24 @@ init_state() {
 }
 
 validate_config() {
+  local alias seen
   [[ "$DOMAIN" =~ ^[a-z0-9]([a-z0-9.-]*[a-z0-9])$ && "$DOMAIN" == *.* ]] \
     || die "invalid JJS_DOMAIN: $DOMAIN"
   [[ "$SERVICE_NAME" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]] \
     || die "invalid JJS_SERVICE_NAME: $SERVICE_NAME"
   [[ "$MAIN_HOSTNAME" =~ ^[a-z0-9]([a-z0-9.-]*[a-z0-9])$ ]] \
     || die "invalid JJS_MAIN_HOSTNAME: $MAIN_HOSTNAME"
+  seen=",$MAIN_HOSTNAME,"
+  if [[ -n "$MAIN_ALIASES" ]]; then
+    while IFS= read -r alias; do
+      [[ "$alias" =~ ^[a-z0-9]([a-z0-9.-]*[a-z0-9])$ ]] \
+        || die "invalid JJS_MAIN_ALIASES hostname: $alias"
+      case "$seen" in
+        *",$alias,"*) die "duplicate main hostname: $alias" ;;
+      esac
+      seen="$seen$alias,"
+    done < <(printf '%s\n' "$MAIN_ALIASES" | tr ',' '\n')
+  fi
   [[ "$HEALTH_TIMEOUT" =~ ^[0-9]+$ && "$HEALTH_TIMEOUT" -gt 0 ]] \
     || die "JJS_HEALTH_TIMEOUT_SEC must be a positive integer"
   [[ "$GITHUB_REPORTING_REQUIRED" == true || "$GITHUB_REPORTING_REQUIRED" == false ]] \
@@ -142,6 +155,14 @@ hostname_for_slug() {
     printf '%s\n' "$MAIN_HOSTNAME"
   else
     printf '%s-%s.%s\n' "$slug" "$SERVICE_NAME" "$DOMAIN"
+  fi
+}
+
+hostnames_for_slug() {
+  local branch="$1" slug="$2"
+  hostname_for_slug "$branch" "$slug"
+  if [[ "$branch" == "$MAIN_BRANCH" && -n "$MAIN_ALIASES" ]]; then
+    printf '%s\n' "$MAIN_ALIASES" | tr ',' '\n'
   fi
 }
 
@@ -302,20 +323,28 @@ reload_caddy() {
 }
 
 render_route() {
-  local hostname="$1" slug="$2" output="$3"
-  sed -e "s/__HOSTNAME__/$hostname/g" -e "s/__SLUG__/$slug/g" \
+  local hostnames="$1" slug="$2" output="$3" hostname addresses=""
+  while IFS= read -r hostname; do
+    [[ -z "$addresses" ]] || addresses="$addresses, "
+    addresses="${addresses}http://$hostname"
+  done <<<"$hostnames"
+  sed -e "s|__HOSTNAMES__|$addresses|g" -e "s|__SLUG__|$slug|g" \
     "$ROUTE_TEMPLATE" >"$output"
 }
 
 verify_routed_health() {
-  local hostname="$1"
-  edge_compose exec -T caddy wget -q -O /dev/null \
-    --header="Host: $hostname" http://127.0.0.1/api/health
-  edge_compose exec -T caddy wget -q -O /dev/null \
-    --header="Host: $hostname" http://127.0.0.1/
+  local hostnames="$1" hostname
+  while IFS= read -r hostname; do
+    edge_compose exec -T caddy wget -q -O /dev/null \
+      --header="Host: $hostname" http://127.0.0.1/api/health
+    edge_compose exec -T caddy wget -q -O /dev/null \
+      --header="Host: $hostname" http://127.0.0.1/
+  done <<<"$hostnames"
   if [[ "$EXTERNAL_HEALTHCHECK" == true ]]; then
-    curl --fail --silent --show-error --max-time 20 "https://$hostname/api/health" >/dev/null
-    curl --fail --silent --show-error --max-time 20 "https://$hostname/" >/dev/null
+    while IFS= read -r hostname; do
+      curl --fail --silent --show-error --max-time 20 "https://$hostname/api/health" >/dev/null
+      curl --fail --silent --show-error --max-time 20 "https://$hostname/" >/dev/null
+    done <<<"$hostnames"
   fi
 }
 
