@@ -33,7 +33,8 @@ type ResponseResult = {
   readonly response: Response;
 };
 
-const revisionEtagPattern = /^"([1-9]\d*)"$/;
+// Edge compression weakens the backend's strong ETag to W/"<revision>".
+const revisionEtagPattern = /^(?:W\/)?"([1-9]\d*)"$/;
 
 async function request(
   path: string,
