@@ -7,12 +7,19 @@
 <p align="center"><strong>Find places with AI. Plan how to get there.</strong></p>
 
 <p align="center">
-  <strong>Under Active Development</strong><br />
+  <strong>🚧 Under Active Development</strong><br />
   <a href="https://trasolve.mangagaki.net">Open the demo</a>
 </p>
 
+## Screenshot
+
+<p align="center">
+  <em>Screenshot coming soon.</em><br />
+  <sub>The Trasolve map workspace will be shown here.</sub>
+</p>
+
 <!--
-Add the current application screenshot at docs/assets/trasolve-app.png, then enable this block:
+Replace the placeholder above with the following block after adding the current application screenshot at docs/assets/trasolve-app.png:
 
 <p align="center">
   <a href="https://trasolve.mangagaki.net">
