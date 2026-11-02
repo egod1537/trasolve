@@ -1,4 +1,12 @@
 __HOSTNAMES__ {
+	# Google OAuth uses the canonical callback hostname. Starting the flow there
+	# keeps the transaction cookie and callback on the same origin.
+	@aliasGoogleOAuthStart {
+		not host __HOSTNAME__
+		path /api/auth/google/start
+	}
+	redir @aliasGoogleOAuthStart https://__HOSTNAME__{uri} 302
+
 	handle /api/* {
 		reverse_proxy jjs-__SLUG__-backend:3000
 	}

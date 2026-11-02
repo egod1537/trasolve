@@ -323,12 +323,15 @@ reload_caddy() {
 }
 
 render_route() {
-  local hostnames="$1" slug="$2" output="$3" hostname addresses=""
+  local hostnames="$1" slug="$2" output="$3" hostname primary_hostname addresses=""
+  primary_hostname="${hostnames%%$'\n'*}"
   while IFS= read -r hostname; do
     [[ -z "$addresses" ]] || addresses="$addresses, "
     addresses="${addresses}http://$hostname"
   done <<<"$hostnames"
-  sed -e "s|__HOSTNAMES__|$addresses|g" -e "s|__SLUG__|$slug|g" \
+  sed -e "s|__HOSTNAMES__|$addresses|g" \
+    -e "s|__HOSTNAME__|$primary_hostname|g" \
+    -e "s|__SLUG__|$slug|g" \
     "$ROUTE_TEMPLATE" >"$output"
 }
 

@@ -455,6 +455,8 @@ DNS record를 안전하게 생성할 수 있습니다. 기존 record는 강제�
 저장소의 Caddy는 생성된 정확한 JJS hostname과 `JJS_MAIN_ALIASES`에 지정한 `main`
 alias만 받고 나머지는 응답하지 않습니다. Alias DNS는 다른 서비스의 기존 레코드를 배포
 스크립트가 강제로 덮어쓰지 않으므로 Cloudflare에서 해당 Tunnel로 명시적으로 이전합니다.
+Google OAuth 시작 요청은 host-only 검증 쿠키와 callback origin을 일치시키기 위해 alias에서
+`JJS_MAIN_HOSTNAME`으로 이동하며, 로그인 완료 후에도 canonical hostname을 사용합니다.
 
 설정 검증:
 
