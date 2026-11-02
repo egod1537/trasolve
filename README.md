@@ -1,44 +1,72 @@
-# Trasolve
+<p align="center">
+  <img src="./frontend/public/favicon.svg" width="144" height="144" alt="Trasolve App Icon" />
+</p>
 
-**Find places with AI, then figure out how to get to them.**
+<h1 align="center">Trasolve</h1>
 
-Trasolve is a travel planner that brings place discovery, trip planning, and route optimization together on a map. The goal is to turn a list of places you want to visit into a trip you can actually follow.
+<p align="center"><strong>Find places with AI. Plan how to get there.</strong></p>
 
-> [!NOTE]
-> Trasolve is still in development. Some parts of the planning flow are unfinished and may change.
+<p align="center">
+  <strong>Under Active Development</strong><br />
+  <a href="https://trasolve.mangagaki.net">Open the demo</a>
+</p>
 
-[Try Trasolve](https://trasolve.mangagaki.net) · [Route optimization engine (troute)](https://github.com/egod1537/troute)
+<!--
+Add the current application screenshot at docs/assets/trasolve-app.png, then enable this block:
 
-<!-- Add a screenshot or short demo here. -->
+<p align="center">
+  <a href="https://trasolve.mangagaki.net">
+    <img src="./docs/assets/trasolve-app.png" width="1200" alt="Trasolve map workspace" />
+  </a>
+</p>
+-->
+
+Trasolve is a trip-planning application with place search, itinerary editing, maps, and route tools. The project is still in development. Some features require external services or API credentials.
 
 ## Why Trasolve?
 
-Finding places to visit is easy. Fitting them into a day is harder.
+A list of places is not an itinerary. You still need to group stops by day, decide their order, and account for travel time and opening hours.
 
-A list of recommendations doesn't tell you which place to visit first, how long it takes to get between stops, or whether you'll arrive before a place closes. Trasolve is an attempt to handle those details in the same place where you explore and save destinations.
+Trasolve keeps this work next to the map. You can search for places, organize them by day, review routes between stops, and use the chat panel for travel questions.
 
 ## Features
 
-- **AI-assisted discovery** — Use the chat panel to explore places and travel ideas.
-- **Map-based planning** — Find places on a map and organize stops into a trip.
-- **Saved trips** — Create, edit, and return to your itineraries.
-- **Route optimization (in progress)** — Work toward an itinerary that accounts for travel time and scheduling constraints. The optimization engine is developed separately in [troute](https://github.com/egod1537/troute).
+- Trips can contain multiple days, ordered places, schedule details, and routes displayed on a Google map.
+- Place searches go through the backend to Google Places. A search result can be added directly to a trip.
+- The backend stores trips and uses revisions to detect conflicting edits.
+- The chat panel renders Markdown and can use OpenWebUI, Gemini, or the local development provider. It does not automatically change the active trip.
+- Google Routes provides directions. Route optimization uses the separate [`troute`](https://github.com/egod1537/troute) service and is still under development.
+- The interface supports localized resources and light, dark, and system themes.
 
 ## Getting Started
 
-The development version is available at **[trasolve.mangagaki.net](https://trasolve.mangagaki.net)**.
+The hosted development build is available at [trasolve.mangagaki.net](https://trasolve.mangagaki.net).
 
-The site is changing as features are built, so it may not always be usable end to end.
+Sign in, create a trip or load an example, then use the map workspace to search for places and arrange the itinerary. The hosted build changes frequently. Some flows may be incomplete or temporarily unavailable.
 
 ## Self-Hosting
 
-The repository contains the frontend, backend, and shared API definitions. Route optimization is handled by the separate [`troute`](https://github.com/egod1537/troute) project.
+Trasolve is a workspace-based TypeScript project with a React frontend, a Node.js backend, and shared runtime schemas. Local development requires Node.js 24.11 or newer.
 
-For local development, you'll need Node.js 24.11 or newer. Start with the example environment files in the root, `frontend`, and `backend` directories, then run:
+Copy the frontend and backend environment examples before starting:
 
 ```bash
+cp frontend/.env.example frontend/.env.local
+cp backend/.env.example backend/.env.local
 npm install
 npm run dev
 ```
 
-Additional services and API keys are needed for features such as maps, authentication, and persistence. See the documentation in [`docs/`](docs/) and the environment examples for configuration details. This is a development setup, not a one-command production deployment.
+The development servers run at `http://127.0.0.1:5173` for the frontend and `http://127.0.0.1:43127` for the backend. Local mode uses file persistence and supports debug guest authentication. A browser-restricted Maps JavaScript API key is required to render the map; Places and Routes use separate server-side keys.
+
+AI chat, Google OAuth, PostgreSQL persistence, `troute`, and `tcache` are optional integrations with their own settings in the example environment files. The development-only random chat provider is used when no AI provider is configured. PostgreSQL users should configure `DATABASE_URL` and run `npm run db:migrate`.
+
+Validate a production build with the repository scripts:
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+```
+
+Detailed implementation and deployment notes are kept in [`docs/architecture-and-operations.md`](docs/architecture-and-operations.md). Additional references include the [database guide](docs/database.md), [trip and map architecture](docs/trip-maps.md), and [frontend source layout](docs/frontend-source-layout.md).
