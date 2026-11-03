@@ -179,6 +179,8 @@ export function createRouteOptimizationRequest(
       return {
         id: place.id.trim(),
         place_id: place.placeId!.trim(),
+        latitude: place.location.lat,
+        longitude: place.location.lng,
         open_time: constraint.openTime,
         close_time: constraint.closeTime,
         stay_minutes: constraint.stayMinutes,
@@ -189,6 +191,7 @@ export function createRouteOptimizationRequest(
       ? { start_time: resolved.startTime! }
       : {}),
     travel_mode: resolved.travelMode,
+    use_euclidean_matrix: true,
   };
   try {
     return trouteOptimizeRequestSchema.parse(request);

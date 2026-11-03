@@ -117,6 +117,8 @@ export const trouteLocationSchema = z.strictObject({
   id: nonEmptyStringSchema,
   name: z.string().max(512).optional(),
   place_id: z.string().max(512),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
   open_time: timeOfDaySchema,
   close_time: timeOfDaySchema,
   stay_minutes: z.number().int().min(0).max(MAX_U32),
@@ -146,6 +148,7 @@ export const trouteOptimizeRequestSchema = z
     travel_mode: trouteTravelModeSchema.optional(),
     country_code: z.string().max(512).optional(),
     route_provider: trouteRouteProviderSchema.optional(),
+    use_euclidean_matrix: z.boolean().optional(),
     travel_time_matrix: trouteTravelTimeMatrixSchema.optional(),
     debug: trouteDebugOptionsSchema.optional(),
   })
@@ -213,20 +216,49 @@ export const trouteOptimizeRequestSchema = z
           path: ['locations', index, 'stay_minutes'],
         });
       }
+      const hasLatitude = location.latitude !== undefined;
+      const hasLongitude = location.longitude !== undefined;
+      if (hasLatitude !== hasLongitude) {
+        context.addIssue({
+          code: 'custom',
+          message: 'Latitude and longitude must be supplied together.',
+          path: ['locations', index],
+        });
+      } else if (
+        request.use_euclidean_matrix === true &&
+        (!hasLatitude || !hasLongitude)
+      ) {
+        context.addIssue({
+          code: 'custom',
+          message:
+            'Latitude and longitude are required for Euclidean matrix mode.',
+          path: ['locations', index],
+        });
+      }
     });
 
     const matrix = request.travel_time_matrix;
-    if (matrix === undefined) {
-      request.locations.forEach((location, index) => {
-        if (!nonEmptyStringSchema.safeParse(location.place_id).success) {
-          context.addIssue({
-            code: 'custom',
-            message:
-              'Place IDs must not be empty when no travel time matrix is provided.',
-            path: ['locations', index, 'place_id'],
-          });
-        }
+    if (request.use_euclidean_matrix === true && matrix !== undefined) {
+      context.addIssue({
+        code: 'custom',
+        message:
+          'Euclidean matrix mode cannot be combined with a supplied matrix.',
+        path: ['use_euclidean_matrix'],
       });
+    }
+    if (matrix === undefined) {
+      if (request.use_euclidean_matrix !== true) {
+        request.locations.forEach((location, index) => {
+          if (!nonEmptyStringSchema.safeParse(location.place_id).success) {
+            context.addIssue({
+              code: 'custom',
+              message:
+                'Place IDs must not be empty when no travel time matrix is provided.',
+              path: ['locations', index, 'place_id'],
+            });
+          }
+        });
+      }
       return;
     }
 
