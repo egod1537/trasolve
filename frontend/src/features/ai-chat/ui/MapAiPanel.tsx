@@ -29,6 +29,7 @@ import { getLanguage, useL, L, type Localize } from '@/shared/i18n';
 
 type Props = {
   open: boolean;
+  singleChat?: boolean;
   model?: string;
   onClose?: () => void;
   onGeneratingChange?: (generating: boolean) => void;
@@ -186,7 +187,14 @@ function assertThreadMessageRefInvariant(
 
 export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
   function MapAiPanel(
-    { open, model, onClose, onGeneratingChange, onUnreadPreviewsChange },
+    {
+      open,
+      singleChat = false,
+      model,
+      onClose,
+      onGeneratingChange,
+      onUnreadPreviewsChange,
+    },
     ref,
   ) {
     const L = useL();
@@ -211,6 +219,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
     const [renameDraft, setRenameDraft] = useState('');
     const [listDrawerOpen, setListDrawerOpen] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const chatSearchRef = useRef<HTMLInputElement>(null);
+    const chatListToggleRef = useRef<HTMLButtonElement>(null);
+    const wasListDrawerOpenRef = useRef(false);
     const messagesRef = useRef<HTMLDivElement>(null);
     const nextThreadIdRef = useRef(2);
     const nextMessageIdRef = useRef(1);
@@ -292,6 +303,26 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
     }, [open, selectedThreadId]);
 
     useEffect(() => {
+      if (singleChat) {
+        return;
+      }
+      if (listDrawerOpen) {
+        wasListDrawerOpenRef.current = true;
+        chatSearchRef.current?.focus({ preventScroll: true });
+        const closeOnEscape = (event: globalThis.KeyboardEvent) => {
+          if (event.key === 'Escape') {
+            setListDrawerOpen(false);
+          }
+        };
+        document.addEventListener('keydown', closeOnEscape);
+        return () => document.removeEventListener('keydown', closeOnEscape);
+      } else if (wasListDrawerOpenRef.current) {
+        chatListToggleRef.current?.focus({ preventScroll: true });
+      }
+      wasListDrawerOpenRef.current = listDrawerOpen;
+    }, [listDrawerOpen, singleChat]);
+
+    useEffect(() => {
       messagesRef.current?.scrollTo({
         top: messagesRef.current.scrollHeight,
         behavior: 'smooth',
@@ -363,6 +394,10 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
           markThreadRead(selectedThreadIdRef.current);
         },
         viewThread: (threadId) => {
+          if (singleChat) {
+            markThreadRead(selectedThreadIdRef.current);
+            return;
+          }
           changeSelectedThread(threadId);
           setOpenMenuThreadId(null);
           setRenamingThreadId(null);
@@ -370,7 +405,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
           markThreadRead(threadId);
         },
       }),
-      [changeSelectedThread, markThreadRead],
+      [changeSelectedThread, markThreadRead, singleChat],
     );
 
     const createNewThread = () => {
@@ -812,8 +847,13 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
         aria-hidden={!open}
         inert={!open}
       >
-        <div className="trip-ai-chat-layout">
-          {listDrawerOpen && (
+        <div
+          className="trip-ai-chat-layout"
+          style={
+            singleChat ? { gridTemplateColumns: 'minmax(0, 1fr)' } : undefined
+          }
+        >
+          {!singleChat && listDrawerOpen && (
             <button
               type="button"
               className="trip-ai-chat-list-backdrop"
@@ -821,76 +861,86 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
               onClick={() => setListDrawerOpen(false)}
             />
           )}
-          <aside
-            id="trip-ai-chat-list"
-            className={`trip-ai-chat-list${listDrawerOpen ? ' is-mobile-open' : ''}`}
-            aria-label={L('ai:mapAiPanel.ariaLabel.aiChatList')}
-          >
-            <header className="trip-ai-chat-list-header">
-              <h2>{L('ai:mapAiPanel.title.trasolveAi')}</h2>
-              <button type="button" onClick={createNewThread}>
-                <span aria-hidden="true">＋</span>
-                {L('ai:mapAiPanel.createThread.title.newChat')}
-              </button>
-            </header>
-            <label className="trip-ai-chat-search">
-              <span className="sr-only">
-                {L('ai:mapAiPanel.text.chatSearch')}
-              </span>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="10.5" cy="10.5" r="6.5" />
-                <path d="m15.5 15.5 5 5" />
-              </svg>
-              <input
-                type="search"
-                value={searchQuery}
-                placeholder={L('ai:mapAiPanel.text.chatSearch')}
-                onChange={(event) => setSearchQuery(event.target.value)}
-              />
-            </label>
-            <div className="trip-ai-chat-list-content">
-              <section aria-labelledby="trip-ai-recent-chats-title">
-                <h3 id="trip-ai-recent-chats-title">
-                  {L('ai:mapAiPanel.title.recentConversations')}
-                </h3>
-                {recentThreads.length ? (
-                  <ul>{recentThreads.map(renderThread)}</ul>
-                ) : (
-                  <p className="trip-ai-chat-list-empty">
-                    {L('ai:mapAiPanel.description.thereNoDialogue')}
-                  </p>
-                )}
-              </section>
-              {!!archivedThreads.length && (
-                <section aria-labelledby="trip-ai-archived-chats-title">
-                  <h3 id="trip-ai-archived-chats-title">
-                    {L('ai:mapAiPanel.title.archived')}
+          {!singleChat && (
+            <aside
+              id="trip-ai-chat-list"
+              className={`trip-ai-chat-list${listDrawerOpen ? ' is-mobile-open' : ''}`}
+              aria-label={L('ai:mapAiPanel.ariaLabel.aiChatList')}
+            >
+              <header className="trip-ai-chat-list-header">
+                <h2>{L('ai:mapAiPanel.title.trasolveAi')}</h2>
+                <button type="button" onClick={createNewThread}>
+                  <span aria-hidden="true">＋</span>
+                  {L('ai:mapAiPanel.createThread.title.newChat')}
+                </button>
+              </header>
+              <label className="trip-ai-chat-search">
+                <span className="sr-only">
+                  {L('ai:mapAiPanel.text.chatSearch')}
+                </span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="10.5" cy="10.5" r="6.5" />
+                  <path d="m15.5 15.5 5 5" />
+                </svg>
+                <input
+                  ref={chatSearchRef}
+                  type="search"
+                  value={searchQuery}
+                  placeholder={L('ai:mapAiPanel.text.chatSearch')}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                />
+              </label>
+              <div className="trip-ai-chat-list-content">
+                <section aria-labelledby="trip-ai-recent-chats-title">
+                  <h3 id="trip-ai-recent-chats-title">
+                    {L('ai:mapAiPanel.title.recentConversations')}
                   </h3>
-                  <ul>{archivedThreads.map(renderThread)}</ul>
+                  {recentThreads.length ? (
+                    <ul>{recentThreads.map(renderThread)}</ul>
+                  ) : (
+                    <p className="trip-ai-chat-list-empty">
+                      {L('ai:mapAiPanel.description.thereNoDialogue')}
+                    </p>
+                  )}
                 </section>
-              )}
-            </div>
-          </aside>
+                {!!archivedThreads.length && (
+                  <section aria-labelledby="trip-ai-archived-chats-title">
+                    <h3 id="trip-ai-archived-chats-title">
+                      {L('ai:mapAiPanel.title.archived')}
+                    </h3>
+                    <ul>{archivedThreads.map(renderThread)}</ul>
+                  </section>
+                )}
+              </div>
+            </aside>
+          )}
 
           <section
             className="trip-ai-conversation"
             aria-label={L('ai:mapAiPanel.ariaLabel.currentConversation')}
           >
             <header className="trip-map-ai-panel-header">
-              <button
-                type="button"
-                className="trip-ai-chat-list-toggle"
-                aria-label={L('ai:mapAiPanel.ariaLabel.openChatList')}
-                aria-controls="trip-ai-chat-list"
-                aria-expanded={listDrawerOpen}
-                onClick={() => setListDrawerOpen(true)}
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 7h16M4 12h16M4 17h16" />
-                </svg>
-              </button>
+              {!singleChat && (
+                <button
+                  ref={chatListToggleRef}
+                  type="button"
+                  className="trip-ai-chat-list-toggle"
+                  aria-label={L('ai:mapAiPanel.ariaLabel.openChatList')}
+                  aria-controls="trip-ai-chat-list"
+                  aria-expanded={listDrawerOpen}
+                  onClick={() => setListDrawerOpen(true)}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7h16M4 12h16M4 17h16" />
+                  </svg>
+                </button>
+              )}
               <div>
-                <h2>{getThreadTitle(selectedThread, L)}</h2>
+                <h2>
+                  {singleChat
+                    ? L('ai:mapAiPanel.title.trasolveAi')
+                    : getThreadTitle(selectedThread, L)}
+                </h2>
                 <p>{L('ai:mapAiPanel.description.travelAssistant')}</p>
               </div>
               {onClose && (
