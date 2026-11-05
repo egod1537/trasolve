@@ -5,4 +5,3 @@ export {
   type MapAiUnreadPreview,
 } from './ui/MapAiPanel';
 export { MapAiRegion } from './ui/MapAiRegion';
-export type { ChatRequestPreamble } from './ui/MapAiPanel';

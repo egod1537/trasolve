@@ -9,10 +9,7 @@ import {
 } from '@trasolve/shared';
 import type { TripCommand } from '@/features/map-workspace/command/TripCommand';
 import { defineTripCommand } from '@/features/map-workspace/command/TripCommand';
-import type {
-  PersistedBatchOutcome,
-  TripEditController,
-} from '@/features/map-workspace/controller/TripEditController';
+import type { TripEditController } from '@/features/map-workspace/controller/TripEditController';
 import {
   adaptTripCommandPlanOperation,
   getTripCommandPlanResultKind,
@@ -33,10 +30,9 @@ import {
   computeTripCommandPlanRisk,
   type TripCommandPlanRisk,
 } from '@/features/map-workspace/ai-command/TripCommandPlanRisk';
-import {
-  resolveTripCommandPlanPlace,
-  type TripCommandPlanResultBinding,
-  type TripCommandPlanResultKind,
+import type {
+  TripCommandPlanResultBinding,
+  TripCommandPlanResultKind,
 } from '@/features/map-workspace/ai-command/TripCommandPlanResolver';
 import { L } from '@/shared/i18n';
 
@@ -68,13 +64,7 @@ export type PrepareTripCommandPlanResult =
   | { success: false; error: TripCommandPlanValidationError };
 
 export type ExecutePreparedTripCommandPlanResult =
-  | { success: true }
-  | {
-      success: false;
-      error: TripCommandPlanValidationError;
-      /** Why a persisted Apply did not complete (conflict, busy, unknown...). */
-      outcome?: PersistedBatchOutcome;
-    };
+  { success: true } | { success: false; error: TripCommandPlanValidationError };
 
 export type PrepareTripCommandPlanOptions = {
   selectedPlaceIds?: readonly string[];
@@ -130,10 +120,8 @@ export async function prepareTripCommandPlan(
 
   const plan = parsed.data;
   try {
-    options.signal?.throwIfAborted();
     const initialTrip = tripSchema.parse(structuredClone(currentTrip));
     await validateBase(plan, initialTrip);
-    options.signal?.throwIfAborted();
     const selectedPlaceIds = validateSelection(
       options.selectedPlaceIds ?? [],
       initialTrip,
@@ -153,79 +141,23 @@ export async function prepareTripCommandPlan(
       TripCommandPlanResultBinding
     >();
     const commands: TripCommand[] = [];
-    // The schema keeps visit and preferred durations in sync, so any later
-    // different duration for the same resolved place would silently win.
-    const durationEdits = new Map<string, number>();
-    const claimDuration = (
-      placeId: string,
-      minutes: number,
-      stepId: TripCommandPlanStepId,
-    ) => {
-      const previous = durationEdits.get(placeId);
-      if (previous !== undefined && previous !== minutes) {
-        throw new TripCommandPlanError(
-          'unsafe_operation',
-          L(
-            'map:tripCommandPlanExecutor.executePreparedTripCommandPlan.message.preparedTravelCommandCannotBeSafely',
-          ),
-          stepId,
-        );
-      }
-      durationEdits.set(placeId, minutes);
-    };
     let workingTrip = structuredClone(initialTrip);
 
     for (const [stepIndex, operation] of plan.operations.entries()) {
-      options.signal?.throwIfAborted();
-      const context = {
-        initialTrip,
-        workingTrip,
-        selectedPlaceIds,
-        stepIndexes,
-        stepResultKinds,
-        results,
-        stepIndex,
-        stepId: operation.stepId,
-      };
-      // One add operation can explicitly request incompatible simultaneous
-      // durations. Sequential edits retain the domain's last-wins behavior.
-      if (
-        operation.op === 'add_place' &&
-        operation.visitDurationMinutes !== undefined &&
-        operation.preferredDurationMinutes !== undefined &&
-        operation.visitDurationMinutes !== operation.preferredDurationMinutes
-      ) {
-        throw new TripCommandPlanError(
-          'unsafe_operation',
-          L(
-            'map:tripCommandPlanExecutor.executePreparedTripCommandPlan.message.preparedTravelCommandCannotBeSafely',
-          ),
-          operation.stepId,
-        );
-      }
-      if (
-        operation.op === 'set_visit_duration' ||
-        operation.op === 'set_preferred_duration'
-      ) {
-        claimDuration(
-          resolveTripCommandPlanPlace(operation.place, context),
-          operation.minutes,
-          operation.stepId,
-        );
-      }
       const adapted = await adaptTripCommandPlanOperation(
         operation,
-        context,
+        {
+          initialTrip,
+          workingTrip,
+          selectedPlaceIds,
+          stepIndexes,
+          stepResultKinds,
+          results,
+          stepIndex,
+          stepId: operation.stepId,
+        },
         options.signal,
       );
-      options.signal?.throwIfAborted();
-      if (operation.op === 'add_place' && adapted.result?.kind === 'place') {
-        const minutes =
-          operation.visitDurationMinutes ?? operation.preferredDurationMinutes;
-        if (minutes !== undefined) {
-          claimDuration(adapted.result.id, minutes, operation.stepId);
-        }
-      }
       for (const command of adapted.commands) {
         workingTrip = applyCommandForPreflight(workingTrip, command);
         commands.push(command);
@@ -270,7 +202,6 @@ export async function executePreparedTripCommandPlan(
   prepared: PreparedTripCommandPlan,
   currentTrip: Trip,
   controller: TripEditController,
-  options: { persist?: boolean } = {},
 ): Promise<ExecutePreparedTripCommandPlanResult> {
   if (
     currentTrip.id !== prepared.tripId ||
@@ -287,46 +218,18 @@ export async function executePreparedTripCommandPlan(
     };
   }
 
-  if (!options.persist) {
-    return (await controller.executeBatch(prepared.commands))
-      ? { success: true }
-      : {
-          success: false,
-          error: {
-            code: 'unsafe_operation',
-            message: L(
-              'map:tripCommandPlanExecutor.executePreparedTripCommandPlan.message.preparedTravelCommandCannotBeSafely',
-            ),
-          },
-        };
-  }
-  const outcome = await controller.executePersistedBatchDetailed(
-    prepared.commands,
-  );
-  if (outcome === 'committed') {
-    return { success: true };
-  }
-  return {
-    success: false,
-    outcome,
-    error:
-      outcome === 'conflict'
-        ? {
-            code: 'stale_plan',
-            message: L(
-              'map:tripCommandPlanExecutor.executePreparedTripCommandPlan.message.tripHasChangedSinceItWas',
-            ),
-          }
-        : {
-            code: 'unsafe_operation',
-            message:
-              outcome === 'not_committed' || outcome === 'unknown_commit'
-                ? L('map:tripEditController.runSave.error.failedSaveTrip')
-                : L(
-                    'map:tripCommandPlanExecutor.executePreparedTripCommandPlan.message.preparedTravelCommandCannotBeSafely',
-                  ),
-          },
-  };
+  const success = await controller.executeBatch(prepared.commands);
+  return success
+    ? { success: true }
+    : {
+        success: false,
+        error: {
+          code: 'unsafe_operation',
+          message: L(
+            'map:tripCommandPlanExecutor.executePreparedTripCommandPlan.message.preparedTravelCommandCannotBeSafely',
+          ),
+        },
+      };
 }
 
 async function validateBase(plan: TripCommandPlan, trip: Trip): Promise<void> {

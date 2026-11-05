@@ -63,8 +63,6 @@ const chatProvider = createChatProvider(
     openWebUIModel: process.env.OPENWEBUI_MODEL ?? '',
     geminiApiKey: process.env.GEMINI_API_KEY ?? '',
     geminiModel: process.env.GEMINI_MODEL ?? '',
-    geminiNativeTools: process.env.GEMINI_NATIVE_TOOLS === '1',
-    geminiBaseUrl: process.env.GEMINI_API_BASE_URL?.trim() || undefined,
   },
   openWebUIClient,
 );

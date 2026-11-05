@@ -1,7 +1,7 @@
 import { memo, useCallback, useState, type RefObject } from 'react';
 import type { PlaceDetails } from '@trasolve/shared';
 import type { GoogleMapHandle } from '@/map/types/googleMapComponent';
-import { TripAiRegion } from './TripAiRegion';
+import { MapAiRegion } from '@/features/ai-chat';
 import {
   getQuickSearchShortcutLabel,
   QuickSearch,
@@ -13,7 +13,6 @@ import { RenderProfiler } from '@/shared/lib/RenderProfiler';
 type Props = {
   dismissRevision: number;
   mapRef: RefObject<GoogleMapHandle | null>;
-  selectedPlaceIds: readonly string[];
   onSelectPlace: (place: PlaceDetails) => void;
   onOpenTripPicker: () => void;
 };
@@ -21,7 +20,6 @@ type Props = {
 export const MapToolbar = memo(function MapToolbar({
   dismissRevision,
   mapRef,
-  selectedPlaceIds,
   onSelectPlace,
   onOpenTripPicker,
 }: Props) {
@@ -56,11 +54,7 @@ export const MapToolbar = memo(function MapToolbar({
         <MapUserControls onOpenTripPicker={onOpenTripPicker} />
       </div>
       <RenderProfiler id="map-ai-panel">
-        <TripAiRegion
-          open={aiOpen}
-          onOpenChange={setAiOpen}
-          selectedPlaceIds={selectedPlaceIds}
-        />
+        <MapAiRegion open={aiOpen} onOpenChange={setAiOpen} />
       </RenderProfiler>
       <QuickSearch
         open={quickSearchOpen}

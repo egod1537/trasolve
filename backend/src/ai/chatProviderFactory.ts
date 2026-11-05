@@ -12,10 +12,6 @@ export type ChatProviderConfiguration = {
   openWebUIModel: string;
   geminiApiKey: string;
   geminiModel: string;
-  /** Off by default: Gemini then only ever receives plain text requests. */
-  geminiNativeTools?: boolean;
-  /** Overrides the Gemini API base URL (development stubs only). */
-  geminiBaseUrl?: string | undefined;
 };
 
 export class ChatProviderConfigurationError extends Error {
@@ -58,10 +54,6 @@ export function createChatProvider(
         return new GeminiChatProvider({
           apiKey: configuration.geminiApiKey,
           model: configuration.geminiModel,
-          nativeTools: configuration.geminiNativeTools ?? false,
-          ...(configuration.geminiBaseUrl
-            ? { baseUrl: configuration.geminiBaseUrl }
-            : {}),
         });
       } catch (cause) {
         const message =
