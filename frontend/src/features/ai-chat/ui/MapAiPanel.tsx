@@ -8,9 +8,14 @@ import {
   useRef,
   useState,
   type FormEvent,
+  type ReactNode,
   type KeyboardEvent,
 } from 'react';
-import { CHAT_LIMITS, type ChatMessage } from '@trasolve/shared';
+import {
+  CHAT_LIMITS,
+  type ChatMessage,
+  type ChatRequest,
+} from '@trasolve/shared';
 import { sendChat } from '@/features/ai-chat/api/chat';
 import { downloadChatMarkdown } from '@/features/ai-chat/lib/chatMarkdown';
 import { ChatMarkdown } from '@/features/ai-chat/ui/ChatMarkdown';
@@ -27,8 +32,27 @@ import { CloseIcon } from '@/shared/ui/icons';
 import '@/features/ai-chat/ui/chat-panel.css';
 import { getLanguage, useL, L, type Localize } from '@/shared/i18n';
 
+/**
+ * System messages plus an opaque request-time context. The context is captured
+ * together with the system messages, stored on the resulting assistant message,
+ * and handed back to the assistant actions, so an answer is only ever
+ * interpreted against the context that was sent with its own request.
+ */
+export type ChatRequestPreamble = {
+  systemMessages: readonly ChatMessage[];
+  context?: string;
+  /** Tools the model may call for this request (edit mode only). */
+  tools?: ChatRequest['tools'];
+};
+
 type Props = {
   open: boolean;
+  singleSession?: boolean;
+  persistenceKey?: string;
+  getRequestPreamble?: () => Promise<ChatRequestPreamble>;
+  renderAssistantActions?: (content: string, context?: string) => ReactNode;
+  /** Always visible above the messages, independent of any message. */
+  notice?: ReactNode;
   model?: string;
   onClose?: () => void;
   onGeneratingChange?: (generating: boolean) => void;
@@ -40,7 +64,11 @@ type UiChatMessage = ChatMessage & {
   createdAt: number;
   unread: boolean;
   requestContent?: string | null;
+  /** Opaque context captured when the request for this answer was sent. */
+  requestContext?: string;
 };
+
+const MAX_REQUEST_CONTEXT_LENGTH = 100_000;
 
 export type MapAiUnreadPreview = {
   messageId: string;
@@ -64,6 +92,79 @@ type ChatThread = {
   archived: boolean;
   error: string | null;
 };
+
+type PersistedProductChat = {
+  messages: UiChatMessage[];
+  draft: string;
+};
+
+function readProductChat(key: string | undefined): PersistedProductChat | null {
+  if (!key) {
+    return null;
+  }
+  try {
+    const stored: unknown = JSON.parse(sessionStorage.getItem(key) ?? 'null');
+    if (!stored || typeof stored !== 'object') {
+      return null;
+    }
+    const value = stored as Record<string, unknown>;
+    if (
+      value.version !== 1 ||
+      !Array.isArray(value.messages) ||
+      typeof value.draft !== 'string' ||
+      value.draft.length > CHAT_LIMITS.messageLength
+    ) {
+      return null;
+    }
+    const messages: UiChatMessage[] = [];
+    for (const item of value.messages) {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+      const message = item as Record<string, unknown>;
+      if (
+        typeof message.id !== 'string' ||
+        !/^(user|assistant)-[1-9]\d*$/.test(message.id) ||
+        (message.role !== 'user' && message.role !== 'assistant') ||
+        typeof message.content !== 'string' ||
+        !message.content.trim() ||
+        Array.from(message.content).length > CHAT_LIMITS.messageLength ||
+        typeof message.createdAt !== 'number' ||
+        !Number.isFinite(message.createdAt) ||
+        typeof message.unread !== 'boolean' ||
+        (message.requestContent !== undefined &&
+          message.requestContent !== null &&
+          typeof message.requestContent !== 'string')
+      ) {
+        return null;
+      }
+      const { requestContext, ...rest } = message;
+      messages.push({
+        ...(rest as UiChatMessage),
+        // Only a well-formed string is trusted; anything else is dropped so a
+        // consumer treats the answer as having no verifiable request context.
+        ...(typeof requestContext === 'string' &&
+        requestContext.length <= MAX_REQUEST_CONTEXT_LENGTH
+          ? { requestContext }
+          : {}),
+      });
+    }
+    return { messages, draft: value.draft };
+  } catch {
+    return null;
+  }
+}
+
+function nextMessageId(messages: readonly UiChatMessage[]): number {
+  let next = 1;
+  for (const message of messages) {
+    const id = Number(message.id.split('-')[1]);
+    if (Number.isSafeInteger(id)) {
+      next = Math.max(next, id + 1);
+    }
+  }
+  return next;
+}
 
 function createThread(id: string): ChatThread {
   return {
@@ -186,12 +287,29 @@ function assertThreadMessageRefInvariant(
 
 export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
   function MapAiPanel(
-    { open, model, onClose, onGeneratingChange, onUnreadPreviewsChange },
+    {
+      open,
+      singleSession = false,
+      persistenceKey,
+      model,
+      onClose,
+      onGeneratingChange,
+      onUnreadPreviewsChange,
+      getRequestPreamble,
+      renderAssistantActions,
+      notice,
+    },
     ref,
   ) {
     const L = useL();
+    const [initialProductChat] = useState(() =>
+      readProductChat(persistenceKey),
+    );
     const [threads, setThreads] = useState<ChatThread[]>(() => [
-      createThread('chat-1'),
+      {
+        ...createThread('chat-1'),
+        messages: initialProductChat?.messages ?? [],
+      },
     ]);
     const threadMessagesRef = useRef<Map<string, UiChatMessage[]>>(
       new Map([['chat-1', threads[0]!.messages]]),
@@ -199,8 +317,11 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
     const threadsRef = useRef(threads);
     const threadIdsRef = useRef(new Set(['chat-1']));
     const [selectedThreadId, setSelectedThreadId] = useState('chat-1');
-    const [drafts, setDrafts] = useState<Record<string, string>>({});
-    const draftsRef = useRef<Record<string, string>>({});
+    const [drafts, setDrafts] = useState<Record<string, string>>(
+      (): Record<string, string> =>
+        initialProductChat ? { 'chat-1': initialProductChat.draft } : {},
+    );
+    const draftsRef = useRef<Record<string, string>>(drafts);
     const [searchQuery, setSearchQuery] = useState('');
     const [openMenuThreadId, setOpenMenuThreadId] = useState<string | null>(
       null,
@@ -213,7 +334,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const messagesRef = useRef<HTMLDivElement>(null);
     const nextThreadIdRef = useRef(2);
-    const nextMessageIdRef = useRef(1);
+    const nextMessageIdRef = useRef(
+      nextMessageId(initialProductChat?.messages ?? []),
+    );
     const openRef = useRef(open);
     const selectedThreadIdRef = useRef(selectedThreadId);
     const getSelectedThreadId = useCallback(
@@ -284,6 +407,24 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
     useEffect(() => {
       onUnreadPreviewsChange?.(unreadPreviews);
     }, [onUnreadPreviewsChange, unreadPreviews]);
+
+    useEffect(() => {
+      if (!persistenceKey) {
+        return;
+      }
+      try {
+        sessionStorage.setItem(
+          persistenceKey,
+          JSON.stringify({
+            version: 1,
+            messages: threads[0]?.messages ?? [],
+            draft: drafts['chat-1'] ?? '',
+          }),
+        );
+      } catch {
+        // The active conversation remains available when browser storage is full.
+      }
+    }, [drafts, persistenceKey, threads]);
 
     useEffect(() => {
       if (open) {
@@ -575,10 +716,23 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
         logLifecycle('SEND_CHAT_STARTED', {
           messageCount: requestMessages.length,
         });
+        const preamble = await getRequestPreamble?.();
+        const systemMessages = preamble?.systemMessages ?? [];
+        if (controller.signal.aborted) {
+          return;
+        }
         const result = await sendChat(
           {
-            messages: requestMessages,
+            messages: systemMessages.length
+              ? [
+                  ...systemMessages,
+                  ...requestMessages.slice(
+                    -(CHAT_LIMITS.messages - systemMessages.length),
+                  ),
+                ]
+              : requestMessages,
             ...(model ? { model } : {}),
+            ...(preamble?.tools ? { tools: preamble.tools } : {}),
           },
           controller.signal,
         );
@@ -592,6 +746,9 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
           id: `assistant-${nextMessageIdRef.current++}`,
           createdAt: completedAt,
           unread: !openRef.current || selectedThreadIdRef.current !== threadId,
+          ...(preamble?.context === undefined
+            ? {}
+            : { requestContext: preamble.context }),
         };
         let latestMessages = threadMessagesRef.current.get(threadId);
         if (!latestMessages && threadIdsRef.current.has(threadId)) {
@@ -812,8 +969,10 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
         aria-hidden={!open}
         inert={!open}
       >
-        <div className="trip-ai-chat-layout">
-          {listDrawerOpen && (
+        <div
+          className={`trip-ai-chat-layout${singleSession ? ' is-single-session' : ''}`}
+        >
+          {!singleSession && listDrawerOpen && (
             <button
               type="button"
               className="trip-ai-chat-list-backdrop"
@@ -821,74 +980,78 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
               onClick={() => setListDrawerOpen(false)}
             />
           )}
-          <aside
-            id="trip-ai-chat-list"
-            className={`trip-ai-chat-list${listDrawerOpen ? ' is-mobile-open' : ''}`}
-            aria-label={L('ai:mapAiPanel.ariaLabel.aiChatList')}
-          >
-            <header className="trip-ai-chat-list-header">
-              <h2>{L('ai:mapAiPanel.title.trasolveAi')}</h2>
-              <button type="button" onClick={createNewThread}>
-                <span aria-hidden="true">＋</span>
-                {L('ai:mapAiPanel.createThread.title.newChat')}
-              </button>
-            </header>
-            <label className="trip-ai-chat-search">
-              <span className="sr-only">
-                {L('ai:mapAiPanel.text.chatSearch')}
-              </span>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="10.5" cy="10.5" r="6.5" />
-                <path d="m15.5 15.5 5 5" />
-              </svg>
-              <input
-                type="search"
-                value={searchQuery}
-                placeholder={L('ai:mapAiPanel.text.chatSearch')}
-                onChange={(event) => setSearchQuery(event.target.value)}
-              />
-            </label>
-            <div className="trip-ai-chat-list-content">
-              <section aria-labelledby="trip-ai-recent-chats-title">
-                <h3 id="trip-ai-recent-chats-title">
-                  {L('ai:mapAiPanel.title.recentConversations')}
-                </h3>
-                {recentThreads.length ? (
-                  <ul>{recentThreads.map(renderThread)}</ul>
-                ) : (
-                  <p className="trip-ai-chat-list-empty">
-                    {L('ai:mapAiPanel.description.thereNoDialogue')}
-                  </p>
-                )}
-              </section>
-              {!!archivedThreads.length && (
-                <section aria-labelledby="trip-ai-archived-chats-title">
-                  <h3 id="trip-ai-archived-chats-title">
-                    {L('ai:mapAiPanel.title.archived')}
+          {!singleSession && (
+            <aside
+              id="trip-ai-chat-list"
+              className={`trip-ai-chat-list${listDrawerOpen ? ' is-mobile-open' : ''}`}
+              aria-label={L('ai:mapAiPanel.ariaLabel.aiChatList')}
+            >
+              <header className="trip-ai-chat-list-header">
+                <h2>{L('ai:mapAiPanel.title.trasolveAi')}</h2>
+                <button type="button" onClick={createNewThread}>
+                  <span aria-hidden="true">＋</span>
+                  {L('ai:mapAiPanel.createThread.title.newChat')}
+                </button>
+              </header>
+              <label className="trip-ai-chat-search">
+                <span className="sr-only">
+                  {L('ai:mapAiPanel.text.chatSearch')}
+                </span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="10.5" cy="10.5" r="6.5" />
+                  <path d="m15.5 15.5 5 5" />
+                </svg>
+                <input
+                  type="search"
+                  value={searchQuery}
+                  placeholder={L('ai:mapAiPanel.text.chatSearch')}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                />
+              </label>
+              <div className="trip-ai-chat-list-content">
+                <section aria-labelledby="trip-ai-recent-chats-title">
+                  <h3 id="trip-ai-recent-chats-title">
+                    {L('ai:mapAiPanel.title.recentConversations')}
                   </h3>
-                  <ul>{archivedThreads.map(renderThread)}</ul>
+                  {recentThreads.length ? (
+                    <ul>{recentThreads.map(renderThread)}</ul>
+                  ) : (
+                    <p className="trip-ai-chat-list-empty">
+                      {L('ai:mapAiPanel.description.thereNoDialogue')}
+                    </p>
+                  )}
                 </section>
-              )}
-            </div>
-          </aside>
+                {!!archivedThreads.length && (
+                  <section aria-labelledby="trip-ai-archived-chats-title">
+                    <h3 id="trip-ai-archived-chats-title">
+                      {L('ai:mapAiPanel.title.archived')}
+                    </h3>
+                    <ul>{archivedThreads.map(renderThread)}</ul>
+                  </section>
+                )}
+              </div>
+            </aside>
+          )}
 
           <section
             className="trip-ai-conversation"
             aria-label={L('ai:mapAiPanel.ariaLabel.currentConversation')}
           >
             <header className="trip-map-ai-panel-header">
-              <button
-                type="button"
-                className="trip-ai-chat-list-toggle"
-                aria-label={L('ai:mapAiPanel.ariaLabel.openChatList')}
-                aria-controls="trip-ai-chat-list"
-                aria-expanded={listDrawerOpen}
-                onClick={() => setListDrawerOpen(true)}
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 7h16M4 12h16M4 17h16" />
-                </svg>
-              </button>
+              {!singleSession && (
+                <button
+                  type="button"
+                  className="trip-ai-chat-list-toggle"
+                  aria-label={L('ai:mapAiPanel.ariaLabel.openChatList')}
+                  aria-controls="trip-ai-chat-list"
+                  aria-expanded={listDrawerOpen}
+                  onClick={() => setListDrawerOpen(true)}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7h16M4 12h16M4 17h16" />
+                  </svg>
+                </button>
+              )}
               <div>
                 <h2>{getThreadTitle(selectedThread, L)}</h2>
                 <p>{L('ai:mapAiPanel.description.travelAssistant')}</p>
@@ -921,6 +1084,8 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
               )}
             </header>
 
+            {notice}
+
             <div
               ref={messagesRef}
               className="trip-map-ai-messages"
@@ -940,6 +1105,10 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                     className="trip-map-ai-message is-assistant"
                   >
                     <ChatMarkdown content={message.content} />
+                    {renderAssistantActions?.(
+                      message.content,
+                      message.requestContext,
+                    )}
                   </div>
                 ) : (
                   <p key={message.id} className="trip-map-ai-message is-user">
@@ -971,6 +1140,16 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
               aria-busy={selectedThreadSending}
               onSubmit={handleSubmit}
             >
+              {singleSession && selectedThreadSending && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    cancelThreadRequest(selectedThread.id, 'explicit-cancel')
+                  }
+                >
+                  {L('common:action.cancel')}
+                </button>
+              )}
               <label className="sr-only" htmlFor="trip-map-ai-input">
                 {L('ai:mapAiPanel.label.sendMessageAiTravelAssistant')}
               </label>
