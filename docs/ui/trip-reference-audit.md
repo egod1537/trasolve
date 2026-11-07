@@ -307,10 +307,9 @@ shadows. This stage does not reapply or modify them.
 | Feature popovers   | several use `createPortal(..., document.body)` and viewport-position calculations           |
 
 `--shadow-map-overlay` is the required local invariant for map floating
-surfaces. The current tree also has `--shadow-map-overlay-menu` and map menu
-usage; this is a follow-up conflict with the repository rule that all map
-floating surfaces use the single `--shadow-map-overlay` token. It is recorded
-for a later style stage, not changed here. Marker halos, selection rings,
+surfaces. Stage 2 removed the separate `--shadow-map-overlay-menu` path: the
+map profile menu now consumes `--shadow-map-overlay`, while the non-map theme
+menu consumes the general `--shadow-popup` role. Marker halos, selection rings,
 timeline handles, and focus rings are state shadows and remain outside that
 surface rule.
 
@@ -395,3 +394,29 @@ changes in this stage.
 No value outside these sourced tables should be promoted to a design token
 without another code or rendered-UI observation. The implementation order and
 verification gates are recorded in `docs/ui/trip-style-migration-plan.md`.
+
+## 9. Stage 2 realized token mapping
+
+The implementation keeps the existing `--color-*`, `--bg-*`, `--text-*`, and
+`--border-*` compatibility layers. The new role tokens below are the single
+entry points for later component work.
+
+| Token family                        | Implementation                                                                                                        | Provenance classification                                                                                      |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Background/surface/elevated/overlay | `--color-bg`, `--color-surface`, `--color-surface-elevated`, `--color-surface-overlay`, `--color-overlay-backdrop`    | Zinc application surfaces are TRIP-derived; backdrop opacity is a Trasolve live-map extension                  |
+| Text hierarchy                      | `--color-text-primary`, `--color-text-secondary`, `--color-text-muted`, `--color-placeholder`                         | Zinc hierarchy from TRIP utilities; placeholder uses Aura's exact light Slate 500/dark Zinc 400 field role     |
+| Border hierarchy                    | `--color-border`, `--color-border-strong`, `--color-hover-border`, `--color-disabled-border`                          | Base Zinc boundaries from TRIP application use; disabled boundary uses Aura field roles                        |
+| Accent and selection                | `--color-accent`, `--color-accent-hover`, `--color-selected-bg`, `--color-selected-hover-bg`, `--color-selected-text` | Exact `mytheme.ts` primary and highlight declarations                                                          |
+| Focus                               | `--color-focus-ring`, `--focus-ring-width`, `--focus-ring-offset`                                                     | Blue 2px ring is an explicit Trasolve accessibility extension; TRIP's source ring is neutral 1px               |
+| Hover/active/disabled               | `--color-hover-bg`, `--color-active-bg`, `--color-disabled-*`, `--opacity-disabled`                                   | Hover/active use the TRIP Zinc surface hierarchy; disabled colors/0.6 opacity come from Aura                   |
+| Semantic states                     | `--color-info-*`, `--color-success-*`, `--color-warning-*`, `--color-danger-*`                                        | Tailwind/Aura state scales observed in TRIP; role assignment remains Trasolve semantic behavior                |
+| Map overlay                         | `--color-map-overlay-*`, `--map-overlay-blur`, `--shadow-map-overlay`                                                 | TRIP translucent/ring/blur expression adapted to one required Trasolve map-surface shadow                      |
+| Typography                          | `--font-family-sans`, `--font-size-*`, `--font-weight-*`, `--line-height-*`                                           | TRIP 15px root and Tailwind 4.1.18 type scale; Pretendard fallback is a Trasolve localization extension        |
+| Radius/spacing                      | `--radius-*`, `--space-*`                                                                                             | TRIP's used Tailwind radii; spacing is the documented integer rounding of the 3.75px source unit               |
+| Elevation                           | `--shadow-card`, `--shadow-popup`, `--shadow-dialog`, `--shadow-map-overlay`                                          | Tailwind/Aura `sm`, `md`, `xl`, and TRIP map `lg` geometry; dark opacity is a Trasolve contrast extension      |
+| Scrollbar                           | `--color-scrollbar-*`                                                                                                 | Trasolve extension because TRIP has no explicit scrollbar tokens; only app-owned scroll areas may consume them |
+
+Global state selectors are scoped through `#root` and `.ui-dialog`, and exclude
+Google Maps `.gm-style` descendants and Blueprint `bp6-*` controls. This keeps
+the application's placeholder, selection, focus, native checkbox/radio, and
+disabled defaults consistent without overriding SDK or Blueprint internals.

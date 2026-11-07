@@ -197,10 +197,9 @@ Map-specific rules:
 - Do not edit `.trip-map-workspace` columns, `--trip-panel-width`, breakpoints,
   panel position, map size, or visibility rules.
 - Do not change TSX structure or handlers for a styling convenience.
-- Use `--shadow-map-overlay` for every floating map surface. Replace current
-  map use of `--shadow-map-overlay-menu` in a later implementation commit;
-  keep stronger dialog elevation only for true dialogs outside the map
-  floating-surface rule.
+- Use `--shadow-map-overlay` for every floating map surface. Stage 2 removed
+  the separate map-menu shadow path; keep stronger dialog elevation only for
+  true dialogs outside the map floating-surface rule.
 - Do not apply surface shadows to markers, selection halos, focus rings, DnD
   indicators, route lines, timeline handles, or active drawing state.
 - Keep dynamic day/place/polyline colors. Only their supporting opacity,
@@ -314,13 +313,11 @@ explanation proving that it is a styling hook and does not alter behavior.
 
 ## 8. Open items for later implementation stages
 
-- Reconcile the current `--shadow-map-overlay-menu` declaration/usages with
-  the repository rule requiring the single `--shadow-map-overlay` token.
 - Decide through rendered light/dark keyboard review whether Trasolve's 2px
   blue focus ring remains the accessibility adaptation or can move closer to
   TRIP's 1px neutral primary ring.
-- Decide whether disabled opacity should change from the current button value
-  `0.55` to Aura's exact `0.6`; verify loading/progress exceptions.
+- Verify the Stage 2 base disabled opacity of Aura's exact `0.6` against
+  loading/progress exceptions and feature-specific states.
 - Verify whether the current 240px Tooltip maximum should remain for Trasolve
   content or move toward Aura's 12.5rem/approximately 187.5px value. Do not
   reduce it if translated text clips.

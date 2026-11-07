@@ -1,19 +1,34 @@
+/*
+ * TRIP 1.50.1 design-token provenance:
+ * docs/ui/trip-reference-audit.md
+ *
+ * Zinc primary/highlight, Aura state colors, 15px-root typography, radii,
+ * and shadow geometry come from the pinned TRIP sources. Blue focus rings,
+ * map translucency, dark shadow opacity, and integer spacing are documented
+ * Trasolve extensions for accessibility, live-map contrast, and layout safety.
+ */
 :root,
 [data-theme='light'] {
   color-scheme: light;
   --color-bg: #fafafa;
   --color-surface: #ffffff;
   --color-surface-raised: #ffffff;
+  --color-surface-elevated: var(--color-surface-raised);
+  --color-surface-overlay: var(--color-surface-raised);
   --color-surface-subtle: #f4f4f5;
   --color-surface-hover: #f4f4f5;
   --color-surface-active: #e4e4e7;
+  --color-hover-bg: var(--color-surface-hover);
+  --color-active-bg: var(--color-surface-active);
   --color-text-primary: #18181b;
   --color-text-secondary: #52525b;
   --color-text-muted: #71717a;
   --color-text-inverse: #ffffff;
+  --color-placeholder: #64748b;
   --color-border: #e4e4e7;
   --color-border-strong: #d4d4d8;
   --color-border-floating: #e4e4e7;
+  --color-hover-border: var(--color-border-strong);
   --color-accent: #09090b;
   --color-accent-hover: #18181b;
   --color-accent-contrast: #ffffff;
@@ -30,20 +45,38 @@
   --color-success: #059669;
   --color-success-strong: #047857;
   --color-success-soft: #ecfdf5;
+  --color-success-border: #a7f3d0;
   --color-warning: #d97706;
   --color-warning-strong: #b45309;
   --color-warning-soft: #fffbeb;
+  --color-warning-border: #fde68a;
   --color-tooltip-bg: #18181b;
   --color-tooltip-text: #fafafa;
   --color-overlay: rgba(9, 9, 11, 0.44);
   --color-overlay-light: rgba(9, 9, 11, 0.24);
+  --color-overlay-backdrop: var(--color-overlay);
   --color-map-background: #f4f4f5;
   --color-map-overlay-surface: rgba(255, 255, 255, 0.7);
   --color-map-overlay-ring: rgba(0, 0, 0, 0.05);
-  --color-highlight-bg: #09090b;
-  --color-highlight-text: #ffffff;
+  --color-map-overlay-border: var(--color-map-overlay-ring);
+  --color-selected-bg: #09090b;
+  --color-selected-hover-bg: #3f3f46;
+  --color-selected-text: #ffffff;
+  --color-selected-border: var(--color-accent);
+  --color-highlight-bg: var(--color-selected-bg);
+  --color-highlight-text: var(--color-selected-text);
+  --color-disabled-bg: #e2e8f0;
+  --color-disabled-text: #64748b;
+  --color-disabled-border: #cbd5e1;
+  --color-scrollbar-thumb: #a1a1aa;
+  --color-scrollbar-thumb-hover: #71717a;
+  --color-scrollbar-track: transparent;
   --hero-overlay-color: 255 255 255;
-  --focus-ring: rgba(37, 99, 235, 0.38);
+  --color-focus-ring: rgba(37, 99, 235, 0.38);
+  --focus-ring: var(--color-focus-ring);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --opacity-disabled: 0.6;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md:
     0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
@@ -53,10 +86,13 @@
     0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   --shadow-floating-md-hover:
     0 12px 18px -4px rgba(0, 0, 0, 0.12), 0 5px 8px -5px rgba(0, 0, 0, 0.1);
+  --shadow-xl:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
   --shadow-floating-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-card: var(--shadow-floating-sm);
+  --shadow-popup: var(--shadow-md);
+  --shadow-dialog: var(--shadow-xl);
   --shadow-map-overlay: var(--shadow-floating-md);
-  --shadow-map-overlay-menu:
-    0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
   --color-primary: var(--color-accent);
   --color-primary-dark: var(--color-accent-hover);
   --color-text: var(--color-text-primary);
@@ -67,32 +103,66 @@
   --bg-app: var(--color-bg);
   --bg-surface: var(--color-surface);
   --bg-surface-raised: var(--color-surface-raised);
+  --bg-elevated: var(--color-surface-elevated);
+  --bg-overlay: var(--color-surface-overlay);
   --bg-subtle: var(--color-surface-subtle);
-  --bg-hover: var(--color-surface-hover);
-  --bg-backdrop: var(--color-overlay);
+  --bg-hover: var(--color-hover-bg);
+  --bg-active: var(--color-active-bg);
+  --bg-selected: var(--color-selected-bg);
+  --bg-selected-hover: var(--color-selected-hover-bg);
+  --bg-disabled: var(--color-disabled-bg);
+  --bg-backdrop: var(--color-overlay-backdrop);
   --bg-tooltip: var(--color-tooltip-bg);
   --text-primary: var(--color-text-primary);
   --text-secondary: var(--color-text-secondary);
   --text-muted: var(--color-text-muted);
+  --text-placeholder: var(--color-placeholder);
+  --text-selected: var(--color-selected-text);
+  --text-disabled: var(--color-disabled-text);
   --text-on-accent: var(--color-accent-contrast);
   --text-tooltip: var(--color-tooltip-text);
   --border-default: var(--color-border);
   --border-strong: var(--color-border-strong);
+  --border-hover: var(--color-hover-border);
+  --border-selected: var(--color-selected-border);
+  --border-disabled: var(--color-disabled-border);
   --accent: var(--color-accent);
   --accent-hover: var(--color-accent-hover);
   --accent-soft: var(--color-accent-soft);
   --info: var(--color-info);
   --info-hover: var(--color-info-hover);
+  --info-strong: var(--color-info-hover);
   --info-soft: var(--color-info-soft);
   --info-border: var(--color-info-border);
   --danger: var(--color-danger);
+  --danger-strong: var(--color-danger-strong);
   --danger-soft: var(--color-danger-soft);
   --danger-border: var(--color-danger-border);
   --warning: var(--color-warning);
+  --warning-strong: var(--color-warning-strong);
   --warning-soft: var(--color-warning-soft);
+  --warning-border: var(--color-warning-border);
   --success: var(--color-success);
+  --success-strong: var(--color-success-strong);
   --success-soft: var(--color-success-soft);
+  --success-border: var(--color-success-border);
   --progress-stripe: color-mix(in srgb, currentColor 16%, transparent);
+  --font-family-sans:
+    Inter, Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-size-root: 15px;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-normal: normal;
+  --line-height-xs: 1rem;
+  --line-height-sm: 1.25rem;
+  --line-height-base: 1.5rem;
+  --line-height-lg: 1.75rem;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -113,7 +183,6 @@
   --motion-fast: 120ms;
   --motion-normal: 200ms;
   --map-overlay-blur: 24px;
-  --shadow-dialog: var(--shadow-floating-lg);
 }
 
 [data-theme='dark'] {
@@ -128,6 +197,7 @@
   --color-text-secondary: #d4d4d8;
   --color-text-muted: #a1a1aa;
   --color-text-inverse: #09090b;
+  --color-placeholder: #a1a1aa;
   --color-border: #3f3f46;
   --color-border-strong: #52525b;
   --color-border-floating: #3f3f46;
@@ -147,9 +217,11 @@
   --color-success: #34d399;
   --color-success-strong: #6ee7b7;
   --color-success-soft: #022c22;
+  --color-success-border: #065f46;
   --color-warning: #fbbf24;
   --color-warning-strong: #fcd34d;
   --color-warning-soft: #451a03;
+  --color-warning-border: #92400e;
   --color-tooltip-bg: #09090b;
   --color-tooltip-text: #fafafa;
   --color-overlay: rgba(0, 0, 0, 0.72);
@@ -157,10 +229,16 @@
   --color-map-background: #18181b;
   --color-map-overlay-surface: rgba(24, 24, 27, 0.7);
   --color-map-overlay-ring: rgba(255, 255, 255, 0.1);
-  --color-highlight-bg: rgba(250, 250, 250, 0.16);
-  --color-highlight-text: rgba(255, 255, 255, 0.87);
+  --color-selected-bg: rgba(250, 250, 250, 0.16);
+  --color-selected-hover-bg: rgba(250, 250, 250, 0.24);
+  --color-selected-text: rgba(255, 255, 255, 0.87);
+  --color-disabled-bg: #3f3f46;
+  --color-disabled-text: #a1a1aa;
+  --color-disabled-border: #52525b;
+  --color-scrollbar-thumb: #52525b;
+  --color-scrollbar-thumb-hover: #71717a;
   --hero-overlay-color: 9 9 11;
-  --focus-ring: rgba(96, 165, 250, 0.48);
+  --color-focus-ring: rgba(96, 165, 250, 0.48);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.32);
   --shadow-md:
     0 4px 6px -1px rgba(0, 0, 0, 0.42), 0 2px 4px -2px rgba(0, 0, 0, 0.36);
@@ -170,9 +248,9 @@
     0 10px 15px -3px rgba(0, 0, 0, 0.48), 0 4px 6px -4px rgba(0, 0, 0, 0.42);
   --shadow-floating-md-hover:
     0 12px 18px -4px rgba(0, 0, 0, 0.52), 0 5px 8px -5px rgba(0, 0, 0, 0.44);
-  --shadow-floating-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.64);
-  --shadow-map-overlay-menu:
+  --shadow-xl:
     0 20px 25px -5px rgba(0, 0, 0, 0.58), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  --shadow-floating-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.64);
 }
 
 .language-control {
@@ -245,10 +323,10 @@
   height: 40px;
   padding: 0;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-surface-raised);
   color: var(--color-text-secondary);
-  box-shadow: var(--shadow-floating-sm);
+  box-shadow: var(--shadow-card);
   cursor: pointer;
 }
 
@@ -280,7 +358,7 @@
   border: 1px solid var(--color-border-floating);
   border-radius: var(--radius-md);
   background: var(--color-surface-raised);
-  box-shadow: var(--shadow-map-overlay-menu);
+  box-shadow: var(--shadow-popup);
 }
 
 .theme-control-menu button {

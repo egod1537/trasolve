@@ -216,7 +216,7 @@
     var(--color-floating-border) 85%,
     var(--color-visualization-contrast) 15%
   );
-  box-shadow: var(--shadow-map-overlay-menu);
+  box-shadow: var(--shadow-map-overlay);
 }
 
 .map-profile-menu-header {
