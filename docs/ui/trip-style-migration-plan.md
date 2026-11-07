@@ -316,6 +316,26 @@ adopting TRIP's page layouts.
 Gate: all routes, navigation, information order, form fields, and localization
 keys are unchanged.
 
+#### Stage 5 implementation result — 2026-11-07
+
+Stage 5 remains CSS-only apart from documentation. Landing, public-share
+states, account presentation, analytics funnel chips, the testbed index,
+Google Maps/OAuth/AI testbeds, and the troute/tcache testbed chrome now use the
+Stage 2 semantic roles and Stage 3 primitive geometry/elevation. No route,
+component tree, field, label, event, data source, or dependency changed.
+
+Blueprint remains installed and is not globally restyled. Troute and tcache
+define a scoped custom-property bridge on their shells and on portals while
+the corresponding shell exists. Literal Blueprint dialog, header, popover,
+select, and callout values that bypass the variables receive narrowly scoped
+portal/component overrides. Rendered troute checks confirm `6px` controls,
+Zinc primary actions, `12px` dialogs, themed popup surfaces, dark portal
+propagation, and Escape close behavior in both themes.
+
+The complete route impact table, desktop/mobile theme matrix, computed-style
+evidence, protected behavior audit, and outstanding environment/functional
+gates are recorded in `docs/ui/trip-ui-verification.md`.
+
 ### Package 6 — regression verification and finish (P4)
 
 No production behavior change belongs in this package. Only documentation or

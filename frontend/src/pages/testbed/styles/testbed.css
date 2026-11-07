@@ -38,14 +38,16 @@
   height: 100%;
   padding: 24px;
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: var(--color-surface);
+  box-shadow: var(--shadow-card);
   text-decoration: none;
 }
 
 .testbed-card:hover,
 .testbed-card:focus-visible {
   border-color: var(--color-primary);
+  background: var(--bg-hover);
 }
 
 .testbed-card h2 {

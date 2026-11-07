@@ -115,7 +115,7 @@
   width: 28px;
   height: 28px;
   place-items: center;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--color-primary);
   color: var(--color-accent-contrast);
   font-size: 0.78rem;
@@ -186,7 +186,7 @@
 .analytics-funnel-connector small {
   z-index: 1;
   padding: 2px 7px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--color-background);
 }
 

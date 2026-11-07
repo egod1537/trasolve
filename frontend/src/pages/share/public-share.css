@@ -18,7 +18,7 @@
   padding: 8px 12px;
   transform: translateX(-50%);
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   backdrop-filter: blur(var(--map-overlay-blur));
@@ -85,7 +85,7 @@
   padding: 10px 14px;
   transform: translateX(-50%);
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   color: var(--danger);
@@ -103,7 +103,7 @@
   justify-items: center;
   gap: 14px;
   padding: 24px;
-  background: var(--bg-canvas);
+  background: var(--bg-app);
   color: var(--text-secondary);
   text-align: center;
 }
