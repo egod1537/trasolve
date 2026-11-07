@@ -117,6 +117,8 @@ color from Primer.
 | success emphasis / border | `bgColor-success-emphasis`, `borderColor-success-muted` | `#1f883d`, `#4ac26b66` | `#238636`, `#2ea04366` | Primer |
 | warning text / surface | `fgColor-attention`, `bgColor-attention-muted` | `#9a6700`, `#fff8c5` | `#d29922`, `#bb800926` | Primer |
 | warning emphasis / border | `bgColor-attention-emphasis`, `borderColor-attention-muted` | `#9a6700`, `#d4a72c66` | `#9e6a03`, `#bb800966` | Primer |
+| done / AI text and surface | `fgColor-done`, `bgColor-done-muted` | `#8250df`, `#fbefff` | `#ab7df8`, `#ab7df826` | Primer |
+| done / AI emphasis and border | `bgColor-done-emphasis`, `borderColor-done-muted` | `#8250df`, `#c297ff66` | `#8957e5`, `#ab7df866` | Primer |
 | danger text / surface | `fgColor-danger`, `bgColor-danger-muted` | `#d1242f`, `#ffebe9` | `#f85149`, `#f851491a` | Primer |
 | danger emphasis / border | `bgColor-danger-emphasis`, `borderColor-danger-muted` | `#cf222e`, `#ff818266` | `#da3633`, `#f8514966` | Primer |
 | tooltip | `tooltip-bgColor`, `tooltip-fgColor` | `#25292e`, `#ffffff` | `#3d444d`, `#ffffff` | Primer (resolved aliases) |
@@ -133,7 +135,7 @@ official checked/accent tokens; success-only UI continues to use success.
 
 ## Hard-coded color classification
 
-The CSS inventory is classified before replacement:
+The CSS inventory was classified before replacement:
 
 - **Replace:** UI status indicators and focus decoration whose role is already
   success, danger, accent, or on-emphasis.
@@ -159,21 +161,121 @@ analytics styles, where literals often encode data rather than brand UI.
 | Theme persistence | parallel theme modes could diverge | retain `trasolve.theme` and existing `data-theme` flow |
 | Aliases | custom-property cycle | one-way `--primer-*` to semantic token to compatibility alias mapping |
 
-## Verification record
+## Implementation result
 
-The following are populated after implementation. A failed or unavailable check
-will remain explicit rather than being inferred as passing.
+The implementation changed only the token adapter and declarations whose CSS
+role is color: custom properties, `color`, `background`, `border-color`,
+`outline`, and state-halo color. No width, height, display, grid/flex,
+position, overflow, z-index, pointer-events, spacing, radius, animation, or
+shadow geometry declaration changed.
+
+Residual literal colors intentionally left in source are limited to:
+
+- marker borders, labels, selection/drag/drop halos, and their state shadows in
+  `map/adapters/map-objects.css`;
+- route-mode and default polyline colors in map/domain code;
+- user-selectable day/place palettes and sample trip data;
+- route comparison start/end markers and their matching legend/controls;
+- analytics series and map visualization colors;
+- existing TRIP shadow colors where changing the value would alter the
+  established shadow rendering.
+
+The quick-search schedule and AI icons, destructive confirmation buttons,
+progress states, text selection, map AI button decoration, and analytics graph
+fallbacks now use the new semantic tokens. No `@primer/react` or
+`@primer/primitives` runtime dependency was added.
+
+## Accessibility checks
+
+Contrast was calculated from the pinned opaque values. Alpha status surfaces in
+dark mode were composited over `bgColor-default` before calculating ratios.
+
+| Pair | Light | Dark | Target / result |
+| --- | ---: | ---: | --- |
+| primary text / background | 15.80:1 | 17.39:1 | AA pass |
+| muted text / background | 6.11:1 | 6.50:1 | AA pass |
+| strong border / background | 3.45:1 | 3.57:1 | meaningful boundary pass |
+| focus accent / background | 5.19:1 | 4.08:1 | focus indicator pass |
+| on-emphasis / accent | 5.19:1 | 4.63:1 | AA pass |
+| success text / soft surface | 4.56:1 | 6.25:1 | AA pass |
+| on-emphasis / success fill | 4.52:1 | 4.63:1 | AA pass |
+| warning text / soft surface | 4.52:1 | 6.27:1 | AA pass |
+| on-emphasis / warning fill | 4.87:1 | 4.65:1 | AA pass |
+| danger text / soft surface | 4.57:1 | 5.11:1 | AA pass |
+| on-emphasis / danger fill | 5.36:1 | 4.61:1 | AA pass |
+| done text / soft surface | 4.54:1 | 5.18:1 | AA pass |
+
+Browser focus inspection confirmed the existing `2px` outline and `2px`
+offset with Primer `#0969da` in light mode and `#1f6feb` in dark mode.
+Disabled colors follow Primer's disabled tokens and are supplemented by the
+existing opacity and disabled semantics rather than being treated as normal
+body text.
+
+## Visual comparison
+
+Screenshots were captured in headless Microsoft Edge 156 against an isolated
+local backend/data directory. The same Seoul sample trip, Google map, viewport,
+and device scale were used for each before/after pair.
+
+| Viewport / theme | Before | After |
+| --- | --- | --- |
+| 1440 × 1000 light | ![1440 light before](screenshots/primer-before-light-1440.png) | ![1440 light after](screenshots/primer-after-light-1440.png) |
+| 1440 × 1000 dark | ![1440 dark before](screenshots/primer-before-dark-1440.png) | ![1440 dark after](screenshots/primer-after-dark-1440.png) |
+| 390 × 844 light | ![390 light before](screenshots/primer-before-light-390.png) | ![390 light after](screenshots/primer-after-light-390.png) |
+| 390 × 844 dark | ![390 dark before](screenshots/primer-before-dark-390.png) | ![390 dark after](screenshots/primer-after-dark-390.png) |
+
+Additional responsive captures:
+
+- [768 × 900 light](screenshots/primer-after-light-768.png)
+- [768 × 900 dark](screenshots/primer-after-dark-768.png)
+
+The before/after images retain the desktop panel width/position and mobile
+bottom-sheet breakpoint. Source diff classification also confirms that no
+geometry property changed. Marker, day, and route colors remain identical
+while surface, foreground, border, accent, selected, focus, and state colors
+move to Primer.
+
+## Browser scenarios
+
+The following were exercised through the rendered application, not mocks:
+
+- `light`, `dark`, and emulated `system` themes; `system` resolved dark then
+  light as the emulated OS setting changed while local storage remained
+  `system`;
+- `/map` at 1440, 768, and 390 px with a created/opened Seoul sample trip,
+  Google map, markers, polylines, layer panel, toolbar, and mobile sheet;
+- share modal enablement, generated public link, and the resulting public share
+  viewer;
+- AI panel open/close and route optimization dialog with comparison maps;
+- landing, analytics, testbed index, Google Maps testbed, AI testbed, OAuth
+  testbed, troute testbed, and localization testbed in dark mode with no app
+  error fallback or horizontal overflow;
+- keyboard focus on the map search input and Escape handling.
+
+One unrelated baseline issue remains: `/testbed/tcache-route` throws the
+localized validation error “장소 검색으로 위치를 선택해 주세요.” while rendering
+its initial empty location drafts, so the app error fallback appears. The
+relevant tcache builder code predates this work (`3f17a43a` and earlier), and no
+tcache source was changed here. A functional fix was intentionally excluded
+from this color-only migration.
+
+## Automated verification
+
+Commands were run from the repository root on 2026-11-07.
 
 | Check | Result |
 | --- | --- |
-| Light / dark adapter values | pending |
-| System theme and refresh persistence | pending |
-| Contrast calculations | pending |
-| 1440 px / 768 px / 390 px layout comparison | pending |
-| Map overlay and user data color review | pending |
-| `npm run typecheck` | pending |
-| `npm run lint` | pending |
-| `npm test` | pending |
-| `npm run build` | pending |
-| `npm run architecture:check` | pending |
+| Light / dark computed adapter values | pass; matched the pinned functional CSS |
+| Custom-property direction | pass; `--primer-*` → semantic → compatibility alias, with no empty computed token |
+| System theme and refresh persistence | pass |
+| 1440 px / 768 px / 390 px visual review | pass for available rendered scenarios |
+| Map overlay and user data color review | pass; data colors preserved |
+| `npm run typecheck` | pass |
+| `npm run lint` | **fail (pre-existing):** oxlint and ESLint pass, then localization lint reports 98 missing `analytics:*` resource keys |
+| `npm test` | pass; 9/9 backend contract tests |
+| `npm run build` | pass |
+| `npm run architecture:check` | **fail (pre-existing):** 4 public-index/import-boundary findings in preferences/auth/map-workspace |
 
+Neither failure is in a file or rule changed by this migration. Localization
+resources and the architecture import paths were unchanged from start HEAD, so
+they were recorded rather than bypassed or mixed into a palette change.
