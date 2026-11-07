@@ -234,6 +234,56 @@ Gate: verify actual Google Maps loading, resize, pan/zoom, marker click and
 double-click focus, layer/place double-click focus, quick-search keyboard flow,
 all DnD paths, map popovers, menus, dialogs, and mobile panel rules.
 
+#### Stage 4 implementation result — 2026-11-07
+
+The realized change is CSS-only. No TSX, map runtime/adapter, store,
+controller, API, localization resource, model, or dependency changed.
+
+- The sidebar, map toolbar, bottom controls, quick search, map menus, place
+  cards, route settings, trip picker, and profile menu now share the audited
+  translucent map material, ring, 8px geometry, and
+  `--shadow-map-overlay` elevation.
+- The opaque sidebar compatibility surface was replaced with the map material;
+  headers and list content remain within the same box and scroll regions.
+- Route optimization status badges use the existing info/success/danger
+  semantic roles. Dynamic place/day/polyline colors remain unchanged.
+- `anchored-map-card.css` and the share modal were reviewed but required no
+  Stage 4 edit: their map pointer/surface and shared primitive styling already
+  matched the mapping.
+
+Rendered comparisons use the same dark-theme viewport and an isolated local
+trip containing three days, fifteen places, and twelve route rows:
+
+| Viewport          | Before                                               | After                                               |
+| ----------------- | ---------------------------------------------------- | --------------------------------------------------- |
+| Desktop 1440×1000 | `docs/ui/screenshots/trip-stage4-before-desktop.png` | `docs/ui/screenshots/trip-stage4-after-desktop.png` |
+| Mobile 390×844    | `docs/ui/screenshots/trip-stage4-before-mobile.png`  | `docs/ui/screenshots/trip-stage4-after-mobile.png`  |
+
+Protected geometry was sampled from the rendered DOM before and after the
+production build. Every sampled position and size was identical, including:
+
+| Protected area            | Desktop before/after | Mobile before/after              |
+| ------------------------- | -------------------- | -------------------------------- |
+| Sidebar                   | `(16,16) 468×952`    | `(12,444.640625) 264×371.359375` |
+| Map tools region          | `(484,0) 956×1000`   | `(0,0) 390×844`                  |
+| Toolbar positioner        | `(500,16) 816×42`    | `(12,66) 366×42`                 |
+| Bottom-control positioner | `(484,912) 832×64`   | `(12,364.640625) 366×64`         |
+
+The browser gate used the real Google Maps SDK against an isolated local data
+directory. Both themes resolved immediately to their corresponding
+`rgba(255,255,255,.7)` and `rgba(24,24,27,.7)` map materials. Quick search
+focused its input and closed on Escape; the profile menu remained at z-index
+3200; the style popover (z-index 4000) and anchored place card stayed within
+the viewport. A layer-place double click moved N서울타워 from offscreen to the
+map focus point, and a pin double click did the same for 명동. Keyboard reorder
+moved 경복궁 after 명동 and then restored the original order exactly. No
+production trip data was used or changed.
+
+Targeted Prettier, typecheck, build, Oxlint, ESLint, diff-check, and CR-byte
+checks pass. The aggregate `npm run lint` still reaches localization lint and
+exits on the pre-existing inventory of 98 missing analytics keys and 21 unused
+keys; Stage 4 adds no user-facing string or localization resource.
+
 ### Package 5 — remaining screens and scoped theme cleanup (P3)
 
 Primary files:

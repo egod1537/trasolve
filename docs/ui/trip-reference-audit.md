@@ -448,3 +448,37 @@ to mirror PrimeNG. Blueprint controls remain scoped to their existing testbeds.
 Only design values and state expressions were transposed. No TRIP source file,
 icon, font, image, or other asset was copied, so the Stage 1 license notice and
 source attribution remain sufficient for this implementation.
+
+## 11. Stage 4 map-workspace realization
+
+Stage 4 applies the audited map expression through the Stage 2 semantic tokens
+without changing React structure, handlers, map adapters, data, or responsive
+rules. The existing inline SVGs and Google Maps implementation remain intact.
+
+| Trasolve boundary                           | Applied source-backed expression                                                                                                                                       | Preserved boundary                                                                                                                                       |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `map-workspace/styles/map.css`              | TRIP's 70-80% white/Zinc map material, 8px dominant radius, low-opacity ring, `shadow-lg`-mapped `--shadow-map-overlay`, compact ghost actions, and neutral row states | 468px/320px/mobile panel geometry, scroll regions, DnD transforms and handles, route/place data colors, overlay coordinates, z-index, and pointer events |
+| `quick-search.css`                          | translucent 8px command surface, compact 6px controls, neutral hover, shared map ring/blur/shadow                                                                      | input grid, keyboard handlers, result bounds, focus ownership, and portal lifetime                                                                       |
+| `bottom-context-panel.css`                  | shared 8px floating material plus Blue/info, Emerald/success, and Red/danger job-status hierarchy                                                                      | floating-bar dimensions, route optimizer fields, SSE/progress structure, nested dialog and map bounds                                                    |
+| `trip-maps.css`                             | audited 8px card/control radius through `--radius-md` and existing map material tokens                                                                                 | picker dialog dimensions, preview bounds, navigation, create/open/delete handlers                                                                        |
+| `place-info-card.css` and `map-toolbar.css` | shared 8px map cards, transparent list rows over the material, and the documented accessible Blue focus ring                                                           | card anchoring, search measurements, form values, marker selection, and add/edit/delete behavior                                                         |
+| `map-user-controls.css`                     | neutral filled primary profile control, 8px translucent menu, 6px menu rows, single map shadow                                                                         | auth status, menu roles, outside-click/Escape behavior, navigation, account actions                                                                      |
+| `anchored-map-card.css`                     | already used the audited map surface/ring pointer treatment; no edit required                                                                                          | anchor transform and pointer geometry                                                                                                                    |
+
+The main sidebar was the concrete remaining inconsistency: it used the opaque
+compatibility surface while the surrounding toolbar, bottom controls, and
+popovers already consumed the map material tokens. It now uses
+`--color-map-overlay-surface`, `--color-map-overlay-ring`,
+`--map-overlay-blur`, and `--shadow-map-overlay`. Blur is applied only to the
+floating sidebar itself, not to `.trip-map-root`, `.trip-map-canvas`,
+`.map-viewport`, or Google Maps descendants.
+
+The route status classes now assign existing semantic roles to `running`,
+`completed`, `failed`, and input-blocked states. No state name, formatter,
+message, transition, or job behavior changed. Remaining marker halos, DnD
+shadows, timeline handles, and progress-step rings are state indicators rather
+than floating surfaces and intentionally retain their local shadows.
+
+No TRIP source file, component implementation, icon, image, font, or asset was
+copied in Stage 4. The implementation is a token mapping only, so the Stage 1
+MIT attribution and source links remain the complete provenance record.

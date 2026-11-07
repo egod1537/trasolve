@@ -10,7 +10,7 @@
   gap: 9px;
   padding: 8px 10px;
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
@@ -29,7 +29,7 @@
   gap: 4px;
   padding: 6px;
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
@@ -44,7 +44,7 @@
   height: 38px;
   padding: 0;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -92,7 +92,7 @@
   gap: 14px;
   padding: 8px 10px 8px 14px;
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
@@ -149,7 +149,7 @@
   gap: 6px;
   padding: 0 10px;
   border: 1px solid var(--color-border-floating);
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   background: var(--color-surface-raised);
   color: var(--color-text-secondary);
   font: inherit;
@@ -222,7 +222,7 @@
   width: min(300px, calc(100vw - 24px));
   padding: 14px;
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   backdrop-filter: blur(var(--map-overlay-blur));
@@ -574,17 +574,24 @@
 }
 
 .route-optimization-status.is-running {
-  color: var(--accent);
+  background: var(--info-soft);
+  color: var(--info);
 }
 
 .route-optimization-status.is-failed {
+  background: var(--danger-soft);
   color: var(--danger);
 }
 
 .route-optimization-status.is-blocked {
-  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  background: var(--danger-soft);
   color: var(--danger);
   font-weight: 700;
+}
+
+.route-optimization-status.is-completed {
+  background: var(--success-soft);
+  color: var(--success-strong);
 }
 
 .route-optimization-settings,

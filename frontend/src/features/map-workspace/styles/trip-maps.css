@@ -24,7 +24,7 @@
   overflow-wrap: anywhere;
   padding: 20px;
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   backdrop-filter: blur(var(--map-overlay-blur));
@@ -64,7 +64,7 @@
   flex: none;
   padding: 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -104,7 +104,7 @@
   height: 36px;
   padding: 0 12px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-surface-raised);
   color: var(--color-text);
   font: inherit;
@@ -160,7 +160,7 @@
 .trip-map-picker-status {
   margin: 0;
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-surface-hover);
   color: var(--color-text-secondary);
   font-size: 12px;
@@ -193,7 +193,7 @@
   gap: 12px;
   padding: 10px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-surface-raised);
   cursor: pointer;
   transition:
@@ -218,7 +218,7 @@
   flex: none;
   width: 64px;
   height: 64px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-accent-soft);
   overflow: hidden;
 }
@@ -273,7 +273,7 @@
   height: 28px;
   padding: 0 12px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-primary);
   color: var(--color-accent-contrast);
   font: inherit;
@@ -293,7 +293,7 @@
   width: 28px;
   height: 28px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
