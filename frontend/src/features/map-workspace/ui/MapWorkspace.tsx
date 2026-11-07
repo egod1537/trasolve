@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useRef } from 'react';
+
 import { selectTripPlace, selectTripPolyline } from '@/entities/trip';
 import type { QueryRouteDuration } from '@/features/map-workspace/domain/routeDuration';
 import { tripToView } from '@/entities/trip';
@@ -18,6 +19,13 @@ import { ReadonlyMapWorkspaceViewport } from '@/features/map-workspace/ui/Readon
 import { RenderProfiler } from '@/shared/lib/RenderProfiler';
 import '@/features/map-workspace/styles/map.css';
 import { useL } from '@/shared/i18n';
+
+const DeveloperTools =
+  import.meta.env.DEV ||
+  (import.meta.env.VITE_BUILD_CHANNEL === 'preview' &&
+    import.meta.env.VITE_GIT_BRANCH === 'integration/w9-p0ab')
+    ? lazy(() => import('./AiDeveloperTools'))
+    : null;
 
 type Props =
   | {
@@ -92,6 +100,16 @@ function EditableMapWorkspace({
 
   return (
     <div className="trip-map-workspace">
+      {debugMode && DeveloperTools && (
+        <Suspense fallback={null}>
+          <DeveloperTools
+            trip={trip}
+            status={status}
+            selectedDayId={ui.selectedDayId}
+            selectedPlaceIds={[...ui.selectedPlaceIds]}
+          />
+        </Suspense>
+      )}
       <main className="trip-map-page">
         <RenderProfiler id="map-layer-panel">
           <LayerPanel
