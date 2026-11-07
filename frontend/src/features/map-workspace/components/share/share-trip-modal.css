@@ -175,7 +175,7 @@
   gap: 11px;
   padding: 13px 14px;
   border: 1px solid var(--border-default);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--bg-subtle);
 }
 
