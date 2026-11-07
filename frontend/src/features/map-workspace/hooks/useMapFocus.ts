@@ -12,6 +12,16 @@ type MapFocusState = {
 };
 
 function createFocusTarget(trip: Trip, focus: MapFocus): MapFocusTarget {
+  if (focus.type === 'place') {
+    const place = trip.days
+      .flatMap((day) => day.places)
+      .find((candidate) => candidate.id === focus.placeId);
+    return {
+      type: 'point',
+      revision: focus.revision,
+      point: place ? { ...place.location } : null,
+    };
+  }
   const focusedDay =
     focus.type === 'day'
       ? trip.days.find((day) => day.id === focus.dayId)
@@ -57,13 +67,26 @@ export function useMapFocus(trip: Trip) {
       }),
     );
   }, [trip]);
+  const focusPlace = useCallback(
+    (placeId: string) => {
+      setState((current) =>
+        createFocusState(trip, {
+          type: 'place',
+          placeId,
+          revision: current.focus.revision + 1,
+        }),
+      );
+    },
+    [trip],
+  );
   return useMemo(
     () => ({
       focusTarget,
       revision: focus.revision,
       focusDay,
       focusAll,
+      focusPlace,
     }),
-    [focus.revision, focusAll, focusDay, focusTarget],
+    [focus.revision, focusAll, focusDay, focusPlace, focusTarget],
   );
 }

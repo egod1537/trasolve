@@ -35,6 +35,7 @@ export interface MapMarkerHandle extends MapObjectHandle {
   setLabel(label?: string): void;
   setEmphasis(emphasis: MapMarkerEmphasis): void;
   onClick(callback: () => void): () => void;
+  onDoubleClick(callback: () => void): () => void;
   onContextMenu(
     callback: (event: MapMarkerContextMenuEvent) => void,
   ): () => void;
