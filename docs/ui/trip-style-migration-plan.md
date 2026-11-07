@@ -369,6 +369,30 @@ Final diff review must confirm that the only changes are visual CSS/tokens and
 the required documentation/license notice. Any TSX change needs an explicit
 explanation proving that it is a styling hook and does not alter behavior.
 
+#### Stage 6 verification result — 2026-11-07
+
+The production build was exercised with an isolated debug-guest backend, real
+Google Maps/Places data, the configured AI provider, and the live troute
+gateway. Trip persistence, create/delete, place/route CRUD, pointer and
+keyboard reorder, layer/marker double-click focus, theme persistence,
+share/account dialogs, AI messaging, direct-matrix optimization, progress,
+SSE, and cancellation passed. Protected map geometry remained exact at the
+recorded 1440×1000 and 390×844 baselines, with additional no-document-overflow
+checks at 1280×800 and 768×1024.
+
+Typecheck, the existing 9-test backend suite, and production build pass. The
+aggregate lint remains blocked only by the existing localization inventory;
+the architecture checker reports four pre-existing feature-boundary findings.
+The live tcache-backed troute preset also exposed an upstream HTTP 400/list
+schema compatibility issue, while the direct-matrix job path completed and
+cancelled successfully. Exact commands, results, geometry, environment limits,
+and the pre-existing 390px Quick Search card-width issue are recorded in
+`docs/ui/trip-ui-verification.md`.
+
+No corrective production code was mixed into Package 6. The rendered audit
+found no design-migration regression that required a style patch. License and
+provenance were rechecked and appended to `docs/ui/trip-reference-audit.md`.
+
 ## 6. File-level application matrix
 
 | File/group                        | TRIP evidence applied                                                     | Priority | Main regression to watch               |

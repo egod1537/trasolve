@@ -482,3 +482,43 @@ than floating surfaces and intentionally retain their local shadows.
 No TRIP source file, component implementation, icon, image, font, or asset was
 copied in Stage 4. The implementation is a token mapping only, so the Stage 1
 MIT attribution and source links remain the complete provenance record.
+
+## 12. Stage 6 final provenance and license verification
+
+The final regression pass rechecked the reference checkout rather than relying
+only on the Stage 1 notes:
+
+| Item                    | Verified value                                         |
+| ----------------------- | ------------------------------------------------------ |
+| Reference remote        | `https://github.com/itskovacs/trip.git`                |
+| Pinned reference commit | `856b1edfe81a735fce4b544c2e16a6518cebf164`             |
+| Upstream license source | `C:/Users/egod1/proj/trip-reference-audit/license.txt` |
+| Preserved notice        | `docs/licenses/TRIP-MIT.txt`                           |
+| Copyright line          | `Copyright (c) 2026 Kovacs`                            |
+| License                 | MIT License                                            |
+
+The upstream checkout contains one repository-level `license.txt`. Package
+archives inspected during the audit keep their own package notices under the
+external checkout's untracked `.audit-packages/` directory; none of those
+packages or files was added to Trasolve. The preserved TRIP notice matches the
+upstream text after removing only the optional final line feed. The local copy
+intentionally ends with LF to satisfy the repository text-file policy.
+
+The design migration commit range is `2cb68f5..ef37a50`. Its only added binary
+files are the six before/after PNG captures of Trasolve itself under
+`docs/ui/screenshots/`. No TRIP screenshot, logo, icon, font, image, Angular
+component, PrimeNG component, Tailwind stylesheet, or source module was copied
+or modified for use in Trasolve. The implementation is a clean semantic-token
+and CSS re-expression based on the declarations cited in this audit.
+
+Accordingly, the provenance classification remains:
+
+- **Copied or modified TRIP code/assets:** none.
+- **Source-informed reimplementation:** palette roles, radii, type scale,
+  elevation, and interaction-state expressions mapped through Trasolve's own
+  tokens and selectors.
+- **Required preserved attribution:** the pinned repository URL/commit and the
+  complete MIT notice in `docs/licenses/TRIP-MIT.txt`.
+
+The unrelated concurrent commit `5649002` changes a Trasolve memo click
+handler and is outside this design/license range.

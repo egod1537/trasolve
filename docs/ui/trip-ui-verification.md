@@ -146,3 +146,99 @@ Final Stage 5 command results:
 The localization report also confirms zero hard-coded UI literals, zero
 invalid `L()`/`NL()` calls, and zero locale structure or interpolation
 mismatches. Stage 5 adds no localization call, literal, or resource key.
+
+## 8. Stage 6 regression baseline and isolation
+
+Stage 6 started on 2026-11-07 from a clean `impl` worktree at
+`ef37a5031757dd033762ce797364f36942370c41`. At that point the branch was 38
+commits ahead of `origin/impl`, and `main...HEAD` was `0 24`. No checkout,
+merge, rebase, reset, or stash was used.
+
+During the manual run, commit `56490021404aaf31b92d5426912f5f7766bfcd1b`
+(`fix(place): open memo editor on click`) appeared on `impl`. It is a separate
+one-line functional change to `PlaceDetailContent.tsx`, is not part of the TRIP
+design migration, and was preserved without modification. Final static checks
+were rerun against the resulting branch instead of rewriting that commit.
+
+The rendered gate used an isolated environment:
+
+- production frontend preview: `127.0.0.1:4174`;
+- isolated debug-guest backend and data directory: `127.0.0.1:43128`;
+- Chrome 157 with the real Google Maps SDK;
+- the user's already-running backend on `127.0.0.1:43127` was not stopped or
+  reconfigured.
+
+The isolated trip started from the Seoul example, then persisted four days,
+fifteen places, and twelve route rows. Temporary trips, places, routes, mode
+changes, and reorder operations were either deleted or restored before the
+run ended.
+
+## 9. Required automatic checks
+
+| Command                                   | Result        | Evidence and classification                                                                                                                                                                                                                                  |
+| ----------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run typecheck`                       | Pass          | Shared build, workspace TypeScript checks, and localization typecheck completed.                                                                                                                                                                             |
+| `npm run lint`                            | Fail          | Oxlint and ESLint pass; the existing localization inventory exits non-zero with 98 missing analytics keys and 21 unused keys. It reports zero hard-coded UI literals, invalid `L()`/`NL()` calls, structure mismatches, or interpolation mismatches.         |
+| `npm test`                                | Pass          | Existing backend `trouteContract.test.ts`: 9 of 9 tests pass. No test file, fixture, mock, script, or dependency was added.                                                                                                                                  |
+| `npm run build`                           | Pass          | Shared, backend, and production frontend builds complete.                                                                                                                                                                                                    |
+| `npm run architecture:check`              | Fail          | Four pre-existing dependency findings: missing `features/preferences/index.ts`, plus direct feature imports from `MapUserControls.tsx`, `ShareTripModal.tsx`, and `TripPickerPopup.tsx`. The affected files and checker are unchanged in `52daa0c..ef37a50`. |
+| Existing e2e/visual runner                | Not available | No Playwright, Cypress, e2e configuration, or visual-regression runner exists. Real-browser CDP checks and the committed before/after captures are the executable substitute.                                                                                |
+| `git diff --check` / changed-file CR scan | Pass          | No whitespace error or CR byte remains in the Stage 6 documentation.                                                                                                                                                                                         |
+
+The required failures are therefore not introduced by the design migration.
+They remain visible rather than being bypassed or hidden.
+
+## 10. Required manual scenarios
+
+|   # | Scenario                                              | Result and evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| --: | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|   1 | Trip list, select/create/delete, save, reload         | Pass in isolated storage. Created the Seoul example, added Day 4, renamed it to `Stage 6 서울 검수`, created and deleted a blank trip, reloaded, logged out/in, and reopened the persisted 4-day/15-place trip.                                                                                                                                                                                                                                                       |
+|   2 | Layer panel, selection, reorder, place/route CRUD     | Pass. Collapsed/reopened Day 1; pointer-dragged 경복궁 to the end and restored `경복궁 → 명동 → N서울타워`; `Alt+ArrowDown/Up` reorder also round-tripped. Added 서울특별시청, observed its new adjacent route, then confirmed deletion and verified both place and route disappeared. Changed the first route from straight to transit and back to straight.                                                                                                         |
+|   3 | Markers, polylines, camera, popup/modal stacking      | Pass. Real `.gm-style`, fifteen markers, and route overlays rendered. Double-clicking N서울타워 in the layer focused its marker. After dragging the map so that the selected marker moved from x=534 to x=385, marker double-click returned it to x=534. Share/place/route surfaces used the map-overlay shadow and remained interactive.                                                                                                                             |
+|   4 | Google Places and route lookup                        | Pass for available credentials. Searching `서울시청` returned real results; selecting 서울특별시청 loaded rating, hours, address, website, and phone details. Adding/removing it exercised place and adjacent-route persistence. Route mode options returned a transit estimate and saved/restored correctly.                                                                                                                                                         |
+|   5 | troute job/progress/result/cancel/SSE                 | Pass with an upstream compatibility note. Health reported online. A direct-matrix job completed at 100%; a debug job visibly advanced 0% → 68% → 100%; another debug job was cancelled at 5%. Resource timing recorded `/events` requests, and the UI timeline recorded 16 HTTP/SSE observations. The tcache-backed smoke preset separately returned upstream HTTP 400, and upstream list sync emitted an invalid-response warning before the local mirror took over. |
+|   6 | AI open/close/send/scroll                             | Pass with the configured provider. The assistant answered that the current trip contained 15 places; compose busy state returned to false, the disabled send state restored, and the panel closed normally. The two-message log did not yet exceed its scroll viewport.                                                                                                                                                                                               |
+|   7 | Login/logout, ownership, share                        | Partial pass. Debug-guest logout and login succeeded; account and share dialogs opened, closed on Escape, and restored focus. The isolated owner identity and share controls rendered. Real Google OAuth was not configured, and a second real account/valid public token was unavailable, so cross-account ownership and public-link consumption remain unverified.                                                                                                  |
+|   8 | Light/dark/system and persistence                     | Pass. System resolved dark, light and dark switched immediately (`#fafafa` / `#09090b`), a light choice survived reload, and system was restored and survived a second reload.                                                                                                                                                                                                                                                                                        |
+|   9 | 1440/1280/768/390 responsive geometry                 | Pass for protected geometry and document overflow; exact measurements are below.                                                                                                                                                                                                                                                                                                                                                                                      |
+|  10 | Keyboard, focus, Escape, hover/disabled, drag handles | Pass for exercised states. The drag handle resolved a 2px focus ring, keyboard reorder worked, Quick Search focused its searchbox, and Escape closed Quick Search, preferences, and share. Preferences/share restored focus. Disabled AI send and loading/busy states remained non-interactive.                                                                                                                                                                       |
+
+## 11. Geometry comparison
+
+| Viewport  | Sidebar                          | Map tools          | Toolbar           | Bottom controls          | Document overflow  |
+| --------- | -------------------------------- | ------------------ | ----------------- | ------------------------ | ------------------ |
+| 1440×1000 | `(16,16) 468×952`                | `(484,0) 956×1000` | `(500,16) 816×42` | `(484,912) 832×64`       | none (`1440/1440`) |
+| 1280×800  | `(16,16) 468×752`                | `(484,0) 796×800`  | `(500,16) 656×42` | `(484,712) 672×64`       | none (`1280/1280`) |
+| 768×1024  | `(16,16) 320×976`                | `(336,0) 432×1024` | `(352,16) 292×42` | `(336,936) 308×64`       | none (`768/768`)   |
+| 390×844   | `(12,444.640625) 264×371.359375` | `(0,0) 390×844`    | `(12,66) 366×42`  | `(12,364.640625) 366×64` | none (`390/390`)   |
+
+The 1440×1000 and 390×844 measurements exactly match the Stage 4
+before/after gate. The corresponding captures remain the visual comparison
+record:
+
+- `docs/ui/screenshots/trip-stage4-before-desktop.png`
+- `docs/ui/screenshots/trip-stage4-after-desktop.png`
+- `docs/ui/screenshots/trip-stage4-before-mobile.png`
+- `docs/ui/screenshots/trip-stage4-after-mobile.png`
+
+One pre-existing narrow Quick Search defect was observed: at 390px, the
+command card itself resolves to 720px even though the document does not gain a
+horizontal scrollbar. `52daa0c..ef37a50` changes only that card's radius
+tokens, not its width, grid, breakpoint, or positioning declarations, so this
+is not a TRIP migration regression. It is recorded for a separate responsive
+fix rather than mixed into the design-port verification commit.
+
+## 12. Final scope and remaining items
+
+- The TRIP migration range is `2cb68f5..ef37a50`: documentation, CSS,
+  screenshots, and the Stage 3 localization-testbed styling hooks. It contains
+  no backend, API, database, deployment, map runtime/adapter, TripStore,
+  TripEditController, authentication, SSE, or AI behavior change.
+- No new UI package, icon library, webfont, copied source asset, automated test,
+  mock, or production localization resource was introduced.
+- `/testbed/tcache-route` still has the Stage 5 pre-existing render-time empty
+  location validation exception. The troute direct-matrix path was used for
+  the successful live job/SSE/cancel gate.
+- The localization and architecture failures above must be resolved in their
+  own functional/localization work. Stage 6 does not disable or rewrite those
+  checks.
