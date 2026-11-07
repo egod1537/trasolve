@@ -1,4 +1,5 @@
 :root {
+  font-size: 15px;
   font-family:
     Inter,
     Pretendard,
@@ -7,6 +8,7 @@
     'Segoe UI',
     sans-serif;
   font-synthesis: none;
+  line-height: normal;
   text-rendering: optimizeLegibility;
 }
 
@@ -45,9 +47,14 @@ button:disabled {
   cursor: not-allowed;
 }
 
+::selection {
+  background: var(--color-highlight-bg);
+  color: var(--color-highlight-text);
+}
+
 :focus-visible {
-  outline: 3px solid var(--focus-ring);
-  outline-offset: 3px;
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .sr-only {
