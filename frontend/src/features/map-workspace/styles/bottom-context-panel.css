@@ -1361,6 +1361,15 @@ fieldset.route-optimization-setting-field {
   min-width: 0;
 }
 
+.route-optimization-schedule-list > li.is-skipped {
+  opacity: 0.55;
+}
+
+.route-optimization-schedule-list > li.is-skipped
+  .route-optimization-schedule-stop {
+  border-style: dashed;
+}
+
 .route-optimization-schedule-stop {
   display: flex;
   min-width: 0;

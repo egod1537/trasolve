@@ -320,6 +320,7 @@ export {
   trouteSolverCandidateSchema,
   trouteSolverObjectiveScoreSchema,
   trouteStartPolicySchema,
+  trouteVisitPolicySchema,
   trouteTravelModeSchema,
 } from './schemas/troute.js';
 
@@ -352,5 +353,6 @@ export type {
   TrouteSolverCandidate,
   TrouteSolverObjectiveScore,
   TrouteStartPolicy,
+  TrouteVisitPolicy,
   TrouteTravelMode,
 } from './types/troute.js';
