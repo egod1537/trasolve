@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { tripSchema } from './trip.js';
+import { tripIdSchema, tripSchema } from './trip.js';
 
 export const tripShareTokenSchema = z.uuid();
 
@@ -56,4 +56,8 @@ export const sharedTripSchema = z.strictObject({
     shareId: shareAttributionIdSchema,
     viewerType: shareViewerTypeSchema,
   }),
+});
+
+export const tripShareCopyResponseSchema = z.strictObject({
+  tripId: tripIdSchema,
 });

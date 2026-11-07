@@ -16,6 +16,7 @@ export {
   buildAnalyticsFunnelApiRoute,
   buildAnalyticsSessionEventsRoute,
   buildSharedTripApiRoute,
+  buildSharedTripCopyApiRoute,
   buildTripShareApiRoute,
   getGoogleMapsLocale,
   type GoogleMapsLanguageCode,
@@ -65,6 +66,7 @@ export type {
 
 export {
   sharedTripSchema,
+  tripShareCopyResponseSchema,
   tripShareOwnerSchema,
   tripShareSettingsSchema,
   tripShareTokenSchema,
@@ -75,6 +77,7 @@ export {
 
 export type {
   SharedTrip,
+  TripShareCopyResponse,
   TripShareOwner,
   TripShareSettings,
   UpdateTripShareRequest,
@@ -320,6 +323,7 @@ export {
   trouteSolverCandidateSchema,
   trouteSolverObjectiveScoreSchema,
   trouteStartPolicySchema,
+  trouteVisitPolicySchema,
   trouteTravelModeSchema,
 } from './schemas/troute.js';
 
@@ -352,5 +356,6 @@ export type {
   TrouteSolverCandidate,
   TrouteSolverObjectiveScore,
   TrouteStartPolicy,
+  TrouteVisitPolicy,
   TrouteTravelMode,
 } from './types/troute.js';

@@ -27,11 +27,7 @@
   height: 42px;
   border: 2px solid var(--color-surface-raised);
   border-radius: 50%;
-  background: linear-gradient(
-    155deg,
-    var(--color-primary),
-    var(--color-primary-dark)
-  );
+  background: var(--color-primary);
   color: var(--color-accent-contrast);
   box-shadow: var(--shadow-map-overlay);
   font-size: 12px;
@@ -40,7 +36,7 @@
 }
 
 .map-profile-button:hover {
-  filter: brightness(1.06);
+  background: var(--color-primary-dark);
 }
 
 .map-profile-button:active {
@@ -85,7 +81,7 @@
 }
 
 .map-profile-button:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -112,12 +108,13 @@
   right: 0;
   width: 200px;
   padding: 6px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 10px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   transform-origin: top right;
   animation: map-user-menu-in 0.14s ease-out;
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .map-user-menu-item {
@@ -128,7 +125,7 @@
   min-height: 36px;
   padding: 8px 10px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text);
   font: inherit;
@@ -195,7 +192,7 @@
 .map-profile-menu-notice {
   margin: 0 0 6px;
   padding: 8px 10px;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: var(--color-danger-soft);
   color: var(--color-danger);
   font-size: 12px;
@@ -210,12 +207,8 @@
 
 .map-profile-menu {
   width: 240px;
-  border-color: color-mix(
-    in srgb,
-    var(--color-floating-border) 85%,
-    var(--color-visualization-contrast) 15%
-  );
-  box-shadow: var(--shadow-map-overlay-menu);
+  border-color: var(--color-map-overlay-ring);
+  box-shadow: var(--shadow-map-overlay);
 }
 
 .map-profile-menu-header {
@@ -235,11 +228,7 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: linear-gradient(
-    155deg,
-    var(--color-primary),
-    var(--color-primary-dark)
-  );
+  background: var(--color-primary);
   color: var(--color-accent-contrast);
   font-size: 13px;
   font-weight: 650;

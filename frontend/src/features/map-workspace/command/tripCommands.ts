@@ -284,9 +284,19 @@ export function createApplyOptimizedScheduleCommand(
     const currentIds = new Set(day.places.map((place) => place.id));
     const orderedIds = update.placeIds;
     const uniqueOrderedIds = new Set(orderedIds);
+    const skippedIds = update.skippedPlaceIds ?? [];
+    const uniqueSkippedIds = new Set(skippedIds);
+    const partial = skippedIds.length > 0;
     const stopsById = new Map(update.stops.map((stop) => [stop.placeId, stop]));
     if (
-      orderedIds.length !== day.places.length ||
+      (partial
+        ? orderedIds.length + skippedIds.length !== day.places.length ||
+          uniqueSkippedIds.size !== skippedIds.length ||
+          skippedIds.some(
+            (placeId) =>
+              !currentIds.has(placeId) || uniqueOrderedIds.has(placeId),
+          )
+        : orderedIds.length !== day.places.length) ||
       uniqueOrderedIds.size !== orderedIds.length ||
       orderedIds.some((placeId) => !currentIds.has(placeId)) ||
       update.stops.length !== orderedIds.length ||

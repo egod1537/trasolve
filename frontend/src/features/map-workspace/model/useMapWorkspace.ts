@@ -40,7 +40,7 @@ export function useMapWorkspace(trip: Trip) {
     clearPlace,
     clear,
   } = selection;
-  const { focusTarget, revision: focusRevision, focusAll } = focus;
+  const { focusTarget, revision: focusRevision, focusAll, focusPlace } = focus;
   const layerSelection = useMemo(
     () =>
       resolveLayerSelection(
@@ -163,6 +163,7 @@ export function useMapWorkspace(trip: Trip) {
       selectedDayId,
       layerSelection,
       visibleDayIds,
+      focusPlace,
       selectPlace,
       selectPlaceWithModifiers,
       selectPlaceForDetails,
@@ -179,6 +180,7 @@ export function useMapWorkspace(trip: Trip) {
       clear,
       clearPlace,
       focusTarget,
+      focusPlace,
       layerSelection,
       focusRevision,
       selectDay,

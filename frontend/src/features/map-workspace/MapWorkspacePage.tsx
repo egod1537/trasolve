@@ -26,6 +26,7 @@ type Props = {
   mode: MapWorkspaceMode;
   analyticsMode: boolean;
   debugMode: boolean;
+  initialTripId: string | null;
   authenticationStatus: CurrentUserState['status'];
   authNotice: string | null;
   onLogin: () => void;
@@ -47,10 +48,12 @@ export default function MapWorkspaceFeature({
   mode,
   analyticsMode,
   debugMode,
+  initialTripId,
 }: {
   mode: MapWorkspaceMode;
   analyticsMode: boolean;
   debugMode: boolean;
+  initialTripId: string | null;
 }) {
   const L = useL();
   const { state, login, authNotice } = useCurrentUser();
@@ -74,6 +77,7 @@ export default function MapWorkspaceFeature({
       mode={mode}
       analyticsMode={analyticsMode}
       debugMode={debugMode}
+      initialTripId={initialTripId}
       authenticationStatus={state.status}
       authNotice={authNotice}
       onLogin={() => void login()}
@@ -86,9 +90,9 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
     super(props);
     this.repository = new HttpTripRepository();
     this.state = {
-      selectedTripId: null,
+      selectedTripId: props.initialTripId,
       sessionRevision: 0,
-      pickerOpen: true,
+      pickerOpen: props.initialTripId === null,
       trips: [],
       catalogLoading: props.authenticationStatus !== 'signed-out',
       catalogError: null,

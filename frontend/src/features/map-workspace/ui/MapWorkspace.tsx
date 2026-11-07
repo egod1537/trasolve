@@ -111,6 +111,7 @@ function EditableMapWorkspace({
             selectedPolylineIds={ui.selectedPolylineIds}
             selectedDayId={ui.selectedDayId}
             visibleDayIds={ui.visibleDayIds}
+            onFocusPlace={ui.focusPlace}
             {...actions.layerPanel}
           />
         </RenderProfiler>
@@ -137,6 +138,7 @@ function EditableMapWorkspace({
             onUndo={undo}
             onRedo={redo}
             onOpenTripPicker={onOpenTripPicker}
+            onFocusPlace={ui.focusPlace}
             {...actions.mapViewport}
           />
         </RenderProfiler>
@@ -183,6 +185,7 @@ function ReadonlyMapWorkspace() {
             selectedPolylineId={ui.selectedPolylineId}
             selectedPolylineIds={ui.selectedPolylineIds}
             selectedDayId={ui.selectedDayId}
+            onFocusPlace={ui.focusPlace}
             onSelectPlace={ui.selectPlaceWithModifiers}
             onSelectPlaceForDetails={ui.selectPlaceForDetails}
             onSelectPolyline={ui.selectPolylineWithModifiers}
@@ -202,6 +205,7 @@ function ReadonlyMapWorkspace() {
             sidebarRef={sidebarRef}
             selectedTripPlace={selectedTripPlace}
             selectedTripPolyline={selectedTripPolyline}
+            onFocusPlace={ui.focusPlace}
             onSelectPlace={ui.selectPlace}
             onSelectPolyline={ui.selectPolyline}
             onMapClick={clearMapSelection}

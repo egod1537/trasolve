@@ -25,6 +25,7 @@ type Props = {
   visibleDayIds: ReadonlySet<string>;
   isZooming: boolean;
   onSelectPlace: (id: string) => void;
+  onFocusPlace: (id: string) => void;
   onSelectPolyline: (id: string, anchor: GeoPoint) => void;
 };
 
@@ -288,16 +289,19 @@ export const TripLayer = memo(function TripLayer({
   visibleDayIds,
   isZooming,
   onSelectPlace,
+  onFocusPlace,
   onSelectPolyline,
 }: Props) {
   const markers = useRef(new Map<string, OwnedMarker>());
   const lines = useRef(new Map<string, OwnedPolyline>());
   const placeSelection = useRef(onSelectPlace);
+  const placeFocus = useRef(onFocusPlace);
   const polylineSelection = useRef(onSelectPolyline);
   useLayoutEffect(() => {
     placeSelection.current = onSelectPlace;
+    placeFocus.current = onFocusPlace;
     polylineSelection.current = onSelectPolyline;
-  }, [onSelectPlace, onSelectPolyline]);
+  }, [onFocusPlace, onSelectPlace, onSelectPolyline]);
   const tripId = trip.id;
   const layerModel = useMemo(() => toTripLayerModel(trip), [trip]);
   const selectedPlaceIdRef = useRef(selectedPlaceId);
@@ -365,10 +369,14 @@ export const TripLayer = memo(function TripLayer({
         const unsubscribeClick = handle.onClick(() =>
           placeSelection.current(place.id),
         );
+        const unsubscribeDoubleClick = handle.onDoubleClick(() =>
+          placeFocus.current(place.id),
+        );
         marker = {
           handle,
           unsubscribe: () => {
             unsubscribeClick();
+            unsubscribeDoubleClick();
           },
           dayId: place.dayId,
           order: place.order,

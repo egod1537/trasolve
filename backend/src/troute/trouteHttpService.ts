@@ -20,6 +20,7 @@ export class TrouteHttpService {
     private readonly client: TrouteClient | null,
     private readonly jobs: TrouteJobRepository,
     private readonly subscriptions: JobEventSubscriptionManager | null = null,
+    private readonly partialVisitEnabled = false,
   ) {}
 
   public async handle(
@@ -63,12 +64,12 @@ export class TrouteHttpService {
           'troute 최적화 요청의 형식과 값을 확인해 주세요.',
         );
       }
-      optimizeRequest = parsed.data;
+      optimizeRequest = this.prepareRequestForServer(parsed.data);
 
-      this.jobs.create(parsed.data);
-      createdJobId = parsed.data.job_id;
+      this.jobs.create(optimizeRequest);
+      createdJobId = optimizeRequest.job_id;
       this.jobs.markGatewayRequestStarted(createdJobId);
-      const acceptedJobId = await this.client.submitJob(parsed.data);
+      const acceptedJobId = await this.client.submitJob(optimizeRequest);
       void this.subscriptions?.track(acceptedJobId).catch((cause) => {
         console.warn('제출한 troute Job SSE 추적을 시작하지 못했습니다.', {
           jobId: acceptedJobId,
@@ -141,6 +142,20 @@ export class TrouteHttpService {
   }
 
   private readonly maxBodyBytes = 1_048_576;
+
+  private prepareRequestForServer(
+    request: Parameters<TrouteClient['submitJob']>[0],
+  ): Parameters<TrouteClient['submitJob']>[0] {
+    if (this.partialVisitEnabled) {
+      return request;
+    }
+    const locations = request.locations.map(
+      ({ required: _required, priority: _priority, ...location }) => location,
+    );
+    const compatible = { ...request, locations };
+    delete compatible.visit_policy;
+    return compatible;
+  }
 
   private readJson(request: IncomingMessage): Promise<unknown> {
     return new Promise((resolve, reject) => {

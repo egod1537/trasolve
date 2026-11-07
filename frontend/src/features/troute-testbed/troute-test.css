@@ -1,3 +1,100 @@
+.troute-testbed-shell,
+body:has(.troute-testbed-shell) .bp6-portal {
+  --bp-emphasis-focus-color: var(--focus-ring);
+  --bp-emphasis-focus-width: var(--focus-ring-width);
+  --bp-emphasis-focus-offset: var(--focus-ring-offset);
+  --bp-intent-primary-rest: var(--accent);
+  --bp-intent-primary-hover: var(--accent-hover);
+  --bp-intent-primary-active: var(--accent-active);
+  --bp-intent-primary-disabled: var(--bg-disabled);
+  --bp-intent-primary-foreground: var(--text-on-accent);
+  --bp-surface-background-color-default-rest: var(--bg-surface-raised);
+  --bp-surface-background-color-default-hover: var(--bg-hover);
+  --bp-surface-background-color-default-active: var(--bg-active);
+  --bp-surface-background-color-default-disabled: var(--bg-disabled);
+  --bp-surface-background-color-primary-rest: var(--accent);
+  --bp-surface-background-color-primary-hover: var(--accent-hover);
+  --bp-surface-background-color-primary-active: var(--accent-active);
+  --bp-surface-background-color-primary-disabled: var(--bg-disabled);
+  --bp-surface-border-color-default: var(--border-default);
+  --bp-surface-border-color-strong: var(--border-strong);
+  --bp-surface-border-radius: var(--radius-sm);
+  --bp-surface-shadow-0: none;
+  --bp-surface-shadow-1: var(--shadow-card);
+  --bp-surface-shadow-2: var(--shadow-popup);
+  --bp-surface-shadow-3: var(--shadow-dialog);
+  --bp-surface-shadow-4: var(--shadow-dialog);
+  --bp-typography-color-default-rest: var(--text-primary);
+  --bp-typography-color-default-hover: var(--text-primary);
+  --bp-typography-color-default-active: var(--text-primary);
+  --bp-typography-color-default-disabled: var(--text-disabled);
+  --bp-typography-color-muted: var(--text-muted);
+  --bp-typography-color-primary-rest: var(--accent);
+  --bp-typography-color-primary-hover: var(--accent-hover);
+  --bp-typography-color-primary-active: var(--accent-active);
+  --bp-typography-color-primary-disabled: var(--text-disabled);
+  --bp-typography-family-default: var(--font-family-sans);
+}
+
+.troute-testbed-shell .bp6-card,
+.troute-testbed-shell .bp6-navbar {
+  background: var(--bg-surface-raised);
+  color: var(--text-primary);
+}
+
+.troute-testbed-shell .bp6-navbar {
+  box-shadow: inset 0 -1px 0 var(--border-default);
+}
+
+.troute-testbed-shell .bp6-html-select select,
+.troute-testbed-shell .bp6-callout,
+body:has(.troute-testbed-shell) .bp6-portal .bp6-html-select select,
+body:has(.troute-testbed-shell) .bp6-portal .bp6-callout {
+  border-radius: var(--radius-sm);
+}
+
+.troute-testbed-shell .bp6-html-select select,
+body:has(.troute-testbed-shell) .bp6-portal .bp6-html-select select {
+  background: var(--bg-surface-raised);
+  box-shadow: inset 0 0 0 1px var(--border-default);
+  color: var(--text-primary);
+}
+
+body:has(.troute-testbed-shell) .bp6-portal .bp6-overlay-backdrop {
+  background: var(--bg-backdrop);
+}
+
+body:has(.troute-testbed-shell) .bp6-portal .bp6-dialog {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-raised);
+  box-shadow: var(--shadow-dialog);
+  color: var(--text-primary);
+}
+
+body:has(.troute-testbed-shell) .bp6-portal .bp6-dialog-header {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--bg-surface-raised);
+  box-shadow: inset 0 -1px 0 var(--border-default);
+  color: var(--text-primary);
+}
+
+body:has(.troute-testbed-shell) .bp6-portal .bp6-popover-content {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-raised);
+  box-shadow: var(--shadow-popup);
+  color: var(--text-primary);
+}
+
+body:has(.troute-testbed-shell) .bp6-portal .bp6-popover-arrow-fill {
+  fill: var(--bg-surface-raised);
+}
+
+body:has(.troute-testbed-shell) .bp6-portal .bp6-popover-arrow-border {
+  fill: var(--border-default);
+}
+
 .troute-testbed-shell {
   --testbed-page-background: var(--bg-app);
   --testbed-row-hover: var(--bg-hover);
@@ -170,7 +267,7 @@
 .troute-testbed-shell .job-list-item:focus-visible {
   position: relative;
   z-index: 1;
-  outline: 2px solid var(--color-accent);
+  outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: -2px;
 }
 
@@ -234,7 +331,7 @@
 
 .troute-testbed-shell .job-request-summary > summary:focus-visible,
 .troute-testbed-shell .job-request-raw-json > summary:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: -2px;
 }
 
@@ -610,7 +707,7 @@
 }
 
 .troute-testbed-shell .timeline-entry > summary:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: -2px;
 }
 

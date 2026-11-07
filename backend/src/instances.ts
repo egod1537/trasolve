@@ -95,6 +95,7 @@ const trouteHttp = new TrouteHttpService(
   troute,
   trouteJobs,
   trouteSubscriptions,
+  process.env.TROUTE_PARTIAL_VISIT_ENABLED === 'true',
 );
 const trouteJobHttp = new TrouteJobHttpService(
   trouteJobs,

@@ -12,6 +12,7 @@ import {
   TripShareError,
   tripShareAuthenticationRequired,
   tripShareNotFound,
+  tripShareOriginNotAllowed,
   tripShareStorageUnavailable,
 } from './errors.js';
 import type { TripShareController } from './tripShareController.js';
@@ -71,16 +72,45 @@ export class TripShareHttpService {
     });
   }
 
+  public async handleCopy(
+    request: IncomingMessage,
+    response: ServerResponse,
+    encodedToken: string,
+  ): Promise<void> {
+    await this.respond(
+      response,
+      async () => {
+        if (request.method !== 'POST') {
+          response.setHeader('Allow', 'POST');
+          throw new TripShareError(
+            405,
+            'METHOD_NOT_ALLOWED',
+            '지원하지 않는 요청 방식입니다.',
+          );
+        }
+        const actorUserId = await this.currentUser.require(request);
+        this.requireSameOrigin(request);
+        this.requireEmptyBody(request);
+        return this.controller.copySharedTrip(
+          actorUserId,
+          this.decodePublicToken(encodedToken),
+        );
+      },
+      201,
+    );
+  }
+
   private async respond(
     response: ServerResponse,
     operation: () => Promise<unknown>,
+    successStatus = 200,
   ): Promise<void> {
     response.setHeader('Content-Type', 'application/json; charset=utf-8');
     response.setHeader('Cache-Control', 'no-store');
     try {
       const body = await operation();
       if (!response.destroyed) {
-        response.writeHead(200);
+        response.writeHead(successStatus);
         response.end(JSON.stringify(body));
       }
     } catch (cause) {
@@ -114,6 +144,47 @@ export class TripShareHttpService {
       return decodeURIComponent(value);
     } catch {
       throw tripShareNotFound();
+    }
+  }
+
+  private requireSameOrigin(request: IncomingMessage): void {
+    const origin = request.headers.origin;
+    const forwardedHostHeader = request.headers['x-forwarded-host'];
+    const forwardedHost = (
+      Array.isArray(forwardedHostHeader)
+        ? forwardedHostHeader[0]
+        : forwardedHostHeader
+    )
+      ?.split(',')[0]
+      ?.trim();
+    const host = forwardedHost || request.headers.host;
+    const fetchSite = request.headers['sec-fetch-site'];
+    let parsedOrigin: URL;
+    try {
+      parsedOrigin = new URL(origin ?? '');
+    } catch {
+      throw tripShareOriginNotAllowed();
+    }
+    if (
+      !host ||
+      (parsedOrigin.protocol !== 'http:' &&
+        parsedOrigin.protocol !== 'https:') ||
+      parsedOrigin.host !== host ||
+      (fetchSite !== undefined && fetchSite !== 'same-origin')
+    ) {
+      throw tripShareOriginNotAllowed();
+    }
+  }
+
+  private requireEmptyBody(request: IncomingMessage): void {
+    const rawLength = request.headers['content-length'];
+    const contentLength = rawLength === undefined ? 0 : Number(rawLength);
+    if (
+      request.headers['transfer-encoding'] !== undefined ||
+      !Number.isSafeInteger(contentLength) ||
+      contentLength !== 0
+    ) {
+      throw invalidTripShareRequest();
     }
   }
 

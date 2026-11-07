@@ -3,15 +3,16 @@
   max-height: inherit;
   overflow-y: auto;
   overscroll-behavior: contain;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 8px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   pointer-events: auto;
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .place-info-card:focus {
-  outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+  outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -82,7 +83,7 @@
 .trip-place-card-style-control .trip-place-style-icon-frame {
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .trip-place-card-style-control .trip-place-style-icon-frame svg {
@@ -96,8 +97,8 @@
   flex: 0 0 30px;
   width: 30px;
   height: 30px;
-  border-radius: 8px;
-  background: color-mix(in srgb, currentColor 12%, white);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, currentColor 12%, var(--color-surface-raised));
 }
 
 .trip-place-card-static-style-icon svg {
@@ -240,7 +241,7 @@
 .trip-place-delete-trigger:focus-visible {
   background: var(--color-danger-soft);
   color: var(--color-danger-strong);
-  outline: 2px solid rgb(220 38 38 / 38%);
+  outline: 2px solid color-mix(in srgb, var(--color-danger) 38%, transparent);
   outline-offset: 2px;
 }
 
@@ -252,10 +253,11 @@
   max-width: calc(100vw - 24px);
   padding: 15px 16px;
   border: 1px solid var(--color-danger-border);
-  border-radius: 12px;
-  background: var(--color-floating-surface);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   pointer-events: auto;
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .place-delete-confirm-copy {
@@ -307,15 +309,15 @@
 }
 
 .place-delete-confirm-actions button.is-destructive {
-  border-color: var(--color-danger);
-  background: var(--color-danger);
-  color: var(--color-accent-contrast);
+  border-color: var(--color-danger-fill);
+  background: var(--color-danger-fill);
+  color: var(--color-danger-contrast);
 }
 
 .place-delete-confirm-actions button.is-destructive:hover:not(:disabled),
 .place-delete-confirm-actions button.is-destructive:focus-visible {
-  border-color: var(--color-danger-strong);
-  background: var(--color-danger-strong);
+  border-color: var(--color-danger-fill-active);
+  background: var(--color-danger-fill-active);
 }
 
 .place-delete-confirm-actions button:disabled {
@@ -763,11 +765,12 @@
   max-height: inherit;
   overflow-y: auto;
   overscroll-behavior: contain;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 8px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   pointer-events: auto;
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .side-detail-card.is-right {
@@ -788,8 +791,8 @@
   top: 34px;
   width: 10px;
   height: 10px;
-  border: solid var(--color-floating-border);
-  background: var(--color-floating-surface);
+  border: solid var(--color-map-overlay-ring);
+  background: var(--color-map-overlay-surface);
   content: '';
   transform: rotate(45deg);
 }

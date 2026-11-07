@@ -248,11 +248,11 @@ function readGraphColors(container: HTMLElement): GraphColors {
     styles.getPropertyValue(token).trim() || fallback;
   return {
     surface: read('--bg-surface-raised', '#ffffff'),
-    text: read('--text-primary', '#0f172a'),
-    muted: read('--text-muted', '#64748b'),
-    border: read('--border-strong', '#cbd5e1'),
-    edge: read('--text-muted', '#64748b'),
-    accent: read('--accent', '#2563eb'),
-    accentSoft: read('--accent-soft', '#eff6ff'),
+    text: read('--text-primary', '#1f2328'),
+    muted: read('--text-muted', '#59636e'),
+    border: read('--border-strong', '#818b98'),
+    edge: read('--text-muted', '#59636e'),
+    accent: read('--accent', '#0969da'),
+    accentSoft: read('--accent-soft', '#ddf4ff'),
   };
 }

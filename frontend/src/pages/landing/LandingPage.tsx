@@ -191,11 +191,6 @@ class LandingPageView extends Component<LandingPageProps, LandingPageState> {
           <p>
             {NL('©')} {new Date().getFullYear()} {NL('Trasolve')}
           </p>
-          <p>
-            {L(
-              'common:landingPage.render.description.travelPlanningServiceCurrentlyPreparation',
-            )}
-          </p>
         </footer>
         <span className="sr-only" role="status" aria-live="polite">
           {healthLabel}

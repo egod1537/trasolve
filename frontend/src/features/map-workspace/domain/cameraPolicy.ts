@@ -1,4 +1,4 @@
-import type { MapPadding } from '@/shared/types/mapTypes';
+import type { MapPadding, ScreenPoint } from '@/shared/types/mapTypes';
 
 type Rect = {
   top: number;
@@ -32,4 +32,16 @@ export function calculateMapPadding({
 export function calculateBoundsZoom(currentZoom: number): number {
   // One place (or coincident places) must not zoom all the way into a building.
   return Math.min(currentZoom, 16);
+}
+
+export function calculatePointFocusZoom(currentZoom: number): number {
+  // Bring a focused place to neighborhood level without undoing a closer view.
+  return Math.max(currentZoom, 16);
+}
+
+export function calculateMapCenterOffset(padding: MapPadding): ScreenPoint {
+  return {
+    x: (padding.right - padding.left) / 2,
+    y: (padding.bottom - padding.top) / 2,
+  };
 }
