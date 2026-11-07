@@ -33,6 +33,7 @@ type Props = {
   routeRole?: RouteRole;
   validation?: LayerValidationState;
   onSelect: (id: string, modifiers: LayerSelectionModifiers) => void;
+  onFocus: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onUpdatePlaceStyle: (id: string, style: PlaceStyle) => void;
   onStartNameEditing: (id: string) => void;
@@ -63,6 +64,7 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
   routeRole,
   validation,
   onSelect,
+  onFocus,
   onRename,
   onUpdatePlaceStyle,
   onStartNameEditing,
@@ -86,6 +88,7 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
     event.preventDefault();
     event.stopPropagation();
     onCancelDrag();
+    onFocus(place.id);
     onStartNameEditing(place.id);
   };
   const commitName = (draft: string) => {
@@ -234,6 +237,7 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
           type="button"
           className={`trip-layer-item-content trip-place${selected ? ' is-selected' : ''}${dragging ? ' is-dragging' : ''}`}
           aria-pressed={selected}
+          onDoubleClick={() => onFocus(place.id)}
           onClick={(event) => {
             onSelect(place.id, {
               additive: event.ctrlKey || event.metaKey,

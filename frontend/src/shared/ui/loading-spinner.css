@@ -5,7 +5,6 @@
   border-color: color-mix(in srgb, currentColor 24%, transparent);
   border-top-color: currentColor;
   border-radius: 50%;
-  color: var(--accent);
   vertical-align: middle;
   animation: loading-spinner-rotate 0.8s linear infinite;
 }

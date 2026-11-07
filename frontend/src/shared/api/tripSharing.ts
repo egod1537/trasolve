@@ -1,12 +1,15 @@
 import {
+  buildSharedTripCopyApiRoute,
   buildSharedTripApiRoute,
   buildTripShareApiRoute,
   sharedTripSchema,
   tripIdSchema,
   tripShareSettingsSchema,
+  tripShareCopyResponseSchema,
   tripShareTokenSchema,
   updateTripShareRequestSchema,
   type SharedTrip,
+  type TripShareCopyResponse,
   type TripShareSettings,
   type UpdateTripShareRequest,
 } from '@trasolve/shared';
@@ -55,12 +58,31 @@ export async function getSharedTrip(
   return sharedTripSchema.parse(body);
 }
 
+export async function copySharedTrip(
+  token: string,
+  signal?: AbortSignal,
+): Promise<TripShareCopyResponse> {
+  const parsedToken = tripShareTokenSchema.parse(token);
+  const body = await request(buildSharedTripCopyApiRoute(parsedToken), {
+    method: 'POST',
+    signal,
+  });
+  return tripShareCopyResponseSchema.parse(body);
+}
+
 async function request(path: string, init: RequestInit): Promise<unknown> {
   const timeout = AbortSignal.timeout(20000);
   const signal = init.signal
     ? AbortSignal.any([init.signal, timeout])
     : timeout;
-  const response = await fetch(path, { ...init, signal });
+  const headers = new Headers(init.headers);
+  headers.set('Accept', 'application/json');
+  const response = await fetch(path, {
+    ...init,
+    credentials: 'same-origin',
+    headers,
+    signal,
+  });
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     throw new TripSharingApiError(response.status, getErrorCode(body));

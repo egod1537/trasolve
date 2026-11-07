@@ -78,6 +78,10 @@ export const trouteProviderSelectionSourceSchema = z.enum([
   'legacy',
 ]);
 export const trouteStartPolicySchema = z.enum(['FIXED', 'EARLIEST', 'LATEST']);
+export const trouteVisitPolicySchema = z.enum([
+  'ALL_REQUIRED',
+  'BEST_EFFORT_ON_FAILURE',
+]);
 
 const trouteFailureDetailSchema = z
   .object({
@@ -122,10 +126,15 @@ export const trouteLocationSchema = z.strictObject({
   open_time: timeOfDaySchema,
   close_time: timeOfDaySchema,
   stay_minutes: z.number().int().min(0).max(MAX_U32),
+  required: z.boolean().optional(),
+  priority: z.number().int().min(1).max(100).optional(),
 });
 
 const trouteTravelTimeMatrixSchema = z.array(
   z.array(z.number().int().nonnegative()),
+);
+const trouteSparseTravelTimeMatrixSchema = z.array(
+  z.array(z.number().int().nonnegative().nullable()),
 );
 
 export const trouteDebugOptionsSchema = z.strictObject({
@@ -143,13 +152,17 @@ export const trouteOptimizeRequestSchema = z
   .strictObject({
     job_id: trouteJobIdSchema,
     locations: z.array(trouteLocationSchema).min(2).max(500),
+    visit_policy: trouteVisitPolicySchema.optional(),
     start_policy: trouteStartPolicySchema.optional(),
     start_time: timeOfDaySchema.optional(),
+    travel_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    time_zone: nonEmptyStringSchema.optional(),
     travel_mode: trouteTravelModeSchema.optional(),
     country_code: z.string().max(512).optional(),
     route_provider: trouteRouteProviderSchema.optional(),
     use_euclidean_matrix: z.boolean().optional(),
     travel_time_matrix: trouteTravelTimeMatrixSchema.optional(),
+    sparse_travel_time_matrix: trouteSparseTravelTimeMatrixSchema.optional(),
     debug: trouteDebugOptionsSchema.optional(),
   })
   .superRefine((request, context) => {
@@ -235,9 +248,43 @@ export const trouteOptimizeRequestSchema = z
           path: ['locations', index],
         });
       }
+      if (
+        (index === 0 || index === request.locations.length - 1) &&
+        location.required === false
+      ) {
+        context.addIssue({
+          code: 'custom',
+          message: 'Start and end locations must be required.',
+          path: ['locations', index, 'required'],
+        });
+      }
     });
 
-    const matrix = request.travel_time_matrix;
+    if (
+      (request.travel_date === undefined) !==
+      (request.time_zone === undefined)
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Travel date and time zone must be provided together.',
+        path:
+          request.travel_date === undefined ? ['travel_date'] : ['time_zone'],
+      });
+    }
+
+    if (
+      request.travel_time_matrix !== undefined &&
+      request.sparse_travel_time_matrix !== undefined
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Only one travel time matrix representation may be provided.',
+        path: ['sparse_travel_time_matrix'],
+      });
+    }
+
+    const matrix =
+      request.travel_time_matrix ?? request.sparse_travel_time_matrix;
     if (request.use_euclidean_matrix === true && matrix !== undefined) {
       context.addIssue({
         code: 'custom',
@@ -337,6 +384,24 @@ const trouteMatchingPairDiagnosticSchema = z.strictObject({
 
 const optionalCountSchema = z.number().int().nonnegative().optional();
 const trouteSolverCandidateMetadataSchema = z.strictObject({
+  outcome: z
+    .enum([
+      'COMPLETED',
+      'TIMEOUT',
+      'CANCELLED',
+      'UNSUPPORTED',
+      'FAILED',
+      'INFEASIBLE',
+    ])
+    .optional(),
+  proof_status: z
+    .enum(['OPTIMAL', 'INFEASIBLE', 'FEASIBLE', 'UNKNOWN'])
+    .optional(),
+  best_bound: z.number().int().nonnegative().optional(),
+  relative_gap_ppm: z.number().int().nonnegative().optional(),
+  thread_count: z.number().int().positive().optional(),
+  source_version: z.string().optional(),
+  native_status: z.string().optional(),
   state_count: optionalCountSchema,
   frontier_state_count: optionalCountSchema,
   frontier_cell_count: optionalCountSchema,
@@ -383,6 +448,11 @@ const trouteSolverCandidateMetadataSchema = z.strictObject({
   improved_moves: optionalCountSchema,
   seed: optionalCountSchema,
   improved_global_best: z.boolean().optional(),
+  job_queued_at_ms: optionalCountSchema,
+  job_started_at_ms: optionalCountSchema,
+  job_finished_at_ms: optionalCountSchema,
+  queued_ms: optionalCountSchema,
+  reserved_slot_ms: optionalCountSchema,
   timed_out: z.boolean(),
   error: z.string().optional(),
 });
@@ -399,6 +469,8 @@ const trouteSolverDiagnosticsSchema = z.strictObject({
 
 export const trouteSolverCandidateSchema = z.strictObject({
   strategy: nonEmptyStringSchema,
+  solver_id: nonEmptyStringSchema.optional(),
+  run_id: z.number().int().nonnegative().optional(),
   best: z.boolean(),
   route: z.array(nonEmptyStringSchema),
   feasible: z.boolean(),
@@ -412,13 +484,39 @@ export const trouteOptimizeResponseSchema = z.strictObject({
   total_travel_minutes: z.number().int().min(0).max(MAX_U32),
   start_policy: trouteStartPolicySchema.optional(),
   selected_start_time: timeOfDaySchema.optional(),
+  partial: z.boolean().optional(),
+  visited_count: z.number().int().nonnegative().optional(),
+  skipped_locations: z
+    .array(
+      z.strictObject({
+        location_id: nonEmptyStringSchema,
+        reason: nonEmptyStringSchema,
+      }),
+    )
+    .optional(),
+  result_quality: z.enum(['PROVEN', 'BEST_FOUND']).optional(),
   solver_candidates: z.array(trouteSolverCandidateSchema).optional(),
   solver_diagnostics: trouteSolverDiagnosticsSchema.optional(),
+  solver_telemetry: z.record(z.string(), z.unknown()).optional(),
   selected_provider: trouteRouteProviderSchema.optional(),
   provider_selection_reason: z.string().optional(),
   provider_selection_source: trouteProviderSelectionSourceSchema.optional(),
   country_code: z.string().optional(),
   mode: trouteTravelModeSchema.optional(),
+  matrix_departure_time: z.string().datetime({ offset: true }).optional(),
+  matrix_time_zone: z.string().optional(),
+  time_dependent_revalidation: z
+    .strictObject({
+      attempted: z.boolean(),
+      applied: z.boolean(),
+      revalidated_leg_count: z.number().int().nonnegative(),
+      changed_leg_count: z.number().int().nonnegative(),
+      max_delta_minutes: z.number().int().nonnegative(),
+      schedule_feasible: z.boolean().optional(),
+      warning_code: z.string().optional(),
+      warning_detail: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const trouteJobStateSchema = z.strictObject({

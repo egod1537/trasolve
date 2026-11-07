@@ -39,6 +39,7 @@ type Props = {
   selectedPolylineIds: ReadonlySet<string>;
   selectedDayId: string | null;
   onSelectPlace: (id: string, modifiers: LayerSelectionModifiers) => void;
+  onFocusPlace: (id: string) => void;
   onSelectPlaceForDetails: (id: string) => void;
   onSelectPolyline: (id: string, modifiers: LayerSelectionModifiers) => void;
   onSelectPolylineForDetails: (id: string) => void;
@@ -77,6 +78,7 @@ function ReadonlyPlaceLayerItem({
   detailsOpen,
   routeRole,
   onSelect,
+  onFocus,
   onOpenDetails,
 }: {
   day: TripDay;
@@ -86,6 +88,7 @@ function ReadonlyPlaceLayerItem({
   detailsOpen: boolean;
   routeRole?: 'start' | 'destination';
   onSelect: (id: string, modifiers: LayerSelectionModifiers) => void;
+  onFocus: (id: string) => void;
   onOpenDetails: (id: string) => void;
 }) {
   const L = useL();
@@ -126,6 +129,7 @@ function ReadonlyPlaceLayerItem({
         type="button"
         className="trip-layer-item-content trip-place"
         aria-pressed={selected}
+        onDoubleClick={() => onFocus(place.id)}
         onClick={(event) =>
           onSelect(place.id, {
             additive: event.ctrlKey || event.metaKey,
@@ -241,6 +245,7 @@ export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
   selectedPolylineIds,
   selectedDayId,
   onSelectPlace,
+  onFocusPlace,
   onSelectPlaceForDetails,
   onSelectPolyline,
   onSelectPolylineForDetails,
@@ -437,6 +442,7 @@ export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
                         }
                         routeRole={routeRole}
                         onSelect={onSelectPlace}
+                        onFocus={onFocusPlace}
                         onOpenDetails={(id) => {
                           onSelectPlaceForDetails(id);
                           setDetailTarget((current) =>

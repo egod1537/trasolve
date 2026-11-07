@@ -10,7 +10,9 @@ import type { MapClickEvent } from '@/shared/types/mapTypes';
 import type { GeoPoint } from '@/shared/types/mapTypes';
 import {
   calculateBoundsZoom,
+  calculateMapCenterOffset,
   calculateMapPadding,
+  calculatePointFocusZoom,
 } from '@/features/map-workspace/domain/cameraPolicy';
 import type { MapFocusTarget } from '@/features/map-workspace/domain/mapUiTypes';
 import { TripLayer } from '@/features/map-workspace/ui/TripLayer';
@@ -24,6 +26,7 @@ type TripObjectsProps = {
   selectedDayId: string | null;
   visibleDayIds: ReadonlySet<string>;
   onSelectPlace: (id: string) => void;
+  onFocusPlace: (id: string) => void;
   onSelectPolyline: (id: string, anchor: GeoPoint) => void;
   sidebarRef: RefObject<HTMLElement | null>;
 };
@@ -44,6 +47,7 @@ const TripObjects = memo(function TripObjects({
   selectedDayId,
   visibleDayIds,
   onSelectPlace,
+  onFocusPlace,
   onSelectPolyline,
   sidebarRef,
 }: TripObjectsProps) {
@@ -62,6 +66,17 @@ const TripObjects = memo(function TripObjects({
       mobile: window.matchMedia('(max-width: 760px)').matches,
     });
 
+    if (focusTarget.type === 'point') {
+      if (focusTarget.point) {
+        const currentZoom = adapter.getZoom();
+        const focusZoom = calculatePointFocusZoom(currentZoom);
+        if (currentZoom < focusZoom) {
+          adapter.setZoom(focusZoom);
+        }
+        adapter.panTo(focusTarget.point, calculateMapCenterOffset(padding));
+      }
+      return;
+    }
     if (!focusTarget.bounds) {
       return;
     }
@@ -106,6 +121,7 @@ const TripObjects = memo(function TripObjects({
         visibleDayIds={visibleDayIds}
         isZooming={isZooming}
         onSelectPlace={onSelectPlace}
+        onFocusPlace={onFocusPlace}
         onSelectPolyline={onSelectPolyline}
       />
     </>

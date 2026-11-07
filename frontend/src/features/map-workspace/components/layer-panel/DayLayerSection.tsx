@@ -57,6 +57,7 @@ export type SelectionProps = {
   selectedDayId: string | null;
   visibleDayIds: ReadonlySet<string>;
   onSelectPlace: (id: string, modifiers: LayerSelectionModifiers) => void;
+  onFocusPlace: (id: string) => void;
   onSelectPlaceForDetails: (id: string) => void;
   onSelectPlaceForDrag: (id: string) => void;
   onSelectPolyline: (id: string, modifiers: LayerSelectionModifiers) => void;
@@ -123,6 +124,7 @@ export const DayLayerSection = memo(function DayLayerSection({
   onActivateDay,
   onToggleExpanded,
   onSelectPlace,
+  onFocusPlace,
   onSelectPolyline,
   onToggleDayVisibility,
   reorder,
@@ -407,6 +409,7 @@ export const DayLayerSection = memo(function DayLayerSection({
               routeRole={routeRole}
               validation={validationByItemKey?.[renderedItem.key]}
               onSelect={onSelectPlace}
+              onFocus={onFocusPlace}
               onRename={onRenamePlace}
               onUpdatePlaceStyle={onUpdatePlaceStyle}
               onStartNameEditing={onStartPlaceNameEditing}

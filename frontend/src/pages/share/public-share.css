@@ -11,24 +11,24 @@
   top: max(12px, env(safe-area-inset-top));
   left: 50%;
   display: flex;
-  width: min(680px, calc(100% - 32px));
+  width: min(860px, calc(100% - 32px));
   min-height: 48px;
   align-items: center;
   gap: 12px;
   padding: 8px 12px;
   transform: translateX(-50%);
-  border: 1px solid var(--color-floating-border);
-  border-radius: 14px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(var(--map-overlay-blur));
+  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .public-share-brand,
 .public-share-state-brand {
   color: var(--accent);
-  font-weight: 750;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -67,6 +67,35 @@
   white-space: nowrap;
 }
 
+.public-share-copy-button {
+  min-width: 0;
+  max-width: 45%;
+  flex: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-share-notice {
+  position: fixed;
+  z-index: 79;
+  top: calc(max(12px, env(safe-area-inset-top)) + 60px);
+  left: 50%;
+  width: min(620px, calc(100% - 32px));
+  padding: 10px 14px;
+  transform: translateX(-50%);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
+  box-shadow: var(--shadow-map-overlay);
+  color: var(--danger);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+  backdrop-filter: blur(var(--map-overlay-blur));
+  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
+}
+
 .public-share-state {
   display: grid;
   min-height: 100dvh;
@@ -74,7 +103,7 @@
   justify-items: center;
   gap: 14px;
   padding: 24px;
-  background: var(--bg-canvas);
+  background: var(--bg-app);
   color: var(--text-secondary);
   text-align: center;
 }
@@ -97,5 +126,15 @@
 
   .public-share-owner > span {
     display: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .public-share-owner {
+    display: none;
+  }
+
+  .public-share-copy-button {
+    max-width: 52%;
   }
 }

@@ -32,4 +32,5 @@ export type TripScheduleUpdate = {
   stops: readonly TripScheduleStopUpdate[];
   expectedStartPlaceId: string;
   expectedEndPlaceId: string;
+  skippedPlaceIds?: readonly string[];
 };

@@ -20,7 +20,7 @@
 .analytics-funnel-toolbar select {
   min-height: 42px;
   border: 1px solid var(--color-border-strong);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0 38px 0 12px;
   background: var(--color-surface-raised);
   color: var(--color-text);
@@ -36,7 +36,7 @@
 .analytics-funnel-kpis > div {
   min-width: 0;
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   padding: 16px;
   background: var(--color-surface-raised);
   box-shadow: var(--shadow-sm);
@@ -53,7 +53,7 @@
   margin: 8px 0 0;
   color: var(--color-text);
   font-size: clamp(1.25rem, 2vw, 1.75rem);
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .analytics-funnel-kpis small {
@@ -88,7 +88,7 @@
   gap: 13px;
   min-height: 220px;
   border: 1px solid var(--color-border);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 18px;
   text-align: left;
   background: var(--color-surface-raised);
@@ -115,11 +115,11 @@
   width: 28px;
   height: 28px;
   place-items: center;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--color-primary);
   color: var(--color-accent-contrast);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .analytics-funnel-step strong {
@@ -186,17 +186,17 @@
 .analytics-funnel-connector small {
   z-index: 1;
   padding: 2px 7px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--color-background);
 }
 
 .analytics-funnel-connector span {
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .analytics-funnel-detail {
   border: 1px solid var(--color-border);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 20px;
   background: var(--color-surface-raised);
 }
@@ -223,7 +223,7 @@
   gap: 12px;
   margin: 0;
   border: 1px dashed var(--color-border-strong);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   color: var(--color-text-muted);
   background: var(--color-surface-subtle);
 }
@@ -234,7 +234,7 @@
 
 .analytics-funnel-status button {
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   padding: 9px 14px;
   background: var(--color-primary);
   color: var(--color-accent-contrast);

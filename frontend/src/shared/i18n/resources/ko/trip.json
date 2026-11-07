@@ -1,9 +1,17 @@
 {
   "publicSharePage": {
+    "action": {
+      "copyToMyMap": "내 지도로 복사",
+      "signInToCopy": "로그인하고 내 지도로 복사"
+    },
     "description": {
       "unavailable": "링크가 유효하지 않거나 공유가 해제되었습니다."
     },
+    "error": {
+      "copyFailed": "지도를 복사하지 못했습니다. 다시 시도해 주세요."
+    },
     "status": {
+      "copying": "내 지도로 복사하는 중입니다.",
       "loading": "공유 여행을 불러오는 중입니다."
     },
     "title": {
