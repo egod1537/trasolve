@@ -1,83 +1,143 @@
 /*
- * TRIP 1.50.1 design-token provenance:
- * docs/ui/trip-reference-audit.md
+ * Color provenance: Primer Primitives 11.10.0 functional light/dark themes.
+ * docs/ui/primer-palette-audit.md
  *
- * Zinc primary/highlight, Aura state colors, 15px-root typography, radii,
- * and shadow geometry come from the pinned TRIP sources. Blue focus rings,
- * map translucency, dark shadow opacity, and integer spacing are documented
- * Trasolve extensions for accessibility, live-map contrast, and layout safety.
+ * Typography, spacing, radii, motion, and shadow geometry remain derived from
+ * the pinned TRIP sources documented in docs/ui/trip-reference-audit.md.
  */
 :root,
 [data-theme='light'] {
   color-scheme: light;
-  --color-bg: #fafafa;
-  --color-surface: #ffffff;
-  --color-surface-raised: #ffffff;
+
+  /* Pinned Primer functional color adapter. */
+  --primer-bg-default: #ffffff;
+  --primer-bg-muted: #f6f8fa;
+  --primer-bg-inset: var(--primer-bg-muted);
+  --primer-bg-emphasis: #25292e;
+  --primer-bg-neutral-muted: #818b981f;
+  --primer-bg-disabled: #eff2f5;
+  --primer-overlay-bg: #ffffff;
+  --primer-control-bg-rest: #f6f8fa;
+  --primer-control-bg-hover: #eff2f5;
+  --primer-control-bg-active: #e6eaef;
+  --primer-fg-default: #1f2328;
+  --primer-fg-muted: #59636e;
+  --primer-fg-disabled: #818b98;
+  --primer-fg-on-emphasis: #ffffff;
+  --primer-fg-on-inverse: #ffffff;
+  --primer-border-default: #d1d9e0;
+  --primer-border-muted: #d1d9e0b3;
+  --primer-border-emphasis: #818b98;
+  --primer-border-disabled: #818b981a;
+  --primer-overlay-border: #d1d9e080;
+  --primer-fg-accent: #0969da;
+  --primer-bg-accent-emphasis: #0969da;
+  --primer-bg-accent-muted: #ddf4ff;
+  --primer-bg-accent-hover: #0860ca;
+  --primer-bg-accent-active: #0757ba;
+  --primer-border-accent-emphasis: #0969da;
+  --primer-border-accent-muted: #54aeff66;
+  --primer-fg-success: #1a7f37;
+  --primer-bg-success-emphasis: #1f883d;
+  --primer-bg-success-muted: #dafbe1;
+  --primer-border-success-muted: #4ac26b66;
+  --primer-fg-attention: #9a6700;
+  --primer-bg-attention-emphasis: #9a6700;
+  --primer-bg-attention-muted: #fff8c5;
+  --primer-border-attention-muted: #d4a72c66;
+  --primer-fg-danger: #d1242f;
+  --primer-bg-danger-emphasis: #cf222e;
+  --primer-bg-danger-muted: #ffebe9;
+  --primer-bg-danger-hover: #cf222e;
+  --primer-bg-danger-active: #a40e26;
+  --primer-border-danger-muted: #ff818266;
+  --primer-focus-outline: var(--primer-border-accent-emphasis);
+  --primer-overlay-backdrop: #c8d1da66;
+  --primer-tooltip-bg: var(--primer-bg-emphasis);
+  --primer-tooltip-fg: var(--primer-fg-on-emphasis);
+  --primer-selection-bg: #0969da33;
+
+  /* Trasolve semantic API and compatibility aliases. */
+  --color-bg: var(--primer-bg-default);
+  --color-surface: var(--primer-bg-default);
+  --color-surface-raised: var(--primer-bg-default);
   --color-surface-elevated: var(--color-surface-raised);
-  --color-surface-overlay: var(--color-surface-raised);
-  --color-surface-subtle: #f4f4f5;
-  --color-surface-hover: #f4f4f5;
-  --color-surface-active: #e4e4e7;
+  --color-surface-overlay: var(--primer-overlay-bg);
+  --color-surface-subtle: var(--primer-bg-muted);
+  --color-surface-hover: var(--primer-control-bg-hover);
+  --color-surface-active: var(--primer-control-bg-active);
   --color-hover-bg: var(--color-surface-hover);
   --color-active-bg: var(--color-surface-active);
-  --color-text-primary: #18181b;
-  --color-text-secondary: #52525b;
-  --color-text-muted: #71717a;
-  --color-text-inverse: #ffffff;
-  --color-placeholder: #64748b;
-  --color-border: #e4e4e7;
-  --color-border-strong: #d4d4d8;
-  --color-border-floating: #e4e4e7;
+  --color-text-primary: var(--primer-fg-default);
+  --color-text-secondary: var(--primer-fg-muted);
+  --color-text-muted: var(--primer-fg-muted);
+  --color-text-inverse: var(--primer-fg-on-inverse);
+  --color-placeholder: var(--primer-fg-muted);
+  --color-border: var(--primer-border-default);
+  --color-border-strong: var(--primer-border-emphasis);
+  --color-border-floating: var(--primer-overlay-border);
   --color-hover-border: var(--color-border-strong);
-  --color-accent: #09090b;
-  --color-accent-hover: #18181b;
-  --color-accent-active: #27272a;
-  --color-accent-contrast: #ffffff;
+  --color-accent: var(--primer-bg-accent-emphasis);
+  --color-accent-hover: var(--primer-bg-accent-hover);
+  --color-accent-active: var(--primer-bg-accent-active);
+  --color-accent-contrast: var(--primer-fg-on-emphasis);
   --color-visualization-contrast: #ffffff;
-  --color-accent-soft: #f4f4f5;
-  --color-info: #2563eb;
-  --color-info-hover: #1d4ed8;
-  --color-info-soft: #eff6ff;
-  --color-info-border: #bfdbfe;
-  --color-danger: #dc2626;
-  --color-danger-strong: #b91c1c;
-  --color-danger-soft: #fef2f2;
-  --color-danger-border: #fecaca;
-  --color-danger-fill: #ef4444;
-  --color-danger-fill-hover: #dc2626;
-  --color-danger-fill-active: #b91c1c;
-  --color-danger-contrast: #ffffff;
-  --color-success: #059669;
-  --color-success-strong: #047857;
-  --color-success-soft: #ecfdf5;
-  --color-success-border: #a7f3d0;
-  --color-warning: #d97706;
-  --color-warning-strong: #b45309;
-  --color-warning-soft: #fffbeb;
-  --color-warning-border: #fde68a;
-  --color-tooltip-bg: #18181b;
-  --color-tooltip-text: #fafafa;
-  --color-overlay: rgba(9, 9, 11, 0.44);
-  --color-overlay-light: rgba(9, 9, 11, 0.24);
+  --color-accent-soft: var(--primer-bg-accent-muted);
+  --color-info: var(--primer-fg-accent);
+  --color-info-hover: var(--primer-fg-accent);
+  --color-info-soft: var(--primer-bg-accent-muted);
+  --color-info-border: var(--primer-border-accent-muted);
+  --color-danger: var(--primer-fg-danger);
+  --color-danger-strong: var(--primer-fg-danger);
+  --color-danger-soft: var(--primer-bg-danger-muted);
+  --color-danger-border: var(--primer-border-danger-muted);
+  --color-danger-fill: var(--primer-bg-danger-emphasis);
+  --color-danger-fill-hover: var(--primer-bg-danger-hover);
+  --color-danger-fill-active: var(--primer-bg-danger-active);
+  --color-danger-contrast: var(--primer-fg-on-emphasis);
+  --color-success: var(--primer-fg-success);
+  --color-success-strong: var(--primer-fg-success);
+  --color-success-fill: var(--primer-bg-success-emphasis);
+  --color-success-soft: var(--primer-bg-success-muted);
+  --color-success-border: var(--primer-border-success-muted);
+  --color-warning: var(--primer-fg-attention);
+  --color-warning-strong: var(--primer-fg-attention);
+  --color-warning-fill: var(--primer-bg-attention-emphasis);
+  --color-warning-soft: var(--primer-bg-attention-muted);
+  --color-warning-border: var(--primer-border-attention-muted);
+  --color-tooltip-bg: var(--primer-tooltip-bg);
+  --color-tooltip-text: var(--primer-tooltip-fg);
+  --color-overlay: var(--primer-overlay-backdrop);
+  --color-overlay-light: color-mix(
+    in srgb,
+    var(--primer-overlay-backdrop) 55%,
+    transparent
+  );
   --color-overlay-backdrop: var(--color-overlay);
-  --color-map-background: #f4f4f5;
-  --color-map-overlay-surface: rgba(255, 255, 255, 0.7);
-  --color-map-overlay-ring: rgba(0, 0, 0, 0.05);
+  --color-map-background: var(--primer-bg-muted);
+  --color-map-overlay-surface: color-mix(
+    in srgb,
+    var(--primer-bg-default) 70%,
+    transparent
+  );
+  --color-map-overlay-ring: var(--primer-overlay-border);
   --color-map-overlay-border: var(--color-map-overlay-ring);
-  --color-selected-bg: #09090b;
-  --color-selected-hover-bg: #3f3f46;
-  --color-selected-text: #ffffff;
-  --color-selected-border: var(--color-accent);
+  --color-selected-bg: var(--primer-bg-accent-emphasis);
+  --color-selected-hover-bg: var(--primer-bg-accent-hover);
+  --color-selected-text: var(--primer-fg-on-emphasis);
+  --color-selected-border: var(--primer-border-accent-emphasis);
   --color-highlight-bg: var(--color-selected-bg);
   --color-highlight-text: var(--color-selected-text);
-  --color-disabled-bg: #e2e8f0;
-  --color-disabled-text: #64748b;
-  --color-disabled-border: #cbd5e1;
-  --color-scrollbar-thumb: #a1a1aa;
-  --color-scrollbar-thumb-hover: #71717a;
+  --color-selection-bg: var(--primer-selection-bg);
+  --color-selection-text: var(--primer-fg-default);
+  --color-disabled-bg: var(--primer-bg-disabled);
+  --color-disabled-text: var(--primer-fg-disabled);
+  --color-disabled-border: var(--primer-border-disabled);
+  --color-scrollbar-thumb: var(--primer-border-emphasis);
+  --color-scrollbar-thumb-hover: var(--primer-fg-muted);
   --color-scrollbar-track: transparent;
   --hero-overlay-color: 255 255 255;
-  --color-focus-ring: rgba(37, 99, 235, 0.38);
+  --color-focus-ring: var(--primer-focus-outline);
   --focus-ring: var(--color-focus-ring);
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
@@ -115,6 +175,7 @@
   --bg-active: var(--color-active-bg);
   --bg-selected: var(--color-selected-bg);
   --bg-selected-hover: var(--color-selected-hover-bg);
+  --bg-selection: var(--color-selection-bg);
   --bg-disabled: var(--color-disabled-bg);
   --bg-backdrop: var(--color-overlay-backdrop);
   --bg-tooltip: var(--color-tooltip-bg);
@@ -123,6 +184,7 @@
   --text-muted: var(--color-text-muted);
   --text-placeholder: var(--color-placeholder);
   --text-selected: var(--color-selected-text);
+  --text-selection: var(--color-selection-text);
   --text-disabled: var(--color-disabled-text);
   --text-on-accent: var(--color-accent-contrast);
   --text-tooltip: var(--color-tooltip-text);
@@ -154,6 +216,7 @@
   --warning-border: var(--color-warning-border);
   --success: var(--color-success);
   --success-strong: var(--color-success-strong);
+  --success-fill: var(--color-success-fill);
   --success-soft: var(--color-success-soft);
   --success-border: var(--color-success-border);
   --progress-stripe: color-mix(in srgb, currentColor 16%, transparent);
@@ -197,63 +260,53 @@
 
 [data-theme='dark'] {
   color-scheme: dark;
-  --color-bg: #09090b;
-  --color-surface: #18181b;
-  --color-surface-raised: #18181b;
-  --color-surface-subtle: #27272a;
-  --color-surface-hover: #27272a;
-  --color-surface-active: #3f3f46;
-  --color-text-primary: #fafafa;
-  --color-text-secondary: #d4d4d8;
-  --color-text-muted: #a1a1aa;
-  --color-text-inverse: #09090b;
-  --color-placeholder: #a1a1aa;
-  --color-border: #3f3f46;
-  --color-border-strong: #52525b;
-  --color-border-floating: #3f3f46;
-  --color-accent: #fafafa;
-  --color-accent-hover: #f4f4f5;
-  --color-accent-active: #e4e4e7;
-  --color-accent-contrast: #09090b;
-  --color-visualization-contrast: #ffffff;
-  --color-accent-soft: rgba(250, 250, 250, 0.16);
-  --color-info: #60a5fa;
-  --color-info-hover: #93c5fd;
-  --color-info-soft: #172554;
-  --color-info-border: #1e40af;
-  --color-danger: #f87171;
-  --color-danger-strong: #fca5a5;
-  --color-danger-soft: #450a0a;
-  --color-danger-border: #7f1d1d;
-  --color-danger-fill: #f87171;
-  --color-danger-fill-hover: #fca5a5;
-  --color-danger-fill-active: #fecaca;
-  --color-danger-contrast: #450a0a;
-  --color-success: #34d399;
-  --color-success-strong: #6ee7b7;
-  --color-success-soft: #022c22;
-  --color-success-border: #065f46;
-  --color-warning: #fbbf24;
-  --color-warning-strong: #fcd34d;
-  --color-warning-soft: #451a03;
-  --color-warning-border: #92400e;
-  --color-tooltip-bg: #09090b;
-  --color-tooltip-text: #fafafa;
-  --color-overlay: rgba(0, 0, 0, 0.72);
-  --color-overlay-light: rgba(0, 0, 0, 0.48);
-  --color-map-background: #18181b;
-  --color-map-overlay-surface: rgba(24, 24, 27, 0.7);
-  --color-map-overlay-ring: rgba(255, 255, 255, 0.1);
-  --color-selected-bg: rgba(250, 250, 250, 0.16);
-  --color-selected-hover-bg: rgba(250, 250, 250, 0.24);
-  --color-selected-text: rgba(255, 255, 255, 0.87);
-  --color-disabled-bg: #3f3f46;
-  --color-disabled-text: #a1a1aa;
-  --color-disabled-border: #52525b;
-  --color-scrollbar-thumb: #52525b;
-  --color-scrollbar-thumb-hover: #71717a;
-  --hero-overlay-color: 9 9 11;
-  --color-focus-ring: rgba(96, 165, 250, 0.48);
+  --primer-bg-default: #0d1117;
+  --primer-bg-muted: #151b23;
+  --primer-bg-inset: #010409;
+  --primer-bg-emphasis: #3d444d;
+  --primer-bg-neutral-muted: #656c7633;
+  --primer-bg-disabled: #212830;
+  --primer-overlay-bg: #010409;
+  --primer-control-bg-rest: #212830;
+  --primer-control-bg-hover: #262c36;
+  --primer-control-bg-active: #2a313c;
+  --primer-fg-default: #f0f6fc;
+  --primer-fg-muted: #9198a1;
+  --primer-fg-disabled: #656c76;
+  --primer-fg-on-emphasis: #ffffff;
+  --primer-fg-on-inverse: #010409;
+  --primer-border-default: #3d444d;
+  --primer-border-muted: #3d444db3;
+  --primer-border-emphasis: #656c76;
+  --primer-border-disabled: #656c761a;
+  --primer-overlay-border: var(--primer-border-muted);
+  --primer-fg-accent: #4493f8;
+  --primer-bg-accent-emphasis: #1f6feb;
+  --primer-bg-accent-muted: #388bfd1a;
+  --primer-bg-accent-hover: #2a7aef;
+  --primer-bg-accent-active: #3685f3;
+  --primer-border-accent-emphasis: #1f6feb;
+  --primer-border-accent-muted: #388bfd66;
+  --primer-fg-success: #3fb950;
+  --primer-bg-success-emphasis: #238636;
+  --primer-bg-success-muted: #2ea04326;
+  --primer-border-success-muted: #2ea04366;
+  --primer-fg-attention: #d29922;
+  --primer-bg-attention-emphasis: #9e6a03;
+  --primer-bg-attention-muted: #bb800926;
+  --primer-border-attention-muted: #bb800966;
+  --primer-fg-danger: #f85149;
+  --primer-bg-danger-emphasis: #da3633;
+  --primer-bg-danger-muted: #f851491a;
+  --primer-bg-danger-hover: #b62324;
+  --primer-bg-danger-active: #da3633;
+  --primer-border-danger-muted: #f8514966;
+  --primer-focus-outline: var(--primer-border-accent-emphasis);
+  --primer-overlay-backdrop: #21283066;
+  --primer-tooltip-bg: var(--primer-bg-emphasis);
+  --primer-tooltip-fg: var(--primer-fg-on-emphasis);
+  --primer-selection-bg: #1f6febb3;
+  --hero-overlay-color: 13 17 23;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.32);
   --shadow-md:
     0 4px 6px -1px rgba(0, 0, 0, 0.42), 0 2px 4px -2px rgba(0, 0, 0, 0.36);

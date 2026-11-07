@@ -65,8 +65,8 @@ body {
 }
 
 :where(#root, .ui-dialog) :where(:not(.gm-style *))::selection {
-  background: var(--bg-selected);
-  color: var(--text-selected);
+  background: var(--bg-selection);
+  color: var(--text-selection);
 }
 
 :where(#root, .ui-dialog)
