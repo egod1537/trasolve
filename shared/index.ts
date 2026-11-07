@@ -16,6 +16,7 @@ export {
   buildAnalyticsFunnelApiRoute,
   buildAnalyticsSessionEventsRoute,
   buildSharedTripApiRoute,
+  buildSharedTripCopyApiRoute,
   buildTripShareApiRoute,
   getGoogleMapsLocale,
   type GoogleMapsLanguageCode,
@@ -65,6 +66,7 @@ export type {
 
 export {
   sharedTripSchema,
+  tripShareCopyResponseSchema,
   tripShareOwnerSchema,
   tripShareSettingsSchema,
   tripShareTokenSchema,
@@ -75,6 +77,7 @@ export {
 
 export type {
   SharedTrip,
+  TripShareCopyResponse,
   TripShareOwner,
   TripShareSettings,
   UpdateTripShareRequest,

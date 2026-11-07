@@ -1,9 +1,17 @@
 {
   "publicSharePage": {
+    "action": {
+      "copyToMyMap": "マイマップにコピー",
+      "signInToCopy": "ログインしてマイマップにコピー"
+    },
     "description": {
       "unavailable": "リンクが無効か、共有が解除されています。"
     },
+    "error": {
+      "copyFailed": "地図をコピーできませんでした。もう一度お試しください。"
+    },
     "status": {
+      "copying": "マイマップにコピーしています。",
       "loading": "共有された旅行を読み込んでいます。"
     },
     "title": {

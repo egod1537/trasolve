@@ -68,6 +68,7 @@ async function startBackend(): Promise<void> {
           persistence.trips,
           persistence.tripShares,
           persistence.auth,
+          tripController,
         ),
         currentUser,
       ),
