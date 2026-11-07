@@ -58,17 +58,17 @@ buttons and selected controls use near-black in light mode and near-white in
 dark mode. Blue is retained for focus, informational selection, and a small
 number of explicit states; it is not the default surface accent.
 
-| Role | Light | Dark | Source |
-| --- | --- | --- | --- |
-| App canvas | Zinc 50 `#fafafa` | Zinc 950 `#09090b` | Tailwind/Aura Zinc |
-| Main surface | White `#ffffff` | Zinc 900 `#18181b` | dashboard and panels |
-| Subtle/hover | Zinc 100 `#f4f4f5` | Zinc 800 `#27272a` | list and icon hover |
-| Strong text/action | Zinc 900–950 `#18181b`–`#09090b` | Zinc 50 `#fafafa` | theme preset |
-| Secondary text | Zinc 600 `#52525b` | Zinc 300–400 `#d4d4d8`–`#a1a1aa` | labels and metadata |
-| Border | Zinc 200 `#e4e4e7` | Zinc 700 `#3f3f46` | panels and fields |
-| Informational focus | Blue 600 `#2563eb` | Blue 400 `#60a5fa` | search/selection states |
-| Success | Emerald/Green 600 | Emerald/Green 400 | booked/positive states |
-| Danger | Red 600 | Red 400 | destructive/error states |
+| Role                | Light                            | Dark                             | Source                   |
+| ------------------- | -------------------------------- | -------------------------------- | ------------------------ |
+| App canvas          | Zinc 50 `#fafafa`                | Zinc 950 `#09090b`               | Tailwind/Aura Zinc       |
+| Main surface        | White `#ffffff`                  | Zinc 900 `#18181b`               | dashboard and panels     |
+| Subtle/hover        | Zinc 100 `#f4f4f5`               | Zinc 800 `#27272a`               | list and icon hover      |
+| Strong text/action  | Zinc 900–950 `#18181b`–`#09090b` | Zinc 50 `#fafafa`                | theme preset             |
+| Secondary text      | Zinc 600 `#52525b`               | Zinc 300–400 `#d4d4d8`–`#a1a1aa` | labels and metadata      |
+| Border              | Zinc 200 `#e4e4e7`               | Zinc 700 `#3f3f46`               | panels and fields        |
+| Informational focus | Blue 600 `#2563eb`               | Blue 400 `#60a5fa`               | search/selection states  |
+| Success             | Emerald/Green 600                | Emerald/Green 400                | booked/positive states   |
+| Danger              | Red 600                          | Red 400                          | destructive/error states |
 
 Category/day colors remain data colors. They are not replaced by the neutral
 system. Dynamic color chips use a low-opacity color mix so the data color is
@@ -119,16 +119,16 @@ legible without becoming a large saturated surface.
 The port uses Trasolve's existing semantic tokens instead of copying Angular,
 PrimeNG, Tailwind utilities, markup, or component structure.
 
-| Trasolve token family | TRIP interpretation |
-| --- | --- |
-| `--color-bg`, `--color-surface*` | Zinc canvas and surfaces |
-| `--color-text-*`, `--color-border*` | Zinc text/border hierarchy |
-| `--color-accent*` | Neutral primary action hierarchy |
-| new informational/selection tokens | TRIP's limited Blue UI states |
-| `--color-success*`, `--color-danger*`, `--color-warning*` | soft Tailwind semantic states |
-| `--radius-*` | 4/6/8/12/16px geometry without changing layout |
-| `--shadow-*` | lower-contrast card depth and focused overlay depth |
-| `--shadow-map-overlay` | the single required map floating-surface shadow |
+| Trasolve token family                                     | TRIP interpretation                                 |
+| --------------------------------------------------------- | --------------------------------------------------- |
+| `--color-bg`, `--color-surface*`                          | Zinc canvas and surfaces                            |
+| `--color-text-*`, `--color-border*`                       | Zinc text/border hierarchy                          |
+| `--color-accent*`                                         | Neutral primary action hierarchy                    |
+| new informational/selection tokens                        | TRIP's limited Blue UI states                       |
+| `--color-success*`, `--color-danger*`, `--color-warning*` | soft Tailwind semantic states                       |
+| `--radius-*`                                              | 4/6/8/12/16px geometry without changing layout      |
+| `--shadow-*`                                              | lower-contrast card depth and focused overlay depth |
+| `--shadow-map-overlay`                                    | the single required map floating-surface shadow     |
 
 The existing aliases stay available so feature CSS can migrate without
 functional refactors. Layout constants such as `--trip-panel-width`, map
@@ -150,6 +150,69 @@ token changes.
 6. Regression verification and finish: light/dark visual checks, responsive
    checks, interaction checks, typecheck, lint, build, repository diff audit,
    line-ending audit, and provenance audit.
+
+## Completion and verification
+
+### Stage commits
+
+| Stage                      | Commit      | Result                                                                             |
+| -------------------------- | ----------- | ---------------------------------------------------------------------------------- |
+| 1. Source investigation    | `a764d81`   | Pinned evidence, extracted design language, and MIT notice                         |
+| 2. Tokens and global style | `bbd2326`   | Zinc light/dark palette, semantic states, type, radii, depth, and overlay material |
+| 3. Shared elements         | `61a262d`   | Buttons, panels, dialogs, badges, progress, tooltips, controls, and form fields    |
+| 4. Map workspace           | `ffed5c7`   | Sidebar hierarchy, translucent map surfaces, search, toolbars, cards, and controls |
+| 5. Remaining screens       | `b0b14aa`   | Landing, trip picker, share/account surfaces, AI panel, and analytics surfaces     |
+| 6. Verification            | this record | Automated checks, real-browser light/dark and mobile checks, and repository audits |
+
+### Automated checks
+
+- `npm run typecheck`: passed for shared, frontend, backend, and localization
+  TypeScript projects.
+- `npm run lint`: passed with exit code 0. The localization report found no
+  hardcoded UI literals, invalid `L()`/`NL()` calls, empty translations,
+  structure mismatches, or forbidden disables.
+- `npm test`: passed all 9 existing backend contract tests.
+- `npm run build`: passed for shared, backend, and the frontend production
+  Vite build.
+- Targeted Prettier check for every file in this port: passed after formatting
+  this record.
+- Frontend architecture and dependency boundaries were not changed; all
+  implementation changes outside this report and license are CSS-only.
+
+### Real-browser checks
+
+- At 1440×1000, the landing page, trip picker, map workspace, and analytics
+  page were rendered in both light and dark themes against the running
+  development backend and real Google Maps SDK.
+- At 390×844, debug guest login, trip opening, the responsive map/sidebar,
+  `Ctrl+K` quick-search opening, `Escape` closing, and layer selection all
+  succeeded.
+- The desktop panel width remains 468px, the existing 320px intermediate
+  breakpoint remains unchanged, and the mobile panel positioning/visibility
+  rules remain unchanged.
+- Map runtime, adapters, map data, markers, routing, persistence, auth, AI,
+  SSE, drag-and-drop handlers, keyboard handlers, routes, and component markup
+  were not modified by this port.
+
+### Audits and pre-existing findings
+
+- All files changed by this port use LF line endings and contain no CR bytes.
+- Every map floating surface changed by this port continues to use the global
+  `--shadow-map-overlay` token. State rings and marker halos remain separate
+  because they communicate selection, drawing, or focus state.
+- No package, dependency, test file, test helper, fixture, data model, API
+  contract, backend, database, deployment file, localization resource, or
+  image/icon asset was added or changed.
+- The repository-wide Prettier check still reports two unrelated files that
+  were already outside this port: `routeOptimization.ts` and `troute.ts`.
+  Targeted formatting for the port itself passes.
+- The existing architecture check reports four unrelated public-slice import
+  findings in preferences/auth/share code. This CSS-only port does not change
+  those imports.
+- Localization lint still inventories 98 pre-existing missing analytics keys
+  and 21 unused keys while exiting successfully. No user-facing string or
+  localization key was introduced here, so the localization Spreadsheet and
+  production snapshots were intentionally left unchanged.
 
 ## Provenance policy
 
