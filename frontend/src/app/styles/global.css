@@ -35,8 +35,17 @@ body {
 }
 
 button,
+input,
+select,
+textarea,
 a {
   font: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
 }
 
 a {

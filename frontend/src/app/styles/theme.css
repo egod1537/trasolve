@@ -185,7 +185,7 @@
 .language-control-label {
   color: var(--color-text-secondary);
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .language-control select {
@@ -207,7 +207,7 @@
 }
 
 .language-control select:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--info);
   outline-offset: 2px;
 }
 
@@ -248,7 +248,7 @@
   border-radius: 8px;
   background: var(--color-surface-raised);
   color: var(--color-text-secondary);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-floating-sm);
   cursor: pointer;
 }
 
@@ -256,7 +256,7 @@
 .theme-control-trigger[aria-expanded='true'] {
   border-color: var(--color-border-strong);
   background: var(--color-surface-hover);
-  color: var(--color-accent);
+  color: var(--color-text-primary);
 }
 
 .theme-control svg {
@@ -276,11 +276,11 @@
   right: 0;
   display: grid;
   width: 148px;
-  padding: 5px;
+  padding: 4px;
   border: 1px solid var(--color-border-floating);
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   background: var(--color-surface-raised);
-  box-shadow: var(--shadow-map-overlay);
+  box-shadow: var(--shadow-map-overlay-menu);
 }
 
 .theme-control-menu button {
@@ -292,7 +292,7 @@
   min-height: 34px;
   padding: 6px 8px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-secondary);
   font: inherit;
@@ -302,14 +302,14 @@
 }
 
 .theme-control-menu button:hover,
-.theme-control-menu button:focus-visible,
-.theme-control-menu button[aria-checked='true'] {
+.theme-control-menu button:focus-visible {
   background: var(--color-surface-hover);
   color: var(--color-text-primary);
 }
 
 .theme-control-menu button[aria-checked='true'] {
-  color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
 }
 
 .theme-control-check[data-visible='false'] {
