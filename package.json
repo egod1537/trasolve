@@ -17,6 +17,7 @@
     }
   },
   "scripts": {
+    "ai:e2e": "npm run build -w @trasolve/shared && node infra/ai-e2e/run.mjs",
     "predev": "npm run build -w @trasolve/shared",
     "dev": "concurrently -k -n shared,backend,frontend \"npm run dev -w @trasolve/shared\" \"npm run dev -w @trasolve/backend\" \"npm run dev -w @trasolve/frontend\"",
     "db:migrate": "npm run db:migrate -w @trasolve/backend",
