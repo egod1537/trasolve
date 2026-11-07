@@ -3,11 +3,12 @@
   max-height: inherit;
   overflow-y: auto;
   overscroll-behavior: contain;
-  border: 1px solid var(--color-floating-border);
+  border: 1px solid var(--color-map-overlay-ring);
   border-radius: 8px;
-  background: var(--color-floating-surface);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   pointer-events: auto;
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .place-info-card:focus {
@@ -97,7 +98,7 @@
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: color-mix(in srgb, currentColor 12%, white);
+  background: color-mix(in srgb, currentColor 12%, var(--color-surface-raised));
 }
 
 .trip-place-card-static-style-icon svg {
@@ -252,10 +253,11 @@
   max-width: calc(100vw - 24px);
   padding: 15px 16px;
   border: 1px solid var(--color-danger-border);
-  border-radius: 12px;
-  background: var(--color-floating-surface);
+  border-radius: 8px;
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   pointer-events: auto;
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .place-delete-confirm-copy {
@@ -763,11 +765,12 @@
   max-height: inherit;
   overflow-y: auto;
   overscroll-behavior: contain;
-  border: 1px solid var(--color-floating-border);
+  border: 1px solid var(--color-map-overlay-ring);
   border-radius: 8px;
-  background: var(--color-floating-surface);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   pointer-events: auto;
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .side-detail-card.is-right {
@@ -788,8 +791,8 @@
   top: 34px;
   width: 10px;
   height: 10px;
-  border: solid var(--color-floating-border);
-  background: var(--color-floating-surface);
+  border: solid var(--color-map-overlay-ring);
+  background: var(--color-map-overlay-surface);
   content: '';
   transform: rotate(45deg);
 }

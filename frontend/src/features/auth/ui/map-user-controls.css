@@ -112,12 +112,13 @@
   right: 0;
   width: 200px;
   padding: 6px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 10px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: 8px;
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   transform-origin: top right;
   animation: map-user-menu-in 0.14s ease-out;
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .map-user-menu-item {

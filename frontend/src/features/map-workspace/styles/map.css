@@ -100,7 +100,7 @@
   width: var(--trip-panel-width);
   overflow: hidden;
   border: 1px solid var(--color-floating-border);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--color-floating-surface);
   box-shadow: var(--shadow-map-overlay);
 }
@@ -135,8 +135,8 @@
   min-height: 34px;
   margin: 0 0 3px;
   font-size: 24px;
-  font-weight: 750;
-  letter-spacing: -0.04em;
+  font-weight: 700;
+  letter-spacing: -0.025em;
   line-height: 1.2;
 }
 
@@ -285,7 +285,7 @@
   gap: 4px;
   padding: 9px 10px;
   border-top: 1px solid var(--color-border-floating);
-  background: var(--color-border);
+  background: var(--color-surface-subtle);
 }
 
 .trip-panel-header-action {
@@ -350,13 +350,13 @@
 .trip-day {
   position: relative;
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface-subtle);
+  background: var(--color-surface-raised);
   transform: translateY(var(--day-preview-offset, 0));
   transition: transform 120ms ease;
 }
 .trip-day.is-dragging {
   z-index: 3;
-  background: var(--color-surface-subtle);
+  background: var(--color-surface-raised);
   box-shadow: var(--shadow-floating-sm);
   opacity: 0.82;
   transform: translateY(var(--day-preview-offset));
@@ -616,7 +616,7 @@
   position: relative;
   margin: 5px 0 0 18px;
   padding: 2px 0 7px;
-  background: var(--color-surface-subtle);
+  background: var(--color-surface-raised);
   list-style: none;
   --trip-tree-axis: 35px;
   --trip-tree-row-anchor: 22px;
@@ -713,7 +713,7 @@
   height: 9px;
   border: 2px solid var(--place-tree-node-color);
   border-radius: 50%;
-  background: var(--color-surface-subtle);
+  background: var(--color-surface-raised);
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
@@ -725,7 +725,7 @@
   height: 18px;
   border-color: var(--day-color);
   color: var(--day-color);
-  box-shadow: 0 0 0 2px var(--color-surface-subtle);
+  box-shadow: 0 0 0 2px var(--color-surface-raised);
 }
 .trip-layer-tree-node.is-start {
   border: 0;
@@ -737,7 +737,7 @@
   height: 18px;
   border: 0;
   border-radius: 0;
-  background: var(--color-surface-subtle);
+  background: var(--color-surface-raised);
 }
 .trip-layer-tree-node svg {
   width: 13px;
@@ -793,7 +793,7 @@
 }
 .trip-layer-item.is-details-open > .trip-layer-row {
   box-shadow: inset 0 0 0 1px
-    color-mix(in srgb, var(--color-primary) 68%, white);
+    color-mix(in srgb, var(--color-primary) 68%, var(--color-surface-raised));
 }
 .trip-layer-item.is-dragging {
   z-index: 3;
@@ -1866,7 +1866,7 @@
   overflow-x: hidden;
   overflow-y: auto;
   border: 1px solid var(--color-floating-border);
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--color-floating-surface);
   box-shadow: var(--shadow-map-overlay);
   pointer-events: auto;
@@ -2266,6 +2266,19 @@
   border-radius: 4px;
   background: var(--color-surface-raised);
   cursor: pointer;
+}
+
+.trip-panel-header-menu,
+.trip-day-color-picker,
+.trip-place-style-popover,
+.trip-place-duration-popup,
+.layer-detail-card,
+.route-settings-card,
+.trip-map-ai-unread-previews button,
+.trip-map-status {
+  border-color: var(--color-map-overlay-ring);
+  background: var(--color-map-overlay-surface);
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 @media (max-width: 1000px) {

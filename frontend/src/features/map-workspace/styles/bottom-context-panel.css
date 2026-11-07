@@ -9,14 +9,15 @@
   min-width: 0;
   gap: 9px;
   padding: 8px 10px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 12px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: 8px;
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
   pointer-events: none;
   animation: bottom-context-panel-in 150ms ease-out;
   --context-accent: var(--color-primary);
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .map-tool-panel {
@@ -27,12 +28,13 @@
   flex: none;
   gap: 4px;
   padding: 6px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 12px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: 8px;
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
   pointer-events: auto;
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .map-tool-panel button {
@@ -89,13 +91,14 @@
   min-width: 0;
   gap: 14px;
   padding: 8px 10px 8px 14px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 12px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: 8px;
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
   pointer-events: auto;
   animation: bottom-context-panel-in 150ms ease-out;
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .layer-bulk-selection-count {
@@ -218,10 +221,11 @@
   bottom: calc(100% + 10px);
   width: min(300px, calc(100vw - 24px));
   padding: 14px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 12px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: 8px;
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .layer-bulk-mode-popover {
@@ -993,10 +997,11 @@ fieldset.route-optimization-setting-field {
   width: min(228px, calc(100vw - 20px));
   gap: 10px;
   padding: 12px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 10px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: 8px;
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .route-endpoint-context-menu > strong {
@@ -1365,7 +1370,8 @@ fieldset.route-optimization-setting-field {
   opacity: 0.55;
 }
 
-.route-optimization-schedule-list > li.is-skipped
+.route-optimization-schedule-list
+  > li.is-skipped
   .route-optimization-schedule-stop {
   border-style: dashed;
 }
@@ -1935,7 +1941,11 @@ fieldset.route-optimization-setting-field {
   width: 32px;
   height: 32px;
   border-radius: 9px;
-  background: color-mix(in srgb, var(--context-accent) 10%, white);
+  background: color-mix(
+    in srgb,
+    var(--context-accent) 10%,
+    var(--color-surface-raised)
+  );
   color: var(--context-accent);
 }
 
