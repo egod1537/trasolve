@@ -11,11 +11,7 @@ export class HttpTripRepository implements TripRepository {
   }
 
   public getTrip(id: string, signal?: AbortSignal): Promise<Trip> {
-    return this.serialize(
-      id,
-      async () => (await this.load(id, signal)).trip,
-      true,
-    );
+    return this.serialize(id, async () => (await this.load(id, signal)).trip);
   }
 
   public async createTrip(
@@ -32,9 +28,9 @@ export class HttpTripRepository implements TripRepository {
     input: TripInput,
     signal?: AbortSignal,
   ): Promise<Trip> {
+    const expectedRevision = this.resolveExpectedRevision(id, signal);
     return this.serialize(id, async () => {
-      // Resolve the revision after earlier writes for this Trip have completed.
-      const revision = await this.resolveExpectedRevision(id, signal);
+      const revision = await expectedRevision;
       try {
         const stored = await trips.saveTrip(id, revision, input, signal);
         this.cacheRevision(id, stored.revision);
@@ -49,9 +45,9 @@ export class HttpTripRepository implements TripRepository {
   }
 
   public deleteTrip(id: string, signal?: AbortSignal): Promise<void> {
+    const expectedRevision = this.resolveExpectedRevision(id, signal);
     return this.serialize(id, async () => {
-      // A queued delete must use the revision returned by the preceding write.
-      const revision = await this.resolveExpectedRevision(id, signal);
+      const revision = await expectedRevision;
       try {
         const deletedRevision = await trips.deleteTrip(id, revision, signal);
         this.cacheRevision(id, deletedRevision);
@@ -110,14 +106,9 @@ export class HttpTripRepository implements TripRepository {
   private async serialize<Result>(
     id: string,
     operation: () => Promise<Result>,
-    recoverPreviousFailure = false,
   ): Promise<Result> {
     const previous = this.writes.get(id) ?? Promise.resolve();
-    // A queued write must not proceed after an uncertain or conflicting write.
-    // Reads can still recover the canonical state after that failure.
-    const current = (
-      recoverPreviousFailure ? previous.catch(() => undefined) : previous
-    ).then(operation);
+    const current = previous.catch(() => undefined).then(operation);
     this.writes.set(id, current);
     try {
       return await current;

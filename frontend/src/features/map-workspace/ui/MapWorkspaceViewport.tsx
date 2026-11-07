@@ -330,7 +330,6 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
       <MapToolbar
         dismissRevision={transient.searchDismissRevision}
         mapRef={mapRef}
-        selectedPlaceIds={bulkSelectedPlaceIds}
         onSelectPlace={onSelectSearchedGooglePlace}
         onOpenTripPicker={onOpenTripPicker}
       />

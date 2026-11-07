@@ -3,7 +3,6 @@ import type {
   TripCommandPlanStepId,
 } from '@trasolve/shared';
 import { createTripPlaceFromGooglePlace } from '@/entities/place';
-import { pickRandomDayColor } from '@/entities/trip';
 import type { TripCommand } from '@/features/map-workspace/command/TripCommand';
 import {
   createAddDayCommandWithPendingId,
@@ -15,7 +14,6 @@ import {
   createRenamePlaceCommand,
   createRenameTripCommand,
   createUpdateMemoCommand,
-  createUpdateDayColorCommand,
   createUpdatePreferredDurationCommand,
   createUpdatePolylineModeCommand,
   createUpdateVisitTimeRangeCommand,
@@ -53,16 +51,8 @@ export async function adaptTripCommandPlanOperation(
       return { commands: [createRenameTripCommand(operation.title)] };
     case 'add_day': {
       const id = createPendingEntityId();
-      // Resolve randomness once, so executing the approved commands preserves
-      // the day color shown by preflight rather than drawing a new one.
-      const color = pickRandomDayColor(
-        context.workingTrip.days.map((day) => day.color),
-      );
       return {
-        commands: [
-          createAddDayCommandWithPendingId(operation.title, id),
-          createUpdateDayColorCommand(id, color),
-        ],
+        commands: [createAddDayCommandWithPendingId(operation.title, id)],
         result: { kind: 'day', id },
       };
     }

@@ -31,21 +31,7 @@ export async function sendChat(
         : L('errors:chat.error.unableConnectChatServerTryAgain'),
     );
   }
-  let body: unknown;
-  try {
-    body = await response.json();
-  } catch (cause) {
-    if (signal?.aborted) {
-      throw cause;
-    }
-    if (timeout.aborted) {
-      throw new Error(L('errors:chat.error.waitingTimeReplyHasBeenExceeded'));
-    }
-    if (!(cause instanceof SyntaxError)) {
-      throw new Error(L('errors:chat.error.unableConnectChatServerTryAgain'));
-    }
-    body = null;
-  }
+  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(L('errors:chat.error.answerCouldNotBeRetrievedTry'));
   }

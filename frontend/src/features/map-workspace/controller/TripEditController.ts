@@ -6,10 +6,7 @@ import {
   type TripPolylineMode,
   type TripScheduleUpdate,
 } from '@trasolve/shared';
-import {
-  defineTripCommand,
-  type TripCommand,
-} from '@/features/map-workspace/command/TripCommand';
+import type { TripCommand } from '@/features/map-workspace/command/TripCommand';
 import {
   TripCommandDispatcher,
   type TripHistorySnapshot,
@@ -47,16 +44,6 @@ import { L } from '@/shared/i18n';
 
 export type { PlaceInput } from '@/features/map-workspace/command/tripCommands';
 
-export type PersistedBatchOutcome =
-  | 'committed'
-  | 'rejected'
-  | 'busy'
-  | 'destroyed'
-  | 'aborted'
-  | 'conflict'
-  | 'not_committed'
-  | 'unknown_commit';
-
 export type CommandExecutionResult = {
   success: boolean;
   commandName: string | null;
@@ -92,24 +79,11 @@ export class TripEditController {
     this.commandDispatcher.getHistorySnapshot();
 
   public async save(): Promise<boolean> {
-    if (this.persistedCompletion) {
-      return this.persistedCompletion;
-    }
     if (this.destroyed) {
       return false;
     }
-    // While a save is unconfirmed, a PUT would carry a fresh If-Match for a
-    // Trip the client has not seen. Only reconcileUnknownCommit may continue.
-    if (this.unknownCommit) {
-      return false;
-    }
     await this.commandCompletion;
-    // A confirmed batch can acquire persistence while this save is yielding.
-    // Join it rather than saving the pre-Apply snapshot concurrently.
-    if (this.persistedCompletion) {
-      return this.persistedCompletion;
-    }
-    if (this.destroyed || this.unknownCommit) {
+    if (this.destroyed) {
       return false;
     }
 
@@ -150,147 +124,26 @@ export class TripEditController {
   }
 
   public undo(): Promise<boolean> {
-    if (this.destroyed || this.persistedController || this.unknownCommit) {
+    if (this.destroyed) {
       return Promise.resolve(false);
     }
     return this.completeLocalChange(this.commandDispatcher.undo());
   }
 
   public redo(): Promise<boolean> {
-    if (this.destroyed || this.persistedController || this.unknownCommit) {
+    if (this.destroyed) {
       return Promise.resolve(false);
     }
     return this.completeLocalChange(this.commandDispatcher.redo());
   }
 
   public executeBatch(commands: readonly TripCommand[]): Promise<boolean> {
-    if (
-      this.destroyed ||
-      this.persistedController ||
-      this.unknownCommit ||
-      commands.length === 0
-    ) {
+    if (this.destroyed || commands.length === 0) {
       return Promise.resolve(false);
     }
     return this.completeLocalChange(
       this.commandDispatcher.executeBatch(commands),
     );
-  }
-
-  /** Publish a confirmed batch only after canonical persistence and readback. */
-  public executePersistedBatch(
-    commands: readonly TripCommand[],
-  ): Promise<boolean> {
-    return this.executePersistedBatchDetailed(commands).then(
-      (outcome) => outcome === 'committed',
-    );
-  }
-
-  /**
-   * Same as executePersistedBatch, but preserves why a batch was not applied.
-   * `unknown_commit` means the save result could not be confirmed; the batch is
-   * never retried until the canonical Trip is read back successfully.
-   */
-  public executePersistedBatchDetailed(
-    commands: readonly TripCommand[],
-  ): Promise<PersistedBatchOutcome> {
-    if (this.destroyed) {
-      return Promise.resolve('destroyed');
-    }
-    if (this.unknownCommit) {
-      return Promise.resolve('unknown_commit');
-    }
-    if (commands.length === 0) {
-      return Promise.resolve('rejected');
-    }
-    if (
-      this.persistedController ||
-      this.pending ||
-      this.store.getState().status !== 'ready'
-    ) {
-      return Promise.resolve('busy');
-    }
-    const controller = new AbortController();
-    this.persistedController = controller;
-    const completion = this.runPersistedBatch(commands, controller);
-    this.persistedCompletion = completion.then(
-      (outcome) => outcome === 'committed',
-    );
-    return completion;
-  }
-
-  public get hasUnknownCommit(): boolean {
-    return this.unknownCommit;
-  }
-
-  /** Stable primitive snapshot so UI can observe recovery with useSyncExternalStore. */
-  public readonly getRecoverySnapshot = (): 'none' | 'unknown_commit' =>
-    this.unknownCommit ? 'unknown_commit' : 'none';
-
-  public readonly subscribeRecovery = (listener: () => void): (() => void) => {
-    this.recoveryListeners.add(listener);
-    return () => {
-      this.recoveryListeners.delete(listener);
-    };
-  };
-
-  /**
-   * Read the canonical Trip back after an unconfirmed save and adopt it. This
-   * is the only path that clears the unknown state. It refuses to run while
-   * local edits are unsaved or a save is in flight, so they are never replaced.
-   */
-  public async reconcileUnknownCommit(): Promise<boolean> {
-    const status = this.store.getState().status;
-    if (
-      this.destroyed ||
-      !this.unknownCommit ||
-      this.persistedController ||
-      this.pending ||
-      this.autosaveTimer !== null ||
-      this.flushAfterPending ||
-      // A failed save can leave a local edit that was never stored.
-      this.revision > this.lastSavedRevision ||
-      status === 'dirty' ||
-      status === 'saving'
-    ) {
-      return false;
-    }
-    const controller = new AbortController();
-    this.persistedController = controller;
-    try {
-      const canonical = await this.repository.getTrip(
-        this.tripId,
-        controller.signal,
-      );
-      if (
-        this.destroyed ||
-        controller.signal.aborted ||
-        canonical.id !== this.tripId
-      ) {
-        return false;
-      }
-      // An edit may have started while the readback was in flight.
-      const current = this.store.getState().status;
-      if (
-        current === 'dirty' ||
-        current === 'saving' ||
-        this.revision > this.lastSavedRevision
-      ) {
-        return false;
-      }
-      this.commandDispatcher.resetHistory();
-      this.setUnknownCommit(false);
-      this.revision += 1;
-      this.lastSavedRevision = this.revision;
-      this.store.setState({ trip: canonical, status: 'ready', error: null });
-      return true;
-    } catch {
-      return false;
-    } finally {
-      if (this.persistedController === controller) {
-        this.persistedController = null;
-      }
-    }
   }
 
   public async executeTripCommandString(
@@ -462,7 +315,6 @@ export class TripEditController {
     this.pending = null;
     this.pendingPromise = null;
     pending?.controller.abort();
-    this.persistedController?.abort();
   }
 
   private readonly tripId: string;
@@ -487,192 +339,8 @@ export class TripEditController {
 
   private revision = 0;
 
-  private persistedController: AbortController | null = null;
-
-  private persistedCompletion: Promise<boolean> | null = null;
-
-  private unknownCommit = false;
-
-  private readonly recoveryListeners = new Set<() => void>();
-
-  private setUnknownCommit(value: boolean): void {
-    if (this.unknownCommit === value) {
-      return;
-    }
-    this.unknownCommit = value;
-    for (const listener of [...this.recoveryListeners]) {
-      listener();
-    }
-  }
-
-  /**
-   * Compare Trips ignoring ids the server assigned to entities that did not
-   * exist before the batch (pending-* ids are replaced on save). Existing ids
-   * are kept verbatim; new ones are labelled by structural position so day,
-   * place, polyline and layer-item references stay consistent.
-   */
-  private semanticKey(trip: Trip, knownIds: ReadonlySet<string>): string {
-    const labels = new Map<string, string>();
-    trip.days.forEach((day, dayIndex) => {
-      if (!knownIds.has(day.id)) {
-        labels.set(day.id, `new:day:${dayIndex}`);
-      }
-      day.places.forEach((place, index) => {
-        if (!knownIds.has(place.id)) {
-          labels.set(place.id, `new:place:${dayIndex}:${index}`);
-        }
-      });
-      day.polylines.forEach((polyline, index) => {
-        if (!knownIds.has(polyline.id)) {
-          labels.set(polyline.id, `new:polyline:${dayIndex}:${index}`);
-        }
-      });
-    });
-    return JSON.stringify(this.createTripInput(trip)).replace(
-      /"((?:[^"\\]|\\.)*)"/g,
-      (token, value: string) =>
-        labels.has(value) ? JSON.stringify(labels.get(value)) : token,
-    );
-  }
-
-  private async runPersistedBatch(
-    commands: readonly TripCommand[],
-    controller: AbortController,
-  ): Promise<PersistedBatchOutcome> {
-    const before = this.store.getState();
-    let staged = before;
-    const dispatcher = new TripCommandDispatcher({
-      getState: () => staged,
-      setState: (state) => {
-        staged = state;
-      },
-      subscribe: () => () => {},
-    });
-    this.clearAutosaveTimer();
-    this.store.setState({ ...before, status: 'saving', error: null });
-    let saveAttempted = false;
-    try {
-      if (!(await dispatcher.executeBatch(commands))) {
-        // Nothing was sent to the server; restore the untouched snapshot.
-        if (!this.destroyed && !controller.signal.aborted) {
-          this.store.setState({ ...before, status: 'ready', error: null });
-        }
-        if (controller.signal.aborted) {
-          return this.destroyed ? 'destroyed' : 'aborted';
-        }
-        return 'rejected';
-      }
-      if (controller.signal.aborted) {
-        return this.destroyed ? 'destroyed' : 'aborted';
-      }
-      saveAttempted = true;
-      const saved = await this.repository.saveTrip(
-        this.tripId,
-        this.createTripInput(staged.trip),
-        controller.signal,
-      );
-      const canonical = await this.repository.getTrip(
-        this.tripId,
-        controller.signal,
-      );
-      if (this.destroyed || controller.signal.aborted) {
-        return this.destroyed ? 'destroyed' : 'aborted';
-      }
-      if (saved.id !== this.tripId || canonical.id !== this.tripId) {
-        throw new Error(
-          L(
-            'map:tripEditController.error.savedTripDifferentFromCurrentSession',
-          ),
-        );
-      }
-      if (
-        JSON.stringify(this.createTripInput(saved)) !==
-        JSON.stringify(this.createTripInput(canonical))
-      ) {
-        throw new TripRevisionConflictError(canonical);
-      }
-      const published = await this.commandDispatcher.execute(
-        defineTripCommand(() => canonical),
-      );
-      if (!published) {
-        throw new Error(
-          L('map:tripEditController.runSave.error.failedSaveTrip'),
-        );
-      }
-      this.revision += 1;
-      this.lastSavedRevision = this.revision;
-      this.store.setState({ trip: canonical, status: 'ready', error: null });
-      return 'committed';
-    } catch (cause) {
-      if (this.destroyed || controller.signal.aborted) {
-        return this.destroyed ? 'destroyed' : 'aborted';
-      }
-      if (!saveAttempted) {
-        this.store.setState({ ...before, status: 'ready', error: null });
-        return 'rejected';
-      }
-      // A failed response may follow a committed write. Decide only from the
-      // canonical Trip: never assume success or failure without reading it.
-      let canonical: Trip | null = null;
-      if (cause instanceof TripRevisionConflictError) {
-        canonical = cause.latestTrip;
-      } else {
-        try {
-          const reloaded = await this.repository.getTrip(
-            this.tripId,
-            controller.signal,
-          );
-          canonical = reloaded.id === this.tripId ? reloaded : null;
-        } catch {
-          canonical = null;
-        }
-      }
-      if (this.destroyed || controller.signal.aborted) {
-        return this.destroyed ? 'destroyed' : 'aborted';
-      }
-      this.commandDispatcher.resetHistory();
-      if (!canonical) {
-        // UNKNOWN_COMMIT: keep the last confirmed snapshot, block blind retry.
-        this.setUnknownCommit(true);
-        this.store.setState({
-          trip: before.trip,
-          status: 'error',
-          error: L('map:tripEditController.runSave.error.failedSaveTrip'),
-        });
-        return 'unknown_commit';
-      }
-      // Entities that existed before the batch keep their ids; entities the
-      // batch created are matched by position, so a committed add_day/add_place
-      // is not mistaken for an external change.
-      const knownIds = new Set<string>(
-        before.trip.days.flatMap((day) => [
-          day.id,
-          ...day.places.map((place) => place.id),
-          ...day.polylines.map((polyline) => polyline.id),
-        ]),
-      );
-      const canonicalKey = this.semanticKey(canonical, knownIds);
-      this.revision += 1;
-      this.lastSavedRevision = this.revision;
-      this.store.setState({ trip: canonical, status: 'ready', error: null });
-      // "committed" means the canonical Trip equals the intended result; it does
-      // not prove that this particular PUT produced it.
-      if (canonicalKey === this.semanticKey(staged.trip, knownIds)) {
-        return 'committed';
-      }
-      return canonicalKey === this.semanticKey(before.trip, knownIds)
-        ? 'not_committed'
-        : 'conflict';
-    } finally {
-      if (this.persistedController === controller) {
-        this.persistedController = null;
-        this.persistedCompletion = null;
-      }
-    }
-  }
-
   private dispatch(command: TripCommand): Promise<boolean> {
-    if (this.destroyed || this.persistedController || this.unknownCommit) {
+    if (this.destroyed) {
       return Promise.resolve(false);
     }
     return this.completeLocalChange(this.commandDispatcher.execute(command));
@@ -773,10 +441,7 @@ export class TripEditController {
   }
 
   private startSave(): Promise<boolean> {
-    if (this.persistedCompletion) {
-      return this.persistedCompletion;
-    }
-    if (this.destroyed || this.unknownCommit) {
+    if (this.destroyed) {
       return Promise.resolve(false);
     }
     if (this.pendingPromise) {
