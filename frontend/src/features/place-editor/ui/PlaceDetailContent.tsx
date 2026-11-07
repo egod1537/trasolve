@@ -449,6 +449,7 @@ export function PlaceDetailContent({
                     : L('common:action.add'),
                 })}
                 title={L('place:placeDetailContent.tooltip.doubleClickEdit')}
+                onClick={startMemoEditing}
                 onDoubleClick={startMemoEditing}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
