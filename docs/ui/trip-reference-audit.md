@@ -420,3 +420,31 @@ Global state selectors are scoped through `#root` and `.ui-dialog`, and exclude
 Google Maps `.gm-style` descendants and Blueprint `bp6-*` controls. This keeps
 the application's placeholder, selection, focus, native checkbox/radio, and
 disabled defaults consistent without overriding SDK or Blueprint internals.
+
+## 10. Stage 3 shared-element realization
+
+Stage 3 re-expresses the pinned TRIP/Aura values through Trasolve's existing
+components and CSS boundaries. No PrimeNG runtime, PrimeIcons asset, copied
+component implementation, or new user route is introduced.
+
+| Trasolve boundary                           | Applied TRIP evidence                                                                                                                       | Preserved contract                                                                                                            |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `Button` / `IconButton`                     | Aura button 6px field radius, 500 label weight, 8px gap, neutral primary states, filled Red destructive states, and 32px compact icon width | public variants/sizes, 32px and 38px targets, loading/disabled behavior, native click/submit semantics, accessible icon label |
+| `.ui-field` / `.ui-select` / `.ui-textarea` | Aura field surface, 6px radius, subtle boundary, hover/focus/invalid/disabled roles; current 38px Trasolve height and padding are retained  | native input/select/textarea behavior, values, validation, and measured height                                                |
+| `Panel`                                     | observed TRIP utility cards' 8px neutral boundary and exact `shadow-sm` geometry via `--shadow-card`                                        | section semantics, padding ownership, content order                                                                           |
+| `Dialog`                                    | Aura 12px modal radius, mask, and `shadow-xl` role already provided by Stage 2                                                              | body portal, focus trap/restore, Escape/backdrop rules, scroll locking                                                        |
+| `Tooltip`                                   | 6px radius, compact padding, neutral inverse surface, `shadow-md`; Trasolve's 240px translated-content maximum remains                      | `aria-describedby`, hover/focus reveal, pointer behavior                                                                      |
+| `StatusBadge`                               | compact 6px soft semantic tag expression with 12px/600 local typography                                                                     | tone meaning, text, inline layout                                                                                             |
+| `Progress` / `EmptyState` / spinner         | neutral track and muted hierarchy; spinner now inherits the owning control's contrast color                                                 | progress ARIA, determinate/indeterminate math, reduced motion, loading disable behavior                                       |
+| Language/theme controls                     | form-field radius and disabled opacity; Aura navigation spacing and selected/focus states                                                   | theme/language storage, menu roles, keyboard/outside-click behavior                                                           |
+| Existing share toggle                       | semantic disabled surface and the shared accessible focus ring                                                                              | checkbox state, label target, submit/update handlers                                                                          |
+
+The existing `/testbed/localization` route is the Stage 3 comparison surface:
+it now consumes the reusable field/select hooks in addition to its existing
+`Panel` and `StatusBadge` instances. Tabs, toast, and a generic menu/popover are
+not present as shared Trasolve APIs, so no unused abstraction was added merely
+to mirror PrimeNG. Blueprint controls remain scoped to their existing testbeds.
+
+Only design values and state expressions were transposed. No TRIP source file,
+icon, font, image, or other asset was copied, so the Stage 1 license notice and
+source attribution remain sufficient for this implementation.

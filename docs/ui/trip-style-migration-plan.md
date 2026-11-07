@@ -168,6 +168,24 @@ PrimeNG. Style current selectors and components at their existing boundary.
 Gate: keyboard focus, disabled states, loading states, dialog nesting, portal
 theme, and reduced motion are manually checked.
 
+Stage 3 implementation result (2026-11-07):
+
+- Existing shared props, DOM hierarchy, event handlers, dialog behavior, and
+  icon meanings remain unchanged; the only TSX edits add field/select styling
+  hooks to the existing localization testbed.
+- Shared buttons, fields, panels, dialogs, tooltips, badges, progress, empty
+  state, spinner, theme/language menu, and the existing share toggle consume
+  the Stage 2 semantic tokens and TRIP-derived state expression.
+- `/testbed/localization` remains the development comparison surface; no route
+  or localization key was added.
+- Typecheck, build, Oxlint, and ESLint pass. The aggregate `npm run lint`
+  continues to exit on the pre-existing localization inventory of 98 missing
+  analytics keys and 21 unused keys; Stage 3 adds no user-facing string or
+  localization resource.
+- Dark-theme comparison captures are stored at
+  `docs/ui/screenshots/trip-stage3-before.png` and
+  `docs/ui/screenshots/trip-stage3-after.png`.
+
 ### Package 4 — map workspace appearance (P2, P0 protected)
 
 Primary files, in recommended order:

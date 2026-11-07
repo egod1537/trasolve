@@ -370,6 +370,7 @@ export default function LocalizationTestPage() {
         <label>
           {L('testbed:localizationTestPage.label.namespace')}
           <select
+            className="ui-select"
             value={namespaceFilter}
             onChange={(event) => selectNamespace(event.target.value)}
           >
@@ -388,6 +389,7 @@ export default function LocalizationTestPage() {
             'testbed:localizationTestPage.label.localizationKeyTranslationSearch',
           )}
           <input
+            className="ui-field"
             type="search"
             value={query}
             placeholder={L(
@@ -499,6 +501,7 @@ export default function LocalizationTestPage() {
                     <label key={variable}>
                       {variable}
                       <input
+                        className="ui-field"
                         value={interpolationValues[variable] ?? ''}
                         placeholder={L(
                           'testbed:localizationTestPage.placeholder.value',
@@ -550,6 +553,7 @@ export default function LocalizationTestPage() {
                   {L('testbed:localizationTestPage.text.rawJsonNamespace')}
                 </span>
                 <select
+                  className="ui-select"
                   value={rawNamespace}
                   onChange={(event) => setRawNamespace(event.target.value)}
                 >
@@ -565,6 +569,7 @@ export default function LocalizationTestPage() {
                   {L('testbed:localizationTestPage.text.rawJsonLanguage')}
                 </span>
                 <select
+                  className="ui-select"
                   value={rawLanguage}
                   onChange={(event) =>
                     setRawLanguage(event.target.value as Language)

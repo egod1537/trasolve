@@ -154,12 +154,13 @@
 }
 
 .share-trip-option input:focus-visible + .share-trip-switch {
-  outline: 3px solid var(--focus-ring);
-  outline-offset: 3px;
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 .share-trip-option input:disabled + .share-trip-switch {
-  background: var(--border-default);
+  background: var(--bg-disabled);
+  opacity: var(--opacity-disabled);
 }
 
 .share-trip-description {

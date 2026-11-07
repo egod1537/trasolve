@@ -37,44 +37,48 @@ body {
 }
 
 :where(#root, .ui-dialog)
-  :where(button, input, select, textarea, a):not(.gm-style *):not(
-    [class*='bp6-']
+  :where(button, input, select, textarea, a):where(:not(.gm-style *)):where(
+    :not([class*='bp6-'])
   ) {
   font: inherit;
 }
 
 :where(#root, .ui-dialog)
-  :where(input, textarea):not(.gm-style *):not([class*='bp6-'])::placeholder {
+  :where(input, textarea):where(:not(.gm-style *)):where(
+    :not([class*='bp6-'])
+  )::placeholder {
   color: var(--text-placeholder);
   opacity: 1;
 }
 
-:where(#root, .ui-dialog) a:not(.gm-style *):not([class*='bp6-']) {
+:where(#root, .ui-dialog)
+  a:where(:not(.gm-style *)):where(:not([class*='bp6-'])) {
   color: inherit;
 }
 
 :where(#root, .ui-dialog)
-  :where(button, input, select, textarea):disabled:not(.gm-style *):not(
-    [class*='bp6-']
-  ) {
+  :where(button, input, select, textarea):disabled:where(
+    :not(.gm-style *)
+  ):where(:not([class*='bp6-'])) {
   cursor: not-allowed;
   opacity: var(--opacity-disabled);
 }
 
-:where(#root, .ui-dialog) :not(.gm-style *)::selection {
+:where(#root, .ui-dialog) :where(:not(.gm-style *))::selection {
   background: var(--bg-selected);
   color: var(--text-selected);
 }
 
-:where(#root, .ui-dialog) :focus-visible:not(.gm-style *):not([class*='bp6-']) {
+:where(#root, .ui-dialog)
+  :focus-visible:where(:not(.gm-style *)):where(:not([class*='bp6-'])) {
   outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: var(--focus-ring-offset);
 }
 
 :where(#root, .ui-dialog)
-  :where(input[type='checkbox'], input[type='radio']):not(.gm-style *):not(
-    [class*='bp6-']
-  ) {
+  :where(input[type='checkbox'], input[type='radio']):where(
+    :not(.gm-style *)
+  ):where(:not([class*='bp6-'])) {
   accent-color: var(--accent);
 }
 
