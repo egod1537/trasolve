@@ -241,7 +241,7 @@
 .trip-place-delete-trigger:focus-visible {
   background: var(--color-danger-soft);
   color: var(--color-danger-strong);
-  outline: 2px solid rgb(220 38 38 / 38%);
+  outline: 2px solid color-mix(in srgb, var(--color-danger) 38%, transparent);
   outline-offset: 2px;
 }
 
@@ -309,15 +309,15 @@
 }
 
 .place-delete-confirm-actions button.is-destructive {
-  border-color: var(--color-danger);
-  background: var(--color-danger);
-  color: var(--color-accent-contrast);
+  border-color: var(--color-danger-fill);
+  background: var(--color-danger-fill);
+  color: var(--color-danger-contrast);
 }
 
 .place-delete-confirm-actions button.is-destructive:hover:not(:disabled),
 .place-delete-confirm-actions button.is-destructive:focus-visible {
-  border-color: var(--color-danger-strong);
-  background: var(--color-danger-strong);
+  border-color: var(--color-danger-fill-active);
+  background: var(--color-danger-fill-active);
 }
 
 .place-delete-confirm-actions button:disabled {

@@ -116,12 +116,12 @@
 
 .quick-search-mode-icon.is-schedule {
   background: var(--color-success-soft);
-  color: #059669;
+  color: var(--color-success);
 }
 
 .quick-search-mode-icon.is-ai {
-  background: color-mix(in srgb, #7c3aed 16%, var(--color-surface-raised));
-  color: #7c3aed;
+  background: var(--color-done-soft);
+  color: var(--color-done);
 }
 
 .quick-search-mode-icon svg {

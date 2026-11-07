@@ -1565,7 +1565,7 @@
   color: var(--color-primary);
 }
 .trip-place-duration-options button[aria-pressed='true'] {
-  border-color: color-mix(in srgb, var(--color-primary) 58%, white);
+  border-color: var(--color-selected-border);
   background: var(--color-accent-soft);
   color: var(--color-primary);
 }
@@ -2025,7 +2025,8 @@
   width: var(--map-ai-toggle-size);
   height: var(--map-ai-toggle-size);
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 1px solid
+    color-mix(in srgb, var(--color-accent-contrast) 24%, transparent);
   border-radius: 50%;
   overflow: hidden;
   background: var(--color-primary);
@@ -2059,9 +2060,9 @@
   inset: 0;
   background: linear-gradient(
     to top,
-    rgba(37, 99, 235, 0) 5%,
-    rgba(147, 197, 253, 0.78) 50%,
-    rgba(96, 165, 250, 0.12) 95%
+    color-mix(in srgb, var(--color-info) 0%, transparent) 5%,
+    color-mix(in srgb, var(--color-info) 78%, transparent) 50%,
+    color-mix(in srgb, var(--color-info) 12%, transparent) 95%
   );
   opacity: 0;
   transform: translateY(105%);
@@ -2071,9 +2072,18 @@
   position: absolute;
   z-index: 1;
   inset: 8px;
-  border: 2px solid rgba(255, 255, 255, 0.22);
-  border-top-color: rgba(255, 255, 255, 0.95);
-  border-right-color: rgba(255, 255, 255, 0.58);
+  border: 2px solid
+    color-mix(in srgb, var(--color-accent-contrast) 22%, transparent);
+  border-top-color: color-mix(
+    in srgb,
+    var(--color-accent-contrast) 95%,
+    transparent
+  );
+  border-right-color: color-mix(
+    in srgb,
+    var(--color-accent-contrast) 58%,
+    transparent
+  );
   border-radius: 50%;
   opacity: 0;
   pointer-events: none;
@@ -2092,17 +2102,17 @@
 }
 .trip-map-ai-button.is-generating {
   box-shadow:
-    0 0 0 4px rgba(96, 165, 250, 0.2),
+    0 0 0 4px color-mix(in srgb, var(--color-info) 20%, transparent),
     var(--shadow-map-overlay);
 }
 .trip-map-ai-button.is-generating:hover {
   box-shadow:
-    0 0 0 4px rgba(96, 165, 250, 0.2),
+    0 0 0 4px color-mix(in srgb, var(--color-info) 20%, transparent),
     var(--shadow-map-overlay);
 }
 .trip-map-ai-button.is-generating:active {
   box-shadow:
-    0 0 0 2px rgba(96, 165, 250, 0.18),
+    0 0 0 2px color-mix(in srgb, var(--color-info) 18%, transparent),
     var(--shadow-map-overlay);
 }
 .trip-map-ai-button.is-generating .trip-map-ai-button-sweep {

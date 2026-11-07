@@ -312,9 +312,9 @@
 }
 
 .layer-bulk-delete-actions button.is-destructive {
-  border-color: var(--color-danger);
-  background: var(--color-danger);
-  color: var(--color-accent-contrast);
+  border-color: var(--color-danger-fill);
+  background: var(--color-danger-fill);
+  color: var(--color-danger-contrast);
 }
 
 .layer-bulk-delete-actions button:hover:not(:disabled),
@@ -324,8 +324,8 @@
 
 .layer-bulk-delete-actions button.is-destructive:hover:not(:disabled),
 .layer-bulk-delete-actions button.is-destructive:focus-visible {
-  border-color: var(--color-danger-strong);
-  background: var(--color-danger-strong);
+  border-color: var(--color-danger-fill-active);
+  background: var(--color-danger-fill-active);
 }
 
 .layer-bulk-delete-actions button:disabled {
@@ -777,7 +777,7 @@ fieldset.route-optimization-setting-field {
 
 .route-optimization-policy-options input:checked + span {
   background: var(--accent);
-  color: white;
+  color: var(--text-on-accent);
 }
 
 .route-optimization-policy-options input:focus-visible + span {
@@ -834,8 +834,8 @@ fieldset.route-optimization-setting-field {
   flex: none;
   place-items: center;
   border-radius: 50%;
-  background: var(--danger);
-  color: white;
+  background: var(--danger-fill);
+  color: var(--text-on-danger);
   font-size: 13px;
   font-weight: 800;
   line-height: 1;
@@ -1229,8 +1229,8 @@ fieldset.route-optimization-setting-field {
 }
 
 .route-optimization-progress-steps li.is-completed > span {
-  border-color: var(--color-success-strong);
-  background: var(--color-success-strong);
+  border-color: var(--color-success-fill);
+  background: var(--color-success-fill);
 }
 
 .route-optimization-progress-steps li.is-completed > span::before {
@@ -1252,8 +1252,8 @@ fieldset.route-optimization-setting-field {
 }
 
 .route-optimization-progress-steps li.is-failed > span {
-  border-color: var(--danger);
-  background: var(--danger);
+  border-color: var(--danger-fill);
+  background: var(--danger-fill);
 }
 
 .route-optimization-progress-steps li.is-failed > span::before {
@@ -1261,8 +1261,8 @@ fieldset.route-optimization-setting-field {
 }
 
 .route-optimization-progress-steps li.is-cancelled > span {
-  border-color: var(--warning);
-  background: var(--warning);
+  border-color: var(--color-warning-fill);
+  background: var(--color-warning-fill);
 }
 
 .route-optimization-progress-steps li.is-cancelled > span::before {
@@ -1423,7 +1423,7 @@ fieldset.route-optimization-setting-field {
   place-items: center;
   border-radius: 50%;
   background: var(--accent);
-  color: white;
+  color: var(--text-on-accent);
   font-size: 10px;
   font-weight: 750;
 }

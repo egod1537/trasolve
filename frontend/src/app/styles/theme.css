@@ -45,6 +45,10 @@
   --primer-bg-attention-emphasis: #9a6700;
   --primer-bg-attention-muted: #fff8c5;
   --primer-border-attention-muted: #d4a72c66;
+  --primer-fg-done: #8250df;
+  --primer-bg-done-emphasis: #8250df;
+  --primer-bg-done-muted: #fbefff;
+  --primer-border-done-muted: #c297ff66;
   --primer-fg-danger: #d1242f;
   --primer-bg-danger-emphasis: #cf222e;
   --primer-bg-danger-muted: #ffebe9;
@@ -105,6 +109,10 @@
   --color-warning-fill: var(--primer-bg-attention-emphasis);
   --color-warning-soft: var(--primer-bg-attention-muted);
   --color-warning-border: var(--primer-border-attention-muted);
+  --color-done: var(--primer-fg-done);
+  --color-done-fill: var(--primer-bg-done-emphasis);
+  --color-done-soft: var(--primer-bg-done-muted);
+  --color-done-border: var(--primer-border-done-muted);
   --color-tooltip-bg: var(--primer-tooltip-bg);
   --color-tooltip-text: var(--primer-tooltip-fg);
   --color-overlay: var(--primer-overlay-backdrop);
@@ -214,6 +222,10 @@
   --warning-strong: var(--color-warning-strong);
   --warning-soft: var(--color-warning-soft);
   --warning-border: var(--color-warning-border);
+  --done: var(--color-done);
+  --done-fill: var(--color-done-fill);
+  --done-soft: var(--color-done-soft);
+  --done-border: var(--color-done-border);
   --success: var(--color-success);
   --success-strong: var(--color-success-strong);
   --success-fill: var(--color-success-fill);
@@ -295,6 +307,10 @@
   --primer-bg-attention-emphasis: #9e6a03;
   --primer-bg-attention-muted: #bb800926;
   --primer-border-attention-muted: #bb800966;
+  --primer-fg-done: #ab7df8;
+  --primer-bg-done-emphasis: #8957e5;
+  --primer-bg-done-muted: #ab7df826;
+  --primer-border-done-muted: #ab7df866;
   --primer-fg-danger: #f85149;
   --primer-bg-danger-emphasis: #da3633;
   --primer-bg-danger-muted: #f851491a;
