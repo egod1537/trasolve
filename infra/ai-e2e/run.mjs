@@ -9,8 +9,20 @@ import http from 'node:http';
 import assert from 'node:assert/strict';
 import { createServer as createViteServer } from 'vite';
 import react from '@vitejs/plugin-react';
-import { cases, project, expected } from './cases.mjs';
+import { cases as allCases, project, expected } from './cases.mjs';
 import { listen, stubServer, proxyServer } from './s3-transport.mjs';
+
+const provider =
+  process.argv.find((a) => a.startsWith('--provider='))?.split('=')[1] ??
+  'gemini';
+if (!['gemini', 'openwebui'].includes(provider))
+  throw new Error('Mock provider must be gemini or openwebui');
+const gpt = provider === 'openwebui';
+const suite = gpt ? 'GPT_RESPONSES_MOCK' : 'S3_GEMINI_MOCK';
+const model = gpt ? 'gpt-mock' : 's3-mock';
+const cases = gpt
+  ? allCases.filter((c) => ['E2E-05', 'E2E-09'].includes(c.id))
+  : allCases;
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const started = performance.now();
@@ -24,6 +36,7 @@ if (!Number.isInteger(repeat) || repeat < 1 || repeat > 10)
   throw new Error('--repeat must be 1..10');
 const state = {
   spec: null,
+  providerKind: provider,
   http: [],
   provider: [],
   fault: null,
@@ -194,7 +207,14 @@ try {
       TRASOLVE_DATA_DIR: dataDir,
       TRASOLVE_DEBUG_GUEST_AUTH: 'true',
       TRASOLVE_DEBUG_GUEST_SUBJECT: session,
-      AI_PROVIDER: 'gemini',
+      AI_PROVIDER: provider,
+      ...(gpt
+        ? {
+            OPENWEBUI_API_KEY: 'fake-not-a-real-key',
+            OPENWEBUI_BASE_URL: stubUrl,
+            OPENWEBUI_MODEL: model,
+          }
+        : {}),
       GEMINI_API_KEY: 'fake-not-a-real-key',
       GEMINI_API_BASE_URL: `${stubUrl}/`,
       GEMINI_MODEL: 's3-mock',
@@ -244,8 +264,11 @@ try {
       const item = {
         id: scenario.id,
         round,
-        provider: 'Mock (Gemini wire stub)',
-        model: 's3-mock',
+        suite,
+        provider: gpt
+          ? 'Mock (OpenWebUI Responses)'
+          : 'Mock (Gemini wire stub)',
+        model,
         result: scenario.disposition ?? 'FAIL',
         errorType: null,
         expectedError: scenario.error ?? null,
@@ -301,6 +324,13 @@ try {
         assert.ok(trace, 'stub request observed');
         item.toolCall = chat.body.toolCall?.name ?? null;
         item.responseMode = trace.mode;
+        if (gpt) {
+          assert.equal(trace.requestedModel, model, 'requested GPT model');
+          assert.equal(trace.path, '/openai/responses');
+          assert.equal(trace.contractValid, true);
+          item.requestedModel = trace.requestedModel;
+          item.upstreamStatus = trace.status;
+        }
         assert.equal(
           item.toolCall,
           scenario.mode === 'native' ? 'propose_trip_command_plan' : null,
@@ -391,6 +421,16 @@ try {
         if (scenario.id === 'E2E-09') {
           item.variants = [];
           for (const variant of [
+            ...(gpt
+              ? [
+                  {
+                    name: 'malformed-plan-json',
+                    error: 'INVALID_PLAN',
+                    ops: [],
+                    kind: 'invalid_json',
+                  },
+                ]
+              : []),
             {
               name: 'compound-invalid',
               error: 'TARGET_NOT_FOUND',
@@ -444,7 +484,23 @@ try {
               0,
               'failure PUT 0',
             );
+            if (gpt) {
+              const observed = state.provider.at(-1);
+              assert.equal(observed.contractValid, true);
+              assert.equal(observed.requestedModel, model);
+              assert.equal(
+                await evaluate(
+                  '[...document.querySelectorAll(".trip-ai-plan button")].some(b => b.textContent.trim() === "적용" && !b.disabled)',
+                ),
+                false,
+                'invalid response cannot Apply',
+              );
+            }
             item.variants.push({
+              requestedModel: gpt
+                ? state.provider.at(-1).requestedModel
+                : model,
+              upstreamStatus: state.provider.at(-1).status,
               name: variant.name,
               result: 'PASS',
               errorType: variant.error,
@@ -533,7 +589,7 @@ try {
         item.evidence.provider = [...state.provider];
         item.timings.totalMs = performance.now() - caseStart;
         console.log(
-          `${item.id} [${round}] ${item.result} | ${item.responseMode ?? 'NONE'} | AI=${item.timings.aiMs?.toFixed(0) ?? '-'}ms Plan=${item.timings.planMs?.toFixed(0) ?? '-'}ms Save=${item.timings.saveMs?.toFixed(0) ?? '-'}ms Total=${item.timings.totalMs.toFixed(0)}ms | Plan=${item.plan ?? 'NONE'} Tool=${item.toolCall ?? 'NONE'} PUT=${item.putCount ?? '-'} Persistence=${item.persistence ?? 'NOT_CONFIRMED'} | ${item.errorType ?? 'NONE'}${item.failedStep ? ` @${item.failedStep}: ${item.reason}` : ''}`,
+          `${suite} ${item.id} [${round}] ${item.result} | ${item.responseMode ?? 'NONE'} | AI=${item.timings.aiMs?.toFixed(0) ?? '-'}ms Plan=${item.timings.planMs?.toFixed(0) ?? '-'}ms Save=${item.timings.saveMs?.toFixed(0) ?? '-'}ms Total=${item.timings.totalMs.toFixed(0)}ms | Plan=${item.plan ?? 'NONE'} Tool=${item.toolCall ?? 'NONE'} PUT=${item.putCount ?? '-'} Persistence=${item.persistence ?? 'NOT_CONFIRMED'} | ${item.errorType ?? 'NONE'}${item.failedStep ? ` @${item.failedStep}: ${item.reason}` : ''}`,
         );
       }
     }
@@ -566,6 +622,7 @@ try {
   }
   if (dataDir) await rm(dataDir, { recursive: true, force: true });
   const summary = {
+    suite,
     total: results.length,
     ...Object.fromEntries(
       ['PASS', 'FAIL', 'BLOCKED', 'LIVE_GATED', 'HUMAN_REVIEW'].map(

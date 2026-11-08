@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import http from 'node:http';
 
 // Adapted from S3 r18/stub2.cjs and proxy.cjs (2026-11-06): same Gemini wire
@@ -53,14 +54,69 @@ export function stubServer(state) {
   return http.createServer(async (req, res) => {
     const started = performance.now();
     try {
-      if (!/^\/(?:v1(?:beta)?\/)?models\/[^/]+:generateContent$/.test(req.url))
+      const responses = state.providerKind === 'openwebui';
+      if (
+        responses
+          ? req.url !== '/openai/responses'
+          : !/^\/(?:v1(?:beta)?\/)?models\/[^/]+:generateContent$/.test(req.url)
+      )
         return send(res, 404, {});
       const b = JSON.parse(await body(req));
-      const c = context(b);
+      let requestTrace = {};
+      if (responses) {
+        requestTrace = {
+          method: req.method,
+          path: req.url,
+          requestedModel: b.model,
+          contractValid: false,
+        };
+        try {
+          assert.equal(req.method, 'POST');
+          assert.equal(b.model, 'gpt-mock');
+          assert.equal(b.store, false);
+          assert.equal(b.stream, false);
+          assert.deepEqual(b.tools, []);
+          assert.equal(b.tool_choice, 'none');
+          assert.ok(
+            Array.isArray(b.input) &&
+              b.input.some((m) => m.role === 'system') &&
+              b.input.some((m) => m.role === 'user'),
+          );
+          for (const m of b.input) {
+            assert.ok(['system', 'user', 'assistant'].includes(m.role));
+            assert.ok(m.content.length > 0);
+            for (const part of m.content) {
+              assert.equal(
+                part.type,
+                m.role === 'assistant' ? 'output_text' : 'input_text',
+              );
+              assert.equal(typeof part.text, 'string');
+            }
+          }
+          requestTrace.contractValid = true;
+        } catch {
+          state.provider.push({ ...requestTrace, status: 400 });
+          return send(res, 400, {
+            error: { message: 'Responses contract mismatch' },
+          });
+        }
+      }
+      const c = context(
+        responses
+          ? {
+              systemInstruction: {
+                parts: b.input
+                  .filter((m) => m.role === 'system')
+                  .flatMap((m) => m.content),
+              },
+            }
+          : b,
+      );
       const spec = state.spec;
       if (spec.status) {
         state.provider.push({
-          model: 's3-mock',
+          ...requestTrace,
+          model: responses ? b.model : 's3-mock',
           mode: 'ERROR',
           toolName: null,
           status: spec.status,
@@ -78,20 +134,40 @@ export function stubServer(state) {
           c,
         ),
       };
-      const native = spec.mode === 'native';
+      const native = !responses && spec.mode === 'native';
+      const text =
+        spec.kind === 'invalid_json' ? '{not valid JSON' : JSON.stringify(plan);
       const part = native
         ? { functionCall: { name: 'propose_trip_command_plan', args: plan } }
-        : { text: JSON.stringify(plan) };
+        : { text };
       // Only fixed fixture input/output is retained. Never serialize headers/env.
       state.provider.push({
-        mode: native ? 'NATIVE_TOOL' : 'JSON_PLAN',
-        model: 's3-mock',
-        toolsAdvertised: !!b.tools,
+        ...requestTrace,
+        mode:
+          spec.kind === 'invalid_json'
+            ? 'INVALID_JSON'
+            : native
+              ? 'NATIVE_TOOL'
+              : 'JSON_PLAN',
+        model: responses ? b.model : 's3-mock',
+        toolsAdvertised: responses ? b.tools.length > 0 : !!b.tools,
         toolName: native ? 'propose_trip_command_plan' : null,
-        plan,
+        plan: spec.kind === 'invalid_json' ? null : plan,
         status: 200,
         elapsedMs: performance.now() - started,
       });
+      if (responses)
+        return send(res, 200, {
+          model: b.model,
+          status: 'completed',
+          output: [
+            {
+              type: 'message',
+              role: 'assistant',
+              content: [{ type: 'output_text', text }],
+            },
+          ],
+        });
       send(res, 200, {
         candidates: [
           { content: { role: 'model', parts: [part] }, finishReason: 'STOP' },
