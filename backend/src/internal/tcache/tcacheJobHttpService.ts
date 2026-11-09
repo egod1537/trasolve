@@ -7,6 +7,7 @@ import {
   TcacheHttpError,
   type TcacheUpstreamResponse,
 } from './types.js';
+import { ExternalApiPolicyError } from '../../configuration/externalApiPolicy.js';
 
 type TcacheApiErrorResponse = ApiErrorResponse & {
   error: ApiErrorResponse['error'] & { upstreamStatus?: number };
@@ -413,6 +414,7 @@ export class TcacheJobHttpService {
         ...(error.upstreamStatus === undefined
           ? {}
           : { upstreamStatus: error.upstreamStatus }),
+        ...(error.service ? { service: error.service } : {}),
       },
     };
     response.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -424,6 +426,16 @@ export class TcacheJobHttpService {
   private toHttpError(cause: unknown): TcacheHttpError {
     if (cause instanceof TcacheHttpError) {
       return cause;
+    }
+    if (cause instanceof ExternalApiPolicyError) {
+      return new TcacheHttpError(
+        503,
+        cause.code,
+        cause.message,
+        undefined,
+        undefined,
+        cause.service,
+      );
     }
     if (!(cause instanceof TcacheClientError)) {
       return new TcacheHttpError(

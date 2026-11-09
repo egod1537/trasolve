@@ -1,10 +1,15 @@
 import { TcacheClientError, type TcacheUpstreamResponse } from './types.js';
+import {
+  loadExternalApiPolicy,
+  type ExternalApiPolicy,
+} from '../../configuration/externalApiPolicy.js';
 
 const HEALTH_TIMEOUT_MS = 5_000;
 const REQUEST_TIMEOUT_MS = 10_000;
 
 export interface TcacheClientConfig {
   baseUrl: string;
+  externalApiPolicy?: ExternalApiPolicy;
 }
 
 export interface OpenTcacheEventStreamOptions {
@@ -14,7 +19,12 @@ export interface OpenTcacheEventStreamOptions {
 
 export class TcacheClient {
   public constructor(config: TcacheClientConfig) {
-    this.baseUrl = this.normalizeBaseUrl(config.baseUrl);
+    this.externalApiPolicy =
+      config.externalApiPolicy ?? loadExternalApiPolicy();
+    this.baseUrl =
+      this.externalApiPolicy.mode === 'enabled'
+        ? this.normalizeBaseUrl(config.baseUrl)
+        : new URL('http://localhost/');
   }
 
   public async checkHealth(
@@ -112,6 +122,19 @@ export class TcacheClient {
     jobId: string,
     options: OpenTcacheEventStreamOptions,
   ): Promise<Response> {
+    if (this.externalApiPolicy.resolve('tcache', 'job-events') === 'mock') {
+      const body = [
+        'id: mock-1',
+        'event: completed',
+        `data: ${JSON.stringify({ jobId, status: 'completed' })}`,
+        '',
+        '',
+      ].join('\n');
+      return new Response(body, {
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream' },
+      });
+    }
     const headers: Record<string, string> = { Accept: 'text/event-stream' };
     if (options.lastEventId) {
       headers['Last-Event-ID'] = options.lastEventId;
@@ -119,6 +142,7 @@ export class TcacheClient {
 
     let response: Response;
     try {
+      this.externalApiPolicy.assertNetworkAllowed('tcache', 'job-events');
       response = await fetch(
         new URL(`${this.jobPath(jobId)}/events`, this.baseUrl),
         {
@@ -158,6 +182,7 @@ export class TcacheClient {
   }
 
   private readonly baseUrl: URL;
+  private readonly externalApiPolicy: ExternalApiPolicy;
 
   private async request(
     path: string,
@@ -165,11 +190,16 @@ export class TcacheClient {
     timeoutMs: number,
     callerSignal?: AbortSignal,
   ): Promise<TcacheUpstreamResponse> {
+    const operation = this.operationName(path, init.method);
+    if (this.externalApiPolicy.resolve('tcache', operation) === 'mock') {
+      return this.mockResponse(path, init);
+    }
     const timeoutSignal = AbortSignal.timeout(timeoutMs);
     const signal = callerSignal
       ? AbortSignal.any([callerSignal, timeoutSignal])
       : timeoutSignal;
     try {
+      this.externalApiPolicy.assertNetworkAllowed('tcache', operation);
       const response = await fetch(new URL(path, this.baseUrl), {
         ...init,
         signal,
@@ -254,5 +284,100 @@ export class TcacheClient {
         'TCACHE_BASE_URL must be a valid HTTP or HTTPS URL.',
       );
     }
+  }
+
+  private mockResponse(
+    path: string,
+    init: RequestInit,
+  ): TcacheUpstreamResponse {
+    if (path === 'health' || path === 'api/route/ping') {
+      return this.mockJson(200, { status: 'ok', service: 'tcache' });
+    }
+    if (path === 'api/route/jobs' && init.method === 'POST') {
+      const jobId = this.readMockJobId(init.body);
+      return this.mockJson(202, {
+        jobId,
+        status: 'completed',
+      });
+    }
+    if (
+      (path === 'api/route/jobs' && init.method === 'GET') ||
+      path.startsWith('api/route/jobs?')
+    ) {
+      return this.mockJson(200, { jobs: [] });
+    }
+    const match = /^api\/route\/jobs\/([^/]+)(?:\/(result|cancel))?$/.exec(
+      path,
+    );
+    if (match) {
+      const jobId = decodeURIComponent(match[1] ?? 'trasolve-mock-job');
+      if (match[2] === 'result') {
+        return this.mockJson(200, {
+          jobId,
+          status: 'completed',
+          result: { fixture: 'trasolve-external-api-mock-v1' },
+        });
+      }
+      if (match[2] === 'cancel') {
+        return this.mockJson(200, { jobId, status: 'cancelled' });
+      }
+      return this.mockJson(200, { jobId, status: 'completed' });
+    }
+    this.externalApiPolicy.assertNetworkAllowed(
+      'tcache',
+      'unclassified-request',
+    );
+    throw new Error('Unreachable external API policy branch.');
+  }
+
+  private operationName(path: string, method: string | undefined): string {
+    if (path === 'health' || path === 'api/route/ping') {
+      return 'health';
+    }
+    if (path === 'api/route/jobs' && method === 'POST') {
+      return 'create-job';
+    }
+    if (
+      (path === 'api/route/jobs' && method === 'GET') ||
+      path.startsWith('api/route/jobs?')
+    ) {
+      return 'list-jobs';
+    }
+    if (path.endsWith('/result')) {
+      return 'get-job-result';
+    }
+    if (path.endsWith('/cancel')) {
+      return 'cancel-job';
+    }
+    if (/^api\/route\/jobs\/[^/]+$/.test(path)) {
+      return 'get-job';
+    }
+    return 'unclassified-request';
+  }
+
+  private mockJson(status: number, value: unknown): TcacheUpstreamResponse {
+    return {
+      status,
+      contentType: 'application/json; charset=utf-8',
+      body: new TextEncoder().encode(JSON.stringify(value)),
+    };
+  }
+
+  private readMockJobId(body: RequestInit['body']): string {
+    if (body instanceof Uint8Array) {
+      try {
+        const parsed = JSON.parse(new TextDecoder().decode(body)) as unknown;
+        if (parsed && typeof parsed === 'object') {
+          const record = parsed as Record<string, unknown>;
+          const value = record.jobId ?? record.job_id ?? record.id;
+          if (typeof value === 'string' && value.length > 0) {
+            return value;
+          }
+        }
+      } catch {
+        // The gateway validates the body contract; the fixture uses a safe ID.
+      }
+    }
+    return 'trasolve-mock-job';
   }
 }

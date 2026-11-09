@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/react';
 import { buildInfo } from '@/shared/config/buildInfo';
+import { frontendExternalApiMode } from '@/shared/config/externalApiMode';
 
 const FILTERED_VALUE = '[Filtered]';
 const SAFE_REQUEST_HEADERS = new Set(['accept', 'content-type']);
@@ -21,6 +22,9 @@ export interface ExceptionCaptureDetails {
 let sentryInitialized = false;
 
 export function initSentry(): boolean {
+  if (frontendExternalApiMode === 'disabled') {
+    return false;
+  }
   if (sentryInitialized) {
     return true;
   }

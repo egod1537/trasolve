@@ -68,6 +68,8 @@ The development servers run at `http://127.0.0.1:5173` for the frontend and `htt
 
 AI chat, Google OAuth, PostgreSQL persistence, `troute`, and `tcache` are optional integrations with their own settings in the example environment files. The development-only random chat provider is used when no AI provider is configured. PostgreSQL users should configure `DATABASE_URL` and run `npm run db:migrate`.
 
+For cost-safe performance environments, see [External API call control](docs/external-api-control.md) for backend `enabled|disabled|mock` behavior, frontend Maps/Sentry build control, and required network-level safeguards.
+
 Validate a production build with the repository scripts:
 
 ```bash

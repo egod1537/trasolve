@@ -4,12 +4,14 @@ import {
   type ApiErrorResponse,
 } from '@trasolve/shared';
 import { OpenWebUIClient, OpenWebUIClientError } from './openWebUIClient.js';
+import { ExternalApiPolicyError } from '../configuration/externalApiPolicy.js';
 
 class ModelListError extends Error {
   public constructor(
     public readonly status: number,
     public readonly code: string,
     message: string,
+    public readonly service?: string,
   ) {
     super(message);
     this.name = 'ModelListError';
@@ -53,7 +55,11 @@ export class OpenWebUIModelHttpService {
       }
       const error = this.toHttpError(cause);
       const body: ApiErrorResponse = {
-        error: { code: error.code, message: error.message },
+        error: {
+          code: error.code,
+          message: error.message,
+          ...(error.service ? { service: error.service } : {}),
+        },
       };
       response.writeHead(error.status);
       response.end(JSON.stringify(body));
@@ -65,6 +71,9 @@ export class OpenWebUIModelHttpService {
   private toHttpError(cause: unknown): ModelListError {
     if (cause instanceof ModelListError) {
       return cause;
+    }
+    if (cause instanceof ExternalApiPolicyError) {
+      return new ModelListError(503, cause.code, cause.message, cause.service);
     }
     if (!(cause instanceof OpenWebUIClientError)) {
       return this.unavailable();

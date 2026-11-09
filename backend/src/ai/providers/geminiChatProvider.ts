@@ -10,6 +10,10 @@ import {
   createTripCommandPlanFunctionDeclaration,
   parseTripCommandPlanToolCall,
 } from '../tools/tripCommandPlanTool.js';
+import {
+  loadExternalApiPolicy,
+  type ExternalApiPolicy,
+} from '../../configuration/externalApiPolicy.js';
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1/';
 // Function calling is sent to v1beta; plain text requests stay on v1.
@@ -92,29 +96,39 @@ export type GeminiChatProviderOptions = {
   timeoutMs?: number;
   nativeTools?: boolean;
   baseUrl?: string;
+  externalApiPolicy?: ExternalApiPolicy;
 };
 
 export class GeminiChatProvider implements ChatProvider {
   public constructor(options: GeminiChatProviderOptions) {
+    this.externalApiPolicy =
+      options.externalApiPolicy ?? loadExternalApiPolicy();
     this.apiKey = options.apiKey.trim();
-    this.model = options.model.trim();
+    const configuredModel = options.model.trim();
+    this.model =
+      configuredModel ||
+      (this.externalApiPolicy.mode === 'enabled' ? '' : 'trasolve-mock-v1');
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.nativeTools = options.nativeTools ?? false;
     this.baseUrlOverride = options.baseUrl?.trim() || undefined;
 
-    if (!this.apiKey) {
+    if (this.externalApiPolicy.mode === 'enabled' && !this.apiKey) {
       throw new GeminiChatProviderError(
         'configuration',
         'The Gemini API key is not configured.',
       );
     }
-    if (!this.model || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(this.model)) {
+    if (
+      this.externalApiPolicy.mode === 'enabled' &&
+      !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(this.model)
+    ) {
       throw new GeminiChatProviderError(
         'configuration',
         'The Gemini model is not configured or is invalid.',
       );
     }
     if (
+      this.externalApiPolicy.mode === 'enabled' &&
       this.baseUrlOverride !== undefined &&
       !isAllowedGeminiBaseUrl(this.baseUrlOverride)
     ) {
@@ -132,6 +146,16 @@ export class GeminiChatProvider implements ChatProvider {
   }
 
   public async chat(request: ChatRequest): Promise<ChatResponse> {
+    if (
+      this.externalApiPolicy.resolve('gemini', 'generate-content') === 'mock'
+    ) {
+      return {
+        message: {
+          role: 'assistant',
+          content: 'Trasolve deterministic Gemini mock response.',
+        },
+      };
+    }
     const signal = AbortSignal.timeout(this.timeoutMs);
     const useTools =
       this.nativeTools &&
@@ -149,6 +173,7 @@ export class GeminiChatProvider implements ChatProvider {
     let response: Response;
 
     try {
+      this.externalApiPolicy.assertNetworkAllowed('gemini', 'generate-content');
       response = await fetch(
         new URL(
           `models/${encodeURIComponent(this.model)}:generateContent`,
@@ -268,6 +293,7 @@ export class GeminiChatProvider implements ChatProvider {
   private readonly timeoutMs: number;
   private readonly nativeTools: boolean;
   private readonly baseUrlOverride: string | undefined;
+  private readonly externalApiPolicy: ExternalApiPolicy;
 
   private upstreamError(status: number): GeminiChatProviderError {
     // Status only: never the request, the response body or the key.

@@ -10,6 +10,11 @@ import {
 } from '../internal/troute/trouteJobRepository.js';
 import type { TrouteClient } from './trouteClient.js';
 import type { JobEventSubscriptionManager } from '../internal/troute/jobEventSubscriptionManager.js';
+import {
+  ExternalApiPolicyError,
+  loadExternalApiPolicy,
+  type ExternalApiPolicy,
+} from '../configuration/externalApiPolicy.js';
 
 type TrouteApiErrorResponse = ApiErrorResponse & {
   error: ApiErrorResponse['error'] & { upstreamStatus?: number };
@@ -21,6 +26,7 @@ export class TrouteHttpService {
     private readonly jobs: TrouteJobRepository,
     private readonly subscriptions: JobEventSubscriptionManager | null = null,
     private readonly partialVisitEnabled = false,
+    private readonly externalApiPolicy: ExternalApiPolicy = loadExternalApiPolicy(),
   ) {}
 
   public async handle(
@@ -65,6 +71,8 @@ export class TrouteHttpService {
         );
       }
       optimizeRequest = this.prepareRequestForServer(parsed.data);
+
+      this.externalApiPolicy.resolve('troute', 'submit-job');
 
       this.jobs.create(optimizeRequest);
       createdJobId = optimizeRequest.job_id;
@@ -126,6 +134,7 @@ export class TrouteHttpService {
           ...(error.upstreamStatus === undefined
             ? {}
             : { upstreamStatus: error.upstreamStatus }),
+          ...(error.service ? { service: error.service } : {}),
         },
       };
       if (response.headersSent) {
@@ -213,6 +222,15 @@ export class TrouteHttpService {
   ): TrouteHttpError {
     if (cause instanceof TrouteHttpError) {
       return cause;
+    }
+    if (cause instanceof ExternalApiPolicyError) {
+      return new TrouteHttpError(
+        503,
+        cause.code,
+        cause.message,
+        undefined,
+        cause.service,
+      );
     }
     if (cause instanceof TrouteJobRepositoryError) {
       return cause.kind === 'job_already_exists'

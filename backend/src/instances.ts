@@ -1,4 +1,5 @@
 import { loadBackendEnvironment } from './configuration/environment.js';
+import { loadExternalApiPolicy } from './configuration/externalApiPolicy.js';
 import { resolveBackendDataRoot } from './configuration/persistence.js';
 import { Places } from './google/maps/places.js';
 import { GoogleRoutesProvider } from './routes/providers/googleRoutesProvider.js';
@@ -33,20 +34,28 @@ import type { AnalyticsRepository } from './analytics/analyticsEventRepository.j
 // Preserve direct module use while the normal bootstrap loads configuration
 // before running database migrations and importing these instances.
 loadBackendEnvironment();
+const externalApiPolicy = loadExternalApiPolicy();
 
 // Construct shared services and providers only here. Implementation modules must
 // not import this module, which would create a circular dependency.
 const routeProvider = new GoogleRoutesProvider(
   process.env.GOOGLE_ROUTES_API_KEY ?? '',
+  15000,
+  externalApiPolicy,
 );
 const routes = new RouteHttpService(new RouteService(routeProvider));
-const places = new Places(process.env.GOOGLE_PLACES_API_KEY ?? '');
+const places = new Places(
+  process.env.GOOGLE_PLACES_API_KEY ?? '',
+  15000,
+  externalApiPolicy,
+);
 const openWebUIApiKey = process.env.OPENWEBUI_API_KEY?.trim() ?? '';
 let openWebUIClient: OpenWebUIClient | null = null;
 try {
   openWebUIClient = new OpenWebUIClient({
     apiKey: openWebUIApiKey,
     baseUrl: process.env.OPENWEBUI_BASE_URL,
+    externalApiPolicy,
   });
 } catch (cause) {
   if (
@@ -67,6 +76,7 @@ const chatProvider = createChatProvider(
     geminiBaseUrl: process.env.GEMINI_API_BASE_URL?.trim() || undefined,
   },
   openWebUIClient,
+  externalApiPolicy,
 );
 const chat = new ChatService(chatProvider);
 const conversation = new ConversationService(
@@ -81,6 +91,7 @@ let troute: TrouteClient | null = null;
 try {
   troute = new TrouteClient({
     baseUrl: process.env.TROUTE_BASE_URL ?? '',
+    externalApiPolicy,
   });
 } catch (cause) {
   if (!(cause instanceof TrouteClientError) || cause.kind !== 'configuration') {
@@ -96,16 +107,19 @@ const trouteHttp = new TrouteHttpService(
   trouteJobs,
   trouteSubscriptions,
   process.env.TROUTE_PARTIAL_VISIT_ENABLED === 'true',
+  externalApiPolicy,
 );
 const trouteJobHttp = new TrouteJobHttpService(
   trouteJobs,
   troute,
   trouteSubscriptions,
+  externalApiPolicy,
 );
 let tcache: TcacheClient | null = null;
 try {
   tcache = new TcacheClient({
     baseUrl: process.env.TCACHE_BASE_URL ?? '',
+    externalApiPolicy,
   });
 } catch (cause) {
   if (!(cause instanceof TcacheClientError) || cause.kind !== 'configuration') {

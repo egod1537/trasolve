@@ -4,6 +4,7 @@ import {
   GOOGLE_MAPS_REGION_CODE,
   type GoogleMapsLanguageCode,
 } from '@trasolve/shared';
+import { frontendExternalApiMode } from '@/shared/config/externalApiMode';
 
 // Browser SDK configuration and loading only; Web Service keys stay on the backend.
 declare global {
@@ -14,6 +15,7 @@ declare global {
 }
 
 export const mapsConfig = {
+  enabled: frontendExternalApiMode === 'enabled',
   apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() ?? '',
   mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID?.trim() || 'DEMO_MAP_ID',
 };
@@ -45,6 +47,9 @@ export function requiresGoogleMapsReload(
 export function loadGoogleMaps(
   language: GoogleMapsLanguageCode = GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
 ): Promise<void> {
+  if (!mapsConfig.enabled) {
+    return Promise.reject(new Error('external-api-disabled'));
+  }
   const activeLanguage = getActiveLanguage();
   if (activeLanguage && activeLanguage !== language) {
     return Promise.reject(

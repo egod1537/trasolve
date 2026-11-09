@@ -5,6 +5,7 @@ import {
 } from '@trasolve/shared';
 import { RouteError } from './routeError.js';
 import type { RouteService } from './routeService.js';
+import { ExternalApiPolicyError } from '../configuration/externalApiPolicy.js';
 
 export class RouteHttpService {
   public constructor(private readonly routeService: RouteService) {}
@@ -54,17 +55,20 @@ export class RouteHttpService {
         return;
       }
       const error =
-        cause instanceof RouteError
-          ? cause
-          : new RouteError(
-              500,
-              'INTERNAL_ERROR',
-              '경로 요청을 처리할 수 없습니다.',
-            );
+        cause instanceof ExternalApiPolicyError
+          ? new RouteError(503, cause.code, cause.message, cause.service)
+          : cause instanceof RouteError
+            ? cause
+            : new RouteError(
+                500,
+                'INTERNAL_ERROR',
+                '경로 요청을 처리할 수 없습니다.',
+              );
       const body: DirectionsErrorResponse = {
         error: {
           code: error.code,
           message: error.message,
+          ...(error.service ? { service: error.service } : {}),
         },
       };
       response.writeHead(error.status);

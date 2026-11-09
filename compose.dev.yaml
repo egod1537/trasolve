@@ -26,6 +26,8 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: 3000
+      TRASOLVE_EXTERNAL_API_MODE: ${TRASOLVE_EXTERNAL_API_MODE:-enabled}
+      TRASOLVE_EXTERNAL_API_MOCK_ALLOW_PRODUCTION: ${TRASOLVE_EXTERNAL_API_MOCK_ALLOW_PRODUCTION:-false}
       TRASOLVE_PERSISTENCE_MODE: ${TRASOLVE_PERSISTENCE_MODE:-local}
       DATABASE_URL: ${DATABASE_URL:-}
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
@@ -68,6 +70,7 @@ services:
       dockerfile: infra/docker/frontend.Dockerfile
       args:
         FRONTEND_CADDYFILE: infra/docker/frontend.dev.Caddyfile
+        VITE_EXTERNAL_API_MODE: ${VITE_EXTERNAL_API_MODE:-enabled}
         VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY:-}
         VITE_GOOGLE_MAPS_MAP_ID: ${VITE_GOOGLE_MAPS_MAP_ID:-DEMO_MAP_ID}
         VITE_BUILD_CHANNEL: local

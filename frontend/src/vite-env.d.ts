@@ -1,4 +1,5 @@
 interface ImportMetaEnv {
+  readonly VITE_EXTERNAL_API_MODE?: string;
   readonly VITE_GOOGLE_MAPS_API_KEY?: string;
   readonly VITE_GOOGLE_MAPS_MAP_ID?: string;
   readonly VITE_SENTRY_DSN?: string;

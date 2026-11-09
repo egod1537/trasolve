@@ -16,6 +16,11 @@ import {
   TrouteJobRepository,
   TrouteJobRepositoryError,
 } from './trouteJobRepository.js';
+import {
+  ExternalApiPolicyError,
+  loadExternalApiPolicy,
+  type ExternalApiPolicy,
+} from '../../configuration/externalApiPolicy.js';
 
 type TrouteHealthResponse = {
   status: 'ok';
@@ -28,6 +33,7 @@ class TrouteJobHttpError extends Error {
     public readonly code: string,
     message: string,
     public readonly allow?: string,
+    public readonly service?: string,
   ) {
     super(message);
     this.name = 'TrouteJobHttpError';
@@ -39,6 +45,7 @@ export class TrouteJobHttpService {
     private readonly jobs: TrouteJobRepository,
     private readonly client: TrouteClient | null = null,
     private readonly subscriptions: JobEventSubscriptionManager | null = null,
+    private readonly externalApiPolicy: ExternalApiPolicy = loadExternalApiPolicy(),
   ) {}
 
   public async handle(
@@ -87,6 +94,7 @@ export class TrouteJobHttpService {
     response: ServerResponse,
   ): Promise<void> {
     this.requireMethod(request, 'GET');
+    this.externalApiPolicy.resolve('troute', 'health');
     const client = this.requireClient();
     await client.checkHealth();
     const body: TrouteHealthResponse = { status: 'ok', service: 'troute' };
@@ -100,6 +108,7 @@ export class TrouteJobHttpService {
     jobId: string,
   ): Promise<void> {
     this.requireMethod(request, 'GET');
+    this.externalApiPolicy.resolve('troute', 'get-job');
 
     const local = this.jobs.has(jobId) ? this.jobs.get(jobId) : null;
     if (local === null || !isTrouteJobTerminalStatus(local.status)) {
@@ -129,6 +138,7 @@ export class TrouteJobHttpService {
     response: ServerResponse,
   ): Promise<void> {
     this.requireMethod(request, 'GET');
+    this.externalApiPolicy.resolve('troute', 'list-jobs');
     const limit = this.parseLimit(request);
 
     if (this.client) {
@@ -172,6 +182,7 @@ export class TrouteJobHttpService {
     jobId: string,
   ): Promise<void> {
     this.requireMethod(request, 'POST');
+    this.externalApiPolicy.resolve('troute', 'cancel-job');
     const client = this.requireClient('TROUTE_CANCEL_UPSTREAM_ERROR');
 
     if (!this.jobs.has(jobId)) {
@@ -214,6 +225,7 @@ export class TrouteJobHttpService {
     jobId: string,
   ): Promise<void> {
     this.requireMethod(request, 'GET');
+    this.externalApiPolicy.resolve('troute', 'job-events');
     const subscriptions = this.requireSubscriptions();
     const pending: PublishedTrouteJobEvent[] = [];
     let streaming = false;
@@ -368,6 +380,15 @@ export class TrouteJobHttpService {
     if (cause instanceof TrouteJobHttpError) {
       return cause;
     }
+    if (cause instanceof ExternalApiPolicyError) {
+      return new TrouteJobHttpError(
+        503,
+        cause.code,
+        cause.message,
+        undefined,
+        cause.service,
+      );
+    }
     if (cause instanceof TrouteClientError) {
       if (cause.kind === 'upstream_http' && cause.upstreamStatus === 404) {
         return new TrouteJobHttpError(
@@ -473,7 +494,11 @@ export class TrouteJobHttpService {
       response.setHeader('Allow', error.allow);
     }
     const body: ApiErrorResponse = {
-      error: { code: error.code, message: error.message },
+      error: {
+        code: error.code,
+        message: error.message,
+        ...(error.service ? { service: error.service } : {}),
+      },
     };
     response.writeHead(error.status);
     response.end(JSON.stringify(body));

@@ -120,13 +120,18 @@ export const directionsResultSchema = z.object({
 });
 
 export const apiErrorSchema = z.object({
-  error: z.object({ code: z.string(), message: z.string() }),
+  error: z.object({
+    code: z.string(),
+    message: z.string(),
+    service: z.string().optional(),
+  }),
 });
 
 export const directionsErrorResponseSchema = z.object({
   error: z.object({
     code: z.string(),
     message: z.string(),
+    service: z.string().optional(),
     details: directionsDebugDetailsSchema.optional(),
   }),
 });
