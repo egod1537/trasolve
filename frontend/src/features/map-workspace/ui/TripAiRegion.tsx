@@ -125,7 +125,7 @@ function readSelectionContext(context: string | undefined): readonly string[] {
  */
 function TripRecoveryNotice() {
   const L = useL();
-  const { status, error } = useTripState();
+  const { status } = useTripState();
   const controller = useTripEditController();
   const unconfirmed =
     useSyncExternalStore(
@@ -147,9 +147,7 @@ function TripRecoveryNotice() {
   };
   return (
     <div className="trip-ai-recovery" aria-busy={busy}>
-      <p role="alert">
-        {error ?? L('map:tripEditController.runSave.error.failedSaveTrip')}
-      </p>
+      <p role="alert">{L('map:tripRecovery.message.unconfirmed')}</p>
       <button
         type="button"
         disabled={busy || status === 'dirty' || status === 'saving'}

@@ -457,6 +457,14 @@
       "wayMoving": "way of moving"
     }
   },
+  "tripRecovery": {
+    "message": {
+      "unconfirmed": "We couldn’t confirm whether your changes were saved. Select “Refresh” to check the save status."
+    },
+    "status": {
+      "unconfirmed": "Save confirmation needed"
+    }
+  },
   "useTrip": {
     "error": {
       "tripproviderRequired": "A TripProvider is required."

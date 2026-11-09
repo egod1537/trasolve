@@ -1,4 +1,11 @@
-import { lazy, Suspense, useCallback, useMemo, useRef } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 
 import { selectTripPlace, selectTripPolyline } from '@/entities/trip';
 import type { QueryRouteDuration } from '@/features/map-workspace/domain/routeDuration';
@@ -64,6 +71,15 @@ function EditableMapWorkspace({
   const L = useL();
   const { trip, status, error } = useTripState();
   const controller = useTripEditController();
+  const saveUnconfirmed =
+    useSyncExternalStore(
+      controller.subscribeRecovery,
+      controller.getRecoverySnapshot,
+      controller.getRecoverySnapshot,
+    ) === 'unknown_commit';
+  const mutationError = saveUnconfirmed
+    ? L('map:tripRecovery.status.unconfirmed')
+    : error;
   const { canUndo, canRedo } = useTripHistoryState(controller);
   useTripHistoryShortcuts(controller);
   const ui = useMapWorkspace(trip);
@@ -117,8 +133,9 @@ function EditableMapWorkspace({
             trip={tripView}
             busy={mutationBusy}
             saveStatus={status}
+            saveUnconfirmed={saveUnconfirmed}
             savedAt={trip.updatedAt}
-            mutationError={error}
+            mutationError={mutationError}
             debugMode={debugMode}
             onQueryRouteDuration={onQueryRouteDuration}
             sidebarRef={sidebarRef}
@@ -149,7 +166,7 @@ function EditableMapWorkspace({
             selectedPolylineIds={ui.selectedPolylineIds}
             selectedItemCount={ui.selectedItemCount}
             tripMutationBusy={mutationBusy}
-            tripMutationError={error}
+            tripMutationError={mutationError}
             canUndo={canUndo}
             canRedo={canRedo}
             onUndo={undo}

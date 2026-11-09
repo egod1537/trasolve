@@ -457,6 +457,14 @@
       "wayMoving": "移動方法"
     }
   },
+  "tripRecovery": {
+    "message": {
+      "unconfirmed": "保存結果を確認できませんでした。「更新」を押して保存状態を確認してください。"
+    },
+    "status": {
+      "unconfirmed": "保存結果の確認が必要"
+    }
+  },
   "useTrip": {
     "error": {
       "tripproviderRequired": "TripProvider が必要です。"
