@@ -47,6 +47,8 @@ try {
   openWebUIClient = new OpenWebUIClient({
     apiKey: openWebUIApiKey,
     baseUrl: process.env.OPENWEBUI_BASE_URL,
+    cloudflareAccessClientId: process.env.CLOUDFLARE_ACCESS_CLIENT_ID,
+    cloudflareAccessClientSecret: process.env.CLOUDFLARE_ACCESS_CLIENT_SECRET,
   });
 } catch (cause) {
   if (

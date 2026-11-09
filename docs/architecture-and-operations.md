@@ -71,6 +71,10 @@ OpenWebUI는 `OPENWEBUI_API_KEY`와 `OPENWEBUI_MODEL`이 필요합니다. 키는
 OpenWebUI 연동은 `/openai/models`에서 접근 가능한 모델을 조회하고 `/openai/responses`로
 GPT를 호출합니다. 단순 채팅 계약을 유지하기 위해 server default tool은 명시적으로 끄며,
 응답 저장과 streaming도 사용하지 않습니다. 모델 ID는 고정하지 않고 model API 결과를 사용합니다.
+`OPENWEBUI_BASE_URL`이 Cloudflare Access로 보호되면
+`CLOUDFLARE_ACCESS_CLIENT_ID`와 `CLOUDFLARE_ACCESS_CLIENT_SECRET`을 함께 설정합니다.
+두 값은 각각 `CF-Access-Client-Id`, `CF-Access-Client-Secret` 헤더로 전달되며,
+OpenWebUI 인증용 `Authorization` Bearer 헤더와 동시에 사용됩니다.
 
 `backend/src/instances.ts`는 선택된 `ChatProvider`를 `ChatService`에 주입합니다.
 `OpenWebUIChatProvider`, `GeminiChatProvider`, `RandomChatProvider`가 vendor별 요청과 응답을
