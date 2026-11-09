@@ -24,6 +24,7 @@ export class TrouteHttpError extends Error {
     public readonly code: string,
     message: string,
     public readonly upstreamStatus?: number,
+    public readonly service?: string,
   ) {
     super(message);
     this.name = 'TrouteHttpError';

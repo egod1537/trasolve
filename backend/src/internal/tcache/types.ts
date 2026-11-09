@@ -32,6 +32,7 @@ export class TcacheHttpError extends Error {
     message: string,
     public readonly allow?: string,
     public readonly upstreamStatus?: number,
+    public readonly service?: string,
   ) {
     super(message);
     this.name = 'TcacheHttpError';

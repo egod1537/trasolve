@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
 import {
@@ -16,11 +17,17 @@ import {
   type PlaceDetails,
 } from '@trasolve/shared';
 import { ApiError } from './errors.js';
+import {
+  ExternalApiPolicyError,
+  loadExternalApiPolicy,
+  type ExternalApiPolicy,
+} from '../../configuration/externalApiPolicy.js';
 
 export class Places {
   public constructor(
     apiKey: string,
     private readonly timeoutMs = 15000,
+    private readonly externalApiPolicy: ExternalApiPolicy = loadExternalApiPolicy(),
   ) {
     this.apiKey = apiKey.trim();
   }
@@ -29,6 +36,11 @@ export class Places {
     request: PlaceAutocompleteRequest,
   ): Promise<PlaceAutocompleteResponse> {
     const input = this.validateRequest(placeAutocompleteRequestSchema, request);
+    if (
+      this.externalApiPolicy.resolve('google-places', 'autocomplete') === 'mock'
+    ) {
+      return this.mockAutocomplete(input);
+    }
     const raw = await this.fetchGoogle('places:autocomplete', {
       method: 'POST',
       fieldMask:
@@ -66,6 +78,9 @@ export class Places {
 
   public async getPlace(request: PlaceDetailsRequest): Promise<PlaceDetails> {
     const input = this.validateRequest(placeDetailsRequestSchema, request);
+    if (this.externalApiPolicy.resolve('google-places', 'details') === 'mock') {
+      return this.mockPlace(input);
+    }
     const query = new URLSearchParams({
       languageCode: input.languageCode ?? GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
       regionCode: input.regionCode ?? GOOGLE_MAPS_REGION_CODE,
@@ -211,6 +226,10 @@ export class Places {
     path: string,
     options: { method: 'POST' | 'GET'; fieldMask: string; body?: string },
   ): Promise<unknown> {
+    this.externalApiPolicy.assertNetworkAllowed(
+      'google-places',
+      options.method,
+    );
     if (!this.apiKey) {
       throw new ApiError(
         503,
@@ -297,15 +316,27 @@ export class Places {
         return;
       }
       const error =
-        cause instanceof ApiError
-          ? cause
-          : new ApiError(
-              500,
-              'INTERNAL_ERROR',
-              '장소 요청을 처리할 수 없습니다.',
-            );
+        cause instanceof ExternalApiPolicyError
+          ? new ApiError(
+              503,
+              cause.code,
+              cause.message,
+              undefined,
+              cause.service,
+            )
+          : cause instanceof ApiError
+            ? cause
+            : new ApiError(
+                500,
+                'INTERNAL_ERROR',
+                '장소 요청을 처리할 수 없습니다.',
+              );
       const body: ApiErrorResponse = {
-        error: { code: error.code, message: error.message },
+        error: {
+          code: error.code,
+          message: error.message,
+          ...(error.service ? { service: error.service } : {}),
+        },
       };
       response.writeHead(error.status);
       response.end(JSON.stringify(body));
@@ -318,6 +349,46 @@ export class Places {
       'INVALID_PLACE_REQUEST',
       '장소 검색어, 장소 ID 또는 검색 옵션을 확인해 주세요.',
     );
+  }
+
+  private mockAutocomplete(
+    request: PlaceAutocompleteRequest,
+  ): PlaceAutocompleteResponse {
+    const suffix = this.fixtureHash(request.input);
+    return this.validateResponse(placeAutocompleteResponseSchema, {
+      suggestions: [
+        {
+          placeId: `mock-place-${suffix}`,
+          text: request.input.trim(),
+          secondaryText: 'Trasolve deterministic mock',
+          types: ['point_of_interest'],
+        },
+      ],
+    });
+  }
+
+  private mockPlace(request: PlaceDetailsRequest): PlaceDetails {
+    const hash = this.fixtureHash(request.placeId);
+    const latitudeOffset = Number.parseInt(hash.slice(0, 4), 16) / 0xffff;
+    const longitudeOffset = Number.parseInt(hash.slice(4, 8), 16) / 0xffff;
+    return this.validateResponse(placeDetailsSchema, {
+      id: request.placeId,
+      name: `Mock place ${hash.slice(0, 8)}`,
+      address: 'Trasolve deterministic mock',
+      location: {
+        lat: 37.5 + latitudeOffset * 0.1,
+        lng: 126.9 + longitudeOffset * 0.1,
+      },
+      category: 'point_of_interest',
+    });
+  }
+
+  private fixtureHash(value: string): string {
+    return createHash('sha256')
+      .update('trasolve-external-api-mock-v1', 'utf8')
+      .update(value, 'utf8')
+      .digest('hex')
+      .slice(0, 16);
   }
 
   private validateRequest<T>(schema: z.ZodType<T>, value: unknown): T {

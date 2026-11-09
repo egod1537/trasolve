@@ -49,13 +49,9 @@
   padding: 0;
   border: 2px solid var(--color-surface-raised);
   border-radius: 50%;
-  background: linear-gradient(
-    155deg,
-    var(--color-primary),
-    var(--color-primary-dark)
-  );
+  background: var(--accent);
   color: var(--color-accent-contrast);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-card);
   font: inherit;
   font-size: 12px;
   font-weight: 650;
@@ -63,7 +59,7 @@
 }
 
 .header-profile-button:hover {
-  filter: brightness(1.06);
+  background: var(--accent-hover);
 }
 
 .header-profile-button:disabled {
@@ -72,8 +68,8 @@
 }
 
 .header-profile-button:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 .header-profile-button img {
@@ -89,10 +85,10 @@
   right: 0;
   width: 180px;
   padding: 6px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 10px;
-  background: var(--color-floating-surface);
-  box-shadow: var(--shadow-floating-md);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-raised);
+  box-shadow: var(--shadow-popup);
 }
 
 .header-profile-menu-item {
@@ -100,7 +96,7 @@
   min-height: 36px;
   padding: 8px 10px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text);
   font: inherit;
@@ -209,7 +205,7 @@ a.build-commit:hover {
   min-height: 48px;
   padding: 0 24px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 15px;
   font-weight: 600;
   line-height: 1.4;
@@ -230,6 +226,7 @@ a.build-commit:hover {
 .button-primary {
   background: var(--color-primary);
   color: var(--color-accent-contrast);
+  box-shadow: var(--shadow-sm);
 }
 
 .button-primary:not(:disabled):hover {

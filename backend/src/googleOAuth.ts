@@ -1,5 +1,9 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { GoogleOAuthProfile } from '@trasolve/shared';
+import {
+  loadExternalApiPolicy,
+  type ExternalApiPolicy,
+} from './configuration/externalApiPolicy.js';
 
 const authorizationEndpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
 const tokenEndpoint = 'https://oauth2.googleapis.com/token';
@@ -7,6 +11,7 @@ const userInfoEndpoint = 'https://openidconnect.googleapis.com/v1/userinfo';
 const oauthScopes = ['openid', 'email', 'profile'] as const;
 const localHostnames = ['localhost', '127.0.0.1', '[::1]'];
 const upstreamTimeoutMs = 10_000;
+const API_CALLBACK_PATH = '/api/auth/google/callback';
 
 interface GoogleOAuthConfig {
   clientId: string;
@@ -43,11 +48,25 @@ export class GoogleOAuthError extends Error {
 }
 
 export class GoogleOAuthClient {
-  private constructor(private readonly config: GoogleOAuthConfig) {}
+  private constructor(
+    private readonly config: GoogleOAuthConfig,
+    private readonly externalApiPolicy: ExternalApiPolicy,
+  ) {}
 
   public static fromEnvironment(
     environment: NodeJS.ProcessEnv = process.env,
+    externalApiPolicy: ExternalApiPolicy = loadExternalApiPolicy(),
   ): GoogleOAuthClient {
+    if (externalApiPolicy.mode !== 'enabled') {
+      return new GoogleOAuthClient(
+        {
+          clientId: 'trasolve-mock-client',
+          clientSecret: 'trasolve-mock-secret',
+          redirectUri: API_CALLBACK_PATH,
+        },
+        externalApiPolicy,
+      );
+    }
     const clientId = readRequiredEnvironmentVariable(
       environment,
       'GOOGLE_OAUTH_CLIENT_ID',
@@ -58,12 +77,29 @@ export class GoogleOAuthClient {
     );
     const redirectUri = readRedirectUri(environment);
 
-    return new GoogleOAuthClient({ clientId, clientSecret, redirectUri });
+    return new GoogleOAuthClient(
+      { clientId, clientSecret, redirectUri },
+      externalApiPolicy,
+    );
   }
 
   public createAuthorizationRequest(): GoogleOAuthAuthorizationRequest {
+    const mode = this.externalApiPolicy.resolve(
+      'google-oauth',
+      'authorization-redirect',
+    );
     const state = randomBytes(32).toString('base64url');
     const codeVerifier = randomBytes(32).toString('base64url');
+    if (mode === 'mock') {
+      const authorizationUrl = new URL(API_CALLBACK_PATH, 'http://localhost');
+      authorizationUrl.searchParams.set('code', 'trasolve-mock-code');
+      authorizationUrl.searchParams.set('state', state);
+      return {
+        authorizationUrl: `${authorizationUrl.pathname}${authorizationUrl.search}`,
+        state,
+        codeVerifier,
+      };
+    }
     const codeChallenge = createHash('sha256')
       .update(codeVerifier, 'ascii')
       .digest('base64url');
@@ -95,6 +131,19 @@ export class GoogleOAuthClient {
       'authorization code',
     );
     const verifier = requireAuthorizationValue(codeVerifier, 'PKCE verifier');
+    if (
+      this.externalApiPolicy.resolve(
+        'google-oauth',
+        'complete-authorization',
+      ) === 'mock'
+    ) {
+      return {
+        subject: 'trasolve-external-api-mock-v1',
+        email: 'external-api-mock@localhost',
+        emailVerified: true,
+        name: 'Trasolve Mock User',
+      };
+    }
     const { accessToken } = await this.exchangeAuthorizationCode(
       code,
       verifier,
@@ -110,6 +159,10 @@ export class GoogleOAuthClient {
     let response: Response;
 
     try {
+      this.externalApiPolicy.assertNetworkAllowed(
+        'google-oauth',
+        'token-exchange',
+      );
       response = await fetch(tokenEndpoint, {
         method: 'POST',
         headers: {
@@ -159,6 +212,7 @@ export class GoogleOAuthClient {
     let response: Response;
 
     try {
+      this.externalApiPolicy.assertNetworkAllowed('google-oauth', 'userinfo');
       response = await fetch(userInfoEndpoint, {
         headers: {
           Accept: 'application/json',

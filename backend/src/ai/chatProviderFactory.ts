@@ -3,6 +3,10 @@ import type { OpenWebUIClient } from './openWebUIClient.js';
 import { GeminiChatProvider } from './providers/geminiChatProvider.js';
 import { OpenWebUIChatProvider } from './providers/openWebUIChatProvider.js';
 import { RandomChatProvider } from './providers/randomChatProvider.js';
+import {
+  loadExternalApiPolicy,
+  type ExternalApiPolicy,
+} from '../configuration/externalApiPolicy.js';
 
 export type AIProviderName = 'openwebui' | 'gemini' | 'random';
 
@@ -12,6 +16,10 @@ export type ChatProviderConfiguration = {
   openWebUIModel: string;
   geminiApiKey: string;
   geminiModel: string;
+  /** Off by default: Gemini then only ever receives plain text requests. */
+  geminiNativeTools?: boolean;
+  /** Overrides the Gemini API base URL (development stubs only). */
+  geminiBaseUrl?: string | undefined;
 };
 
 export class ChatProviderConfigurationError extends Error {
@@ -24,6 +32,7 @@ export class ChatProviderConfigurationError extends Error {
 export function createChatProvider(
   configuration: ChatProviderConfiguration,
   openWebUIClient: OpenWebUIClient | null,
+  externalApiPolicy: ExternalApiPolicy = loadExternalApiPolicy(),
 ): ChatProvider {
   const provider = configuration.provider?.trim();
 
@@ -35,25 +44,41 @@ export function createChatProvider(
 
   switch (provider) {
     case 'openwebui':
-      if (!configuration.openWebUIApiKey || !openWebUIClient) {
+      if (
+        externalApiPolicy.mode === 'enabled' &&
+        (!configuration.openWebUIApiKey || !openWebUIClient)
+      ) {
         throw new ChatProviderConfigurationError(
           'AI_PROVIDER=openwebui requires a valid OPENWEBUI_API_KEY and OPENWEBUI_BASE_URL.',
         );
       }
-      if (!configuration.openWebUIModel.trim()) {
+      if (!openWebUIClient) {
+        throw new ChatProviderConfigurationError(
+          'AI_PROVIDER=openwebui requires an OpenWebUI client.',
+        );
+      }
+      if (
+        externalApiPolicy.mode === 'enabled' &&
+        !configuration.openWebUIModel.trim()
+      ) {
         throw new ChatProviderConfigurationError(
           'AI_PROVIDER=openwebui requires OPENWEBUI_MODEL.',
         );
       }
       return new OpenWebUIChatProvider(
         openWebUIClient,
-        configuration.openWebUIModel,
+        configuration.openWebUIModel || 'trasolve-mock-v1',
       );
     case 'gemini':
       try {
         return new GeminiChatProvider({
           apiKey: configuration.geminiApiKey,
           model: configuration.geminiModel,
+          nativeTools: configuration.geminiNativeTools ?? false,
+          externalApiPolicy,
+          ...(configuration.geminiBaseUrl
+            ? { baseUrl: configuration.geminiBaseUrl }
+            : {}),
         });
       } catch (cause) {
         const message =

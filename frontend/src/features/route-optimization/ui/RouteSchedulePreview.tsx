@@ -159,6 +159,8 @@ function AfterSchedule({
   }
 
   const placesById = new Map(places.map((place) => [place.id, place]));
+  const visitedIds = new Set(schedule.placeIds);
+  const skippedPlaces = places.filter((place) => !visitedIds.has(place.id));
   return (
     <SchedulePanel
       title={L(
@@ -217,6 +219,25 @@ function AfterSchedule({
             </li>
           );
         })}
+        {skippedPlaces.map((place) => (
+          <li key={place.id} className="is-skipped">
+            <div className="route-optimization-schedule-stop">
+              <span
+                className="route-optimization-schedule-index"
+                aria-hidden="true"
+              >
+                ×
+              </span>
+              <div className="route-optimization-schedule-place">
+                <div className="route-optimization-schedule-place-heading">
+                  <strong>
+                    <s>{place.name}</s>
+                  </strong>
+                </div>
+              </div>
+            </div>
+          </li>
+        ))}
       </ol>
     </SchedulePanel>
   );

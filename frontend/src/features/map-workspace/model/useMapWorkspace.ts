@@ -5,6 +5,7 @@ import { resolveLayerSelection } from '@/features/map-workspace/domain/layerSele
 import { useActiveDay } from '@/features/map-workspace/hooks/useActiveDay';
 import { useDayVisibility } from '@/features/map-workspace/hooks/useDayVisibility';
 import { useMapFocus } from '@/features/map-workspace/hooks/useMapFocus';
+import { useSelectedPlaceFocusShortcut } from '@/features/map-workspace/hooks/useSelectedPlaceFocusShortcut';
 import {
   useMapSelection,
   type LayerSelectionMode,
@@ -40,7 +41,8 @@ export function useMapWorkspace(trip: Trip) {
     clearPlace,
     clear,
   } = selection;
-  const { focusTarget, revision: focusRevision, focusAll } = focus;
+  const { focusTarget, revision: focusRevision, focusAll, focusPlace } = focus;
+  useSelectedPlaceFocusShortcut(selectedPlaceId, focusPlace);
   const layerSelection = useMemo(
     () =>
       resolveLayerSelection(
@@ -163,6 +165,7 @@ export function useMapWorkspace(trip: Trip) {
       selectedDayId,
       layerSelection,
       visibleDayIds,
+      focusPlace,
       selectPlace,
       selectPlaceWithModifiers,
       selectPlaceForDetails,
@@ -179,6 +182,7 @@ export function useMapWorkspace(trip: Trip) {
       clear,
       clearPlace,
       focusTarget,
+      focusPlace,
       layerSelection,
       focusRevision,
       selectDay,

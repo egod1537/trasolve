@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import {
   GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
@@ -10,11 +11,16 @@ import {
 } from '@trasolve/shared';
 import { RouteError } from '../routeError.js';
 import type { RouteProvider, RouteProviderResult } from '../routeProvider.js';
+import {
+  loadExternalApiPolicy,
+  type ExternalApiPolicy,
+} from '../../configuration/externalApiPolicy.js';
 
 export class GoogleRoutesProvider implements RouteProvider {
   public constructor(
     apiKey: string,
     private readonly timeoutMs = 15000,
+    private readonly externalApiPolicy: ExternalApiPolicy = loadExternalApiPolicy(),
   ) {
     this.apiKey = apiKey.trim();
   }
@@ -22,6 +28,12 @@ export class GoogleRoutesProvider implements RouteProvider {
   public async queryRoutes(
     request: DirectionsRequest,
   ): Promise<RouteProviderResult> {
+    if (
+      this.externalApiPolicy.resolve('google-routes', 'compute-routes') ===
+      'mock'
+    ) {
+      return this.mockRoutes(request);
+    }
     // Google Routes rejects TRANSIT requests with intermediate waypoints.
     if (
       request.travelMode === TravelMode.TRANSIT &&
@@ -152,6 +164,10 @@ export class GoogleRoutesProvider implements RouteProvider {
     request: DirectionsRequest,
     signal = AbortSignal.timeout(this.timeoutMs),
   ): Promise<RouteProviderResult> {
+    this.externalApiPolicy.assertNetworkAllowed(
+      'google-routes',
+      'compute-routes',
+    );
     if (!this.apiKey) {
       throw new RouteError(
         503,
@@ -332,6 +348,80 @@ export class GoogleRoutesProvider implements RouteProvider {
           ...segments.flatMap((segment) => segment.warnings),
         ]),
       ],
+    };
+  }
+
+  private mockRoutes(request: DirectionsRequest): RouteProviderResult {
+    const locations = [
+      request.origin,
+      ...(request.intermediates ?? []),
+      request.destination,
+    ];
+    const path = locations.map((location) => this.mockLocation(location));
+    const legs = path.slice(1).map((endLocation, index) => ({
+      distanceMeters: 1_000 + index * 250,
+      durationMillis: 600_000 + index * 60_000,
+      startLocation: path[index] ?? null,
+      endLocation,
+      steps: [],
+    }));
+    const bounds = path.reduce<MapRoute['bounds']>(
+      (current, point) =>
+        current
+          ? {
+              north: Math.max(current.north, point.lat),
+              south: Math.min(current.south, point.lat),
+              east: Math.max(current.east, point.lng),
+              west: Math.min(current.west, point.lng),
+            }
+          : {
+              north: point.lat,
+              south: point.lat,
+              east: point.lng,
+              west: point.lng,
+            },
+      null,
+    );
+    const route: MapRoute = {
+      description: 'Trasolve deterministic mock route',
+      distanceMeters: legs.reduce(
+        (total, leg) => total + (leg.distanceMeters ?? 0),
+        0,
+      ),
+      durationMillis: legs.reduce(
+        (total, leg) => total + (leg.durationMillis ?? 0),
+        0,
+      ),
+      fare: null,
+      legs,
+      path,
+      bounds,
+      warnings: [],
+    };
+    return {
+      routes: [route],
+      diagnostics: {
+        rawResponse: {
+          fixture: 'trasolve-external-api-mock-v1',
+          service: 'google-routes',
+        },
+      },
+    };
+  }
+
+  private mockLocation(location: RouteLocation): { lat: number; lng: number } {
+    if (location.type === 'coordinates') {
+      return { lat: location.lat, lng: location.lng };
+    }
+    const value =
+      location.type === 'place' ? location.placeId : location.address;
+    const hash = createHash('sha256')
+      .update('trasolve-external-api-mock-v1', 'utf8')
+      .update(value, 'utf8')
+      .digest();
+    return {
+      lat: 37.5 + hash.readUInt16BE(0) / 0xffff / 10,
+      lng: 126.9 + hash.readUInt16BE(2) / 0xffff / 10,
     };
   }
 

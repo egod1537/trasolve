@@ -7,11 +7,11 @@
   width: min(390px, calc(100vw - 32px));
   max-height: calc(100dvh - 96px);
   overflow: hidden;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--bg-surface-raised) 94%, transparent);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .analytics-map-overlay > p {
@@ -43,7 +43,7 @@
 .analytics-map-overlay-toolbar code {
   color: var(--accent);
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .analytics-map-overlay-toolbar button {
@@ -109,7 +109,7 @@
   margin: var(--space-1) 0 0;
   color: var(--text-primary);
   font-size: 20px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .analytics-map-overlay-funnel {
@@ -173,7 +173,7 @@
   color: var(--accent);
   box-shadow: var(--shadow-map-overlay);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
   pointer-events: auto;
   cursor: pointer;
@@ -193,12 +193,13 @@
   gap: var(--space-3);
   padding: var(--space-4);
   overflow: auto;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  background: var(--bg-surface-raised);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
   color: var(--text-primary);
   box-shadow: var(--shadow-map-overlay);
   pointer-events: auto;
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .analytics-target-popover header {
@@ -238,7 +239,7 @@
 .analytics-target-popover dd {
   margin: 3px 0 0;
   font-size: 14px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .analytics-target-popover ol {

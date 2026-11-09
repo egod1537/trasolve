@@ -2,16 +2,21 @@ import { randomUUID } from 'node:crypto';
 import {
   sharedTripSchema,
   tripIdSchema,
+  tripShareCopyResponseSchema,
   tripShareSettingsSchema,
   tripShareTokenSchema,
   updateTripShareRequestSchema,
   type SharedTrip,
+  type Trip,
+  type TripInput,
+  type TripShareCopyResponse,
   type TripShareOwner,
   type TripShareSettings,
   type ShareViewerType,
   type UpdateTripShareRequest,
 } from '@trasolve/shared';
 import type { AuthRepository } from '../auth/authRepository.js';
+import type { TripController } from '../trip/tripController.js';
 import type { TripRepository } from '../trip/tripRepository.js';
 import type { TripShare } from '../share/tripShare.js';
 import {
@@ -34,6 +39,7 @@ export class TripShareController {
     private readonly trips: TripRepository,
     private readonly shares: TripShareRepository,
     private readonly auth: AuthRepository,
+    private readonly tripController: TripController,
   ) {}
 
   public async getSettings(
@@ -112,19 +118,8 @@ export class TripShareController {
     token: string,
     viewerUserId?: string,
   ): Promise<SharedTrip> {
-    const parsedToken = tripShareTokenSchema.safeParse(token);
-    if (!parsedToken.success) {
-      throw tripShareNotFound();
-    }
-    const share = await this.shares.getByToken(parsedToken.data);
-    if (!share || share.token !== parsedToken.data) {
-      throw tripShareNotFound();
-    }
-    const stored = await this.trips.get(share.ownerUserId, share.tripId);
-    if (!stored) {
-      throw tripShareNotFound();
-    }
-    const { userId, ...publicTrip } = stored.trip;
+    const { share, trip } = await this.getSharedSource(token);
+    const { userId, ...publicTrip } = trip;
     if (userId !== share.ownerUserId) {
       throw tripShareNotFound();
     }
@@ -139,7 +134,72 @@ export class TripShareController {
     });
   }
 
+  public async copySharedTrip(
+    actorUserId: string,
+    token: string,
+  ): Promise<TripShareCopyResponse> {
+    if (!tripIdSchema.safeParse(actorUserId).success) {
+      throw invalidTripShareRequest();
+    }
+    const parsedToken = tripShareTokenSchema.safeParse(token);
+    if (!parsedToken.success) {
+      throw tripShareNotFound();
+    }
+    const key = `${actorUserId}:${parsedToken.data}`;
+    const current = this.copyOperations.get(key);
+    if (current) {
+      return current;
+    }
+    const pending = this.createSharedTripCopy(actorUserId, parsedToken.data);
+    this.copyOperations.set(key, pending);
+    try {
+      return await pending;
+    } finally {
+      if (this.copyOperations.get(key) === pending) {
+        this.copyOperations.delete(key);
+      }
+    }
+  }
+
   private readonly mutations = new Map<string, Promise<unknown>>();
+  private readonly copyOperations = new Map<
+    string,
+    Promise<TripShareCopyResponse>
+  >();
+
+  private async createSharedTripCopy(
+    actorUserId: string,
+    token: string,
+  ): Promise<TripShareCopyResponse> {
+    const { share, trip } = await this.getSharedSource(token);
+    await this.getOwner(share.ownerUserId);
+    const input: TripInput = {
+      title: trip.title,
+      days: trip.days,
+      ...(trip.startDate ? { startDate: trip.startDate } : {}),
+      ...(trip.endDate ? { endDate: trip.endDate } : {}),
+    };
+    const copied = await this.tripController.createTrip(actorUserId, input);
+    return tripShareCopyResponseSchema.parse({ tripId: copied.trip.id });
+  }
+
+  private async getSharedSource(
+    token: string,
+  ): Promise<{ share: TripShare; trip: Trip }> {
+    const parsedToken = tripShareTokenSchema.safeParse(token);
+    if (!parsedToken.success) {
+      throw tripShareNotFound();
+    }
+    const share = await this.shares.getByToken(parsedToken.data);
+    if (!share || share.token !== parsedToken.data) {
+      throw tripShareNotFound();
+    }
+    const stored = await this.trips.get(share.ownerUserId, share.tripId);
+    if (!stored || stored.trip.userId !== share.ownerUserId) {
+      throw tripShareNotFound();
+    }
+    return { share, trip: stored.trip };
+  }
 
   private async requireOwnedTrip(
     actorUserId: string,

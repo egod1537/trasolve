@@ -25,17 +25,6 @@
   font-weight: 650;
 }
 
-.localization-test-page select,
-.localization-test-page input {
-  min-height: 38px;
-  padding: 8px 10px;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  font: inherit;
-}
-
 .localization-summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -523,6 +523,9 @@ export function RouteOptimizationModal({
           optimizedSchedule,
           selectedSettings.selectedStartPlaceId,
           selectedSettings.selectedEndPlaceId,
+          selectedState.result?.skipped_locations?.map(
+            (location) => location.location_id,
+          ) ?? [],
         ),
       );
       if (!applied) {
@@ -747,7 +750,7 @@ export function RouteOptimizationModal({
                   )}
                   <RouteSchedulePreview
                     variant="after"
-                    places={afterPlaces}
+                    places={beforePlaces}
                     schedule={optimizedSchedule}
                     selectedStartPlaceId={selectedSettings.selectedStartPlaceId}
                     selectedEndPlaceId={selectedSettings.selectedEndPlaceId}
@@ -1361,6 +1364,8 @@ function createDayOptimizationSettings(day: TripDay): DayOptimizationSettings {
     startPolicy: 'latest',
     startTime: null,
     travelMode: getRouteOptimizationTravelMode(day),
+    visitPolicy: 'all-required',
+    placePreferences: {},
   };
 }
 
@@ -1391,6 +1396,8 @@ function createDayKey(
     startPolicy: settings.startPolicy,
     startTime: settings.startTime,
     travelMode: settings.travelMode,
+    visitPolicy: settings.visitPolicy,
+    placePreferences: settings.placePreferences,
     places: day.places.map((place) => ({
       id: place.id,
       placeId: place.placeId,

@@ -11,8 +11,9 @@
 .google-oauth-test-card {
   padding: 24px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .google-oauth-test-card h2,
@@ -24,7 +25,7 @@
   width: fit-content;
   padding: 10px 16px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--color-accent-contrast);
   background: var(--color-primary);
   cursor: pointer;
@@ -32,6 +33,10 @@
 
 .google-oauth-test-login:disabled {
   opacity: 0.6;
+}
+
+.google-oauth-test-login:not(:disabled):hover {
+  background: var(--accent-hover);
 }
 
 .google-oauth-test-result {

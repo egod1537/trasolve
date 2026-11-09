@@ -7,7 +7,7 @@
   justify-content: center;
   padding: clamp(68px, 10vh, 108px) 16px 16px;
   background: var(--color-overlay-light);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(calc(var(--map-overlay-blur) / 2));
   pointer-events: auto;
 }
 
@@ -15,11 +15,12 @@
   width: min(720px, 100%);
   max-height: calc(100dvh - 96px);
   overflow: hidden;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 10px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   color: var(--color-text);
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .quick-search-input-row {
@@ -63,7 +64,7 @@
   height: 38px;
   padding: 0 7px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   outline: 0;
   background: transparent;
   color: var(--color-text-secondary);
@@ -115,12 +116,12 @@
 
 .quick-search-mode-icon.is-schedule {
   background: var(--color-success-soft);
-  color: #059669;
+  color: var(--color-success);
 }
 
 .quick-search-mode-icon.is-ai {
-  background: color-mix(in srgb, #7c3aed 16%, var(--color-surface-raised));
-  color: #7c3aed;
+  background: var(--color-done-soft);
+  color: var(--color-done);
 }
 
 .quick-search-mode-icon svg {
@@ -137,10 +138,11 @@
   display: grid;
   width: 218px;
   padding: 5px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 8px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .quick-search-mode-menu button {
@@ -236,7 +238,7 @@
   height: 34px;
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;

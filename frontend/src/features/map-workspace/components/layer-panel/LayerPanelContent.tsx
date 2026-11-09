@@ -166,6 +166,7 @@ export const LayerPanelContent = memo(function LayerPanelContent({
     selectedPolylineIds,
     visibleDayIds,
     onSelectPlace,
+    onFocusPlace,
     onSelectPlaceForDrag,
     onSelectPolyline,
     onSelectDay,
@@ -455,6 +456,7 @@ export const LayerPanelContent = memo(function LayerPanelContent({
           onOpenPolylineDetails={onOpenPolylineDetails}
           validationByItemKey={validationByItemKey}
           onSelectPlace={onSelectPlace}
+          onFocusPlace={onFocusPlace}
           onSelectPolyline={onSelectPolyline}
           onActivateDay={activateDay}
           onToggleExpanded={toggleDayExpanded}

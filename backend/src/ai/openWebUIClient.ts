@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import { OPENWEBUI_OPTIONS } from '../options.js';
+import {
+  loadExternalApiPolicy,
+  type ExternalApiPolicy,
+} from '../configuration/externalApiPolicy.js';
 
 export const DEFAULT_OPENWEBUI_BASE_URL = 'https://chat.mangagaki.net';
 
@@ -86,14 +90,18 @@ export type OpenWebUIClientOptions = {
   cloudflareAccessClientSecret?: string;
   modelsTimeoutMs?: number;
   chatTimeoutMs?: number;
+  externalApiPolicy?: ExternalApiPolicy;
 };
 
 export class OpenWebUIClient {
   public constructor(options: OpenWebUIClientOptions) {
+    this.externalApiPolicy =
+      options.externalApiPolicy ?? loadExternalApiPolicy();
     this.apiKey = options.apiKey.trim();
-    this.baseUrl = this.normalizeBaseUrl(
-      options.baseUrl ?? DEFAULT_OPENWEBUI_BASE_URL,
-    );
+    this.baseUrl =
+      this.externalApiPolicy.mode === 'enabled'
+        ? this.normalizeBaseUrl(options.baseUrl ?? DEFAULT_OPENWEBUI_BASE_URL)
+        : new URL('http://localhost/');
     this.cloudflareAccessClientId =
       options.cloudflareAccessClientId?.trim() ?? '';
     this.cloudflareAccessClientSecret =
@@ -118,6 +126,9 @@ export class OpenWebUIClient {
   }
 
   public async listModels(): Promise<OpenWebUIModel[]> {
+    if (this.externalApiPolicy.resolve('openwebui', 'list-models') === 'mock') {
+      return [{ id: 'trasolve-mock-v1', name: 'Trasolve Mock v1' }];
+    }
     const rawResponse = await this.requestJson(
       'openai/models',
       { method: 'GET' },
@@ -141,6 +152,16 @@ export class OpenWebUIClient {
         'invalid_request',
         'The OpenWebUI chat request is invalid.',
       );
+    }
+    if (this.externalApiPolicy.resolve('openwebui', 'chat') === 'mock') {
+      return {
+        model: request.data.model,
+        message: {
+          role: 'assistant',
+          content: 'Trasolve deterministic OpenWebUI mock response.',
+        },
+        finishReason: 'stop',
+      };
     }
 
     const rawResponse = await this.requestJson(
@@ -199,12 +220,14 @@ export class OpenWebUIClient {
   private readonly cloudflareAccessClientSecret: string;
   private readonly modelsTimeoutMs: number;
   private readonly chatTimeoutMs: number;
+  private readonly externalApiPolicy: ExternalApiPolicy;
 
   private async requestJson(
     endpoint: string,
     init: RequestInit,
     timeoutMs: number,
   ): Promise<unknown> {
+    this.externalApiPolicy.assertNetworkAllowed('openwebui', endpoint);
     if (!this.apiKey) {
       throw new OpenWebUIClientError(
         'configuration',

@@ -10,6 +10,11 @@ import {
 } from '../internal/troute/trouteJobRepository.js';
 import type { TrouteClient } from './trouteClient.js';
 import type { JobEventSubscriptionManager } from '../internal/troute/jobEventSubscriptionManager.js';
+import {
+  ExternalApiPolicyError,
+  loadExternalApiPolicy,
+  type ExternalApiPolicy,
+} from '../configuration/externalApiPolicy.js';
 
 type TrouteApiErrorResponse = ApiErrorResponse & {
   error: ApiErrorResponse['error'] & { upstreamStatus?: number };
@@ -20,6 +25,8 @@ export class TrouteHttpService {
     private readonly client: TrouteClient | null,
     private readonly jobs: TrouteJobRepository,
     private readonly subscriptions: JobEventSubscriptionManager | null = null,
+    private readonly partialVisitEnabled = false,
+    private readonly externalApiPolicy: ExternalApiPolicy = loadExternalApiPolicy(),
   ) {}
 
   public async handle(
@@ -63,12 +70,14 @@ export class TrouteHttpService {
           'troute 최적화 요청의 형식과 값을 확인해 주세요.',
         );
       }
-      optimizeRequest = parsed.data;
+      optimizeRequest = this.prepareRequestForServer(parsed.data);
 
-      this.jobs.create(parsed.data);
-      createdJobId = parsed.data.job_id;
+      this.externalApiPolicy.resolve('troute', 'submit-job');
+
+      this.jobs.create(optimizeRequest);
+      createdJobId = optimizeRequest.job_id;
       this.jobs.markGatewayRequestStarted(createdJobId);
-      const acceptedJobId = await this.client.submitJob(parsed.data);
+      const acceptedJobId = await this.client.submitJob(optimizeRequest);
       void this.subscriptions?.track(acceptedJobId).catch((cause) => {
         console.warn('제출한 troute Job SSE 추적을 시작하지 못했습니다.', {
           jobId: acceptedJobId,
@@ -125,6 +134,7 @@ export class TrouteHttpService {
           ...(error.upstreamStatus === undefined
             ? {}
             : { upstreamStatus: error.upstreamStatus }),
+          ...(error.service ? { service: error.service } : {}),
         },
       };
       if (response.headersSent) {
@@ -141,6 +151,20 @@ export class TrouteHttpService {
   }
 
   private readonly maxBodyBytes = 1_048_576;
+
+  private prepareRequestForServer(
+    request: Parameters<TrouteClient['submitJob']>[0],
+  ): Parameters<TrouteClient['submitJob']>[0] {
+    if (this.partialVisitEnabled) {
+      return request;
+    }
+    const locations = request.locations.map(
+      ({ required: _required, priority: _priority, ...location }) => location,
+    );
+    const compatible = { ...request, locations };
+    delete compatible.visit_policy;
+    return compatible;
+  }
 
   private readJson(request: IncomingMessage): Promise<unknown> {
     return new Promise((resolve, reject) => {
@@ -198,6 +222,15 @@ export class TrouteHttpService {
   ): TrouteHttpError {
     if (cause instanceof TrouteHttpError) {
       return cause;
+    }
+    if (cause instanceof ExternalApiPolicyError) {
+      return new TrouteHttpError(
+        503,
+        cause.code,
+        cause.message,
+        undefined,
+        cause.service,
+      );
     }
     if (cause instanceof TrouteJobRepositoryError) {
       return cause.kind === 'job_already_exists'

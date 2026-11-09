@@ -52,8 +52,9 @@
 .maps-test-debug {
   padding: 16px;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface-raised);
+  box-shadow: var(--shadow-card);
   align-content: start;
 }
 .maps-test-data {
@@ -86,7 +87,7 @@
 }
 .maps-test-api-status {
   padding: 3px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: var(--color-surface-hover);
 }
 .maps-test-api-status[data-status='success'] {
@@ -173,7 +174,7 @@
 .maps-test-route-error {
   padding: 12px;
   border: 1px solid var(--color-danger-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--color-danger-soft);
 }
 .maps-test-route-error > h3,
@@ -197,7 +198,7 @@
   gap: 3px;
   padding: 12px;
   border: 1px solid var(--color-border-strong);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--color-text-primary);
   background: var(--color-surface-subtle);
   text-align: left;
@@ -225,7 +226,7 @@
   min-width: 0;
   padding: 12px;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface-subtle);
 }
 .maps-test-route-summary dt {
@@ -308,7 +309,7 @@
 }
 .maps-test-itinerary-mode {
   padding: 4px 7px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: var(--color-accent);
   background: var(--color-accent-soft);
   font-size: 12px;
@@ -322,7 +323,7 @@
   min-width: 0;
   padding: 10px 12px;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface-raised);
 }
 .maps-test-itinerary-step-content p {

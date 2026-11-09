@@ -39,6 +39,7 @@ type MapContextValue = {
 };
 
 const MapContext = createContext<MapContextValue | null>(null);
+const isGoogleMapsAvailable = mapsConfig.enabled && Boolean(mapsConfig.apiKey);
 
 function RuntimePolyline({ line }: { line: MapPolyline }) {
   const { objects } = useGoogleMap();
@@ -91,7 +92,7 @@ export function GoogleMap(props: GoogleMapProps) {
   const [runtime, setRuntime] = useState<MapRuntime | null>(null);
   const [isZooming, setIsZooming] = useState(false);
   const [status, setStatus] = useState<GoogleMapStatus>(
-    mapsConfig.apiKey ? 'loading' : 'missing-key',
+    isGoogleMapsAvailable ? 'loading' : 'missing-key',
   );
   const handle = useMemo<GoogleMapHandle>(
     () => ({
@@ -113,8 +114,8 @@ export function GoogleMap(props: GoogleMapProps) {
     }
     setRuntime(null);
     setIsZooming(false);
-    setStatus(mapsConfig.apiKey ? 'loading' : 'missing-key');
-    if (!mapsConfig.apiKey) {
+    setStatus(isGoogleMapsAvailable ? 'loading' : 'missing-key');
+    if (!isGoogleMapsAvailable) {
       return;
     }
     const controller = new AbortController();

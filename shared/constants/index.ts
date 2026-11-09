@@ -57,6 +57,10 @@ export function buildSharedTripApiRoute(token: string): string {
   return `${API_ROUTES.sharedTrips}/${encodeURIComponent(token)}`;
 }
 
+export function buildSharedTripCopyApiRoute(token: string): string {
+  return `${buildSharedTripApiRoute(token)}/copy`;
+}
+
 export function buildAnalyticsSessionEventsRoute(sessionId: string): string {
   return `${API_ROUTES.analyticsSessions}/${encodeURIComponent(sessionId)}/events`;
 }

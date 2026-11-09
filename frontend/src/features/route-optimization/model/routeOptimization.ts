@@ -20,6 +20,14 @@ type RouteOptimizationDay = TripDay & {
 };
 
 export type RouteOptimizationStartPolicy = 'fixed' | 'earliest' | 'latest';
+export type RouteOptimizationVisitPolicy =
+  | 'all-required'
+  | 'best-effort-on-failure';
+
+export type RouteOptimizationPlacePreference = {
+  required: boolean;
+  priority: number;
+};
 
 export type RouteOptimizationRequestOptions = {
   selectedStartPlaceId: string;
@@ -27,6 +35,8 @@ export type RouteOptimizationRequestOptions = {
   startPolicy: RouteOptimizationStartPolicy;
   startTime: string | null;
   travelMode: TrouteTravelMode;
+  visitPolicy: RouteOptimizationVisitPolicy;
+  placePreferences: Readonly<Record<string, RouteOptimizationPlacePreference>>;
 };
 
 const DEFAULT_START_TIME = '09:00';
@@ -45,6 +55,10 @@ const START_POLICY_BY_UI = {
   earliest: 'EARLIEST',
   latest: 'LATEST',
 } as const satisfies Record<RouteOptimizationStartPolicy, TrouteStartPolicy>;
+const VISIT_POLICY_BY_UI = {
+  'all-required': 'ALL_REQUIRED',
+  'best-effort-on-failure': 'BEST_EFFORT_ON_FAILURE',
+} as const;
 
 type LocationConstraint = {
   openTime: string;
@@ -176,6 +190,11 @@ export function createRouteOptimizationRequest(
     job_id: createRouteOptimizationJobId(activeDay.id),
     locations: requestPlaces.map((place, index) => {
       const constraint = constraints[index]!;
+      const preference = resolved.placePreferences[place.id] ?? {
+        required: false,
+        priority: 1,
+      };
+      const endpoint = index === 0 || index === requestPlaces.length - 1;
       return {
         id: place.id.trim(),
         place_id: place.placeId!.trim(),
@@ -184,8 +203,17 @@ export function createRouteOptimizationRequest(
         open_time: constraint.openTime,
         close_time: constraint.closeTime,
         stay_minutes: constraint.stayMinutes,
+        ...(resolved.visitPolicy === 'BEST_EFFORT_ON_FAILURE'
+          ? {
+              required: endpoint || preference.required,
+              priority: preference.priority,
+            }
+          : {}),
       };
     }),
+    ...(resolved.visitPolicy === 'BEST_EFFORT_ON_FAILURE'
+      ? { visit_policy: resolved.visitPolicy }
+      : {}),
     start_policy: resolved.startPolicy,
     ...(resolved.startPolicy === 'FIXED'
       ? { start_time: resolved.startTime! }
@@ -322,6 +350,7 @@ export function createTripScheduleUpdate(
   schedule: RouteOptimizationSchedule,
   selectedStartPlaceId: string,
   selectedEndPlaceId: string,
+  skippedPlaceIds: readonly string[] = [],
 ): TripScheduleUpdate {
   return {
     placeIds: schedule.placeIds,
@@ -334,6 +363,7 @@ export function createTripScheduleUpdate(
     })),
     expectedStartPlaceId: selectedStartPlaceId,
     expectedEndPlaceId: selectedEndPlaceId,
+    ...(skippedPlaceIds.length > 0 ? { skippedPlaceIds } : {}),
   };
 }
 
@@ -342,7 +372,10 @@ export function isApplicableCandidate(
   activeDay: TripDay,
   options?: Pick<
     RouteOptimizationRequestOptions,
-    'selectedStartPlaceId' | 'selectedEndPlaceId'
+    | 'selectedStartPlaceId'
+    | 'selectedEndPlaceId'
+    | 'visitPolicy'
+    | 'placePreferences'
   >,
 ): candidate is TrouteSolverCandidate {
   if (
@@ -360,9 +393,23 @@ export function isApplicableCandidate(
     options?.selectedStartPlaceId ?? orderedPlaces[0]?.id;
   const selectedEndPlaceId =
     options?.selectedEndPlaceId ?? orderedPlaces.at(-1)?.id;
+  if (!selectedStartPlaceId || !selectedEndPlaceId) {
+    return false;
+  }
+  const partial = options?.visitPolicy === 'best-effort-on-failure';
+  const requiredIds = new Set([
+    selectedStartPlaceId,
+    selectedEndPlaceId,
+    ...Object.entries(options?.placePreferences ?? {})
+      .filter(([, preference]) => preference.required)
+      .map(([placeId]) => placeId),
+  ]);
   return (
-    candidate.route.length === currentIds.size &&
-    new Set(candidate.route).size === currentIds.size &&
+    (partial
+      ? candidate.route.length >= 2 &&
+        [...requiredIds].every((placeId) => candidate.route.includes(placeId))
+      : candidate.route.length === currentIds.size) &&
+    new Set(candidate.route).size === candidate.route.length &&
     candidate.route.every((placeId) => currentIds.has(placeId)) &&
     candidate.route[0] === selectedStartPlaceId &&
     candidate.route.at(-1) === selectedEndPlaceId
@@ -542,6 +589,8 @@ function resolveRequestOptions(
   startPolicy: TrouteStartPolicy;
   startTime: string | null;
   travelMode: TrouteTravelMode;
+  visitPolicy: 'ALL_REQUIRED' | 'BEST_EFFORT_ON_FAILURE';
+  placePreferences: Readonly<Record<string, RouteOptimizationPlacePreference>>;
 } {
   return {
     selectedStartPlaceId:
@@ -554,6 +603,8 @@ function resolveRequestOptions(
       (options ? null : resolveMinimumStartTime(activeDay, orderedPlaces)),
     travelMode:
       options?.travelMode ?? getRouteOptimizationTravelMode(activeDay),
+    visitPolicy: VISIT_POLICY_BY_UI[options?.visitPolicy ?? 'all-required'],
+    placePreferences: options?.placePreferences ?? {},
   };
 }
 

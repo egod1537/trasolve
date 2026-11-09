@@ -89,6 +89,16 @@ export function createBackendServer(
       return;
     }
 
+    const sharedTripCopyToken = matchSinglePathSegment(
+      pathname,
+      `${API_ROUTES.sharedTrips}/`,
+      '/copy',
+    );
+    if (sharedTripCopyToken !== null) {
+      void tripShareHttp.handleCopy(request, response, sharedTripCopyToken);
+      return;
+    }
+
     const sharedTripToken = matchSinglePathSegment(
       pathname,
       `${API_ROUTES.sharedTrips}/`,

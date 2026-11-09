@@ -1,9 +1,17 @@
 {
   "publicSharePage": {
+    "action": {
+      "copyToMyMap": "Copy to My Maps",
+      "signInToCopy": "Sign in to copy"
+    },
     "description": {
       "unavailable": "The link is invalid or sharing has been disabled."
     },
+    "error": {
+      "copyFailed": "Could not copy this map. Try again."
+    },
     "status": {
+      "copying": "Copying to your maps.",
       "loading": "Loading shared trip."
     },
     "title": {

@@ -8,6 +8,7 @@ import { PostgresSessionRepository } from './auth/postgresSessionRepository.js';
 import type { SessionRepository } from './auth/sessionRepository.js';
 import { SessionService } from './auth/sessionService.js';
 import { loadBackendEnvironment } from './configuration/environment.js';
+import { loadExternalApiPolicy } from './configuration/externalApiPolicy.js';
 import {
   resolveBackendDataRoot,
   resolveBackendPersistenceMode,
@@ -30,6 +31,7 @@ import { AnalyticsEventHttpService } from './analytics/analyticsEventHttpService
 import { AnalyticsQueryHttpService } from './analytics/analyticsQueryHttpService.js';
 
 loadBackendEnvironment();
+const externalApiPolicy = loadExternalApiPolicy();
 
 const port = Number(process.env.PORT ?? 43127);
 const host = process.env.HOST ?? '127.0.0.1';
@@ -61,6 +63,7 @@ async function startBackend(): Promise<void> {
         sessions,
         currentUser,
         debugGuestUser?.id,
+        externalApiPolicy,
       ),
       new TripHttpService(tripController, currentUser),
       new TripShareHttpService(
@@ -68,6 +71,7 @@ async function startBackend(): Promise<void> {
           persistence.trips,
           persistence.tripShares,
           persistence.auth,
+          tripController,
         ),
         currentUser,
       ),

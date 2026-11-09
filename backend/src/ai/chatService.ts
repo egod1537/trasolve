@@ -8,12 +8,14 @@ import {
   type ChatResponse,
 } from '@trasolve/shared';
 import type { ChatProvider } from './chatProvider.js';
+import { ExternalApiPolicyError } from '../configuration/externalApiPolicy.js';
 
 class ChatError extends Error {
   public constructor(
     public readonly status: number,
     public readonly code: string,
     message: string,
+    public readonly service?: string,
   ) {
     super(message);
     this.name = 'ChatError';
@@ -36,7 +38,10 @@ export class ChatService {
         throw this.unavailable();
       }
       return result.data;
-    } catch {
+    } catch (cause) {
+      if (cause instanceof ExternalApiPolicyError) {
+        throw new ChatError(503, cause.code, cause.message, cause.service);
+      }
       // Provider errors and raw responses must not reach the client.
       throw this.unavailable();
     }
@@ -80,7 +85,11 @@ export class ChatService {
       }
       const error = cause instanceof ChatError ? cause : this.unavailable();
       const body: ApiErrorResponse = {
-        error: { code: error.code, message: error.message },
+        error: {
+          code: error.code,
+          message: error.message,
+          ...(error.service ? { service: error.service } : {}),
+        },
       };
       response.writeHead(error.status);
       response.end(JSON.stringify(body));

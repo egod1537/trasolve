@@ -9,14 +9,15 @@
   min-width: 0;
   gap: 9px;
   padding: 8px 10px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 12px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
   pointer-events: none;
   animation: bottom-context-panel-in 150ms ease-out;
   --context-accent: var(--color-primary);
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .map-tool-panel {
@@ -27,12 +28,13 @@
   flex: none;
   gap: 4px;
   padding: 6px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 12px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
   pointer-events: auto;
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .map-tool-panel button {
@@ -42,7 +44,7 @@
   height: 38px;
   padding: 0;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -89,13 +91,14 @@
   min-width: 0;
   gap: 14px;
   padding: 8px 10px 8px 14px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 12px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
   pointer-events: auto;
   animation: bottom-context-panel-in 150ms ease-out;
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .layer-bulk-selection-count {
@@ -146,7 +149,7 @@
   gap: 6px;
   padding: 0 10px;
   border: 1px solid var(--color-border-floating);
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   background: var(--color-surface-raised);
   color: var(--color-text-secondary);
   font: inherit;
@@ -218,10 +221,11 @@
   bottom: calc(100% + 10px);
   width: min(300px, calc(100vw - 24px));
   padding: 14px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 12px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .layer-bulk-mode-popover {
@@ -308,9 +312,9 @@
 }
 
 .layer-bulk-delete-actions button.is-destructive {
-  border-color: var(--color-danger);
-  background: var(--color-danger);
-  color: var(--color-accent-contrast);
+  border-color: var(--color-danger-fill);
+  background: var(--color-danger-fill);
+  color: var(--color-danger-contrast);
 }
 
 .layer-bulk-delete-actions button:hover:not(:disabled),
@@ -320,8 +324,8 @@
 
 .layer-bulk-delete-actions button.is-destructive:hover:not(:disabled),
 .layer-bulk-delete-actions button.is-destructive:focus-visible {
-  border-color: var(--color-danger-strong);
-  background: var(--color-danger-strong);
+  border-color: var(--color-danger-fill-active);
+  background: var(--color-danger-fill-active);
 }
 
 .layer-bulk-delete-actions button:disabled {
@@ -570,17 +574,24 @@
 }
 
 .route-optimization-status.is-running {
-  color: var(--accent);
+  background: var(--info-soft);
+  color: var(--info);
 }
 
 .route-optimization-status.is-failed {
+  background: var(--danger-soft);
   color: var(--danger);
 }
 
 .route-optimization-status.is-blocked {
-  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  background: var(--danger-soft);
   color: var(--danger);
   font-weight: 700;
+}
+
+.route-optimization-status.is-completed {
+  background: var(--success-soft);
+  color: var(--success-strong);
 }
 
 .route-optimization-settings,
@@ -766,7 +777,7 @@ fieldset.route-optimization-setting-field {
 
 .route-optimization-policy-options input:checked + span {
   background: var(--accent);
-  color: white;
+  color: var(--text-on-accent);
 }
 
 .route-optimization-policy-options input:focus-visible + span {
@@ -823,8 +834,8 @@ fieldset.route-optimization-setting-field {
   flex: none;
   place-items: center;
   border-radius: 50%;
-  background: var(--danger);
-  color: white;
+  background: var(--danger-fill);
+  color: var(--text-on-danger);
   font-size: 13px;
   font-weight: 800;
   line-height: 1;
@@ -993,10 +1004,11 @@ fieldset.route-optimization-setting-field {
   width: min(228px, calc(100vw - 20px));
   gap: 10px;
   padding: 12px;
-  border: 1px solid var(--color-floating-border);
-  border-radius: 10px;
-  background: var(--color-floating-surface);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: 8px;
+  background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .route-endpoint-context-menu > strong {
@@ -1217,8 +1229,8 @@ fieldset.route-optimization-setting-field {
 }
 
 .route-optimization-progress-steps li.is-completed > span {
-  border-color: var(--color-success-strong);
-  background: var(--color-success-strong);
+  border-color: var(--color-success-fill);
+  background: var(--color-success-fill);
 }
 
 .route-optimization-progress-steps li.is-completed > span::before {
@@ -1240,8 +1252,8 @@ fieldset.route-optimization-setting-field {
 }
 
 .route-optimization-progress-steps li.is-failed > span {
-  border-color: var(--danger);
-  background: var(--danger);
+  border-color: var(--danger-fill);
+  background: var(--danger-fill);
 }
 
 .route-optimization-progress-steps li.is-failed > span::before {
@@ -1249,8 +1261,8 @@ fieldset.route-optimization-setting-field {
 }
 
 .route-optimization-progress-steps li.is-cancelled > span {
-  border-color: var(--warning);
-  background: var(--warning);
+  border-color: var(--color-warning-fill);
+  background: var(--color-warning-fill);
 }
 
 .route-optimization-progress-steps li.is-cancelled > span::before {
@@ -1361,6 +1373,16 @@ fieldset.route-optimization-setting-field {
   min-width: 0;
 }
 
+.route-optimization-schedule-list > li.is-skipped {
+  opacity: 0.55;
+}
+
+.route-optimization-schedule-list
+  > li.is-skipped
+  .route-optimization-schedule-stop {
+  border-style: dashed;
+}
+
 .route-optimization-schedule-stop {
   display: flex;
   min-width: 0;
@@ -1401,7 +1423,7 @@ fieldset.route-optimization-setting-field {
   place-items: center;
   border-radius: 50%;
   background: var(--accent);
-  color: white;
+  color: var(--text-on-accent);
   font-size: 10px;
   font-weight: 750;
 }
@@ -1926,7 +1948,11 @@ fieldset.route-optimization-setting-field {
   width: 32px;
   height: 32px;
   border-radius: 9px;
-  background: color-mix(in srgb, var(--context-accent) 10%, white);
+  background: color-mix(
+    in srgb,
+    var(--context-accent) 10%,
+    var(--color-surface-raised)
+  );
   color: var(--context-accent);
 }
 

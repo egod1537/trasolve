@@ -4,6 +4,8 @@ import type { MapRuntime, MapRuntimeConfig } from '@/map/adapters/MapRuntime';
 import { loadGoogleMaps, mapsConfig } from '@/map/runtime/googleMaps';
 import { getGoogleMapThemeOptions } from '@/map/runtime/googleMapTheme';
 
+const DEFAULT_MAP_CENTER = { lat: 37.5665, lng: 126.978 };
+
 // Browser rendering infrastructure; data queries belong to src/api.
 export async function createGoogleMapRuntime(
   canvas: HTMLElement,
@@ -38,7 +40,7 @@ export async function createGoogleMapRuntime(
   try {
     const { Map } = maps as google.maps.MapsLibrary;
     instance = new Map(canvas, {
-      center: config.center ?? { lat: 35.6812, lng: 139.7671 },
+      center: config.center ?? DEFAULT_MAP_CENTER,
       zoom: config.zoom ?? 12,
       mapId: config.mapId ?? mapsConfig.mapId,
       disableDefaultUI: true,

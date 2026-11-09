@@ -12,6 +12,11 @@ import type { CurrentUserResolver } from './auth/currentUserResolver.js';
 import { readSessionSecret, sessionCookieName } from './auth/sessionCookie.js';
 import type { SessionService } from './auth/sessionService.js';
 import { GoogleOAuthClient, GoogleOAuthError } from './googleOAuth.js';
+import {
+  ExternalApiPolicyError,
+  loadExternalApiPolicy,
+  type ExternalApiPolicy,
+} from './configuration/externalApiPolicy.js';
 
 const transactionCookieName = 'trasolve_google_oauth_transaction';
 const resultCookieName = 'trasolve_google_oauth_result';
@@ -91,6 +96,7 @@ export class GoogleOAuthHttpFlow {
     private readonly sessions: SessionService,
     private readonly currentUser: CurrentUserResolver,
     private readonly debugGuestUserId?: string,
+    private readonly externalApiPolicy: ExternalApiPolicy = loadExternalApiPolicy(),
   ) {}
 
   public async handle(
@@ -114,6 +120,28 @@ export class GoogleOAuthHttpFlow {
       !isAuthLogoutRoute
     ) {
       return false;
+    }
+
+    if (
+      pathname === API_ROUTES.googleOAuthStart ||
+      pathname === API_ROUTES.googleOAuthCallback
+    ) {
+      try {
+        this.externalApiPolicy.resolve('google-oauth', pathname);
+      } catch (cause) {
+        if (cause instanceof ExternalApiPolicyError) {
+          const body: ApiErrorResponse = {
+            error: {
+              code: cause.code,
+              message: cause.message,
+              service: cause.service,
+            },
+          };
+          sendJson(response, 503, body);
+          return true;
+        }
+        throw cause;
+      }
     }
 
     if (isLocalLoginRoute || isAuthLogoutRoute) {
@@ -168,7 +196,7 @@ export class GoogleOAuthHttpFlow {
   private readonly results = new ExpiringStore<GoogleOAuthResult>();
 
   private handleStart(response: ServerResponse, requestUrl: URL): void {
-    const client = createGoogleOAuthClient();
+    const client = createGoogleOAuthClient(this.externalApiPolicy);
     const secure = usesSecureOAuthCookies();
     const returnTo = readSafeReturnTo(requestUrl);
 
@@ -255,7 +283,7 @@ export class GoogleOAuthHttpFlow {
       return;
     }
 
-    const client = createGoogleOAuthClient();
+    const client = createGoogleOAuthClient(this.externalApiPolicy);
     if (!client) {
       this.redirectWithResult(
         response,
@@ -396,9 +424,11 @@ export class GoogleOAuthHttpFlow {
   }
 }
 
-function createGoogleOAuthClient(): GoogleOAuthClient | undefined {
+function createGoogleOAuthClient(
+  externalApiPolicy: ExternalApiPolicy,
+): GoogleOAuthClient | undefined {
   try {
-    return GoogleOAuthClient.fromEnvironment();
+    return GoogleOAuthClient.fromEnvironment(process.env, externalApiPolicy);
   } catch (error) {
     if (
       error instanceof GoogleOAuthError &&

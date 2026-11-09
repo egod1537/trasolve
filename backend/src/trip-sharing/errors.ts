@@ -41,6 +41,14 @@ export function tripShareAuthenticationRequired(): TripShareError {
   );
 }
 
+export function tripShareOriginNotAllowed(): TripShareError {
+  return new TripShareError(
+    403,
+    'TRIP_SHARE_ORIGIN_NOT_ALLOWED',
+    '같은 출처에서만 공유 여행을 복사할 수 있습니다.',
+  );
+}
+
 export function tripShareStorageUnavailable(): TripShareError {
   return new TripShareError(
     503,

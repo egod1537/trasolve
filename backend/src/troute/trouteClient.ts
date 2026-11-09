@@ -19,12 +19,17 @@ import {
 } from '@trasolve/shared';
 import { TrouteClientError } from './errors.js';
 import { parseServerSentEvents } from './serverSentEvents.js';
+import {
+  loadExternalApiPolicy,
+  type ExternalApiPolicy,
+} from '../configuration/externalApiPolicy.js';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 export type TrouteClientConfig = {
   baseUrl: string;
   timeoutMs?: number;
+  externalApiPolicy?: ExternalApiPolicy;
 };
 
 export type TrouteJobEventType =
@@ -54,7 +59,12 @@ export type OpenTrouteJobEventStreamOptions = {
 
 export class TrouteClient {
   public constructor(config: TrouteClientConfig) {
-    this.baseUrl = this.normalizeBaseUrl(config.baseUrl);
+    this.externalApiPolicy =
+      config.externalApiPolicy ?? loadExternalApiPolicy();
+    this.baseUrl =
+      this.externalApiPolicy.mode === 'enabled'
+        ? this.normalizeBaseUrl(config.baseUrl)
+        : new URL('http://localhost/');
     this.timeoutMs = this.normalizeTimeout(
       config.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     );
@@ -67,6 +77,13 @@ export class TrouteClient {
         'invalid_request',
         'The troute optimization request is invalid.',
       );
+    }
+    if (this.externalApiPolicy.resolve('troute', 'submit-job') === 'mock') {
+      this.mockJobs.set(
+        parsedRequest.data.job_id,
+        this.createMockJob(parsedRequest.data),
+      );
+      return parsedRequest.data.job_id;
     }
 
     let response: { status: number; body: unknown };
@@ -97,6 +114,9 @@ export class TrouteClient {
 
   public async getJob(jobId: string): Promise<TrouteRemoteJob> {
     const normalizedJobId = this.parseJobId(jobId);
+    if (this.externalApiPolicy.resolve('troute', 'get-job') === 'mock') {
+      return this.getMockJob(normalizedJobId);
+    }
     const endpoint = `integration/jobs/${encodeURIComponent(normalizedJobId)}`;
     const body = await this.requestJson(endpoint);
     const parsed = trouteRemoteJobSchema.safeParse(body);
@@ -122,6 +142,14 @@ export class TrouteClient {
         'The troute job list limit must be between 1 and 100.',
       );
     }
+    if (this.externalApiPolicy.resolve('troute', 'list-jobs') === 'mock') {
+      return [...this.mockJobs.values()].slice(0, limit).map((job) => ({
+        job_id: job.job_id,
+        status: job.status,
+        created_at: job.created_at,
+        updated_at: job.updated_at,
+      }));
+    }
     const query = new URLSearchParams({ limit: String(limit) });
     const body = await this.requestJson(`integration/jobs?${query}`);
     const parsed = trouteRemoteJobListResponseSchema.safeParse(body);
@@ -133,6 +161,10 @@ export class TrouteClient {
 
   public async getTimeline(jobId: string): Promise<TrouteRemoteTimeline> {
     const normalizedJobId = this.parseJobId(jobId);
+    if (this.externalApiPolicy.resolve('troute', 'get-timeline') === 'mock') {
+      this.getMockJob(normalizedJobId);
+      return { job_id: normalizedJobId, entries: [] };
+    }
     const body = await this.requestJson(
       `integration/jobs/${encodeURIComponent(normalizedJobId)}/timeline`,
     );
@@ -145,6 +177,17 @@ export class TrouteClient {
 
   public async cancelJob(jobId: string): Promise<void> {
     const normalizedJobId = this.parseJobId(jobId);
+    if (this.externalApiPolicy.resolve('troute', 'cancel-job') === 'mock') {
+      const job = this.getMockJob(normalizedJobId);
+      this.mockJobs.set(normalizedJobId, {
+        ...job,
+        status: 'cancelled',
+        progress: 100,
+        result: null,
+        completed_at: MOCK_TIMESTAMP,
+      });
+      return;
+    }
     await this.requestWithoutBody(
       `integration/jobs/${encodeURIComponent(normalizedJobId)}/cancel`,
       { method: 'POST' },
@@ -156,6 +199,33 @@ export class TrouteClient {
     options: OpenTrouteJobEventStreamOptions,
   ): AsyncGenerator<TrouteJobEvent> {
     const normalizedJobId = this.parseJobId(jobId);
+    if (this.externalApiPolicy.resolve('troute', 'job-events') === 'mock') {
+      const job = this.getMockJob(normalizedJobId);
+      const type = job.status === 'cancelled' ? 'cancelled' : 'completed';
+      const body = JSON.stringify({
+        sequence: 1,
+        updated_at: job.updated_at,
+        state: {
+          job_id: job.job_id,
+          status: job.status,
+          stage: job.stage,
+          progress: job.progress,
+          last_message: job.last_message,
+          error: job.error,
+          result: job.result,
+        },
+      });
+      yield {
+        type,
+        state: JSON.parse(body).state as TrouteJobState,
+        rawData: body,
+        lastEventId: 'mock-1',
+        id: 'mock-1',
+        sequence: 1,
+        updatedAt: job.updated_at,
+      };
+      return;
+    }
     const endpoint = `integration/jobs/${encodeURIComponent(normalizedJobId)}/events`;
     const headers: Record<string, string> = { Accept: 'text/event-stream' };
     if (options.lastEventId) {
@@ -164,6 +234,7 @@ export class TrouteClient {
 
     let response: Response;
     try {
+      this.externalApiPolicy.assertNetworkAllowed('troute', 'job-events');
       response = await fetch(new URL(endpoint, this.baseUrl), {
         headers,
         signal: options.signal,
@@ -237,6 +308,9 @@ export class TrouteClient {
   }
 
   public async checkHealth(): Promise<void> {
+    if (this.externalApiPolicy.resolve('troute', 'health') === 'mock') {
+      return;
+    }
     const body = await this.requestJson('health');
     if (
       typeof body !== 'object' ||
@@ -250,6 +324,8 @@ export class TrouteClient {
 
   private readonly baseUrl: URL;
   private readonly timeoutMs: number;
+  private readonly externalApiPolicy: ExternalApiPolicy;
+  private readonly mockJobs = new Map<string, TrouteRemoteJob>();
 
   private async submitJobRequest(
     request: TrouteOptimizeRequest,
@@ -320,6 +396,7 @@ export class TrouteClient {
     init: RequestInit | undefined,
     parseJson: boolean,
   ): Promise<{ status: number; body: unknown }> {
+    this.externalApiPolicy.assertNetworkAllowed('troute', path);
     const signal = AbortSignal.timeout(this.timeoutMs);
     try {
       const response = await fetch(new URL(path, this.baseUrl), {
@@ -478,6 +555,60 @@ export class TrouteClient {
   private timeoutError(): TrouteClientError {
     return new TrouteClientError('timeout', 'The troute request timed out.');
   }
+
+  private createMockJob(request: TrouteOptimizeRequest): TrouteRemoteJob {
+    const start = request.start_time ?? '09:00';
+    const route = request.locations.map((location, index) => {
+      const arrival = addClockMinutes(start, index * 20);
+      return {
+        location_id: location.id,
+        order: index,
+        arrival_time: arrival,
+        service_start_time: arrival,
+        departure_time: addClockMinutes(arrival, location.stay_minutes),
+        wait_minutes: 0,
+        stay_minutes: location.stay_minutes,
+      };
+    });
+    return {
+      request,
+      job_id: request.job_id,
+      status: 'completed',
+      stage: null,
+      progress: 100,
+      last_message: 'Trasolve deterministic troute mock completed.',
+      created_at: MOCK_TIMESTAMP,
+      updated_at: MOCK_TIMESTAMP,
+      completed_at: MOCK_TIMESTAMP,
+      result: {
+        route,
+        total_travel_minutes: Math.max(0, request.locations.length - 1) * 10,
+        ...(request.start_policy ? { start_policy: request.start_policy } : {}),
+        selected_start_time: start,
+      },
+      error: null,
+    };
+  }
+
+  private getMockJob(jobId: string): TrouteRemoteJob {
+    const job = this.mockJobs.get(jobId);
+    if (!job) {
+      throw new TrouteClientError(
+        'upstream_http',
+        'The mock troute job was not found.',
+        404,
+      );
+    }
+    return job;
+  }
+}
+
+const MOCK_TIMESTAMP = 1_700_000_000_000;
+
+function addClockMinutes(value: string, minutes: number): string {
+  const [hours = 0, currentMinutes = 0] = value.split(':').map(Number);
+  const total = (hours * 60 + currentMinutes + minutes) % (24 * 60);
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
 
 function isTrouteJobEventType(value: string): value is TrouteJobEventType {
