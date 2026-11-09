@@ -26,6 +26,7 @@ type Props = SelectionProps & {
   trip: Trip;
   busy: boolean;
   saveStatus: 'ready' | 'dirty' | 'saving' | 'error';
+  saveUnconfirmed: boolean;
   savedAt: string;
   mutationError: string | null;
   debugMode: boolean;
@@ -68,6 +69,7 @@ export const LayerPanel = memo(function LayerPanel({
   trip,
   busy,
   saveStatus,
+  saveUnconfirmed,
   savedAt,
   mutationError,
   debugMode,
@@ -224,6 +226,7 @@ export const LayerPanel = memo(function LayerPanel({
         <LayerPanelHeader
           trip={trip}
           saveStatus={saveStatus}
+          saveUnconfirmed={saveUnconfirmed}
           savedAt={savedAt}
           onAddLayer={onAddLayer}
           onShareTrip={openShareModal}

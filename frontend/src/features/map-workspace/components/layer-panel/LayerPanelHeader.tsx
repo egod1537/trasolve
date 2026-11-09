@@ -19,6 +19,7 @@ type SaveStatus = 'ready' | 'dirty' | 'saving' | 'error';
 type Props = {
   trip: Trip;
   saveStatus: SaveStatus;
+  saveUnconfirmed: boolean;
   savedAt: string;
   onAddLayer: () => void;
   onShareTrip: () => void;
@@ -72,6 +73,7 @@ function ActionIcon({ children }: { children: ReactNode }) {
 export const LayerPanelHeader = memo(function LayerPanelHeader({
   trip,
   saveStatus,
+  saveUnconfirmed,
   savedAt,
   onAddLayer,
   onShareTrip,
@@ -88,8 +90,9 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
     (total, day) => total + day.places.length,
     0,
   );
-  const saveLabel =
-    saveStatus === 'saving'
+  const saveLabel = saveUnconfirmed
+    ? L('map:tripRecovery.status.unconfirmed')
+    : saveStatus === 'saving'
       ? L('map:layerPanelHeader.saveLabel.text.saving')
       : saveStatus === 'error'
         ? L('map:layerPanelHeader.saveLabel.text.saveFailed')
