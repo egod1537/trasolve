@@ -1,107 +1,41 @@
 import type {
   PlaceOpeningHours,
   PlaceOpeningHoursPeriod,
-  PlaceOpeningHoursPoint,
-  PlaceOpeningSchedule,
 } from '@trasolve/shared';
 import { formatClockTime } from '@/entities/place/model/clockFormat';
+import {
+  type PlaceOpeningStatus,
+  type LocalClock,
+  type NextOpening,
+  type PlaceOpeningTimelineRange,
+  type PlaceOpeningHoursMessages,
+} from '@/entities/place/model/openingHoursTypes';
+import {
+  MINUTES_PER_DAY,
+  MINUTES_PER_WEEK,
+  getParts,
+  calendarDay,
+  isAlwaysOpen,
+  minutesUntil,
+} from '@/entities/place/model/openingHoursClock';
+import {
+  formatDuration,
+  formatTodayHours,
+  formatWeeklyHours,
+  formatNextOpen,
+} from '@/entities/place/model/openingHoursFormatting';
+import {
+  getTodayTimelineRanges,
+  getOpeningTimeline,
+} from '@/entities/place/model/openingHoursTimeline';
+export {
+  type PlaceOpeningTimeline,
+  type PlaceOpeningStatus,
+  type PlaceOpeningTimelineRange,
+  type PlaceOpeningHoursMessages,
+} from '@/entities/place/model/openingHoursTypes';
 
 export const CLOSING_SOON_THRESHOLD_MINUTES = 60;
-
-type OpeningStatusBase = {
-  todayHours: string[];
-  weeklyHours: string[];
-  timelineRanges: PlaceOpeningTimelineRange[];
-  timeline?: PlaceOpeningTimeline;
-};
-
-export type PlaceOpeningTimeline = {
-  startText: string;
-  endText: string;
-  state: 'open' | 'closing-soon' | 'before-open' | 'closed';
-  progress?: number;
-};
-
-export type PlaceOpeningStatus =
-  | (OpeningStatusBase & {
-      type: 'open';
-      label: string;
-      relativeText?: string;
-    })
-  | (OpeningStatusBase & {
-      type: 'closing-soon';
-      label: string;
-      relativeText?: string;
-    })
-  | (OpeningStatusBase & {
-      type: 'closed';
-      label: string;
-      nextOpenText?: string;
-    })
-  | (OpeningStatusBase & {
-      type: 'before-open';
-      label: string;
-      nextOpenText?: string;
-      relativeText?: string;
-    })
-  | (OpeningStatusBase & {
-      type: 'always-open';
-      label: string;
-    })
-  | (OpeningStatusBase & {
-      type: 'unknown';
-      label: string;
-      explanation?: string;
-    });
-
-type LocalClock = {
-  year: number;
-  month: number;
-  day: number;
-  weekday: number;
-  hour: number;
-  minute: number;
-};
-
-type NextOpening = {
-  minutes: number;
-  dayOffset: number;
-  point: PlaceOpeningHoursPoint;
-};
-
-export type PlaceOpeningTimelineRange = {
-  start: number;
-  end: number;
-  startText: string;
-  endText: string;
-};
-
-const MINUTES_PER_DAY = 24 * 60;
-const MINUTES_PER_WEEK = 7 * MINUTES_PER_DAY;
-export type PlaceOpeningHoursMessages = {
-  status: {
-    open: string;
-    closingSoon: string;
-    closed: string;
-    beforeOpen: string;
-    alwaysOpen: string;
-    unavailable: string;
-    needsReview: string;
-  };
-  weekdays: readonly string[];
-  shortWeekdays: readonly string[];
-  today: string;
-  tomorrow: string;
-  nextDay: string;
-  closed: string;
-  alwaysOpenWeek: string;
-  missingTimeZone: string;
-  after: (time: string) => string;
-  duration: (hours: number, minutes: number) => string;
-  closesAfter: (duration: string) => string;
-  opensAfter: (duration: string) => string;
-  opensAt: (prefix: string, time: string) => string;
-};
 
 const EMPTY_MESSAGES: PlaceOpeningHoursMessages = {
   status: {
@@ -127,274 +61,6 @@ const EMPTY_MESSAGES: PlaceOpeningHoursMessages = {
   opensAfter: (duration) => duration,
   opensAt: (_prefix, time) => time,
 };
-
-function formatDuration(minutes: number, messages: PlaceOpeningHoursMessages) {
-  const rounded = Math.max(0, Math.ceil(minutes));
-  const hours = Math.floor(rounded / 60);
-  const remainingMinutes = rounded % 60;
-  return messages.duration(hours, remainingMinutes);
-}
-
-function getParts(date: Date, hours: PlaceOpeningHours): LocalClock | null {
-  if (hours.timeZone) {
-    try {
-      const parts = new Intl.DateTimeFormat('en-US-u-ca-gregory-nu-latn', {
-        timeZone: hours.timeZone,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hourCycle: 'h23',
-      }).formatToParts(date);
-      const values = Object.fromEntries(
-        parts.map((part) => [part.type, Number(part.value)]),
-      );
-      const year = values.year,
-        month = values.month,
-        day = values.day,
-        hour = values.hour,
-        minute = values.minute;
-      if (
-        year === undefined ||
-        month === undefined ||
-        day === undefined ||
-        hour === undefined ||
-        minute === undefined
-      ) {
-        return null;
-      }
-      return {
-        year,
-        month,
-        day,
-        weekday: new Date(Date.UTC(year, month - 1, day)).getUTCDay(),
-        hour,
-        minute,
-      };
-    } catch {
-      // Fall back to a validated offset when an unknown IANA zone is supplied.
-    }
-  }
-
-  if (hours.utcOffsetMinutes === undefined) {
-    return null;
-  }
-  const shifted = new Date(date.getTime() + hours.utcOffsetMinutes * 60_000);
-  return {
-    year: shifted.getUTCFullYear(),
-    month: shifted.getUTCMonth() + 1,
-    day: shifted.getUTCDate(),
-    weekday: shifted.getUTCDay(),
-    hour: shifted.getUTCHours(),
-    minute: shifted.getUTCMinutes(),
-  };
-}
-
-function calendarDay(clock: Pick<LocalClock, 'year' | 'month' | 'day'>) {
-  return Math.floor(
-    Date.UTC(clock.year, clock.month - 1, clock.day) / 86_400_000,
-  );
-}
-
-function getPointDayOffset(point: PlaceOpeningHoursPoint, clock: LocalClock) {
-  return point.date
-    ? calendarDay(point.date) - calendarDay(clock)
-    : point.day - clock.weekday;
-}
-
-function getPeriodDuration(period: PlaceOpeningHoursPeriod) {
-  if (!period.close) {
-    return undefined;
-  }
-
-  const openMinutes = period.open.hour * 60 + period.open.minute;
-  const closeMinutes = period.close.hour * 60 + period.close.minute;
-  if (period.open.date && period.close.date) {
-    const dayDifference =
-      calendarDay(period.close.date) - calendarDay(period.open.date);
-    const duration =
-      dayDifference * MINUTES_PER_DAY + closeMinutes - openMinutes;
-    return duration > 0 ? duration : undefined;
-  }
-
-  const openWeekMinutes = period.open.day * MINUTES_PER_DAY + openMinutes;
-  const closeWeekMinutes = period.close.day * MINUTES_PER_DAY + closeMinutes;
-  const duration =
-    (closeWeekMinutes - openWeekMinutes + MINUTES_PER_WEEK) % MINUTES_PER_WEEK;
-  return duration > 0 ? duration : MINUTES_PER_WEEK;
-}
-
-function getTodayTimelineRanges(
-  periods: readonly PlaceOpeningHoursPeriod[],
-  clock: LocalClock,
-) {
-  const ranges: PlaceOpeningTimelineRange[] = [];
-
-  for (const period of periods) {
-    if (!period.close) {
-      continue;
-    }
-    const duration = getPeriodDuration(period);
-    if (duration === undefined) {
-      continue;
-    }
-
-    const startOfDay =
-      getPointDayOffset(period.open, clock) * MINUTES_PER_DAY +
-      period.open.hour * 60 +
-      period.open.minute;
-    const weekOffsets = period.open.date
-      ? [0]
-      : [-MINUTES_PER_WEEK, 0, MINUTES_PER_WEEK];
-
-    for (const weekOffset of weekOffsets) {
-      const start = startOfDay + weekOffset;
-      const end = start + duration;
-      if (start >= MINUTES_PER_DAY || end <= 0) {
-        continue;
-      }
-      const visibleStart = Math.max(0, start);
-      const visibleEnd = Math.min(MINUTES_PER_DAY, end);
-      ranges.push({
-        start,
-        end,
-        startText: formatClockTime(visibleStart),
-        endText: formatClockTime(visibleEnd, { endOfDay: true }),
-      });
-    }
-  }
-
-  return ranges.sort((left, right) => left.start - right.start);
-}
-
-function getOpeningTimeline(
-  ranges: readonly PlaceOpeningTimelineRange[],
-  clock: LocalClock,
-  state: PlaceOpeningTimeline['state'],
-): PlaceOpeningTimeline | undefined {
-  const now = clock.hour * 60 + clock.minute;
-  let range: PlaceOpeningTimelineRange | undefined;
-
-  if (state === 'open' || state === 'closing-soon') {
-    range = ranges.find(({ start, end }) => start <= now && now < end);
-  } else if (state === 'before-open') {
-    range = ranges.find(({ start }) => start > now);
-  } else {
-    range = [...ranges].reverse().find(({ end }) => end <= now);
-  }
-
-  if (!range) {
-    return undefined;
-  }
-  const progress =
-    state === 'open' || state === 'closing-soon'
-      ? ((now - range.start) / (range.end - range.start)) * 100
-      : undefined;
-
-  return {
-    startText: range.startText,
-    endText: range.endText,
-    state,
-    progress,
-  };
-}
-
-function matchesDay(point: PlaceOpeningHoursPoint, clock: LocalClock) {
-  return point.date
-    ? point.date.year === clock.year &&
-        point.date.month === clock.month &&
-        point.date.day === clock.day
-    : point.day === clock.weekday;
-}
-
-function isSamePointDay(
-  left: PlaceOpeningHoursPoint,
-  right: PlaceOpeningHoursPoint,
-) {
-  if (left.date && right.date) {
-    return (
-      left.date.year === right.date.year &&
-      left.date.month === right.date.month &&
-      left.date.day === right.date.day
-    );
-  }
-  return left.day === right.day;
-}
-
-function isAlwaysOpen(schedule?: PlaceOpeningSchedule) {
-  const periods = schedule?.periods;
-  return (
-    periods?.length === 1 &&
-    periods[0].open.day === 0 &&
-    periods[0].open.hour === 0 &&
-    periods[0].open.minute === 0 &&
-    periods[0].close === undefined
-  );
-}
-
-function formatTodayHours(
-  periods: readonly PlaceOpeningHoursPeriod[],
-  clock: LocalClock,
-  messages: PlaceOpeningHoursMessages,
-) {
-  const ranges: Array<{ start: number; text: string }> = [];
-  for (const period of periods) {
-    const opensToday = matchesDay(period.open, clock);
-    const closesToday = period.close && matchesDay(period.close, clock);
-    if (opensToday) {
-      const start = period.open.hour * 60 + period.open.minute;
-      if (!period.close) {
-        ranges.push({
-          start,
-          text: messages.after(formatClockTime(period.open)),
-        });
-        continue;
-      }
-      const nextDay = !isSamePointDay(period.open, period.close);
-      ranges.push({
-        start,
-        text: `${formatClockTime(period.open)} ~ ${nextDay ? `${messages.nextDay} ` : ''}${formatClockTime(period.close)}`,
-      });
-    } else if (closesToday && period.close) {
-      ranges.push({
-        start: 0,
-        text: `${formatClockTime(0)} ~ ${formatClockTime(period.close)}`,
-      });
-    }
-  }
-  return ranges
-    .sort((left, right) => left.start - right.start)
-    .slice(0, 3)
-    .map(({ text }) => text);
-}
-
-function formatWeeklyHours(
-  schedule: PlaceOpeningSchedule | undefined,
-  messages: PlaceOpeningHoursMessages,
-) {
-  if (schedule?.weekdayDescriptions?.length) {
-    return schedule.weekdayDescriptions;
-  }
-  if (!schedule?.periods) {
-    return [];
-  }
-  if (isAlwaysOpen(schedule)) {
-    return [messages.alwaysOpenWeek];
-  }
-
-  return [1, 2, 3, 4, 5, 6, 0].map((day) => {
-    const ranges = schedule
-      .periods!.filter((period) => !period.open.date && period.open.day === day)
-      .map((period) => {
-        if (!period.close) {
-          return messages.after(formatClockTime(period.open));
-        }
-        return `${formatClockTime(period.open)} ~ ${formatClockTime(period.close)}`;
-      });
-    return `${messages.shortWeekdays[day]} ${ranges.length ? ranges.join(', ') : messages.closed}`;
-  });
-}
 
 function getWeeklyTiming(
   periods: readonly PlaceOpeningHoursPeriod[],
@@ -440,17 +106,6 @@ function getWeeklyTiming(
   return { open, minutesUntilClose, nextOpening };
 }
 
-function minutesUntil(timestamp: string | undefined, now: Date) {
-  if (!timestamp) {
-    return undefined;
-  }
-  const target = Date.parse(timestamp);
-  if (!Number.isFinite(target) || target < now.getTime()) {
-    return undefined;
-  }
-  return (target - now.getTime()) / 60_000;
-}
-
 function nextOpeningFromTimestamp(
   timestamp: string | undefined,
   hours: PlaceOpeningHours,
@@ -474,19 +129,6 @@ function nextOpeningFromTimestamp(
       minute: target.minute,
     },
   } satisfies NextOpening;
-}
-
-function formatNextOpen(
-  next: NextOpening,
-  messages: PlaceOpeningHoursMessages,
-) {
-  const prefix =
-    next.dayOffset <= 0
-      ? messages.today
-      : next.dayOffset === 1
-        ? messages.tomorrow
-        : messages.weekdays[next.point.day];
-  return messages.opensAt(prefix, formatClockTime(next.point));
 }
 
 export function getPlaceOpeningStatus(

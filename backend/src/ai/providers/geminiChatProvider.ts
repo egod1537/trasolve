@@ -14,6 +14,11 @@ import {
   loadExternalApiPolicy,
   type ExternalApiPolicy,
 } from '../../configuration/externalApiPolicy.js';
+import {
+  assertInstrumentedNetworkAllowed,
+  instrumentExternalApiFetch,
+  resolveInstrumentedExternalApiMode,
+} from '../../observability/externalApiUsage/externalApiUsage.js';
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1/';
 // Function calling is sent to v1beta; plain text requests stay on v1.
@@ -147,9 +152,14 @@ export class GeminiChatProvider implements ChatProvider {
 
   public async chat(request: ChatRequest): Promise<ChatResponse> {
     if (
-      this.externalApiPolicy.resolve('gemini', 'generate-content') === 'mock'
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'gemini',
+        'generate-content',
+      ) === 'mock'
     ) {
       return {
+        model: this.model,
         message: {
           role: 'assistant',
           content: 'Trasolve deterministic Gemini mock response.',
@@ -173,40 +183,53 @@ export class GeminiChatProvider implements ChatProvider {
     let response: Response;
 
     try {
-      this.externalApiPolicy.assertNetworkAllowed('gemini', 'generate-content');
-      response = await fetch(
-        new URL(
-          `models/${encodeURIComponent(this.model)}:generateContent`,
-          this.baseUrlOverride ??
-            (useTools ? GEMINI_TOOLS_API_BASE_URL : GEMINI_API_BASE_URL),
-        ),
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': this.apiKey,
-            'x-goog-api-client': 'trasolve/0.0.0',
-          },
-          body: JSON.stringify({
-            ...(systemInstruction
-              ? { systemInstruction: { parts: [{ text: systemInstruction }] } }
-              : {}),
-            contents,
-            ...(useTools
-              ? {
-                  tools: [
-                    {
-                      functionDeclarations: [
-                        createTripCommandPlanFunctionDeclaration(),
+      assertInstrumentedNetworkAllowed(
+        this.externalApiPolicy,
+        'gemini',
+        'generate-content',
+      );
+      response = await instrumentExternalApiFetch(
+        'gemini',
+        'generate-content',
+        () =>
+          fetch(
+            new URL(
+              `models/${encodeURIComponent(this.model)}:generateContent`,
+              this.baseUrlOverride ??
+                (useTools ? GEMINI_TOOLS_API_BASE_URL : GEMINI_API_BASE_URL),
+            ),
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': this.apiKey,
+                'x-goog-api-client': 'trasolve/0.0.0',
+              },
+              body: JSON.stringify({
+                ...(systemInstruction
+                  ? {
+                      systemInstruction: {
+                        parts: [{ text: systemInstruction }],
+                      },
+                    }
+                  : {}),
+                contents,
+                ...(useTools
+                  ? {
+                      tools: [
+                        {
+                          functionDeclarations: [
+                            createTripCommandPlanFunctionDeclaration(),
+                          ],
+                        },
                       ],
-                    },
-                  ],
-                  toolConfig: { functionCallingConfig: { mode: 'AUTO' } },
-                }
-              : {}),
-          }),
-          signal,
-        },
+                      toolConfig: { functionCallingConfig: { mode: 'AUTO' } },
+                    }
+                  : {}),
+              }),
+              signal,
+            },
+          ),
       );
     } catch {
       if (signal.aborted) {
@@ -269,6 +292,7 @@ export class GeminiChatProvider implements ChatProvider {
         );
       }
       return {
+        model: this.model,
         message: { role: 'assistant', content: planText },
         toolCall: { name: TRIP_COMMAND_PLAN_TOOL_NAME, arguments: plan },
       };
@@ -285,7 +309,7 @@ export class GeminiChatProvider implements ChatProvider {
       );
     }
 
-    return { message: { role: 'assistant', content } };
+    return { model: this.model, message: { role: 'assistant', content } };
   }
 
   private readonly apiKey: string;

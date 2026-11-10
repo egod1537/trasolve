@@ -1,4 +1,3 @@
-import heroMap from '@/shared/assets/hero-map.png';
 import { ANALYTICS_SCREENS, type AnalyticsTarget } from '@trasolve/shared';
 import { HeroVisual } from '@/pages/landing/components/HeroVisual';
 import { useL } from '@/shared/i18n';
@@ -21,20 +20,20 @@ export function Hero({
   const L = useL();
   return (
     <section className="hero" id="top" aria-labelledby="hero-title">
-      <div className="hero-background" aria-hidden="true">
-        <img src={heroMap} alt="" decoding="async" draggable={false} />
-        <div className="hero-background-overlay" />
-      </div>
       <div className="hero-copy">
         <h1 id="hero-title">
-          {L('common:hero.title.travelItineraryRoute')}
-          <br />
-          {L('common:hero.title.organizeItAllAtOnce')}
+          <span className="hero-title-line">
+            {L('common:landing.hero.title.places')}
+          </span>
+          <span className="hero-title-line">
+            <span className="hero-title-accent">
+              {L('common:landing.hero.title.connected')}
+            </span>{' '}
+            {L('common:landing.hero.title.journey')}
+          </span>
         </h1>
         <p className="hero-description">
-          {L('common:hero.description.placeScheduleOnePlan')}
-          <br className="desktop-break" />
-          {L('common:hero.description.makeTravelPlanByLookingAt')}
+          {L('common:landing.hero.description')}
         </p>
         <div
           className="hero-actions"
@@ -50,10 +49,14 @@ export function Hero({
             onClick={onPrimaryAction}
           >
             {primaryActionLabel}
+            <svg
+              className="button-arrow"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M4 12h15m-6-6 6 6-6 6" />
+            </svg>
           </button>
-          <a className="button button-secondary" href="#features">
-            {L('common:hero.text.viewFeatures')}
-          </a>
         </div>
         {authNotice && (
           <p className="hero-auth-notice" role="alert">

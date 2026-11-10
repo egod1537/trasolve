@@ -35,6 +35,15 @@ export function ExpandIcon(props: Props) {
   );
 }
 
+export function FolderOpenIcon(props: Props) {
+  return (
+    <Icon {...props}>
+      <path d="M3 17V6a2 2 0 0 1 2-2h4l3 3h7a2 2 0 0 1 2 2v2" />
+      <path d="m3 17 3-6h16l-3 9H5a2 2 0 0 1-2-3Z" />
+    </Icon>
+  );
+}
+
 export function RefreshIcon(props: Props) {
   return (
     <Icon {...props}>

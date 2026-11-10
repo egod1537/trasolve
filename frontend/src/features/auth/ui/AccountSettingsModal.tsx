@@ -1,3 +1,4 @@
+import { useLoginDialog } from '@/features/auth/model/loginDialogContext';
 import { useId } from 'react';
 import type { AuthUser } from '@trasolve/shared';
 import { Button } from '@/shared/ui/Button';
@@ -23,6 +24,7 @@ export function AccountSettingsModal({
 }: Props) {
   const L = useL();
   const titleId = useId();
+  const openLoginDialog = useLoginDialog();
 
   return (
     <Dialog
@@ -60,37 +62,63 @@ export function AccountSettingsModal({
           />
         ) : (
           <span className="account-settings-avatar-fallback" aria-hidden="true">
-            {(user.name ?? user.email).trim().slice(0, 1).toUpperCase()}
+            {(user.name ?? user.email ?? user.id)
+              .trim()
+              .slice(0, 1)
+              .toUpperCase()}
           </span>
         )}
         <div className="account-settings-identity-text">
           <strong className="account-settings-name">
-            {user.name ?? user.email}
+            {user.name ?? user.email ?? user.id}
           </strong>
           <span className="account-settings-email">{user.email}</span>
-          <StatusBadge
-            className="account-settings-badge"
-            tone={user.emailVerified ? 'success' : 'danger'}
-          >
-            {user.emailVerified
-              ? L('auth:accountSettingsModal.text.emailVerified')
-              : L('auth:accountSettingsModal.text.emailNotVerified')}
-          </StatusBadge>
+          {user.email && (
+            <StatusBadge
+              className="account-settings-badge"
+              tone={user.emailVerified ? 'success' : 'danger'}
+            >
+              {user.emailVerified
+                ? L('auth:accountSettingsModal.text.emailVerified')
+                : L('auth:accountSettingsModal.text.emailNotVerified')}
+            </StatusBadge>
+          )}
         </div>
       </div>
 
       <dl className="account-settings-details">
         <dt>{L('auth:accountSettingsModal.label.loginMethod')}</dt>
-        <dd>{NL('Google')}</dd>
+        <dd className="account-settings-login-method">
+          {user.loginProvider === 'ssu'
+            ? NL('숭실대학교 SSO')
+            : user.loginProvider === 'local'
+              ? NL('Trasolve Debug')
+              : NL('Google')}
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={loggingOut}
+            onClick={() =>
+              openLoginDialog(
+                window.location.pathname + window.location.search,
+                true,
+              )
+            }
+          >
+            {L('common:action.add')}
+          </Button>
+        </dd>
         <dt>{L('auth:accountSettingsModal.label.accountId')}</dt>
         <dd className="account-settings-id">{user.id}</dd>
       </dl>
 
-      <p className="account-settings-note">
-        {L(
-          'auth:accountSettingsModal.description.thisAccountInformationComesFromGoogle',
-        )}
-      </p>
+      {(!user.loginProvider || user.loginProvider === 'google') && (
+        <p className="account-settings-note">
+          {L(
+            'auth:accountSettingsModal.description.thisAccountInformationComesFromGoogle',
+          )}
+        </p>
+      )}
 
       <div className="account-settings-actions">
         <Button variant="danger" loading={loggingOut} onClick={onLogout}>

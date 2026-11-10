@@ -354,6 +354,18 @@
       "serverStatus": "서버 상태: {{status}}"
     }
   },
+  "routeReviewSummary": {
+    "basis": "일정 시간과 핀 사이 직선 거리 기준입니다.",
+    "distanceAdded": "{{distance}} 증가",
+    "distanceLabel": "직선 이동 거리",
+    "distanceSaved": "{{distance}} 감소",
+    "percentDecrease": "{{percent}} 감소",
+    "percentIncrease": "{{percent}} 증가",
+    "timeAdded": "{{duration}} 증가",
+    "timeLabel": "이동과 대기 시간",
+    "timeSaved": "{{duration}} 단축",
+    "title": "경로 최적화 결과"
+  },
   "routeSchedulePreview": {
     "afterSchedule": {
       "description": {

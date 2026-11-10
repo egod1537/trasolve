@@ -1,0 +1,411 @@
+.route-settings-popup {
+  width: min(520px, 100%);
+  overflow: auto;
+}
+
+.route-settings-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.route-settings-popup h2 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.route-settings-popup-body {
+  display: grid;
+  gap: 24px;
+  padding: 24px;
+}
+
+.route-settings-popup fieldset {
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  border: 0;
+}
+
+.route-settings-popup legend,
+.route-settings-field > span {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.route-settings-field {
+  display: grid;
+}
+
+.route-settings-icon-options {
+  display: grid;
+  gap: 8px;
+}
+
+.route-settings-travel-options {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.route-settings-start-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.route-settings-icon-options button {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 72px;
+  padding: 10px 6px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.route-settings-icon-options button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.route-settings-icon-options button:disabled {
+  cursor: default;
+  opacity: var(--opacity-disabled);
+}
+
+.route-settings-icon-options button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.route-settings-icon-options svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route-settings-departure:has(input) {
+  margin-top: 10px;
+}
+
+.route-settings-day-options {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.route-settings-day-options button {
+  flex: 0 0 108px;
+  flex-direction: column;
+  scroll-snap-align: start;
+  font: inherit;
+  white-space: nowrap;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.route-settings-day-options button span {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.route-settings-day-options button[aria-pressed='true'] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.route-settings-departure {
+  display: flex;
+  gap: 12px;
+}
+
+.route-settings-departure > * {
+  width: 0;
+  min-width: 0;
+  flex: 1;
+}
+
+.route-settings-error,
+.route-review-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.route-settings-error > p {
+  margin: 0;
+}
+
+.route-optimization-failure-details {
+  display: grid;
+  gap: 8px;
+}
+
+.route-optimization-failure-place {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.route-optimization-failure-facts,
+.route-optimization-failure-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.route-optimization-failure-facts li,
+.route-optimization-failure-suggestions li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.route-optimization-failure-facts strong,
+.route-optimization-failure-suggestions strong {
+  color: var(--text-primary);
+  font-size: inherit;
+}
+
+.route-optimization-failure-suggestions {
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--danger) 20%, transparent);
+}
+
+.route-optimization-failure-suggestions del {
+  color: var(--text-muted);
+}
+
+.route-optimization-failure-resolution {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.route-settings-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--border-default);
+}
+
+.route-review-sidebar {
+  position: absolute;
+  z-index: 2500;
+  inset: 16px auto 16px 16px;
+  display: flex;
+  flex-direction: column;
+  width: var(--trip-panel-width);
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-lg);
+  background: var(--color-map-overlay-surface);
+  box-shadow: var(--shadow-map-overlay);
+  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: blur(var(--map-overlay-blur));
+}
+
+.route-review-sidebar > header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.route-review-sidebar h1 {
+  margin: 0;
+  font-size: 23px;
+  line-height: 1.4;
+}
+
+.route-review-sidebar header p {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.route-review-day-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 24px;
+}
+
+.route-review-day-heading h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.route-review-day-heading span {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.route-review-day-heading .route-review-mode-badge {
+  padding: 6px 10px;
+  color: var(--route-review-color);
+  background: color-mix(in srgb, var(--route-review-color), transparent 90%);
+  border-radius: var(--radius-pill);
+}
+
+.route-review-place-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 20px 20px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.route-review-place-list li {
+  padding: 14px 0;
+  border-top: 1px solid var(--border-default);
+}
+
+.route-review-place-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.route-review-place-heading strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.route-review-place-number {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--route-review-color), transparent 90%);
+  color: var(--route-review-color);
+  font-weight: 700;
+}
+
+.route-review-place-timeline {
+  margin: 10px 0 0 40px;
+}
+
+.route-review-controls-positioner {
+  position: absolute;
+  z-index: 2700;
+  right: 24px;
+  bottom: 24px;
+  left: calc(var(--trip-panel-width) + 40px);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.route-review-controls,
+.route-apply-confirmation {
+  --accent: #7351e8;
+  --accent-hover: #6241d3;
+  --accent-active: #5131bd;
+}
+
+.route-settings-day-options button strong {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.route-settings-departure-options {
+  display: grid;
+  gap: 8px;
+}
+.route-settings-fixed-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+.route-settings-fixed-option[data-selected='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.route-settings-fixed-option button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  text-align: left;
+  cursor: pointer;
+}
+.route-settings-fixed-option svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+.route-settings-fixed-option .ui-field {
+  width: 128px;
+  min-width: 0;
+  flex: 0 1 128px;
+}
+.route-settings-fixed-option .ui-field:disabled {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  opacity: 0.65;
+}

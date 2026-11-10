@@ -354,6 +354,18 @@
       "serverStatus": "Серверийн төлөв: {{status}}"
     }
   },
+  "routeReviewSummary": {
+    "basis": "Хуваарийн цаг болон цэгүүдийн хоорондох шулуун зайд үндэслэв.",
+    "distanceAdded": "{{distance}} нэмэгдсэн",
+    "distanceLabel": "Шулуун шугамын зай",
+    "distanceSaved": "{{distance}} багассан",
+    "percentDecrease": "{{percent}} буурсан",
+    "percentIncrease": "{{percent}} өссөн",
+    "timeAdded": "{{duration}} нэмэгдсэн",
+    "timeLabel": "Зорчих болон хүлээх хугацаа",
+    "timeSaved": "{{duration}} хэмнэсэн",
+    "title": "Маршрут оновчлолын үр дүн"
+  },
   "routeSchedulePreview": {
     "afterSchedule": {
       "description": {

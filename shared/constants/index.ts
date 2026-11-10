@@ -19,6 +19,7 @@ export {
 } from './tripCommandPlan.js';
 
 export const API_ROUTES = {
+  billing: '/api/billing',
   health: '/api/health',
   analyticsEvents: '/api/analytics/events',
   analyticsFlows: '/api/analytics/flows',
@@ -28,6 +29,7 @@ export const API_ROUTES = {
   chat: '/api/chat',
   openWebUIModels: '/api/openwebui/models',
   trouteOptimize: '/api/troute/optimize',
+  trouteJobs: '/api/troute/jobs',
   trouteInternalHealth: '/api/internal/troute/health',
   trouteInternalJobs: '/api/internal/troute/jobs',
   tcacheInternalHealth: '/api/internal/tcache/health',
@@ -37,12 +39,22 @@ export const API_ROUTES = {
   routes: '/api/routes',
   placesAutocomplete: '/api/google/maps/places/autocomplete',
   places: '/api/google/maps/places',
+  ssuSsoStart: '/api/auth/ssu/start',
+  ssuSsoCallback: '/api/auth/ssu/callback',
   googleOAuthStart: '/api/auth/google/start',
   googleOAuthCallback: '/api/auth/google/callback',
   googleOAuthResult: '/api/auth/google/result',
   authLocalLogin: '/api/auth/local',
   authMe: '/api/auth/me',
   authLogout: '/api/auth/logout',
+  admin: '/api/admin',
+  adminMe: '/api/admin/me',
+  adminSummary: '/api/admin/summary',
+  adminUsers: '/api/admin/users',
+  adminTrips: '/api/admin/trips',
+  adminApiUsageSummary: '/api/admin/api-usage/summary',
+  adminOperationsSummary: '/api/admin/operations/summary',
+  adminAudit: '/api/admin/audit',
 } as const;
 
 export const API_ROUTE_SUFFIXES = {
@@ -67,4 +79,19 @@ export function buildAnalyticsSessionEventsRoute(sessionId: string): string {
 
 export function buildAnalyticsFunnelApiRoute(funnelId: string): string {
   return `${API_ROUTES.analyticsFunnels}/${encodeURIComponent(funnelId)}`;
+}
+
+export function buildAdminUserApiRoute(userId: string): string {
+  return `${API_ROUTES.adminUsers}/${encodeURIComponent(userId)}`;
+}
+
+export function buildAdminUserActionApiRoute(
+  userId: string,
+  action: 'suspend' | 'restore' | 'revoke-sessions',
+): string {
+  return `${buildAdminUserApiRoute(userId)}/${action}`;
+}
+
+export function buildAdminTripMetadataApiRoute(tripId: string): string {
+  return `${API_ROUTES.adminTrips}/${encodeURIComponent(tripId)}/metadata`;
 }

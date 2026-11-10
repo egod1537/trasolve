@@ -3,7 +3,6 @@ export type MapDetailTarget =
 
 export type MapWorkspaceTransientState = {
   searchDismissRevision: number;
-  activeMapTool: 'pan';
   routeOptimizationOpen: boolean;
   mapDetailTarget: MapDetailTarget;
 };
@@ -12,13 +11,11 @@ export type MapWorkspaceTransientAction =
   | { type: 'map-clicked' }
   | { type: 'detail-selected'; target: Exclude<MapDetailTarget, null> }
   | { type: 'detail-closed' }
-  | { type: 'map-tool-selected'; tool: 'pan' }
   | { type: 'route-optimization-toggled' }
   | { type: 'route-optimization-closed' };
 
 export const initialMapWorkspaceTransientState: MapWorkspaceTransientState = {
   searchDismissRevision: 0,
-  activeMapTool: 'pan',
   routeOptimizationOpen: false,
   mapDetailTarget: null,
 };
@@ -40,8 +37,6 @@ export function reduceMapWorkspaceTransientState(
       return state.mapDetailTarget
         ? { ...state, mapDetailTarget: null }
         : state;
-    case 'map-tool-selected':
-      return { ...state, activeMapTool: action.tool };
     case 'route-optimization-toggled':
       return {
         ...state,

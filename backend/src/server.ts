@@ -11,6 +11,10 @@ import type { TripHttpService } from './trip/tripHttpService.js';
 import type { TripShareHttpService } from './trip-sharing/tripShareHttpService.js';
 import type { AnalyticsEventHttpService } from './analytics/analyticsEventHttpService.js';
 import type { AnalyticsQueryHttpService } from './analytics/analyticsQueryHttpService.js';
+import type { CurrentUserResolver } from './auth/currentUserResolver.js';
+import type { AdminHttpService } from './admin/adminHttpService.js';
+import type { BillingHttpService } from './billing/billingHttpService.js';
+import { runWithExternalApiRequestContext } from './observability/externalApiUsage/externalApiUsage.js';
 
 export function createBackendServer(
   api: typeof API,
@@ -19,187 +23,230 @@ export function createBackendServer(
   tripShareHttp: TripShareHttpService,
   analyticsEventHttp: AnalyticsEventHttpService,
   analyticsQueryHttp: AnalyticsQueryHttpService,
+  currentUser: CurrentUserResolver,
+  adminHttp: AdminHttpService,
+  billingHttp: BillingHttpService,
 ): Server {
   const server = createServer((request, response) => {
-    const requestUrl = new URL(request.url ?? '/', 'http://localhost');
-    const { pathname } = requestUrl;
-    response.setHeader('Content-Type', 'application/json; charset=utf-8');
+    const dispatch = (): void => {
+      const requestUrl = new URL(request.url ?? '/', 'http://localhost');
+      const { pathname } = requestUrl;
+      response.setHeader('Content-Type', 'application/json; charset=utf-8');
+      if (
+        pathname === API_ROUTES.billing ||
+        pathname.startsWith(`${API_ROUTES.billing}/`)
+      ) {
+        void billingHttp.handle(request, response, requestUrl);
+        return;
+      }
 
-    if (pathname === API_ROUTES.analyticsEvents) {
-      void analyticsEventHttp.handle(request, response);
-      return;
-    }
+      if (
+        pathname === API_ROUTES.admin ||
+        pathname.startsWith(`${API_ROUTES.admin}/`)
+      ) {
+        void adminHttp.handle(request, response, requestUrl);
+        return;
+      }
 
-    if (pathname === API_ROUTES.analyticsFlows) {
-      void analyticsQueryHttp.handleFlows(request, response, requestUrl);
-      return;
-    }
+      if (pathname === API_ROUTES.analyticsEvents) {
+        void analyticsEventHttp.handle(request, response);
+        return;
+      }
 
-    if (pathname === API_ROUTES.analyticsFunnels) {
-      void analyticsQueryHttp.handleFunnels(request, response, requestUrl);
-      return;
-    }
+      if (pathname === API_ROUTES.analyticsFlows) {
+        void analyticsQueryHttp.handleFlows(request, response, requestUrl);
+        return;
+      }
 
-    const analyticsFunnelId = matchSinglePathSegment(
-      pathname,
-      `${API_ROUTES.analyticsFunnels}/`,
-    );
-    if (analyticsFunnelId !== null) {
-      void analyticsQueryHttp.handleFunnelResult(
-        request,
-        response,
-        requestUrl,
-        analyticsFunnelId,
+      if (pathname === API_ROUTES.analyticsFunnels) {
+        void analyticsQueryHttp.handleFunnels(request, response, requestUrl);
+        return;
+      }
+
+      const analyticsFunnelId = matchSinglePathSegment(
+        pathname,
+        `${API_ROUTES.analyticsFunnels}/`,
       );
-      return;
-    }
+      if (analyticsFunnelId !== null) {
+        void analyticsQueryHttp.handleFunnelResult(
+          request,
+          response,
+          requestUrl,
+          analyticsFunnelId,
+        );
+        return;
+      }
 
-    if (pathname === API_ROUTES.analyticsOverview) {
-      void analyticsQueryHttp.handleOverview(request, response, requestUrl);
-      return;
-    }
+      if (pathname === API_ROUTES.analyticsOverview) {
+        void analyticsQueryHttp.handleOverview(request, response, requestUrl);
+        return;
+      }
 
-    if (pathname === API_ROUTES.analyticsSessions) {
-      void analyticsQueryHttp.handleSessions(request, response, requestUrl);
-      return;
-    }
+      if (pathname === API_ROUTES.analyticsSessions) {
+        void analyticsQueryHttp.handleSessions(request, response, requestUrl);
+        return;
+      }
 
-    const analyticsSessionId = matchSinglePathSegment(
-      pathname,
-      `${API_ROUTES.analyticsSessions}/`,
-      '/events',
-    );
-    if (analyticsSessionId !== null) {
-      void analyticsQueryHttp.handleSessionEvents(
-        request,
-        response,
-        requestUrl,
-        analyticsSessionId,
+      const analyticsSessionId = matchSinglePathSegment(
+        pathname,
+        `${API_ROUTES.analyticsSessions}/`,
+        '/events',
       );
-      return;
-    }
+      if (analyticsSessionId !== null) {
+        void analyticsQueryHttp.handleSessionEvents(
+          request,
+          response,
+          requestUrl,
+          analyticsSessionId,
+        );
+        return;
+      }
 
-    const tripShareId = matchSinglePathSegment(
-      pathname,
-      `${API_ROUTES.trips}/`,
-      API_ROUTE_SUFFIXES.tripShare,
-    );
-    if (tripShareId !== null) {
-      void tripShareHttp.handleOwner(request, response, tripShareId);
-      return;
-    }
-
-    const sharedTripCopyToken = matchSinglePathSegment(
-      pathname,
-      `${API_ROUTES.sharedTrips}/`,
-      '/copy',
-    );
-    if (sharedTripCopyToken !== null) {
-      void tripShareHttp.handleCopy(request, response, sharedTripCopyToken);
-      return;
-    }
-
-    const sharedTripToken = matchSinglePathSegment(
-      pathname,
-      `${API_ROUTES.sharedTrips}/`,
-    );
-    if (sharedTripToken !== null) {
-      void tripShareHttp.handlePublic(request, response, sharedTripToken);
-      return;
-    }
-
-    if (
-      pathname === API_ROUTES.trips ||
-      pathname.startsWith(`${API_ROUTES.trips}/`)
-    ) {
-      void tripHttp.handle(
-        request,
-        response,
-        pathname === API_ROUTES.trips
-          ? undefined
-          : pathname.slice(API_ROUTES.trips.length + 1),
+      const tripShareId = matchSinglePathSegment(
+        pathname,
+        `${API_ROUTES.trips}/`,
+        API_ROUTE_SUFFIXES.tripShare,
       );
-      return;
-    }
+      if (tripShareId !== null) {
+        void tripShareHttp.handleOwner(request, response, tripShareId);
+        return;
+      }
 
-    if (pathname === API_ROUTES.chat) {
-      void api.Chat.handle(request, response);
-      return;
-    }
-
-    if (pathname === API_ROUTES.openWebUIModels) {
-      void api.OpenWebUIModels.handle(request, response);
-      return;
-    }
-
-    if (pathname === API_ROUTES.placesAutocomplete) {
-      void api.Place.handleAutocomplete(request, response);
-      return;
-    }
-
-    if (
-      pathname === API_ROUTES.tcacheInternalHealth ||
-      pathname === API_ROUTES.tcacheInternalJobs ||
-      pathname.startsWith(`${API_ROUTES.tcacheInternalJobs}/`)
-    ) {
-      void api.TcacheJobHttp.handle(request, response, pathname);
-      return;
-    }
-
-    if (
-      pathname === API_ROUTES.places ||
-      pathname.startsWith(`${API_ROUTES.places}/`)
-    ) {
-      void api.Place.handlePlace(
-        request,
-        response,
-        pathname.slice(API_ROUTES.places.length + 1),
+      const sharedTripCopyToken = matchSinglePathSegment(
+        pathname,
+        `${API_ROUTES.sharedTrips}/`,
+        '/copy',
       );
-      return;
-    }
+      if (sharedTripCopyToken !== null) {
+        void tripShareHttp.handleCopy(request, response, sharedTripCopyToken);
+        return;
+      }
 
-    if (pathname === API_ROUTES.routes) {
-      void api.Route.handle(request, response);
-      return;
-    }
+      const sharedTripToken = matchSinglePathSegment(
+        pathname,
+        `${API_ROUTES.sharedTrips}/`,
+      );
+      if (sharedTripToken !== null) {
+        void tripShareHttp.handlePublic(request, response, sharedTripToken);
+        return;
+      }
 
-    if (pathname === API_ROUTES.trouteOptimize) {
-      void api.TrouteHttp.handle(request, response);
-      return;
-    }
+      if (
+        pathname === API_ROUTES.trips ||
+        pathname.startsWith(`${API_ROUTES.trips}/`)
+      ) {
+        void tripHttp.handle(
+          request,
+          response,
+          pathname === API_ROUTES.trips
+            ? undefined
+            : pathname.slice(API_ROUTES.trips.length + 1),
+        );
+        return;
+      }
 
-    if (
-      pathname === API_ROUTES.trouteInternalHealth ||
-      pathname === API_ROUTES.trouteInternalJobs ||
-      pathname.startsWith(`${API_ROUTES.trouteInternalJobs}/`)
-    ) {
-      void api.TrouteJobHttp.handle(request, response, pathname);
-      return;
-    }
+      if (pathname === API_ROUTES.chat) {
+        void api.Chat.handle(request, response);
+        return;
+      }
 
-    if (
-      pathname === API_ROUTES.googleOAuthStart ||
-      pathname === API_ROUTES.googleOAuthCallback ||
-      pathname === API_ROUTES.googleOAuthResult ||
-      pathname === API_ROUTES.authLocalLogin ||
-      pathname === API_ROUTES.authMe ||
-      pathname === API_ROUTES.authLogout
-    ) {
-      void googleOAuthHttpFlow
-        .handle(request, response, requestUrl)
-        .catch(() => sendOAuthInternalError(response));
-      return;
-    }
+      if (pathname === API_ROUTES.openWebUIModels) {
+        void api.OpenWebUIModels.handle(request, response);
+        return;
+      }
 
-    if (request.method === 'GET' && pathname === API_ROUTES.health) {
-      const body: HealthResponse = { status: 'ok' };
-      response.writeHead(200);
-      response.end(JSON.stringify(body));
-      return;
-    }
+      if (pathname === API_ROUTES.placesAutocomplete) {
+        void api.Place.handleAutocomplete(request, response);
+        return;
+      }
 
-    response.writeHead(404);
-    response.end(JSON.stringify({ error: 'Not found' }));
+      if (
+        pathname === API_ROUTES.tcacheInternalHealth ||
+        pathname === API_ROUTES.tcacheInternalJobs ||
+        pathname.startsWith(`${API_ROUTES.tcacheInternalJobs}/`)
+      ) {
+        if (!canUseInternalGatewayApi()) {
+          sendNotFound(response);
+          return;
+        }
+        void api.TcacheJobHttp.handle(request, response, pathname);
+        return;
+      }
+
+      if (
+        pathname === API_ROUTES.places ||
+        pathname.startsWith(`${API_ROUTES.places}/`)
+      ) {
+        void api.Place.handlePlace(
+          request,
+          response,
+          pathname.slice(API_ROUTES.places.length + 1),
+        );
+        return;
+      }
+
+      if (pathname === API_ROUTES.routes) {
+        void api.Route.handle(request, response);
+        return;
+      }
+
+      if (pathname === API_ROUTES.trouteOptimize) {
+        void api.TrouteHttp.handle(request, response);
+        return;
+      }
+
+      if (pathname.startsWith(`${API_ROUTES.trouteJobs}/`)) {
+        void api.TrouteJobHttp.handle(request, response, pathname);
+        return;
+      }
+
+      if (
+        pathname === API_ROUTES.trouteInternalHealth ||
+        pathname === API_ROUTES.trouteInternalJobs ||
+        pathname.startsWith(`${API_ROUTES.trouteInternalJobs}/`)
+      ) {
+        if (!canUseInternalGatewayApi()) {
+          sendNotFound(response);
+          return;
+        }
+        void api.TrouteJobHttp.handle(request, response, pathname);
+        return;
+      }
+
+      if (
+        pathname === API_ROUTES.ssuSsoStart ||
+        pathname === API_ROUTES.ssuSsoCallback ||
+        pathname.startsWith(`${API_ROUTES.ssuSsoCallback}/`) ||
+        pathname === API_ROUTES.googleOAuthStart ||
+        pathname === API_ROUTES.googleOAuthCallback ||
+        pathname === API_ROUTES.googleOAuthResult ||
+        pathname === API_ROUTES.authLocalLogin ||
+        pathname === API_ROUTES.authMe ||
+        pathname === API_ROUTES.authLogout
+      ) {
+        void googleOAuthHttpFlow
+          .handle(request, response, requestUrl)
+          .catch(() => sendOAuthInternalError(response));
+        return;
+      }
+
+      if (request.method === 'GET' && pathname === API_ROUTES.health) {
+        const body: HealthResponse = { status: 'ok' };
+        response.writeHead(200);
+        response.end(JSON.stringify(body));
+        return;
+      }
+
+      response.writeHead(404);
+      response.end(JSON.stringify({ error: 'Not found' }));
+    };
+
+    void currentUser
+      .resolve(request)
+      .catch(() => undefined)
+      .then((userId) => {
+        runWithExternalApiRequestContext(userId ?? null, dispatch);
+      });
   });
   server.requestTimeout = 35000;
   return server;
@@ -236,4 +283,13 @@ function sendOAuthInternalError(response: ServerResponse): void {
   };
   response.writeHead(500);
   response.end(JSON.stringify(body));
+}
+
+function canUseInternalGatewayApi(): boolean {
+  return process.env.NODE_ENV !== 'production';
+}
+
+function sendNotFound(response: ServerResponse): void {
+  response.writeHead(404);
+  response.end(JSON.stringify({ error: 'Not found' }));
 }

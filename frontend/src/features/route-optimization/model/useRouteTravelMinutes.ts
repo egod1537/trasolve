@@ -4,11 +4,11 @@ import {
   type TripPlace,
   type TrouteTravelMode,
 } from '@trasolve/shared';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getDirections } from '@/shared/api/routes';
 import { getLanguage } from '@/shared/i18n';
 
-const MAX_ROUTED_SEGMENTS = 20;
+const MAX_INTERMEDIATES = 25;
 const DIRECTIONS_MODE_BY_TROUTE_MODE = {
   TRANSIT: TravelMode.TRANSIT,
   DRIVING: TravelMode.DRIVING,
@@ -16,71 +16,84 @@ const DIRECTIONS_MODE_BY_TROUTE_MODE = {
   BICYCLING: TravelMode.BICYCLING,
 } as const satisfies Record<TrouteTravelMode, TravelMode>;
 
-type TravelMinutesState = {
-  key: string;
-  value: number | null;
+export type RouteDirections = {
+  path: readonly { lat: number; lng: number }[];
+  travelMinutes: number | null;
 };
 
-export function useRouteTravelMinutes(
+type RouteDirectionsState = {
+  key: string;
+  value: RouteDirections;
+};
+
+export function useRouteDirections(
   places: readonly TripPlace[],
   travelMode: TrouteTravelMode,
-): number | null {
+): RouteDirections {
   const { languageCode, regionCode } = getGoogleMapsLocale(getLanguage());
   const key = `${languageCode}:${regionCode}:${travelMode}::${places
     .map((place) => `${place.id}:${place.location.lat}:${place.location.lng}`)
     .join('|')}`;
-  const cache = useRef(new Map<string, number | null>());
-  const [state, setState] = useState<TravelMinutesState>({ key, value: null });
+  const fallbackPath = useMemo(
+    () => places.map((place) => place.location),
+    [places],
+  );
+  const cache = useRef(new Map<string, RouteDirections>());
+  const [state, setState] = useState<RouteDirectionsState>({
+    key,
+    value: { path: fallbackPath, travelMinutes: null },
+  });
 
   useEffect(() => {
-    if (cache.current.has(key)) {
-      setState({ key, value: cache.current.get(key) ?? null });
+    const cached = cache.current.get(key);
+    if (cached) {
+      setState({ key, value: cached });
       return;
     }
-    if (places.length < 2 || places.length - 1 > MAX_ROUTED_SEGMENTS) {
-      cache.current.set(key, null);
-      setState({ key, value: null });
+
+    const fallback = { path: fallbackPath, travelMinutes: null };
+    if (places.length < 2 || places.length - 2 > MAX_INTERMEDIATES) {
+      cache.current.set(key, fallback);
+      setState({ key, value: fallback });
       return;
     }
 
     const controller = new AbortController();
-    setState({ key, value: null });
-    const requests = places.slice(0, -1).map((place, index) =>
-      getDirections(
-        {
-          origin: {
-            type: 'coordinates',
-            lat: place.location.lat,
-            lng: place.location.lng,
-          },
-          destination: {
-            type: 'coordinates',
-            lat: places[index + 1]!.location.lat,
-            lng: places[index + 1]!.location.lng,
-          },
-          travelMode: DIRECTIONS_MODE_BY_TROUTE_MODE[travelMode],
+    setState({ key, value: fallback });
+    void getDirections(
+      {
+        origin: {
+          type: 'coordinates',
+          lat: places[0]!.location.lat,
+          lng: places[0]!.location.lng,
         },
-        controller.signal,
-      ),
-    );
-    void Promise.all(requests).then(
-      (results) => {
+        destination: {
+          type: 'coordinates',
+          lat: places.at(-1)!.location.lat,
+          lng: places.at(-1)!.location.lng,
+        },
+        intermediates: places.slice(1, -1).map((place) => ({
+          type: 'coordinates' as const,
+          lat: place.location.lat,
+          lng: place.location.lng,
+        })),
+        travelMode: DIRECTIONS_MODE_BY_TROUTE_MODE[travelMode],
+      },
+      controller.signal,
+    ).then(
+      (result) => {
         if (controller.signal.aborted) {
           return;
         }
-        const routes = results.map((result) => result.routes[0]);
-        const durationMillis = routes.reduce<number | null>(
-          (total, route) =>
-            total === null ||
-            !route ||
-            route.durationMillis === null ||
-            route.durationMillis === undefined
+        const route = result.routes[0];
+        const value: RouteDirections = {
+          path: route?.path.length ? route.path : fallbackPath,
+          travelMinutes:
+            route?.durationMillis === null ||
+            route?.durationMillis === undefined
               ? null
-              : total + route.durationMillis,
-          0,
-        );
-        const value =
-          durationMillis === null ? null : Math.round(durationMillis / 60_000);
+              : Math.round(route.durationMillis / 60_000),
+        };
         cache.current.set(key, value);
         setState({ key, value });
       },
@@ -88,12 +101,21 @@ export function useRouteTravelMinutes(
         if (controller.signal.aborted) {
           return;
         }
-        cache.current.set(key, null);
-        setState({ key, value: null });
+        cache.current.set(key, fallback);
+        setState({ key, value: fallback });
       },
     );
     return () => controller.abort();
-  }, [key, places, travelMode]);
+  }, [fallbackPath, key, places, travelMode]);
 
-  return state.key === key ? state.value : null;
+  return state.key === key
+    ? state.value
+    : { path: fallbackPath, travelMinutes: null };
+}
+
+export function useRouteTravelMinutes(
+  places: readonly TripPlace[],
+  travelMode: TrouteTravelMode,
+): number | null {
+  return useRouteDirections(places, travelMode).travelMinutes;
 }

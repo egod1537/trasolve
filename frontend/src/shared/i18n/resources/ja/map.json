@@ -10,6 +10,12 @@
       "locations": "{{length}}場所"
     }
   },
+  "capture": {
+    "busy": "画面を保存中",
+    "chooseTab": "地図を撮影するには共有画面で現在のタブを選んでください。PNGは自動保存されます。",
+    "download": "現在の画面を保存",
+    "failed": "画面を保存できませんでした。もう一度お試しください。"
+  },
   "dayColorControl": {
     "ariaLabel": {
       "changeColor": "{{dayTitle}}色の変更",
@@ -184,6 +190,21 @@
     "title": {
       "newTravel": "新しい旅行"
     }
+  },
+  "measurement": {
+    "area": "面積を測る",
+    "clear": "測定を消去",
+    "distance": "距離を測る",
+    "hint": "地図をクリックして点を追加し、ドラッグして調整します。Escで終了。",
+    "kilometers": "{{value}} km",
+    "meters": "{{value}} m",
+    "point": "測定点 {{index}}",
+    "segment": "区間 {{index}}: {{value}}",
+    "simplePolygon": "辺が交差しないように点を配置してください。",
+    "squareKilometers": "{{value}} km²",
+    "squareMeters": "{{value}} m²",
+    "surface": "面積 {{value}}",
+    "total": "合計距離 {{value}}"
   },
   "place": {
     "welcome": "{{name}}さん、旅行先を選択してください"
@@ -427,6 +448,22 @@
       }
     }
   },
+  "tripFiles": {
+    "chooseFile": "ファイルを選択",
+    "exportAction": "エクスポート",
+    "exportDescription": "すべてのDayの場所とルートをファイルに保存します。",
+    "failed": "ファイルを処理できませんでした。ファイルと現在の予定を確認してください。",
+    "format": "ファイル形式",
+    "importAction": "ファイルから読み込む",
+    "importDescription": "KML、KMZファイルを選択して、このDayに追加します。",
+    "importSubmit": "読み込む",
+    "importTitle": "場所とルートを読み込む",
+    "invalidFile": "有効なKMLまたはKMZファイルを選択してください。",
+    "missingPlaceIds": "場所IDのない項目は、最適化前に地図検索から再登録してください。",
+    "noPlaces": "読み込める場所やルートがありません。",
+    "ready": "場所{{places}}件、ルート{{routes}}件",
+    "tooLarge": "ファイルサイズまたは場所の数が上限を超えています。"
+  },
   "tripLayer": {
     "toTripLayerModel": {
       "title": {
@@ -455,6 +492,14 @@
     },
     "tooltip": {
       "wayMoving": "移動方法"
+    }
+  },
+  "tripRecovery": {
+    "message": {
+      "unconfirmed": "保存結果を確認できませんでした。「更新」を押して保存状態を確認してください。"
+    },
+    "status": {
+      "unconfirmed": "保存結果の確認が必要"
     }
   },
   "useTrip": {

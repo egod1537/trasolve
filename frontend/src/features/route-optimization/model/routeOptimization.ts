@@ -3,119 +3,65 @@ import {
   trouteStartPolicySchema,
   trouteTravelModeSchema,
   type TrouteOptimizeRequest,
-  type TrouteOptimizeResponse,
-  type TrouteSolverCandidate,
   type TrouteStartPolicy,
   type TrouteTravelMode,
   type TripDay,
   type TripPlace,
-  type TripScheduleUpdate,
 } from '@trasolve/shared';
-import { getPlaceOpeningStatus } from '@/entities/place';
-
-type RouteOptimizationDay = TripDay & {
-  minimumStartTime?: string;
-  startTime?: string;
-  travelMode?: string;
-};
-
-export type RouteOptimizationStartPolicy = 'fixed' | 'earliest' | 'latest';
-export type RouteOptimizationVisitPolicy =
-  | 'all-required'
-  | 'best-effort-on-failure';
-
-export type RouteOptimizationPlacePreference = {
-  required: boolean;
-  priority: number;
-};
-
-export type RouteOptimizationRequestOptions = {
-  selectedStartPlaceId: string;
-  selectedEndPlaceId: string;
-  startPolicy: RouteOptimizationStartPolicy;
-  startTime: string | null;
-  travelMode: TrouteTravelMode;
-  visitPolicy: RouteOptimizationVisitPolicy;
-  placePreferences: Readonly<Record<string, RouteOptimizationPlacePreference>>;
-};
+import {
+  type RouteOptimizationDay,
+  type RouteOptimizationStartPolicy,
+  type RouteOptimizationPlacePreference,
+  type RouteOptimizationRequestOptions,
+  type RouteOptimizationIssue,
+  RouteOptimizationValidationError,
+  type RouteOptimizationDiagnostics,
+} from '@/features/route-optimization/model/routeOptimizationTypes';
+import { getLocationConstraint } from '@/features/route-optimization/model/optimizationConstraints';
+import {
+  isClockTime,
+  isTenMinuteClock,
+} from '@/features/route-optimization/model/optimizationClock';
+export {
+  type RouteOptimizationStartPolicy,
+  type RouteOptimizationVisitPolicy,
+  type RouteOptimizationPlacePreference,
+  type RouteOptimizationRequestOptions,
+  type RouteOptimizationIssue,
+  RouteOptimizationValidationError,
+  type RouteOptimizationDiagnostics,
+  type RouteOptimizationScheduleStop,
+  type RouteOptimizationSchedule,
+} from '@/features/route-optimization/model/routeOptimizationTypes';
+export { getOptimizationStayMinutes } from '@/features/route-optimization/model/optimizationConstraints';
+export {
+  getBestOptimizationCandidate,
+  createRouteOptimizationSchedule,
+  createTripScheduleUpdate,
+  isApplicableCandidate,
+  isTimedOut,
+} from '@/features/route-optimization/model/optimizationSchedule';
 
 const DEFAULT_START_TIME = '09:00';
+
 const DEFAULT_TRAVEL_MODE: TrouteTravelMode = 'TRANSIT';
-const FALLBACK_OPEN_TIME = '00:00';
-const FALLBACK_CLOSE_TIME = '23:50';
-const MINUTES_PER_DAY = 24 * 60;
-const TROUTE_TIME_STEP_MINUTES = 10;
+
 const TRAVEL_MODE_BY_POLYLINE_MODE = {
   walking: 'WALKING',
   transit: 'TRANSIT',
   driving: 'DRIVING',
 } as const satisfies Record<string, TrouteTravelMode>;
+
 const START_POLICY_BY_UI = {
   fixed: 'FIXED',
   earliest: 'EARLIEST',
   latest: 'LATEST',
 } as const satisfies Record<RouteOptimizationStartPolicy, TrouteStartPolicy>;
+
 const VISIT_POLICY_BY_UI = {
   'all-required': 'ALL_REQUIRED',
   'best-effort-on-failure': 'BEST_EFFORT_ON_FAILURE',
 } as const;
-
-type LocationConstraint = {
-  openTime: string;
-  closeTime: string;
-  stayMinutes: number;
-  usedOpeningHoursFallback: boolean;
-  issue: RouteOptimizationIssue | null;
-};
-
-export type RouteOptimizationIssue = {
-  code:
-    | 'minimumPlaces'
-    | 'startOutsideDay'
-    | 'endOutsideDay'
-    | 'sameEndpoints'
-    | 'unsupportedStartPolicy'
-    | 'fixedStartRequired'
-    | 'fixedStartStep'
-    | 'unsupportedTravelMode'
-    | 'missingPlaceId'
-    | 'invalidRequest'
-    | 'stayStep'
-    | 'nextDayOpeningHours'
-    | 'noOpeningHours'
-    | 'openingTimeStep'
-    | 'closingTimeStep';
-  values?: Record<string, string | number>;
-};
-
-export class RouteOptimizationValidationError extends Error {
-  public constructor(public readonly issue: RouteOptimizationIssue) {
-    super(issue.code);
-    this.name = 'RouteOptimizationValidationError';
-  }
-}
-
-export type RouteOptimizationDiagnostics = {
-  openingHoursFallback: boolean;
-  openingHoursFallbackPlaceIds: readonly string[];
-  openingHoursFallbackPlaceNames: readonly string[];
-};
-
-export type RouteOptimizationScheduleStop = {
-  placeId: string;
-  arrivalTime: string;
-  serviceStartTime: string;
-  departureTime: string;
-  travelMinutesFromPrevious: number | null;
-  waitMinutes: number;
-  stayMinutes: number;
-  syncStayMinutes: boolean;
-};
-
-export type RouteOptimizationSchedule = {
-  placeIds: readonly string[];
-  stops: readonly RouteOptimizationScheduleStop[];
-};
 
 export function getRouteOptimizationIssue(
   activeDay: RouteOptimizationDay,
@@ -248,174 +194,6 @@ export function getRouteOptimizationTravelMode(
   return parsed.success ? parsed.data : DEFAULT_TRAVEL_MODE;
 }
 
-export function getBestOptimizationCandidate(
-  response: TrouteOptimizeResponse,
-): TrouteSolverCandidate {
-  const selectedBest = response.solver_candidates?.find(
-    (candidate) => candidate.best,
-  );
-  if (selectedBest) {
-    return selectedBest;
-  }
-  const route = [...response.route].sort(
-    (left, right) => left.order - right.order,
-  );
-  return {
-    strategy: 'best',
-    best: true,
-    route: route.map((stop) => stop.location_id),
-    feasible: true,
-    elapsed_ms: 0,
-    metadata: { timed_out: false },
-  };
-}
-
-export function createRouteOptimizationSchedule(
-  response: TrouteOptimizeResponse,
-  candidate: TrouteSolverCandidate,
-  activeDay: TripDay,
-): RouteOptimizationSchedule | null {
-  const route = [...response.route].sort(
-    (left, right) => left.order - right.order,
-  );
-  if (
-    route.length !== candidate.route.length ||
-    route.some((stop, index) => stop.location_id !== candidate.route[index])
-  ) {
-    return null;
-  }
-
-  const placesById = new Map(
-    activeDay.places.map((place) => [place.id, place]),
-  );
-  const stops: RouteOptimizationScheduleStop[] = [];
-  for (const [index, stop] of route.entries()) {
-    const place = placesById.get(stop.location_id);
-    if (!place) {
-      return null;
-    }
-    const requestedStayMinutes =
-      stop.stay_minutes ?? getOptimizationStayMinutes(place);
-    const serviceStartTime = resolveServiceStartTime(
-      stop.arrival_time,
-      stop.service_start_time,
-      stop.departure_time,
-      stop.wait_minutes,
-      requestedStayMinutes,
-    );
-    if (!serviceStartTime) {
-      return null;
-    }
-    const departureTime =
-      stop.departure_time ??
-      addClockMinutes(serviceStartTime, requestedStayMinutes);
-    if (!departureTime) {
-      return null;
-    }
-    const scheduledWaitMinutes = getForwardMinutes(
-      stop.arrival_time,
-      serviceStartTime,
-    );
-    const scheduledStayMinutes = getForwardMinutes(
-      serviceStartTime,
-      departureTime,
-    );
-    if (scheduledWaitMinutes === null || scheduledStayMinutes === null) {
-      return null;
-    }
-    const waitMinutes = stop.wait_minutes ?? scheduledWaitMinutes;
-    const stayMinutes = stop.stay_minutes ?? scheduledStayMinutes;
-    const previousDeparture = stops.at(-1)?.departureTime;
-    const travelMinutesFromPrevious = previousDeparture
-      ? getForwardMinutes(previousDeparture, stop.arrival_time)
-      : null;
-    if (index > 0 && travelMinutesFromPrevious === null) {
-      return null;
-    }
-    stops.push({
-      placeId: stop.location_id,
-      arrivalTime: stop.arrival_time,
-      serviceStartTime,
-      departureTime,
-      travelMinutesFromPrevious,
-      waitMinutes,
-      stayMinutes,
-      syncStayMinutes: stop.stay_minutes !== undefined,
-    });
-  }
-  return { placeIds: candidate.route, stops };
-}
-
-export function createTripScheduleUpdate(
-  schedule: RouteOptimizationSchedule,
-  selectedStartPlaceId: string,
-  selectedEndPlaceId: string,
-  skippedPlaceIds: readonly string[] = [],
-): TripScheduleUpdate {
-  return {
-    placeIds: schedule.placeIds,
-    stops: schedule.stops.map((stop) => ({
-      placeId: stop.placeId,
-      time: stop.serviceStartTime,
-      ...(stop.syncStayMinutes
-        ? { visitDurationMinutes: stop.stayMinutes }
-        : {}),
-    })),
-    expectedStartPlaceId: selectedStartPlaceId,
-    expectedEndPlaceId: selectedEndPlaceId,
-    ...(skippedPlaceIds.length > 0 ? { skippedPlaceIds } : {}),
-  };
-}
-
-export function isApplicableCandidate(
-  candidate: TrouteSolverCandidate | null,
-  activeDay: TripDay,
-  options?: Pick<
-    RouteOptimizationRequestOptions,
-    | 'selectedStartPlaceId'
-    | 'selectedEndPlaceId'
-    | 'visitPolicy'
-    | 'placePreferences'
-  >,
-): candidate is TrouteSolverCandidate {
-  if (
-    !candidate?.feasible ||
-    candidate.metadata.error ||
-    isTimedOut(candidate)
-  ) {
-    return false;
-  }
-  const currentIds = new Set(activeDay.places.map((place) => place.id));
-  const orderedPlaces = [...activeDay.places].sort(
-    (left, right) => left.order - right.order,
-  );
-  const selectedStartPlaceId =
-    options?.selectedStartPlaceId ?? orderedPlaces[0]?.id;
-  const selectedEndPlaceId =
-    options?.selectedEndPlaceId ?? orderedPlaces.at(-1)?.id;
-  if (!selectedStartPlaceId || !selectedEndPlaceId) {
-    return false;
-  }
-  const partial = options?.visitPolicy === 'best-effort-on-failure';
-  const requiredIds = new Set([
-    selectedStartPlaceId,
-    selectedEndPlaceId,
-    ...Object.entries(options?.placePreferences ?? {})
-      .filter(([, preference]) => preference.required)
-      .map(([placeId]) => placeId),
-  ]);
-  return (
-    (partial
-      ? candidate.route.length >= 2 &&
-        [...requiredIds].every((placeId) => candidate.route.includes(placeId))
-      : candidate.route.length === currentIds.size) &&
-    new Set(candidate.route).size === candidate.route.length &&
-    candidate.route.every((placeId) => currentIds.has(placeId)) &&
-    candidate.route[0] === selectedStartPlaceId &&
-    candidate.route.at(-1) === selectedEndPlaceId
-  );
-}
-
 export function orderRouteOptimizationPlaces(
   activeDay: TripDay,
   options: Pick<
@@ -442,141 +220,8 @@ export function orderRouteOptimizationPlaces(
   ];
 }
 
-export function isTimedOut(candidate: TrouteSolverCandidate): boolean {
-  return candidate.metadata?.timed_out === true;
-}
-
-function getLocationConstraint(
-  activeDay: TripDay,
-  place: TripPlace,
-): LocationConstraint {
-  const openingWindow = getOpeningWindow(
-    place,
-    getReferenceDate(activeDay, place),
-  );
-  const stayMinutes = getOptimizationStayMinutes(place);
-  const stayIssue: RouteOptimizationIssue | null = isTenMinuteStep(stayMinutes)
-    ? null
-    : {
-        code: 'stayStep',
-        values: { name: place.name, stayMinutes },
-      };
-  return {
-    ...openingWindow,
-    stayMinutes,
-    issue: openingWindow.issue ?? stayIssue,
-  };
-}
-
-export function getOptimizationStayMinutes(place: TripPlace): number {
-  return Math.max(
-    TROUTE_TIME_STEP_MINUTES,
-    place.preferredDurationMinutes ??
-      place.visitDurationMinutes ??
-      TROUTE_TIME_STEP_MINUTES,
-  );
-}
-
-function getOpeningWindow(
-  place: TripPlace,
-  referenceDate: Date,
-): Omit<LocationConstraint, 'stayMinutes'> {
-  const status = getPlaceOpeningStatus(place.openingHours, referenceDate);
-  if (status.type === 'unknown') {
-    return {
-      openTime: FALLBACK_OPEN_TIME,
-      closeTime: FALLBACK_CLOSE_TIME,
-      usedOpeningHoursFallback: true,
-      issue: null,
-    };
-  }
-  if (status.type === 'always-open') {
-    return {
-      openTime: FALLBACK_OPEN_TIME,
-      closeTime: FALLBACK_CLOSE_TIME,
-      usedOpeningHoursFallback: false,
-      issue: null,
-    };
-  }
-  if (
-    status.timelineRanges.some(
-      (range) => range.start < 0 || range.end >= MINUTES_PER_DAY,
-    )
-  ) {
-    return invalidOpeningWindow({
-      code: 'nextDayOpeningHours',
-      values: { name: place.name },
-    });
-  }
-
-  const ranges = status.timelineRanges.filter(
-    (range) =>
-      range.start >= 0 &&
-      range.end <= MINUTES_PER_DAY &&
-      range.start < range.end &&
-      isClockTime(range.startText) &&
-      isClockTime(range.endText),
-  );
-  if (ranges.length === 0) {
-    return invalidOpeningWindow({
-      code: 'noOpeningHours',
-      values: { name: place.name },
-    });
-  }
-
-  const scheduledMinutes = place.time ? clockToMinutes(place.time) : undefined;
-  const range =
-    ranges.find(
-      (candidate) =>
-        scheduledMinutes !== undefined &&
-        candidate.start <= scheduledMinutes &&
-        scheduledMinutes <= candidate.end,
-    ) ?? ranges[0]!;
-  if (!isTenMinuteClock(range.startText)) {
-    return invalidOpeningWindow({
-      code: 'openingTimeStep',
-      values: { name: place.name, startText: range.startText },
-    });
-  }
-  if (!isTenMinuteClock(range.endText)) {
-    return invalidOpeningWindow({
-      code: 'closingTimeStep',
-      values: { name: place.name, endText: range.endText },
-    });
-  }
-  return {
-    openTime: range.startText,
-    closeTime: range.endText,
-    usedOpeningHoursFallback: false,
-    issue: null,
-  };
-}
-
-function invalidOpeningWindow(
-  issue: RouteOptimizationIssue,
-): Omit<LocationConstraint, 'stayMinutes'> {
-  return {
-    openTime: FALLBACK_OPEN_TIME,
-    closeTime: FALLBACK_CLOSE_TIME,
-    usedOpeningHoursFallback: false,
-    issue,
-  };
-}
-
 function getOrderedPlaces(activeDay: TripDay): TripPlace[] {
   return [...activeDay.places].sort((left, right) => left.order - right.order);
-}
-
-function getReferenceDate(activeDay: TripDay, place: TripPlace): Date {
-  if (!activeDay.date) {
-    return new Date();
-  }
-  const [year, month, day] = activeDay.date.split('-').map(Number);
-  const utcNoon = Date.UTC(year!, month! - 1, day!, 12);
-  const offsetMinutes = place.openingHours?.utcOffsetMinutes;
-  return offsetMinutes === undefined
-    ? new Date(`${activeDay.date}T12:00:00`)
-    : new Date(utcNoon - offsetMinutes * 60_000);
 }
 
 function resolveRequestOptions(
@@ -641,59 +286,4 @@ function resolveTravelMode(
 function createRouteOptimizationJobId(dayId: string): string {
   const dayIdSegment = dayId.slice(0, 50);
   return `route-${dayIdSegment}-${Date.now()}-${crypto.randomUUID()}`;
-}
-
-function isClockTime(value: string): boolean {
-  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
-}
-
-function resolveServiceStartTime(
-  arrivalTime: string,
-  serviceStartTime: string | undefined,
-  departureTime: string | undefined,
-  waitMinutes: number | undefined,
-  stayMinutes: number,
-): string | null {
-  if (serviceStartTime) {
-    return serviceStartTime;
-  }
-  if (waitMinutes !== undefined) {
-    return addClockMinutes(arrivalTime, waitMinutes);
-  }
-  if (departureTime) {
-    return addClockMinutes(departureTime, -stayMinutes);
-  }
-  return arrivalTime;
-}
-
-function addClockMinutes(time: string, minutes: number): string | null {
-  const total = clockToMinutes(time) + minutes;
-  if (total < 0 || total >= MINUTES_PER_DAY) {
-    return null;
-  }
-  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(
-    total % 60,
-  ).padStart(2, '0')}`;
-}
-
-function getForwardMinutes(from: string, to: string): number | null {
-  const difference = clockToMinutes(to) - clockToMinutes(from);
-  return difference >= 0 ? difference : null;
-}
-
-function isTenMinuteClock(value: string): boolean {
-  return isClockTime(value) && isTenMinuteStep(clockToMinutes(value));
-}
-
-function isTenMinuteStep(minutes: number): boolean {
-  return (
-    Number.isInteger(minutes) &&
-    minutes >= 0 &&
-    minutes % TROUTE_TIME_STEP_MINUTES === 0
-  );
-}
-
-function clockToMinutes(value: string): number {
-  const [hours = 0, minutes = 0] = value.split(':').map(Number);
-  return hours * 60 + minutes;
 }

@@ -1,0 +1,14 @@
+@media (max-width: 760px) {
+  .trip-map-ai-panel {
+    top: calc(max(10px, calc(env(safe-area-inset-top) + 4px)) + 63px + 12px);
+    right: max(12px, calc(env(safe-area-inset-right) + 8px));
+    left: max(12px, calc(env(safe-area-inset-left) + 8px));
+  }
+  .trip-map-ai-panel-header {
+    min-height: 64px;
+    padding-block: 10px;
+  }
+  .trip-map-ai-messages {
+    padding: 16px;
+  }
+}

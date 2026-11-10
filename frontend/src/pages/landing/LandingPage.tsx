@@ -8,6 +8,7 @@ import { checkApiHealth } from '@/shared/api/health';
 import { FeatureSection } from '@/pages/landing/components/FeatureSection';
 import { Header } from '@/pages/landing/components/Header';
 import { Hero } from '@/pages/landing/components/Hero';
+import { PlanningSection } from '@/pages/landing/components/PlanningSection';
 import { isDebugGuestMode, useCurrentUser } from '@/features/auth';
 import { NL, useL, type Localize } from '@/shared/i18n';
 import { trackEvent, useScreenView } from '@/shared/analytics';
@@ -87,7 +88,7 @@ export function LandingPage() {
       headerProfile={
         state.status === 'signed-in'
           ? {
-              displayName: state.user.name ?? state.user.email,
+              displayName: state.user.name ?? state.user.email ?? state.user.id,
               pictureUrl: state.user.pictureUrl,
             }
           : null
@@ -95,19 +96,15 @@ export function LandingPage() {
       headerActionLabel={
         state.status === 'signed-out'
           ? debugGuestMode
-            ? L('common:hero.text.gettingStarted')
-            : L('auth:mapUserControls.text.signGoogle')
+            ? L('common:landing.action.startTrip')
+            : L('common:landing.navigation.signIn')
           : L('common:header.text.goServices')
       }
       authLoading={state.status === 'loading'}
       heroPrimaryLabel={
         state.status === 'loading'
           ? L('auth:mapUserControls.tooltip.preparing')
-          : state.status === 'signed-out'
-            ? debugGuestMode
-              ? L('common:hero.text.gettingStarted')
-              : L('auth:mapUserControls.text.signGoogle')
-            : L('common:hero.text.gettingStarted')
+          : L('common:landing.action.planTrip')
       }
       heroPrimaryTarget={
         state.status === 'signed-in' || debugGuestMode
@@ -186,6 +183,7 @@ class LandingPageView extends Component<LandingPageProps, LandingPageState> {
             onPrimaryAction={onHeroPrimaryAction}
           />
           <FeatureSection />
+          <PlanningSection />
         </main>
         <footer className="site-footer">
           <p>

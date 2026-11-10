@@ -1,0 +1,140 @@
+.token-plan-allowance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 24px;
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 7%,
+    var(--color-surface-subtle)
+  );
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.5;
+}
+
+.token-plan-allowance svg,
+.token-plan-features svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.token-plan-features {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0 28px;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--color-border);
+  list-style: none;
+}
+
+.token-plan-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.token-plan-features svg {
+  margin-top: 2px;
+}
+
+.token-plan-select.ui-button {
+  width: 100%;
+  min-height: 42px;
+  margin-top: auto;
+  border-radius: 10px;
+}
+
+.token-plan-select.ui-button--secondary:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.token-plans-footer {
+  margin-top: 20px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.token-plans-footer p {
+  margin: 6px 0 0;
+}
+
+.token-plans-selection {
+  color: var(--color-primary);
+}
+
+/* The map search and profile share a narrow viewport beside the trip panel. */
+
+@media (min-width: 1161px) {
+  .map-viewport-tools:has(.map-token-balance) .map-toolbar-positioner {
+    right: 336px;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1160px) {
+  .map-viewport-tools .map-token-balance {
+    position: absolute;
+    top: 75px;
+    right: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .token-plans-dialog {
+    padding: 22px 18px;
+    border-radius: 18px;
+  }
+
+  .token-plans-heading {
+    gap: 10px;
+  }
+
+  .token-plans-sparkle {
+    width: 23px;
+    height: 23px;
+  }
+
+  .token-plans-heading p {
+    font-size: 13px;
+  }
+
+  .token-plans-grid,
+  .token-plans-grid[data-kind='topup'] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .token-plan-card {
+    padding: 20px;
+  }
+
+  .token-plan-subtitle {
+    min-height: 0;
+    margin-bottom: 12px;
+  }
+
+  .token-plan-features {
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 380px) {
+  .map-token-balance {
+    width: 208px;
+    gap: 10px;
+    padding-left: 12px;
+  }
+}

@@ -11,6 +11,7 @@ import { MapUserControls } from '@/features/auth';
 import { RenderProfiler } from '@/shared/lib/RenderProfiler';
 
 type Props = {
+  suspended?: boolean;
   dismissRevision: number;
   mapRef: RefObject<GoogleMapHandle | null>;
   selectedPlaceIds: readonly string[];
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export const MapToolbar = memo(function MapToolbar({
+  suspended = false,
   dismissRevision,
   mapRef,
   selectedPlaceIds,
@@ -28,7 +30,11 @@ export const MapToolbar = memo(function MapToolbar({
   const [aiOpen, setAiOpen] = useState(false);
   const [quickSearchOpen, setQuickSearchOpen] = useState(false);
   const [quickSearchShortcutLabel] = useState(getQuickSearchShortcutLabel);
-  const openQuickSearch = useCallback(() => setQuickSearchOpen(true), []);
+  const openQuickSearch = useCallback(() => {
+    if (!suspended) {
+      setQuickSearchOpen(true);
+    }
+  }, [suspended]);
   const closeQuickSearch = useCallback(() => setQuickSearchOpen(false), []);
   const getSearchBias = useCallback(() => {
     const center = mapRef.current?.getCenter();
@@ -62,12 +68,14 @@ export const MapToolbar = memo(function MapToolbar({
           selectedPlaceIds={selectedPlaceIds}
         />
       </RenderProfiler>
-      <QuickSearch
-        open={quickSearchOpen}
-        shortcutLabel={quickSearchShortcutLabel}
-        onOpen={openQuickSearch}
-        onClose={closeQuickSearch}
-      />
+      {!suspended && (
+        <QuickSearch
+          open={quickSearchOpen}
+          shortcutLabel={quickSearchShortcutLabel}
+          onOpen={openQuickSearch}
+          onClose={closeQuickSearch}
+        />
+      )}
     </>
   );
 });

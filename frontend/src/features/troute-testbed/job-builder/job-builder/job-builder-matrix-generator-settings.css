@@ -1,0 +1,189 @@
+.job-builder-matrix-generator-settings .bp6-html-select select {
+  min-width: 210px;
+}
+
+.job-builder-matrix-seed-input {
+  width: 108px;
+}
+
+.job-builder-matrix-generator-error {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.job-builder-raw-editor > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.job-builder-raw-editor {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-subtle);
+}
+
+.job-builder-raw-editor h2,
+.job-builder-raw-editor p {
+  margin: 0;
+}
+
+.job-builder-raw-editor h2 {
+  font-size: 15px;
+}
+
+.job-builder-raw-editor p {
+  margin-top: 3px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.job-builder-raw-textarea {
+  min-height: 300px;
+  resize: vertical;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre;
+}
+
+.job-builder-validation-summary,
+.job-builder-feedback {
+  min-width: 0;
+  max-width: 100%;
+  flex: none;
+  overflow-wrap: anywhere;
+  position: static;
+  word-break: break-word;
+  z-index: auto;
+}
+
+@media (max-width: 900px) {
+  .job-builder-dialog {
+    width: calc(100vw - 20px);
+    height: calc(100vh - 20px);
+    max-height: calc(100vh - 20px);
+    margin: 10px 0;
+  }
+
+  .job-builder-main-grid {
+    min-height: 0;
+    flex: none;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 420px 420px;
+    overflow: hidden;
+  }
+
+  .job-builder-map {
+    min-height: 0;
+  }
+
+  .job-builder-location-panel {
+    min-height: 0;
+    border-top: 1px solid var(--color-border);
+    border-left: 0;
+  }
+
+  .job-builder-location-scroll {
+    max-height: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .job-builder-dialog {
+    width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .job-builder-main-grid {
+    grid-template-rows: 340px 420px;
+  }
+
+  .job-builder-location-panel > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .job-builder-location-meta {
+    justify-content: space-between;
+  }
+
+  .job-builder-raw-editor > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .job-builder-preset {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .job-builder-preset-controls {
+    flex-wrap: wrap;
+  }
+
+  .job-builder-preset > p {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .job-builder-settings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .job-builder-travel-time-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .job-builder-settings h2 {
+    margin: 0;
+  }
+
+  .job-builder-debug-help {
+    margin-left: 0;
+  }
+
+  .job-builder-time-range input {
+    width: 106px;
+  }
+
+  .job-builder-location-fields {
+    margin-left: 34px;
+  }
+
+  .job-builder-location-fields > label {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .job-builder-location-fields > .job-builder-field-error {
+    margin-left: 0;
+  }
+
+  .job-builder-matrix-generator > .bp6-button-group {
+    flex-wrap: wrap;
+  }
+
+  .job-builder-matrix-generator-settings .bp6-html-select,
+  .job-builder-matrix-generator-settings .bp6-html-select select {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .job-builder-validation-indicator.is-validating svg {
+    animation: none;
+  }
+}

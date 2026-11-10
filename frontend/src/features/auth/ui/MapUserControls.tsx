@@ -1,9 +1,17 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
 import '@/features/auth/ui/map-user-controls.css';
 import { useCurrentUser } from '@/features/auth/model/useCurrentUser';
 import { AccountSettingsModal } from '@/features/auth/ui/AccountSettingsModal';
-import { PreferencesModal } from '@/features/preferences/ui/PreferencesModal';
+import { TokenBalanceControl, useBilling } from '@/features/billing';
+import { PreferencesModal } from '@/features/preferences';
 import { useL } from '@/shared/i18n';
 import { trackEvent } from '@/shared/analytics';
 
@@ -77,9 +85,14 @@ function PersonIcon() {
 
 type Props = {
   onOpenTripPicker: () => void;
+  showTokens?: boolean;
 };
 
-export function MapUserControls({ onOpenTripPicker }: Props) {
+export function MapUserControls({
+  onOpenTripPicker,
+  showTokens = true,
+}: Props) {
+  const billing = useBilling();
   const L = useL();
   const { state, login, logout, authNotice } = useCurrentUser();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -89,8 +102,16 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const profileMenuId = useId();
 
+  const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
+  const profileMenuVisible =
+    profileMenuOpen || (authNotice !== null && authNotice !== dismissedNotice);
+  const closeProfileMenu = useCallback(() => {
+    setProfileMenuOpen(false);
+    setDismissedNotice(authNotice);
+  }, [authNotice]);
+
   useEffect(() => {
-    if (!profileMenuOpen) {
+    if (!profileMenuVisible) {
       return;
     }
     const closeOnOutsidePointerDown = (event: PointerEvent) => {
@@ -98,7 +119,7 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
         event.target instanceof Node &&
         !rootRef.current?.contains(event.target)
       ) {
-        setProfileMenuOpen(false);
+        closeProfileMenu();
       }
     };
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -106,7 +127,7 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
         return;
       }
       event.preventDefault();
-      setProfileMenuOpen(false);
+      closeProfileMenu();
     };
     document.addEventListener('pointerdown', closeOnOutsidePointerDown);
     document.addEventListener('keydown', closeOnEscape);
@@ -114,7 +135,7 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
       document.removeEventListener('pointerdown', closeOnOutsidePointerDown);
       document.removeEventListener('keydown', closeOnEscape);
     };
-  }, [profileMenuOpen]);
+  }, [profileMenuVisible, closeProfileMenu]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -123,17 +144,17 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
       window.location.assign('/');
     } finally {
       setLoggingOut(false);
-      setProfileMenuOpen(false);
+      closeProfileMenu();
       setAccountSettingsOpen(false);
       setPreferencesOpen(false);
     }
   };
 
   const user = state.status === 'signed-in' ? state.user : null;
-  const displayName = user ? (user.name ?? user.email) : null;
+  const displayName = user ? (user.name ?? user.email ?? user.id) : null;
   const profileLabel = user
     ? L('auth:mapUserControls.text.profile', { displayName: displayName })
-    : L('auth:mapUserControls.text.signGoogleAccount');
+    : L('common:landing.navigation.signIn');
 
   return (
     <div
@@ -142,6 +163,19 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
       role="group"
       aria-label={L('auth:mapUserControls.ariaLabel.userMenu')}
     >
+      {showTokens && user && billing.summary && (
+        <TokenBalanceControl
+          remaining={billing.summary.wallet.remaining}
+          allowance={billing.summary.wallet.provided}
+          mode={billing.summary.mode}
+          open={billing.plansOpen}
+          dialogId={billing.dialogId}
+          onOpen={() => {
+            closeProfileMenu();
+            billing.openPlans();
+          }}
+        />
+      )}
       <span className="map-user-control-anchor">
         <button
           type="button"
@@ -149,12 +183,18 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
           aria-label={profileLabel}
           title={profileLabel}
           aria-haspopup="menu"
-          aria-expanded={profileMenuOpen}
-          aria-controls={profileMenuOpen ? profileMenuId : undefined}
+          aria-expanded={profileMenuVisible}
+          aria-controls={profileMenuVisible ? profileMenuId : undefined}
           disabled={state.status === 'loading'}
-          data-open={profileMenuOpen}
+          data-open={profileMenuVisible}
           data-status={state.status}
-          onClick={() => setProfileMenuOpen((current) => !current)}
+          onClick={() => {
+            if (profileMenuVisible) {
+              closeProfileMenu();
+            } else {
+              setProfileMenuOpen(true);
+            }
+          }}
         >
           {user ? (
             user.pictureUrl ? (
@@ -171,7 +211,7 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
             <PersonIcon />
           )}
         </button>
-        {profileMenuOpen && (
+        {profileMenuVisible && (
           <div
             id={profileMenuId}
             className="map-user-menu map-profile-menu"
@@ -197,11 +237,12 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
                   </span>
                 </span>
               </div>
-            ) : authNotice ? (
+            ) : null}
+            {authNotice && (
               <p className="map-profile-menu-notice" role="alert">
                 {authNotice}
               </p>
-            ) : null}
+            )}
             <a
               className="map-user-menu-item"
               role="menuitem"
@@ -216,7 +257,7 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
               className="map-user-menu-item"
               role="menuitem"
               onClick={() => {
-                setProfileMenuOpen(false);
+                closeProfileMenu();
                 onOpenTripPicker();
               }}
             >
@@ -235,7 +276,7 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
                   screen: ANALYTICS_SCREENS.mapWorkspace,
                   target: ANALYTICS_TARGETS.preferencesOpen,
                 });
-                setProfileMenuOpen(false);
+                closeProfileMenu();
                 setPreferencesOpen(true);
               }}
             >
@@ -250,7 +291,7 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
                   className="map-user-menu-item"
                   role="menuitem"
                   onClick={() => {
-                    setProfileMenuOpen(false);
+                    closeProfileMenu();
                     setAccountSettingsOpen(true);
                   }}
                 >
@@ -280,12 +321,12 @@ export function MapUserControls({ onOpenTripPicker }: Props) {
                 className="map-user-menu-item is-accent"
                 role="menuitem"
                 onClick={() => {
-                  setProfileMenuOpen(false);
+                  closeProfileMenu();
                   void login();
                 }}
               >
                 <LoginIcon />
-                <span>{L('auth:mapUserControls.text.signGoogle')}</span>
+                <span>{L('common:landing.navigation.signIn')}</span>
               </button>
             )}
           </div>

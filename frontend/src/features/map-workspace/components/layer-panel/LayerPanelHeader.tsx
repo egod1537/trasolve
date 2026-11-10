@@ -13,6 +13,7 @@ import type { Trip } from '@/entities/trip';
 import { InlineRename } from '@/shared/ui/InlineRename';
 import { getLanguage, useL, L } from '@/shared/i18n';
 import { trackEvent } from '@/shared/analytics';
+import { TripExportDialog } from '../../files/TripFileDialogs';
 
 type SaveStatus = 'ready' | 'dirty' | 'saving' | 'error';
 
@@ -81,6 +82,7 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
   const L = useL();
   const [titleEditing, setTitleEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const rootRef = useRef<HTMLElement>(null);
   const menuId = useId();
   const saved = formatSavedAt(savedAt);
@@ -258,7 +260,18 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
           </ActionIcon>
           <span>{L('map:layerPanelHeader.text.share')}</span>
         </button>
+        <button
+          type="button"
+          className="trip-panel-header-action"
+          onClick={() => setExportOpen(true)}
+        >
+          <ActionIcon>
+            <path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5" />
+          </ActionIcon>
+          <span>{L('map:tripFiles.exportAction')}</span>
+        </button>
       </div>
+      {exportOpen && <TripExportDialog onClose={() => setExportOpen(false)} />}
     </header>
   );
 });

@@ -293,8 +293,10 @@ export class TrouteJobHttpService {
   private parseJobRoute(
     pathname: string,
   ): { jobId: string; action: 'inspect' | 'cancel' | 'events' } | null {
-    const prefix = `${API_ROUTES.trouteInternalJobs}/`;
-    if (!pathname.startsWith(prefix)) {
+    const prefix = [API_ROUTES.trouteJobs, API_ROUTES.trouteInternalJobs]
+      .map((basePath) => `${basePath}/`)
+      .find((candidate) => pathname.startsWith(candidate));
+    if (!prefix) {
       return null;
     }
 

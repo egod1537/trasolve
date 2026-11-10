@@ -1,3 +1,4 @@
+import { reuseJsonValue } from '@/shared/lib/structuralSharing';
 import {
   reconcileDayRouteSegments,
   tripSchema,
@@ -34,7 +35,11 @@ export function createTripStore(initialTrip: Trip): TripStore {
     getState: () => state,
     setState: (next) => {
       // Detached immutable snapshots: callers cannot mutate stored domain data.
-      state = freeze(structuredClone(next));
+      const shared = reuseJsonValue(state, structuredClone(next));
+      if (shared === state) {
+        return;
+      }
+      state = freeze(shared);
       for (const listener of listeners) {
         listener();
       }

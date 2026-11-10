@@ -36,6 +36,7 @@ export function tripViewToInput(view: TripView, stored?: Trip): TripInput {
     days: view.days.map((day) => ({
       id: stored ? day.id : undefined,
       title: day.title,
+      hidden: day.hidden,
       date: stored?.days.find((item) => item.id === day.id)?.date,
       color: day.color,
       places: day.places.map((place) => ({

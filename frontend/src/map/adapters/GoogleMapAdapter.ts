@@ -2,7 +2,11 @@
 
 import type { MapAdapter } from '@/map/adapters/MapAdapter';
 import { GoogleMapObjectController } from '@/map/adapters/GoogleMapObjectController';
-import type { MapObjectController } from '@/map/adapters/MapObjectController';
+import type {
+  MapObjectController,
+  MapPolygonOptions,
+  MapPolygonHandle,
+} from '@/map/adapters/MapObjectController';
 import type { MapObjectHandle } from '@/shared/map/MapObjectHandle';
 import type {
   MapMarkerHandle,
@@ -159,6 +163,10 @@ export class GoogleMapAdapter implements MapAdapter, MapObjectController {
     };
     this.listenerRemovers.add(remove);
     return remove;
+  }
+
+  public addPolygon(options: MapPolygonOptions): MapPolygonHandle {
+    return this.objects.addPolygon(options);
   }
 
   public addMarker(options: MapMarkerOptions): MapMarkerHandle {

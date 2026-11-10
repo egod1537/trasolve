@@ -53,7 +53,10 @@ function sameItem(
   return !!left && left.type === right.type && left.id === right.id;
 }
 
-export function useMapSelection(trip: Trip) {
+export function useMapSelection(
+  trip: Trip,
+  visibleDayIds: ReadonlySet<string>,
+) {
   const [selection, setSelection] =
     useState<LayerMultiSelectionState>(EMPTY_SELECTION);
   const [revision, setRevision] = useState(0);
@@ -61,6 +64,9 @@ export function useMapSelection(trip: Trip) {
     const nextItemDayIds = new Map<string, string>();
     const nextValidItemKeys = new Set<string>();
     for (const day of trip.days) {
+      if (!visibleDayIds.has(day.id)) {
+        continue;
+      }
       for (const place of day.places) {
         const key = itemKey({ type: 'place', id: place.id });
         nextItemDayIds.set(key, day.id);
@@ -76,7 +82,7 @@ export function useMapSelection(trip: Trip) {
       itemDayIds: nextItemDayIds,
       validItemKeys: nextValidItemKeys,
     };
-  }, [trip.days]);
+  }, [trip.days, visibleDayIds]);
   const selectedItems = useMemo(
     () =>
       selection.dayId

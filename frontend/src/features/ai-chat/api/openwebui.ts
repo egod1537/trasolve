@@ -3,6 +3,7 @@ import {
   openWebUIModelListResponseSchema,
   type OpenWebUIModelListResponse,
 } from '@trasolve/shared';
+import { throwIfExternalApiDisabled } from '@/shared/api/externalApiDisabled';
 import { L } from '@/shared/i18n';
 
 export type { OpenWebUIModel } from '@trasolve/shared';
@@ -21,6 +22,7 @@ export async function listOpenWebUIModels(): Promise<OpenWebUIModelListResponse>
   }
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
+    throwIfExternalApiDisabled(body);
     throw new Error(L('errors:openwebui.error.modelListCouldNotBeLoaded'));
   }
   const parsed = openWebUIModelListResponseSchema.safeParse(body);

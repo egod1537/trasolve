@@ -1,24 +1,21 @@
-import { lazy, memo, Suspense, type RefObject } from 'react';
-import type {
-  TripDay,
-  TripPolyline,
-  TripPolylineMode,
-  TripScheduleUpdate,
-} from '@trasolve/shared';
+import { memo, type RefObject } from 'react';
+import type { Measurement } from '../measurement/useMeasurement';
+import { MeasurementPanel } from '../measurement/MeasurementPanel';
+import { useViewCapture } from '../capture/useViewCapture';
+import type { TripDay, TripPolyline, TripPolylineMode } from '@trasolve/shared';
 import { BottomContextPanel } from '@/features/map-workspace/components/bottom-panel/BottomContextPanel';
 import { MapToolPanel } from '@/features/map-workspace/components/bottom-panel/MapToolPanel';
 import { MultiSelectionActionPanel } from '@/features/map-workspace/components/bottom-panel/MultiSelectionActionPanel';
-
-const RouteOptimizationModal = lazy(() =>
-  import('@/features/route-optimization').then((module) => ({
-    default: module.RouteOptimizationModal,
-  })),
-);
+import {
+  RouteOptimizationModal,
+  type RouteComparisonData,
+} from '@/features/route-optimization';
 
 type Props = {
+  onCompare: (data: RouteComparisonData) => void;
   activeDay: TripDay | null;
   days: readonly TripDay[];
-  activeMapTool: 'pan';
+  measurement: Measurement;
   routeOptimizationOpen: boolean;
   routeOptimizationModalId: string;
   routeToolButtonRef: RefObject<HTMLButtonElement | null>;
@@ -31,7 +28,6 @@ type Props = {
   canRedo: boolean;
   onUndo: () => void;
   onRedo: () => void;
-  onSelectMapTool: (tool: 'pan') => void;
   onToggleRouteOptimization: () => void;
   onCloseRouteOptimization: () => void;
   onUpdatePolylineModes: (
@@ -40,16 +36,13 @@ type Props = {
   ) => Promise<boolean>;
   onDeletePlaces: (placeIds: readonly string[]) => Promise<boolean>;
   onClearSelection: () => void;
-  onApplyOptimizedSchedule: (
-    dayId: string,
-    schedule: TripScheduleUpdate,
-  ) => Promise<boolean>;
 };
 
 export const MapOverlayHost = memo(function MapOverlayHost({
+  onCompare,
   activeDay,
   days,
-  activeMapTool,
+  measurement,
   routeOptimizationOpen,
   routeOptimizationModalId,
   routeToolButtonRef,
@@ -62,17 +55,23 @@ export const MapOverlayHost = memo(function MapOverlayHost({
   canRedo,
   onUndo,
   onRedo,
-  onSelectMapTool,
   onToggleRouteOptimization,
   onCloseRouteOptimization,
   onUpdatePolylineModes,
   onDeletePlaces,
   onClearSelection,
-  onApplyOptimizedSchedule,
 }: Props) {
+  const capture = useViewCapture();
+  const measuring = measurement.tool !== 'pan';
   return (
     <>
       <div className="bottom-map-controls-positioner">
+        {capture.message && (
+          <p className="map-capture-status" role="status" data-capture-ignore>
+            {capture.message}
+          </p>
+        )}
+        <MeasurementPanel measurement={measurement} />
         {selectedItemCount >= 2 && (
           <MultiSelectionActionPanel
             selectedPlaceIds={selectedPlaceIds}
@@ -87,14 +86,21 @@ export const MapOverlayHost = memo(function MapOverlayHost({
         <div className="bottom-map-controls">
           <BottomContextPanel activeDay={activeDay} />
           <MapToolPanel
-            canUndo={canUndo}
-            canRedo={canRedo}
-            activeTool={activeMapTool}
-            onUndo={onUndo}
+            captureBusy={capture.busy}
+            onCapture={() => void capture.capture()}
+            canUndo={measuring ? measurement.points.length > 0 : canUndo}
+            canRedo={!measuring && canRedo}
+            activeTool={measurement.tool}
+            onUndo={measuring ? measurement.undo : onUndo}
             onRedo={onRedo}
-            onSelectTool={onSelectMapTool}
+            onSelectTool={measurement.selectTool}
             onOpenRouteTools={
-              days.length > 0 ? onToggleRouteOptimization : undefined
+              days.length > 0
+                ? () => {
+                    measurement.selectTool('pan');
+                    onToggleRouteOptimization();
+                  }
+                : undefined
             }
             routeToolsOpen={routeOptimizationOpen && days.length > 0}
             routeToolsControlId={routeOptimizationModalId}
@@ -103,15 +109,13 @@ export const MapOverlayHost = memo(function MapOverlayHost({
         </div>
       </div>
       {routeOptimizationOpen && days.length > 0 && (
-        <Suspense fallback={null}>
-          <RouteOptimizationModal
-            id={routeOptimizationModalId}
-            days={days}
-            initialDayId={activeDay?.id}
-            onClose={onCloseRouteOptimization}
-            onApply={onApplyOptimizedSchedule}
-          />
-        </Suspense>
+        <RouteOptimizationModal
+          id={routeOptimizationModalId}
+          days={days}
+          initialDayId={activeDay?.id}
+          onClose={onCloseRouteOptimization}
+          onCompare={onCompare}
+        />
       )}
     </>
   );

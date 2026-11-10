@@ -1,0 +1,217 @@
+.trip-layer-item-content {
+  position: relative;
+  z-index: 3;
+}
+
+.trip-layer-item-content:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  outline-offset: -2px;
+}
+
+.trip-place[aria-disabled='true'] {
+  cursor: default;
+}
+
+.trip-place.is-editing {
+  cursor: text;
+}
+
+.trip-polyline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+  padding: 6px 4px 5px 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.trip-polyline:disabled {
+  cursor: default;
+}
+
+.trip-layer-type-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  color: var(--color-text-muted);
+}
+
+.trip-polyline > .trip-layer-type-icon {
+  flex-basis: 52px;
+  width: 52px;
+  padding-left: 18px;
+  box-sizing: border-box;
+}
+
+.trip-layer-type-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.trip-layer-type-icon.is-place {
+  color: var(--day-color);
+}
+
+.trip-layer-type-icon.is-polyline.is-straight {
+  color: #2563eb;
+}
+
+.trip-layer-type-icon.is-polyline.is-walking {
+  color: #059669;
+}
+
+.trip-layer-type-icon.is-polyline.is-transit {
+  color: #7c3aed;
+}
+
+.trip-layer-type-icon.is-polyline.is-driving {
+  color: #ea580c;
+}
+
+.trip-place.is-selected .trip-layer-type-icon {
+  color: var(--color-primary);
+}
+
+.trip-polyline-content {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 3px;
+}
+
+.trip-polyline-name {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-polyline-mode {
+  color: var(--color-muted);
+  font-size: 10px;
+}
+
+.trip-polyline-time-summary {
+  display: block;
+  min-width: 0;
+  margin-top: 1px;
+}
+
+.trip-polyline-time-summary .time-range-timeline.is-travel {
+  --time-range-range-height: 3px;
+  --time-range-event-size: 4px;
+}
+
+.trip-place-content {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.trip-place-name-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 5px;
+}
+
+.trip-place-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
+.trip-place-stay-duration {
+  flex: none;
+  margin-left: auto;
+  color: var(--color-muted);
+  font-size: 10px;
+  font-weight: 450;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.trip-place-name-input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  margin: -2px 0 -3px;
+  padding: 2px 6px;
+  border: 1px solid var(--color-primary);
+  border-radius: 5px;
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  outline-offset: 1px;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.trip-place-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 5px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.trip-place-meta > span + span::before {
+  margin-right: 5px;
+  content: '·';
+}
+
+.trip-place-time {
+  margin-left: auto;
+  padding-top: 3px;
+  flex: none;
+  font-size: 11px;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.place-time-summary {
+  display: block;
+  min-width: 0;
+}
+
+.trip-layer-item .time-range-timeline.is-compact {
+  --time-range-axis-height: 58px;
+  --time-range-baseline-top: 17px;
+  --time-range-tick-label-top: 25px;
+  --time-range-tick-top: 14px;
+  --time-range-event-label-bottom: 12px;
+  --time-range-event-end-label-top: 12px;
+  --time-range-event-top: 13px;
+  --time-range-label-top: 49px;
+}
+
+.trip-polyline-time-summary .time-range-timeline.is-compact {
+  --time-range-axis-height: 49px;
+}

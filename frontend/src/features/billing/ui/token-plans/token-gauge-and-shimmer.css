@@ -1,0 +1,144 @@
+.token-balance-gauge {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+.token-balance-gauge > strong {
+  color: var(--color-text);
+  font-size: 20px;
+  line-height: 1.2;
+}
+.token-plans-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.token-plans-mode-badge {
+  padding: 3px 7px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.token-plans-header-balance {
+  flex: 0 0 160px;
+  margin-left: auto;
+  padding-top: 3px;
+}
+.token-plans-header-balance strong {
+  text-align: right;
+}
+.token-shimmer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.token-shimmer > * {
+  position: relative;
+  z-index: 1;
+}
+.token-shimmer::after {
+  position: absolute;
+  z-index: 0;
+  top: -40%;
+  bottom: -40%;
+  left: -60%;
+  width: 45%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    #fff8,
+    #d2e4ff66,
+    transparent
+  );
+  content: '';
+  pointer-events: none;
+  transform: skewX(-20deg);
+  animation: token-foil-sheen 5.6s ease-in-out infinite;
+}
+.token-shimmer::before {
+  position: absolute;
+  z-index: 2;
+  top: 9px;
+  right: 10px;
+  width: 10px;
+  height: 10px;
+  background: white;
+  clip-path: polygon(
+    50% 0,
+    62% 38%,
+    100% 50%,
+    62% 62%,
+    50% 100%,
+    38% 62%,
+    0 50%,
+    38% 38%
+  );
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  animation: token-foil-sparkle 5.6s ease-in-out infinite;
+}
+.map-token-add.token-shimmer::before {
+  top: 4px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+}
+.token-plan-card.token-shimmer::after,
+.token-plan-card.token-shimmer::before {
+  animation-delay: 1.2s;
+}
+@keyframes token-foil-sheen {
+  0%,
+  65% {
+    left: -60%;
+    opacity: 0;
+  }
+  68% {
+    opacity: 1;
+  }
+  88%,
+  100% {
+    left: 130%;
+    opacity: 0;
+  }
+}
+@keyframes token-foil-sparkle {
+  0%,
+  72%,
+  92%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(0);
+  }
+  82% {
+    opacity: 0.9;
+    transform: scale(1.1) rotate(45deg);
+  }
+}
+@media (max-width: 700px) {
+  .token-plans-header {
+    flex-wrap: wrap;
+  }
+  .token-plans-heading {
+    flex: 1 1 calc(100% - 56px);
+  }
+  .token-plans-close {
+    order: 2;
+  }
+  .token-plans-header-balance {
+    order: 3;
+    flex: 0 0 150px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .token-shimmer::before,
+  .token-shimmer::after {
+    display: none;
+    animation: none;
+  }
+}

@@ -4,34 +4,43 @@
   min-height: 100vh;
   min-height: 100dvh;
 }
-.trip-map-picker-backdrop {
-  position: absolute;
+.ui-dialog-backdrop.trip-map-picker-backdrop {
+  position: fixed;
   inset: 0;
-  background: var(--color-overlay-light);
+  padding: 100px 24px 24px;
+  background: var(--color-overlay-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
 }
-.trip-map-picker-popup {
+.ui-dialog.trip-map-picker-popup {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  width: 440px;
-  max-width: calc(100% - 32px);
-  max-height: 78vh;
-  overflow: auto;
+  box-sizing: border-box;
+  width: 1180px;
+  max-width: 100%;
+  max-height: calc(100vh - 124px);
+  max-height: calc(100dvh - 124px);
+  overflow: hidden;
   overflow-wrap: anywhere;
-  padding: 20px;
+  padding: 24px;
   border: 1px solid var(--color-map-overlay-ring);
   border-radius: var(--radius-md);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
-  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .trip-map-picker-popup:focus-visible {
   outline: none;
+}
+
+.trip-map-picker-header,
+.trip-map-picker-actions,
+.trip-map-picker-status,
+.trip-map-picker-empty {
+  flex: none;
 }
 
 .trip-map-picker-header {
@@ -44,7 +53,7 @@
 
 .trip-map-picker-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--color-text);
 }
@@ -101,8 +110,12 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
-  padding: 0 12px;
+  min-height: 40px;
+  height: auto;
+  max-width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  white-space: normal;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-raised);
@@ -135,7 +148,7 @@
 }
 
 .trip-map-picker-action.trip-map-picker-refresh {
-  width: 36px;
+  width: 40px;
   padding: 0;
   flex: none;
   justify-content: center;
@@ -180,58 +193,121 @@
 }
 
 .trip-map-picker-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 0;
-  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
+  gap: 20px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 4px;
+  margin: 0 -4px;
   list-style: none;
 }
+
 .trip-map-picker-item {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px;
+  flex-direction: column;
+  min-width: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-raised);
-  cursor: pointer;
   transition:
     border-color 0.15s ease,
-    background 0.15s ease,
-    box-shadow 0.15s ease;
+    background-color 0.15s ease;
 }
 
-.trip-map-picker-item:hover,
+.trip-map-picker-item:has(.trip-map-picker-item-select:not(:disabled):hover),
+.trip-map-picker-item:has(.trip-map-picker-preview-open:not(:disabled):hover),
 .trip-map-picker-item:focus-within {
-  border-color: color-mix(
-    in srgb,
-    var(--color-primary) 30%,
-    var(--color-border)
-  );
+  border-color: var(--color-primary);
   background: var(--color-surface-subtle);
-  box-shadow: var(--shadow-floating-sm);
+}
+
+.trip-map-picker-item-select {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.trip-map-picker-item-select:focus-visible,
+.trip-map-picker-preview-open:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.trip-map-picker-item-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .trip-map-picker-item-preview {
+  position: relative;
   display: block;
   flex: none;
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-md);
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-bottom: 1px solid var(--color-border);
   background: var(--color-accent-soft);
   overflow: hidden;
 }
 
-.trip-map-picker-item-preview.is-empty {
+.trip-map-picker-preview-map.google-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.trip-map-picker-preview-map .trip-map-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.trip-map-picker-preview-map .trip-map-marker-icon {
+  display: none;
+}
+
+.trip-map-picker-preview-open {
+  position: absolute;
+  z-index: 1;
+  /* Leave the provider attribution and its links visible and interactive. */
+  inset: 0 0 26px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.trip-map-picker-preview-open:disabled {
+  cursor: not-allowed;
+}
+
+.trip-map-picker-preview-placeholder {
   display: grid;
   place-items: center;
+  height: 100%;
   color: var(--color-primary);
 }
 
-.trip-map-picker-item-preview.is-empty svg {
-  width: 22px;
-  height: 22px;
+.trip-map-picker-preview-placeholder svg {
+  width: 36px;
+  height: 36px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -241,16 +317,27 @@
 
 .trip-map-picker-item-body {
   display: flex;
+  box-sizing: border-box;
   flex-direction: column;
+  width: 100%;
   min-width: 0;
-  gap: 3px;
+  gap: 6px;
   flex: 1;
+  padding: 16px;
+}
+
+.trip-map-picker-item-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .trip-map-picker-item-title {
+  display: block;
+  max-width: 100%;
   overflow: hidden;
   color: var(--color-text);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -265,33 +352,14 @@
   display: flex;
   align-items: center;
   flex: none;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.trip-map-picker-item-open {
-  height: 28px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
-  color: var(--color-accent-contrast);
-  font: inherit;
-  font-size: 12px;
-  font-weight: 650;
-  cursor: pointer;
-}
-
-.trip-map-picker-item-open:hover:not(:disabled),
-.trip-map-picker-item-open:focus-visible {
-  background: var(--color-primary-dark);
+  gap: 4px;
 }
 
 .trip-map-picker-item-delete {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border: 0;
   border-radius: var(--radius-md);
   background: transparent;
@@ -315,23 +383,55 @@
   color: var(--color-danger);
 }
 
-.trip-map-picker-item-open:disabled,
 .trip-map-picker-item-delete:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
 
-@media (max-width: 480px) {
-  .trip-map-picker-action span {
-    display: none;
-  }
+.trip-map-delete-backdrop {
+  z-index: calc(var(--z-dialog) + 1);
+}
 
-  .trip-map-picker-action:not(.trip-map-picker-refresh) {
-    width: 40px;
-    padding: 0;
-    justify-content: center;
+.trip-map-delete-confirmation {
+  width: min(420px, 100%);
+  padding: 24px;
+}
+
+.trip-map-delete-confirmation h2 {
+  margin: 0 0 24px;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.trip-map-delete-confirmation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 1099px) {
+  .trip-map-picker-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+@media (max-width: 699px) {
+  .ui-dialog-backdrop.trip-map-picker-backdrop {
+    padding: 96px 12px 12px;
+  }
+
+  .ui-dialog.trip-map-picker-popup {
+    max-height: calc(100vh - 108px);
+    max-height: calc(100dvh - 108px);
+    padding: 16px;
+  }
+
+  .trip-map-picker-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+}
+
 .trip-map-workspace {
   display: flex;
   flex-direction: column;

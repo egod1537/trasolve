@@ -22,6 +22,8 @@ export interface TcacheRouteRequest {
   computeAlternativeRoutes?: boolean;
   languageCode?: string;
   regionCode?: string;
+  countryCode?: string;
+  provider?: string;
   routingPreference?: string;
   units?: string;
 }
@@ -40,6 +42,39 @@ export interface TcacheRouteBounds {
   west: number;
 }
 
+export interface TcacheTransitStop {
+  name?: string;
+}
+
+export interface TcacheTransitVehicle {
+  name?: string;
+  type?: string;
+}
+
+export interface TcacheTransitDetails {
+  departureStop?: string;
+  arrivalStop?: string;
+  departureTime?: string;
+  arrivalTime?: string;
+  lineName?: string;
+  lineShortName?: string;
+  headsign?: string;
+  stopCount?: number;
+  vehicleType?: string;
+  stops: TcacheTransitStop[];
+  vehicles: TcacheTransitVehicle[];
+}
+
+export interface TcacheRouteStep {
+  distanceMeters?: number;
+  durationSeconds?: number;
+  start?: TcacheRoutePoint;
+  end?: TcacheRoutePoint;
+  travelMode?: string;
+  instruction?: string;
+  transitDetails?: TcacheTransitDetails;
+}
+
 export interface TcacheRouteLeg {
   from: string;
   to: string;
@@ -48,6 +83,7 @@ export interface TcacheRouteLeg {
   start?: TcacheRoutePoint;
   end?: TcacheRoutePoint;
   path?: TcacheRoutePoint[];
+  steps: TcacheRouteStep[];
 }
 
 export interface TcacheRouteAlternative {

@@ -6,7 +6,7 @@ import {
   type AnalyticsTarget,
   type Trip,
 } from '@trasolve/shared';
-import { PreferencesModal } from '@/features/preferences/ui/PreferencesModal';
+import { MapUserControls } from '@/features/auth';
 import { Button } from '@/shared/ui/Button';
 import { Dialog } from '@/shared/ui/Dialog';
 import { EmptyState } from '@/shared/ui/EmptyState';
@@ -14,7 +14,6 @@ import { IconButton } from '@/shared/ui/IconButton';
 import {
   BookIcon,
   CloseIcon,
-  GearIcon,
   PlusIcon,
   RefreshIcon,
   TrashIcon,
@@ -24,9 +23,11 @@ import { useL } from '@/shared/i18n';
 import type { MapWorkspaceMode } from '@/features/map-workspace/model/mapWorkspaceMode';
 import { trackEvent, useScreenView } from '@/shared/analytics';
 import { TripMapPreview } from '@/features/map-workspace/components/TripMapPreview';
+import { TripDeleteConfirmation } from '@/features/map-workspace/components/TripDeleteConfirmation';
 
 type CommonProps = {
   mode: MapWorkspaceMode;
+  debugMode: boolean;
   trips: readonly Trip[];
   busy: boolean;
   error: string | null;
@@ -58,6 +59,7 @@ type Props = CommonProps &
 
 export function TripPickerPopup({
   mode,
+  debugMode,
   trips,
   busy,
   error,
@@ -74,7 +76,7 @@ export function TripPickerPopup({
 }: Props) {
   const L = useL();
   const titleId = useId();
-  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [deletingTrip, setDeletingTrip] = useState<Trip | null>(null);
   useScreenView(ANALYTICS_SCREENS.tripPicker);
 
   const trackPickerButton = (
@@ -89,37 +91,22 @@ export function TripPickerPopup({
     });
   };
 
-  if (preferencesOpen) {
-    return <PreferencesModal onClose={() => setPreferencesOpen(false)} />;
-  }
-
   return (
     <Dialog
       className="trip-map-picker-popup"
       backdropClassName="trip-map-picker-backdrop"
       labelledBy={titleId}
+      busy={busy}
       closeOnBackdrop={false}
-      closeOnEscape={canClose}
+      closeOnEscape={canClose && deletingTrip === null}
       onClose={onClose}
+      accessory={
+        <MapUserControls onOpenTripPicker={onRefresh} showTokens={false} />
+      }
     >
       <header className="trip-map-picker-header">
         <h2 id={titleId}>{L('trip:tripPickerPopup.title.myTrip')}</h2>
         <div className="trip-map-picker-header-actions">
-          <IconButton
-            className="trip-map-picker-close"
-            data-analytics-id={ANALYTICS_TARGETS.preferencesOpen}
-            data-analytics-screen={ANALYTICS_SCREENS.tripPicker}
-            aria-label={L('auth:mapUserControls.text.preferences')}
-            title={L('auth:mapUserControls.text.preferences')}
-            aria-haspopup="dialog"
-            variant="ghost"
-            size="sm"
-            icon={<GearIcon />}
-            onClick={() => {
-              trackPickerButton(ANALYTICS_TARGETS.preferencesOpen);
-              setPreferencesOpen(true);
-            }}
-          />
           <IconButton
             className="trip-map-picker-close"
             aria-label={L(
@@ -166,34 +153,52 @@ export function TripPickerPopup({
           >
             <span>{L('trip:tripPickerPopup.text.createNewTrip')}</span>
           </Button>
-          <Button
-            className="trip-map-picker-action"
-            data-analytics-id={ANALYTICS_TARGETS.tripCreate}
-            data-analytics-screen={ANALYTICS_SCREENS.tripPicker}
-            aria-label={L('trip:tripPickerPopup.text.createExampleTripSeoul')}
-            disabled={busy}
-            startIcon={<BookIcon />}
-            onClick={() => {
-              trackPickerButton(ANALYTICS_TARGETS.tripCreate, 'seoul_example');
-              onCreateSeoulExample?.();
-            }}
-          >
-            <span>{L('trip:tripPickerPopup.text.createExampleTripSeoul')}</span>
-          </Button>
-          <Button
-            className="trip-map-picker-action"
-            data-analytics-id={ANALYTICS_TARGETS.tripCreate}
-            data-analytics-screen={ANALYTICS_SCREENS.tripPicker}
-            aria-label={L('trip:tripPickerPopup.text.createExampleTripTokyo')}
-            disabled={busy}
-            startIcon={<BookIcon />}
-            onClick={() => {
-              trackPickerButton(ANALYTICS_TARGETS.tripCreate, 'tokyo_example');
-              onCreateTokyoExample?.();
-            }}
-          >
-            <span>{L('trip:tripPickerPopup.text.createExampleTripTokyo')}</span>
-          </Button>
+          {debugMode && (
+            <>
+              <Button
+                className="trip-map-picker-action"
+                data-analytics-id={ANALYTICS_TARGETS.tripCreate}
+                data-analytics-screen={ANALYTICS_SCREENS.tripPicker}
+                aria-label={L(
+                  'trip:tripPickerPopup.text.createExampleTripSeoul',
+                )}
+                disabled={busy}
+                startIcon={<BookIcon />}
+                onClick={() => {
+                  trackPickerButton(
+                    ANALYTICS_TARGETS.tripCreate,
+                    'seoul_example',
+                  );
+                  onCreateSeoulExample?.();
+                }}
+              >
+                <span>
+                  {L('trip:tripPickerPopup.text.createExampleTripSeoul')}
+                </span>
+              </Button>
+              <Button
+                className="trip-map-picker-action"
+                data-analytics-id={ANALYTICS_TARGETS.tripCreate}
+                data-analytics-screen={ANALYTICS_SCREENS.tripPicker}
+                aria-label={L(
+                  'trip:tripPickerPopup.text.createExampleTripTokyo',
+                )}
+                disabled={busy}
+                startIcon={<BookIcon />}
+                onClick={() => {
+                  trackPickerButton(
+                    ANALYTICS_TARGETS.tripCreate,
+                    'tokyo_example',
+                  );
+                  onCreateTokyoExample?.();
+                }}
+              >
+                <span>
+                  {L('trip:tripPickerPopup.text.createExampleTripTokyo')}
+                </span>
+              </Button>
+            </>
+          )}
           <IconButton
             className="trip-map-picker-action trip-map-picker-refresh"
             aria-label={L('common:action.refresh')}
@@ -239,22 +244,55 @@ export function TripPickerPopup({
       {authenticationStatus === 'signed-in' && !!trips.length && (
         <ul className="trip-map-picker-list">
           {trips.map((trip) => (
-            <li
-              key={trip.id}
-              className="trip-map-picker-item"
-              onClick={() => {
-                if (busy) {
-                  return;
-                }
-                trackPickerButton(ANALYTICS_TARGETS.tripSelect, 'saved_trip');
-                onOpen(trip.id);
-              }}
-            >
-              <TripMapPreview trip={trip} />
+            <li key={trip.id} className="trip-map-picker-item">
+              <TripMapPreview
+                trip={trip}
+                disabled={busy}
+                onOpen={() => {
+                  trackPickerButton(ANALYTICS_TARGETS.tripSelect, 'saved_trip');
+                  onOpen(trip.id);
+                }}
+              />
               <div className="trip-map-picker-item-body">
-                <strong className="trip-map-picker-item-title">
-                  {trip.title}
-                </strong>
+                <div className="trip-map-picker-item-heading">
+                  <button
+                    type="button"
+                    className="trip-map-picker-item-select"
+                    data-analytics-id={ANALYTICS_TARGETS.tripSelect}
+                    data-analytics-screen={ANALYTICS_SCREENS.tripPicker}
+                    disabled={busy}
+                    onClick={() => {
+                      trackPickerButton(
+                        ANALYTICS_TARGETS.tripSelect,
+                        'saved_trip',
+                      );
+                      onOpen(trip.id);
+                    }}
+                  >
+                    <strong
+                      className="trip-map-picker-item-title"
+                      title={trip.title}
+                    >
+                      {trip.title}
+                    </strong>
+                  </button>
+                  <div className="trip-map-picker-item-actions">
+                    {mode === 'edit' && (
+                      <IconButton
+                        className="trip-map-picker-item-delete"
+                        aria-label={L('trip:tripPickerPopup.ariaLabel.delete', {
+                          title: trip.title,
+                        })}
+                        title={L('common:action.delete')}
+                        variant="ghost"
+                        size="sm"
+                        icon={<TrashIcon />}
+                        disabled={busy}
+                        onClick={() => setDeletingTrip(trip)}
+                      />
+                    )}
+                  </div>
+                </div>
                 <span className="trip-map-picker-item-meta">
                   {L('trip:tripPickerPopup.text.daysLocations', {
                     dayCount: trip.days.length,
@@ -264,46 +302,21 @@ export function TripPickerPopup({
                     ),
                   })}
                 </span>
-                <div className="trip-map-picker-item-actions">
-                  <Button
-                    className="trip-map-picker-item-open"
-                    data-analytics-id={ANALYTICS_TARGETS.tripSelect}
-                    data-analytics-screen={ANALYTICS_SCREENS.tripPicker}
-                    size="sm"
-                    disabled={busy}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      trackPickerButton(
-                        ANALYTICS_TARGETS.tripSelect,
-                        'saved_trip',
-                      );
-                      onOpen(trip.id);
-                    }}
-                  >
-                    {L('trip:tripPickerPopup.action.open')}
-                  </Button>
-                  {mode === 'edit' && (
-                    <IconButton
-                      className="trip-map-picker-item-delete"
-                      aria-label={L('trip:tripPickerPopup.ariaLabel.delete', {
-                        title: trip.title,
-                      })}
-                      title={L('common:action.delete')}
-                      variant="ghost"
-                      size="sm"
-                      icon={<TrashIcon />}
-                      disabled={busy}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onDelete(trip.id);
-                      }}
-                    />
-                  )}
-                </div>
               </div>
             </li>
           ))}
         </ul>
+      )}
+      {deletingTrip && mode === 'edit' && (
+        <TripDeleteConfirmation
+          trip={deletingTrip}
+          onCancel={() => setDeletingTrip(null)}
+          onConfirm={() => {
+            const id = deletingTrip.id;
+            setDeletingTrip(null);
+            onDelete(id);
+          }}
+        />
       )}
     </Dialog>
   );

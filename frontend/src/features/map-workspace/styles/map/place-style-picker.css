@@ -1,0 +1,258 @@
+.trip-place-style-popover {
+  position: fixed;
+  z-index: 4000;
+  width: min(612px, calc(100vw - 16px));
+  max-height: calc(100vh - 16px);
+  padding: 12px 14px 14px;
+  overflow: visible;
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
+  box-shadow: var(--shadow-map-overlay);
+  backdrop-filter: blur(var(--map-overlay-blur));
+  box-sizing: border-box;
+  --place-style-cell-size: 40px;
+  --place-style-cell-gap: 4px;
+  --place-style-cell-radius: 6px;
+}
+
+.trip-place-style-popover::after {
+  position: absolute;
+  left: var(--trip-place-style-anchor-x, 50%);
+  width: 10px;
+  height: 10px;
+  border: solid var(--color-map-overlay-ring);
+  background: var(--color-map-overlay-surface);
+  content: '';
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.trip-place-style-popover[data-placement='above']::after {
+  bottom: -6px;
+  border-width: 0 1px 1px 0;
+}
+
+.trip-place-style-popover[data-placement='below']::after {
+  top: -6px;
+  border-width: 1px 0 0 1px;
+}
+
+.trip-place-style-popover[data-placement='overlay']::after {
+  display: none;
+}
+
+.trip-place-style-close {
+  position: absolute;
+  z-index: 3;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.trip-place-style-close:hover,
+.trip-place-style-close:focus-visible {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.trip-place-style-close svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.8;
+}
+
+.trip-place-style-popover fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.trip-place-style-content {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  align-items: start;
+  gap: 12px;
+  min-width: 0;
+  padding-right: 36px;
+}
+
+.trip-place-style-types {
+  display: grid;
+  grid-template-columns: repeat(6, var(--place-style-cell-size));
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px;
+  gap: var(--place-style-cell-gap);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-border);
+}
+
+.trip-place-style-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--place-style-cell-size);
+  min-width: var(--place-style-cell-size);
+  height: var(--place-style-cell-size);
+  min-height: var(--place-style-cell-size);
+  padding: 0;
+  border-radius: var(--place-style-cell-radius);
+  box-sizing: border-box;
+}
+
+.trip-place-style-cell.is-type {
+  border: 0;
+  background: var(--color-surface-raised);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.trip-place-style-cell.is-type:hover,
+.trip-place-style-cell.is-type:focus-visible {
+  z-index: 2;
+  background: var(--color-surface-hover);
+}
+
+.trip-place-style-cell:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.trip-place-style-cell.is-type[aria-pressed='true'] {
+  background: var(--color-accent-soft);
+  color: var(--color-primary);
+  box-shadow: inset 0 0 0 2px var(--color-primary);
+}
+
+.trip-place-style-types svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.55;
+}
+
+.trip-place-style-tooltip {
+  position: absolute;
+  right: auto;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  z-index: 4;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: var(--color-tooltip-bg);
+  box-shadow: var(--shadow-map-overlay);
+  color: var(--color-tooltip-text);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.25;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 2px);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease,
+    visibility 120ms ease;
+  visibility: hidden;
+  white-space: nowrap;
+}
+
+.trip-place-style-types button:nth-child(-n + 6) .trip-place-style-tooltip {
+  top: calc(100% + 5px);
+  bottom: auto;
+  transform: translate(-50%, -2px);
+}
+
+.trip-place-style-types button:hover .trip-place-style-tooltip,
+.trip-place-style-types button:focus-visible .trip-place-style-tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  visibility: visible;
+}
+
+.trip-place-style-palette {
+  display: grid;
+  grid-template-columns: repeat(6, var(--place-style-cell-size));
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px;
+  gap: var(--place-style-cell-gap);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-border);
+}
+
+.trip-place-style-cell.is-color {
+  border: 1px solid
+    color-mix(in srgb, var(--palette-color) 76%, var(--color-surface-raised));
+  outline: 0;
+  background: var(--palette-color);
+  cursor: pointer;
+}
+
+.trip-place-style-cell.is-color:hover,
+.trip-place-style-cell.is-color:focus-visible {
+  z-index: 1;
+  outline: 2px solid
+    color-mix(in srgb, var(--color-primary) 58%, var(--color-surface-raised));
+  outline-offset: -2px;
+}
+
+.trip-place-style-cell.is-color[aria-pressed='true'] {
+  z-index: 2;
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  box-shadow: inset 0 0 0 2px var(--color-surface-raised);
+}
+
+.trip-place-style-popover fieldset:disabled button {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+@media (max-width: 640px) {
+  .trip-place-style-popover {
+    padding: 10px 12px 12px;
+  }
+  .trip-place-style-content {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  .trip-place-style-content {
+    padding-top: 32px;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 300px) {
+  .trip-place-style-types,
+  .trip-place-style-palette {
+    grid-template-columns: repeat(5, var(--place-style-cell-size));
+  }
+}
+
+@media (max-height: 360px) {
+  .trip-place-style-content {
+    max-height: calc(100vh - 88px);
+    overflow: auto;
+  }
+}

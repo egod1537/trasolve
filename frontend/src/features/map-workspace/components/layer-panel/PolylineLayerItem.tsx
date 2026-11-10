@@ -10,7 +10,6 @@ import {
   type TimeRangeTimelineRange,
 } from '@/features/place-editor';
 import type { LayerSelectionModifiers } from '@/features/map-workspace/model/useMapWorkspace';
-import { formatPolylineMode } from '@/features/map-workspace/lib/mapFormatters';
 import { LayerItemChevron } from '@/features/map-workspace/components/layer-panel/LayerItemChevron';
 import { LayerItemShell } from '@/features/map-workspace/components/layer-panel/LayerItemShell';
 import { LayerTypeIcon } from '@/features/map-workspace/components/layer-panel/LayerTypeIcon';
@@ -139,17 +138,11 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
         <LayerTypeIcon type="polyline" mode={polyline.mode} />
         <span className="trip-polyline-content">
           <span className="trip-polyline-name">{connectionName}</span>
-          <span className="trip-polyline-mode">
-            {formatPolylineMode(polyline.mode, L)}
-            {scheduleRange
-              ? L('map:polylineLayerItem.text.betweenPlaces', {
-                  formatDurationMinutes: formatDurationMinutes(
-                    scheduleRange.durationMinutes,
-                    L,
-                  ),
-                })
-              : null}
-          </span>
+          {scheduleRange && (
+            <span className="trip-polyline-mode">
+              {formatDurationMinutes(scheduleRange.durationMinutes, L)}
+            </span>
+          )}
           {scheduleRange && (
             <span className="trip-polyline-time-summary">
               <TimeRangeTimeline

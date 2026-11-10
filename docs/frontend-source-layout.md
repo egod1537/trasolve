@@ -1,158 +1,137 @@
-# Frontend source layout
+# Frontend architecture
 
-Top-level folders: app, pages, map, api, shared, assets.
+This document describes the current `frontend/src` layout. It replaces the historic
+page-local directory move inventory. Public contracts and URLs remain compatible.
 
-Before: adapters, api, assets, components, controllers, data, domain, hooks, maps,
-pages, stores, styles, types, utils (14 folders). After: six folders. The eleven
-obsolete technical-layer directories were removed once empty. No dependencies or
-aliases were added, and routes and public API contracts are unchanged.
+## Module ownership
 
-```text
-src/
-├─ app/                 App, main, routes, buildInfo
-├─ pages/
-│  ├─ map/
-│  │  ├─ MapPage.tsx
-│  │  ├─ components/    workspace, session, picker, layer-panel, viewport, ai
-│  │  ├─ repository/    TripRepository, HttpTripRepository
-│  │  ├─ controller/    TripEditController
-│  │  ├─ store/         TripStore, factory, Provider
-│  │  ├─ hooks/         selection, store binding, reorder
-│  │  ├─ domain/        camera policy, mapping, trip/UI types, bounds helper
-│  │  ├─ api/           trips.ts
-│  │  ├─ data/          demoTrip
-│  │  └─ styles/
-│  ├─ landing/          page, components, styles
-│  └─ testbed/          three page roots, Google Maps components, hooks, styles
-├─ map/
-│  ├─ adapters/         provider-neutral contracts and Google implementations
-│  ├─ runtime/          Google SDK loader and runtime factory
-│  ├─ components/       reusable GoogleMap and canvas styles
-│  ├─ types/            map primitives and React map component contracts
-│  ├─ hooks/            useMapPolyline runtime binding
-│  └─ geometry/         existing provider-neutral culling helpers
-├─ api/                 chat, places, routes, health
-├─ shared/
-│  ├─ components/chat/  MapAiPanel, Markdown rendering and their styles
-│  ├─ utils/            chat Markdown export/download
-│  └─ styles/           global reset/tokens
-└─ assets/              existing images
-```
+| Layer      | Responsibility                                                   | Allowed source dependencies                                 |
+| ---------- | ---------------------------------------------------------------- | ----------------------------------------------------------- |
+| `app`      | Bootstrap, providers, routes, global styles                      | All layers                                                  |
+| `pages`    | Route composition, admin screens, development pages              | Features, entities, shared, map, api                        |
+| `features` | User actions, orchestration, feature state and presentation      | Features through public entries, entities, shared, map, api |
+| `entities` | Place, trip and route-job data, repositories and mappings        | Shared; other entities are independent                      |
+| `shared`   | Product-neutral UI, transport helpers, preferences, localization | Shared                                                      |
+| `map`      | Provider-neutral map contracts and Google implementation         | Map, shared                                                 |
+| `api`      | Common service clients such as tcache                            | Api, shared                                                 |
 
-MapAiPanel is shared by /map and /testbed/ai-chat, so it does not live under either
-page. Markdown rendering, export and chat CSS follow that shared consumer. The
-map-specific AI button/region remain under pages/map. Shared contains no speculative
-UI library or new store. GooglePlaceSearch and useDirectionsState are currently
-testbed-only and move there. GoogleMap and its primitive lifecycle binding remain
-map infrastructure used by both map and testbed.
+Feature/entity consumers import the slice root `index.ts`; internal files use
+explicit local modules. Nested public barrels, legacy source roots, deep relative
+imports and circular dependencies (including type-only imports) are rejected.
+Features may compose other features through their public APIs. A new dependency
+must still have a concrete responsibility; extracting code does not justify a cycle.
 
-The top-level api folder is the existing common Web Service client boundary:
-chat serves both chat surfaces, places/routes supply reusable Google data requests,
-and health represents app connectivity. trips.ts is currently map-feature-only and
-remains a low-level client wrapped by HttpTripRepository. Only the selected
-TripSession creates the store/edit controller; MapPage owns the repository.
-API logic is unchanged.
+## Component and state contracts
 
-MapFocus/MapFocusTarget were extracted to pages/map/domain/mapUiTypes.ts so map
-primitives no longer contain page selection state. Existing declarations were
-moved without changing their shapes. AI panel CSS was extracted from map.css to
-shared chat-panel.css; Places search CSS was extracted from the Google canvas CSS
-to testbed/styles/google-place-search.css. Selectors and declarations are preserved.
+Display components accept the data they render and named event callbacks. They do
+not resolve a global container, create repositories or write trip state. Local
+presentation state such as expansion or a draft belongs near its input. Feature
+hooks own requests and editing workflows; composition roots connect them to views.
+A hook extraction is a responsibility boundary, not permission to grow another
+large file. Function-size warnings identify remaining candidates for decomposition.
 
-Imports point explicitly at their new owners; no barrels or aliases were added.
-Lint boundaries now address the new paths, including the page-specific trips client.
-Map/shared/api cannot import pages. The plain controller/store still cannot import
-React or rendering bindings, and visual regions retain their existing restrictions.
-Repositories cannot import React/session/rendering code. UI cannot import repositories;
-MapPage and TripSession are the composition exceptions.
+| State/resource                                             | Owner and lifetime                                               |
+| ---------------------------------------------------------- | ---------------------------------------------------------------- |
+| Authentication and billing environment                     | App providers; backend is authoritative                          |
+| Trip catalog and repository                                | `features/map-workspace/MapWorkspacePage.tsx`                    |
+| Live editable trip                                         | One immutable TripStore per selected TripSession                 |
+| Undo/redo, local edits, autosave and confirmed batches     | TripEditController and command dispatcher                        |
+| Layer visibility in editable trips                         | Optional `TripDay.hidden`; command/controller edits and autosave |
+| Selection, active day, viewer visibility and camera intent | Workspace UI hooks; read-only overrides never save               |
+| SDK map, markers, polylines and listeners                  | GoogleMap / MapRuntime / object controller                       |
+| Chat threads and browser persistence                       | `ai-chat/model/useChatThreads.ts`                                |
+| Chat request cancellation and response application         | `ai-chat/model/useChatSubmission.ts`, `ui/useThreadRequests.ts`  |
+| Chat focus, scroll and outside-menu listeners              | `ai-chat/ui/useChatPanelEffects.ts`                              |
+| Optimization request, constraints, schedule                | Separate modules under `route-optimization/model`                |
+| Testbed job state, stream and gateway requests             | Feature model hooks; views receive data and actions              |
 
-Validation: lint, typecheck and production build pass. A static relative-import
-graph review of 86 modules found no unresolved imports, cycles (including type
-imports), or map/shared/api references to pages. A before/after source comparison
-found only path changes except the documented type/CSS extraction and CSS import
-adjustments. No automated test files, fixtures, scripts or dependencies were added.
-Browser behavior remains unverified: browser launch in this session was previously
-rejected by tool policy. The original map, chat and testbed manual checklist still
-applies after moving files.
+Trip snapshots stay detached and frozen. `reuseJsonValue` preserves unchanged
+branches and suppresses identical store publications. `useTripData` subscribes only
+to the trip reference; `useTripState` also observes save status and errors.
 
-## File moves
+All user edits, AI plans and optimized schedules enter the shared command path.
+`TripEditCommands` defines named editing operations; its controller implements the
+single dispatch boundary. The controller owns revision/lock state. Separate
+`tripAutosave`, `persistedTripBatch`, `tripPersistenceMapping` and
+`tripCommandExecution` modules handle persistence and input policies through
+explicit contracts. No second mutable trip store is introduced.
 
-| Before (frontend/) | After (frontend/) |
-| --- | --- |
-| `src/utils/chatMarkdown.ts` | `src/shared/utils/chatMarkdown.ts` |
-| `src/types/trip.ts` | `src/pages/map/domain/trip.ts` |
-| `src/styles/trip-maps.css` | `src/pages/map/styles/trip-maps.css` |
-| `src/styles/testbed.css` | `src/pages/testbed/styles/testbed.css` |
-| `src/styles/map.css` | `src/pages/map/styles/map.css` |
-| `src/styles/map-toolbar.css` | `src/pages/map/styles/map-toolbar.css` |
-| `src/styles/landing.css` | `src/pages/landing/styles/landing.css` |
-| `src/styles/google-maps-test.css` | `src/pages/testbed/styles/google-maps-test.css` |
-| `src/styles/global.css` | `src/shared/styles/global.css` |
-| `src/styles/ai-chat-test.css` | `src/pages/testbed/styles/ai-chat-test.css` |
-| `src/stores/TripStore.ts` | `src/pages/map/store/TripStore.ts` |
-| `src/stores/TripProvider.tsx` | `src/pages/map/store/TripProvider.tsx` |
-| `src/stores/createTripStore.ts` | `src/pages/map/store/createTripStore.ts` |
-| `src/routes.tsx` | `src/app/routes.tsx` |
-| `src/pages/TestbedPage.tsx` | `src/pages/testbed/TestbedPage.tsx` |
-| `src/pages/MapPage.tsx` | `src/pages/map/MapPage.tsx` |
-| `src/pages/LandingPage.tsx` | `src/pages/landing/LandingPage.tsx` |
-| `src/pages/GoogleMapsTestPage.tsx` | `src/pages/testbed/GoogleMapsTestPage.tsx` |
-| `src/pages/AiChatTestPage.tsx` | `src/pages/testbed/AiChatTestPage.tsx` |
-| `src/maps/googleMaps.ts` | `src/map/runtime/googleMaps.ts` |
-| `src/maps/createGoogleMapRuntime.ts` | `src/map/runtime/createGoogleMapRuntime.ts` |
-| `src/main.tsx` | `src/app/main.tsx` |
-| `src/hooks/usePlaceReorder.ts` | `src/pages/map/hooks/usePlaceReorder.ts` |
-| `src/hooks/useDirectionsState.ts` | `src/pages/testbed/hooks/useDirectionsState.ts` |
-| `src/hooks/map/useTrip.ts` | `src/pages/map/hooks/useTrip.ts` |
-| `src/hooks/map/useMapUi.ts` | `src/pages/map/hooks/useMapUi.ts` |
-| `src/hooks/map/useMapPolyline.ts` | `src/map/hooks/useMapPolyline.ts` |
-| `src/buildInfo.ts` | `src/app/buildInfo.ts` |
-| `src/domain/map/tripMapping.ts` | `src/pages/map/domain/tripMapping.ts` |
-| `src/domain/map/mapTypes.ts` | `src/map/types/mapTypes.ts` |
-| `src/domain/map/geometry.ts` | `src/pages/map/domain/geometry.ts` |
-| `src/domain/map/culling.ts` | `src/map/geometry/culling.ts` |
-| `src/domain/map/cameraPolicy.ts` | `src/pages/map/domain/cameraPolicy.ts` |
-| `src/controllers/TripController.ts` | `src/pages/map/controller/TripEditController.ts` |
-| `src/data/demoTrip.ts` | `src/pages/map/data/demoTrip.ts` |
-| `src/api/trips.ts` | `src/pages/map/api/trips.ts` |
-| `src/adapters/map/MapRuntime.ts` | `src/map/adapters/MapRuntime.ts` |
-| `src/adapters/map/MapOverlayHost.ts` | `src/map/adapters/MapOverlayHost.ts` |
-| `src/adapters/map/MapObjectController.ts` | `src/map/adapters/MapObjectController.ts` |
-| `src/adapters/map/MapAdapter.ts` | `src/map/adapters/MapAdapter.ts` |
-| `src/adapters/map/map-objects.css` | `src/map/adapters/map-objects.css` |
-| `src/adapters/map/GoogleOverlayHost.ts` | `src/map/adapters/GoogleOverlayHost.ts` |
-| `src/adapters/map/GoogleMapObjectController.ts` | `src/map/adapters/GoogleMapObjectController.ts` |
-| `src/adapters/map/GoogleMapAdapter.ts` | `src/map/adapters/GoogleMapAdapter.ts` |
-| `src/components/chat/ChatMarkdown.tsx` | `src/shared/components/chat/ChatMarkdown.tsx` |
-| `src/components/chat/chat-markdown.css` | `src/shared/components/chat/chat-markdown.css` |
-| `src/components/google-map/google-map.css` | `src/map/components/google-map.css` |
-| `src/components/google-map/types.ts` | `src/map/types/googleMapComponent.ts` |
-| `src/components/google-map/GooglePlaceSearch.tsx` | `src/pages/testbed/components/google-maps/GooglePlaceSearch.tsx` |
-| `src/components/google-map/GoogleMap.tsx` | `src/map/components/GoogleMap.tsx` |
-| `src/components/google-maps-test/Coordinates.tsx` | `src/pages/testbed/components/google-maps/Coordinates.tsx` |
-| `src/components/google-maps-test/config.ts` | `src/pages/testbed/components/google-maps/config.ts` |
-| `src/components/google-maps-test/DebugPanel.tsx` | `src/pages/testbed/components/google-maps/DebugPanel.tsx` |
-| `src/components/google-maps-test/DirectionsPanel.tsx` | `src/pages/testbed/components/google-maps/DirectionsPanel.tsx` |
-| `src/components/google-maps-test/types.ts` | `src/pages/testbed/components/google-maps/types.ts` |
-| `src/components/google-maps-test/SelectionPanel.tsx` | `src/pages/testbed/components/google-maps/SelectionPanel.tsx` |
-| `src/components/google-maps-test/RouteResultPanel.tsx` | `src/pages/testbed/components/google-maps/RouteResultPanel.tsx` |
-| `src/components/landing/HeroVisual.tsx` | `src/pages/landing/components/HeroVisual.tsx` |
-| `src/components/google-maps-test/MapPanel.tsx` | `src/pages/testbed/components/google-maps/MapPanel.tsx` |
-| `src/components/landing/Hero.tsx` | `src/pages/landing/components/Hero.tsx` |
-| `src/components/landing/Header.tsx` | `src/pages/landing/components/Header.tsx` |
-| `src/components/landing/FeatureSection.tsx` | `src/pages/landing/components/FeatureSection.tsx` |
-| `src/components/landing/FeatureCard.tsx` | `src/pages/landing/components/FeatureCard.tsx` |
-| `src/components/map/GoogleMapView.tsx` | `src/pages/map/components/viewport/GoogleMapView.tsx` |
-| `src/components/map/ai/MapAiRegion.tsx` | `src/pages/map/components/ai/MapAiRegion.tsx` |
-| `src/components/map/MapWorkspace.tsx` | `src/pages/map/components/MapWorkspace.tsx` |
-| `src/components/map/MapToolbar.tsx` | `src/pages/map/components/viewport/MapSearchToolbar.tsx` |
-| `src/components/map/MapAiPanel.tsx` | `src/shared/components/chat/MapAiPanel.tsx` |
-| `src/components/map/MapAiButton.tsx` | `src/pages/map/components/ai/MapAiButton.tsx` |
-| `src/components/map/viewport/MapViewport.tsx` | `src/pages/map/components/viewport/MapViewport.tsx` |
-| `src/components/map/TripPickerDialog.tsx` | `src/pages/map/components/TripPickerPopup.tsx` |
-| `src/components/map/TripLayer.tsx` | `src/pages/map/components/viewport/TripLayer.tsx` |
-| `src/components/map/PlaceDragHandle.tsx` | `src/pages/map/components/layer-panel/PlaceDragHandle.tsx` |
-| `src/components/map/layer-panel/PlaceLayerItem.tsx` | `src/pages/map/components/layer-panel/PlaceLayerItem.tsx` |
-| `src/components/map/layer-panel/LayerPanel.tsx` | `src/pages/map/components/layer-panel/LayerPanel.tsx` |
-| `src/components/map/layer-panel/DayLayerSection.tsx` | `src/pages/map/components/layer-panel/DayLayerSection.tsx` |
-| `App.tsx` | `src/app/App.tsx` |
+Layer visibility uses an optional `hidden` boolean on each day. Missing values
+mean visible; no default is materialized, preserving existing StoredTripV1
+canonical documents. Individual and bulk toggles enter the same command/history
+and autosave path as other edits. The bulk toggle hides every day when any is
+visible, and shows every day when none is visible, as one undoable edit.
+Shared-trip viewers start from saved visibility and may toggle their local view
+without changing the owner's data. Selection and detail cards exclude hidden days.
+The bulk control reuses the existing localized `all` label and an eye icon;
+`aria-pressed="mixed"` represents partially visible days. Empty trips disable it.
+
+## Asynchronous work and maps
+
+Requests accept AbortSignal. After an await, cancelled or superseded work must not
+publish into a replacement session. The owner aborts requests and releases timers,
+subscriptions and SDK handles. Session construction performs no I/O. Cleanup stays
+safe under StrictMode. Unknown save outcomes still require canonical readback;
+they must not be retried blindly or reported as committed.
+
+`google.maps` objects and types stay in `map/runtime` and `map/adapters`. Marker
+creation/setters live in `createGoogleMarker`; the object controller owns its
+registry, layer membership and disposal. Markers and polylines retain their IDs and
+update attributes instead of being recreated for UI changes. Map locale reload
+status is exposed through `map/locale.ts`, without leaking SDK types to preferences.
+
+HTTP calls live in `api`, `shared/api` or a feature's `api` directory. Components,
+domains and map runtime do not issue raw fetch calls. Routes and Places go through
+the backend. API keys and billing reconciliation remain server-owned.
+
+## Size, CSS and localization
+
+- Aim for 300 nonblank, noncomment lines per TS/TSX file; ESLint errors above 400.
+- Ordinary functions/hooks warn above 80 such lines; TSX functions warn above 150.
+  These warnings are review signals, not exceptions that disable the file budget.
+- Split by responsibility. Do not compress statements or create numbered fragments
+  to satisfy a counter. Generated resources are not TS/TSX application source.
+- Stylesheet entry files import cohesive subfiles in their original cascade order.
+  Media queries, selectors and declarations remain ordered. Use semantic theme
+  tokens and `--shadow-map-overlay` for map floating surfaces.
+- Preserve localization keys and ko/ja/en/mn resources. UI strings use `L`/`NL`
+  according to AGENTS.md; extracting code does not authorize new literal strings or
+  edits to the localization spreadsheet.
+
+## Enforcement and validation
+
+`npm run architecture:check` uses dependency-cruiser with the SWC parser because the
+project uses TypeScript 7 and dependency-cruiser's tsc parser supports earlier
+compiler APIs. SWC includes explicit type imports. The runner checks source coverage
+so an unavailable parser cannot produce a misleading zero-module success.
+Additional AST checks enforce network/SDK boundaries, legacy paths and public entries.
+Configuration lives in `.dependency-cruiser.cjs`, `eslint.config.mjs` and
+`infra/architecture/check-frontend-dependencies.mjs`. CI runs on impl pushes and PRs.
+
+Required checks: architecture, typecheck, lint (including localization), build and
+formatting. No automated test files, fixtures, fake SDKs or new mock branches are
+added. Browser checks use the actual service and its existing development modes.
+See [Frontend verification](frontend-verification.md) for the manual scenarios and
+recorded limitations. Source ownership documentation must change with its code.
+
+## Route and export presentation
+
+`map-workspace/components/RouteSettingsPanel` is the shared route content for map
+anchors and layer cards. The wrappers own placement only. `model/useRouteOptions`
+owns cancellable requests; `api/routeDetails` keeps all returned alternatives.
+Route result cards, proportional journey bars and expandable itineraries render
+normalized data without saving geometry or rewriting schedule times.
+
+Place cards defer their surface until the details request settles; failed requests
+show the existing fallback/error state. AnchoredMapCard ignores an empty child
+during initial measurement. Markers remain mounted during loading.
+
+`files/TripScheduleDocument` owns the standalone A4 itinerary and print stylesheet.
+`printTripSchedule` captures a detached trip snapshot, opens the print document
+inside the click, waits for fonts and invokes the browser's print/PDF-save flow.
+It makes no Places/Routes calls and React escapes user-authored values. The PDF
+module is loaded only when selected; existing KML/KMZ serializers stay unchanged.
+
+Billing's `TokenBalanceGauge` is shared by optimization and the plan dialog; it
+displays only the authoritative current balance. Charge estimates and affordability
+checks remain server-backed. Decorative foil animations respect reduced motion.

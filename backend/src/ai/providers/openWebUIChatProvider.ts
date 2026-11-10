@@ -26,6 +26,10 @@ export class OpenWebUIChatProvider implements ChatProvider {
         result: 'error',
         errorKind: error.kind,
         upstreamStatus: error.upstreamStatus ?? null,
+        upstreamCode: error.upstream?.code ?? null,
+        upstreamType: error.upstream?.type ?? null,
+        upstreamRequestId: error.upstream?.requestId ?? null,
+        retryAfterMs: error.upstream?.retryAfterMs ?? null,
         localAbortSignalTimeout: false,
       });
       throw error;
@@ -43,9 +47,13 @@ export class OpenWebUIChatProvider implements ChatProvider {
         result: 'success',
         errorKind: null,
         upstreamStatus: null,
+        upstreamCode: null,
+        upstreamType: null,
+        upstreamRequestId: null,
+        retryAfterMs: null,
         localAbortSignalTimeout: false,
       });
-      return { message: result.message };
+      return { model: result.model, message: result.message };
     } catch (cause) {
       const error = cause instanceof OpenWebUIClientError ? cause : undefined;
       this.logRequest({
@@ -56,6 +64,10 @@ export class OpenWebUIChatProvider implements ChatProvider {
         result: 'error',
         errorKind: error?.kind ?? 'unexpected',
         upstreamStatus: error?.upstreamStatus ?? null,
+        upstreamCode: error?.upstream?.code ?? null,
+        upstreamType: error?.upstream?.type ?? null,
+        upstreamRequestId: error?.upstream?.requestId ?? null,
+        retryAfterMs: error?.upstream?.retryAfterMs ?? null,
         localAbortSignalTimeout: error?.kind === 'timeout',
       });
       throw cause;
@@ -70,6 +82,10 @@ export class OpenWebUIChatProvider implements ChatProvider {
     result: 'success' | 'error';
     errorKind: string | null;
     upstreamStatus: number | null;
+    upstreamCode: string | null;
+    upstreamType: string | null;
+    upstreamRequestId: string | null;
+    retryAfterMs: number | null;
     localAbortSignalTimeout: boolean;
   }): void {
     console.info(JSON.stringify({ event: 'openwebui_chat', ...fields }));

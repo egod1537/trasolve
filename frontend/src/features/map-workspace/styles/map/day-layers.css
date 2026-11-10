@@ -1,0 +1,308 @@
+.trip-sidebar-scroll {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.trip-day {
+  position: relative;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  transform: translateY(var(--day-preview-offset, 0));
+  transition: transform 120ms ease;
+}
+
+.trip-day.is-dragging {
+  z-index: 3;
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-floating-sm);
+  opacity: 0.82;
+  transform: translateY(var(--day-preview-offset));
+  transition: none;
+}
+
+.trip-day.is-day-drop-before::before,
+.trip-day.is-day-drop-after::after {
+  position: absolute;
+  z-index: 4;
+  right: 8px;
+  left: 8px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  content: '';
+  pointer-events: none;
+}
+
+.trip-day.is-day-drop-before::before {
+  top: -2px;
+}
+
+.trip-day.is-day-drop-after::after {
+  bottom: -2px;
+}
+
+.trip-day-heading {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px 10px 4px;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface-hover) 78%, transparent);
+}
+
+.trip-day-heading h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+}
+
+.trip-day-heading h2 button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 8px;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  text-align: left;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.trip-day-heading h2 button[aria-disabled='true'] {
+  cursor: default;
+}
+
+.trip-day-title-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-day-title-editor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 3px 8px;
+}
+
+.trip-day-title-editor input {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 4px 7px;
+  border: 1px solid var(--color-primary);
+  border-radius: 5px;
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  outline-offset: 1px;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.trip-day-shuffle {
+  flex: none;
+  color: var(--color-muted);
+}
+
+.trip-day-shuffle:hover:not(:disabled),
+.trip-day-shuffle:focus-visible {
+  color: var(--color-primary);
+}
+
+.trip-day.is-active .trip-day-heading {
+  border-bottom-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.trip-day.is-active .trip-day-color-swatch {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--day-color) 16%, transparent);
+}
+
+.trip-day.is-hidden .trip-day-heading {
+  border-bottom-color: var(--color-border);
+  background: var(--color-surface-hover);
+  box-shadow: none;
+}
+
+.trip-day.is-hidden.is-active .trip-day-heading {
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.trip-day.is-place-drop-target-pending > .trip-day-heading {
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--color-primary) 42%,
+    var(--color-border-strong)
+  );
+  outline: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  outline-offset: -1px;
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 9%,
+    var(--color-surface-hover)
+  );
+}
+
+.trip-day.is-hidden .trip-day-heading h2,
+.trip-day.is-hidden .trip-day-heading > .trip-layer-drag-handle,
+.trip-day.is-hidden .trip-layer-list {
+  opacity: 0.48;
+  filter: saturate(0.45);
+}
+
+.trip-day.is-hidden .trip-place {
+  cursor: default;
+}
+
+.trip-day-date {
+  margin-left: auto;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.trip-day-color-control {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.trip-day-color-control:hover {
+  background: color-mix(in srgb, var(--day-color) 10%, transparent);
+}
+
+.trip-day-color-control.is-readonly {
+  cursor: default;
+}
+
+.trip-day-color-control.is-readonly:hover {
+  background: transparent;
+}
+
+.trip-day-color-control:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--day-color) 38%, transparent);
+  outline-offset: -2px;
+}
+
+.trip-day-color-swatch {
+  position: relative;
+  width: 10px;
+  height: 18px;
+  border-radius: 2px;
+  background: var(--day-color);
+}
+
+.trip-day.is-hidden .trip-day-color-swatch {
+  background: var(--color-text-muted);
+  box-shadow: none;
+}
+
+.trip-day-color-control[aria-pressed='false'] .trip-day-color-swatch::after {
+  position: absolute;
+  top: 8px;
+  left: -2px;
+  width: 14px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--color-surface-raised);
+  content: '';
+  transform: rotate(-55deg);
+}
+
+.trip-layer-chevron.is-day {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-left: 4px;
+  padding: 8px;
+  border: 0;
+  background: none;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.trip-layer-chevron.is-day:hover,
+.trip-layer-chevron.is-day:focus-visible {
+  color: var(--color-primary);
+}
+
+.trip-layer-chevron.is-day svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.trip-day-color-picker {
+  position: fixed;
+  z-index: 4000;
+  width: 184px;
+  padding: 10px;
+  border: 1px solid var(--color-floating-border);
+  border-radius: 8px;
+  background: var(--color-floating-surface);
+  box-shadow: var(--shadow-map-overlay);
+}
+
+.trip-day-color-picker-title {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.trip-day-color-palette {
+  display: grid;
+  grid-template-columns: repeat(5, 24px);
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.trip-day-color-palette button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid var(--color-surface-raised);
+  border-radius: 6px;
+  outline: 1px solid
+    color-mix(in srgb, var(--palette-color) 48%, var(--color-border-strong));
+  background: var(--palette-color);
+  cursor: pointer;
+}
+
+.trip-day-color-palette button:hover,
+.trip-day-color-palette button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--palette-color) 42%, transparent);
+  outline-offset: 1px;
+}
+
+.trip-day-color-palette button[aria-pressed='true'] {
+  border-color: var(--color-surface-raised);
+  outline: 3px solid var(--palette-color);
+  outline-offset: 1px;
+}

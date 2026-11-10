@@ -23,14 +23,15 @@
 }
 
 .map-profile-button {
-  width: 42px;
-  height: 42px;
-  border: 2px solid var(--color-surface-raised);
+  box-sizing: border-box;
+  width: 63px;
+  height: 63px;
+  border: 3px solid var(--color-surface-raised);
   border-radius: 50%;
   background: var(--color-primary);
   color: var(--color-accent-contrast);
   box-shadow: var(--shadow-map-overlay);
-  font-size: 12px;
+  font-size: 18px;
   font-weight: 650;
   letter-spacing: 0.01em;
 }
@@ -64,8 +65,8 @@
 }
 
 .map-profile-button svg {
-  width: 20px;
-  height: 20px;
+  width: 30px;
+  height: 30px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;

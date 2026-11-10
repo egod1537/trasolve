@@ -1,35 +1,29 @@
-# Page root ownership
+# Route and session ownership
 
-Each route in frontend/src/app/routes.tsx renders a React class page root. Lazy
-loading and URLs are unchanged; no route hook bridge is currently needed.
+Route definitions live in `frontend/src/app/router/routes.tsx`. Page modules compose
+features; reusable UI remains function components. A route boundary does not imply
+that all its descendants use the same component style.
 
-| Route | Class root | Ownership and cleanup |
-| --- | --- | --- |
-| / | LandingPage | Starts health request on mount; owns and aborts its request. |
-| /map | MapPage | Owns TripRepository/catalog state and directly composes TripPickerPopup + TripSession; no preselection store/controller. |
-| /testbed | TestbedPage | Static navigation, no imperative resources. |
-| /testbed/google-maps | GoogleMapsTestPage | Function content owns map/directions cleanup. |
-| /testbed/ai-chat | AiChatTestPage | Function content owns reset UI; MapAiPanel cancels chat requests. |
+| Surface         | Owner                                                         | Cleanup                                                                       |
+| --------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Landing         | `pages/landing/LandingPage.tsx`                               | Abort health request                                                          |
+| Map catalog     | `features/map-workspace/MapWorkspacePage.tsx`                 | Abort list/open/create/delete requests                                        |
+| Selected trip   | `features/map-workspace/components/TripSession.tsx`           | Destroy controller on final unmount; deferred cleanup accommodates StrictMode |
+| Public share    | `pages/share/PublicSharePage.tsx`                             | Abort loading; supply read-only trip session                                  |
+| Chat            | `features/ai-chat` hooks and UI                               | Abort thread requests, remove focus/menu listeners                            |
+| Job testbeds    | `features/troute-testbed` and `features/tcache-route-testbed` | Abort gateway/result/stream work; clear polling and reconnect timers          |
+| Admin/analytics | Route screens and resource hooks                              | Cancel resource requests through existing owners                              |
 
-MapPage owns HttpTripRepository, catalog, selected Trip and abortable
-list/open/create/delete requests. It renders the picker outside Context. Only selection
-mounts TripSession, which creates TripStore and TripEditController and passes their
-stable value to TripProvider. MapWorkspace subscribes to the live session store.
-TripProvider creates no resources.
+Before trip selection there is no TripStore or edit controller. TripSession creates
+inert dependencies in its initializer and TripProvider passes their stable value.
+A keyed session replacement cannot receive the previous session's async results.
+Readonly sessions contain a store but no edit controller. Selection/camera UI state
+is distinct from persisted trip data.
 
-Switching Trip or explicitly reloading replaces the keyed session. Session unmount
-calls cancelPending; MapPage independently aborts catalog/action work. MapPage keeps
-the selected canonical Trip only to create a session; the session Store owns live
-edits. Optimistic commands, rollback and route
-invalidation remain in plain TypeScript TripEditController. Map objects stay under
-GoogleMap/MapRuntime and TripLayer.
+Store snapshots are immutable and structurally shared. useTripData observes trip
+changes; useTripState additionally observes save progress/errors. Controller methods
+route local actions through commands; persistence adapters retain their canonical
+readback, conflict and unknown-commit semantics.
 
-Session initializers compose inert dependencies without I/O or subscriptions.
-StrictMode can discard initialization and repeat effect cleanup/setup safely:
-cancellation is idempotent, not permanent disposal. LandingPage creates a fresh
-AbortController on every mount. Reusable UI remains function components with
-existing request/listener/object cleanup.
-
-Manual verification covers every route, picker/session lifecycle, reorder/save errors,
-marker identity, camera, AI and page reentry under StrictMode. HTTP checks and
-lint/typecheck/build do not substitute for actual browser interaction.
+See [Frontend architecture](frontend-source-layout.md) and
+[Manual verification](frontend-verification.md).

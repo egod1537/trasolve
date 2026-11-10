@@ -76,6 +76,29 @@
       }
     }
   },
+  "landing": {
+    "action": {
+      "planTrip": "여행 계획하기",
+      "startTrip": "여행 시작하기",
+      "viewExample": "예시 보기"
+    },
+    "example": {
+      "heading": "장소에서 일정으로.",
+      "title": "도쿄에서 보내는 하루"
+    },
+    "hero": {
+      "description": "장소와 동선을 한눈에.",
+      "title": {
+        "connected": "이어지는",
+        "journey": "여행.",
+        "places": "가고 싶은 곳,"
+      }
+    },
+    "navigation": {
+      "about": "서비스 소개",
+      "signIn": "로그인"
+    }
+  },
   "landingPage": {
     "healthLabels": {
       "text": {

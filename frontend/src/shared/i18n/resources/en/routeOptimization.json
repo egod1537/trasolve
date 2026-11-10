@@ -354,6 +354,18 @@
       "serverStatus": "Server Status: {{status}}"
     }
   },
+  "routeReviewSummary": {
+    "basis": "Based on scheduled times and straight-line distances between pins.",
+    "distanceAdded": "{{distance}} longer",
+    "distanceLabel": "Straight-line distance",
+    "distanceSaved": "{{distance}} shorter",
+    "percentDecrease": "{{percent}} less",
+    "percentIncrease": "{{percent}} more",
+    "timeAdded": "{{duration}} longer",
+    "timeLabel": "Travel and waiting time",
+    "timeSaved": "{{duration}} saved",
+    "title": "Route optimization results"
+  },
   "routeSchedulePreview": {
     "afterSchedule": {
       "description": {

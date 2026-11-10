@@ -1,0 +1,145 @@
+loc_key	ko	ja	en	mn	context	status
+access.description.forbidden	허용된 관리자 계정으로 다시 로그인해 주세요.	許可された管理者アカウントで再度ログインしてください。	Sign in again with an authorized administrator account.	Эрхтэй администраторын бүртгэлээр дахин нэвтэрнэ үү.	Forbidden access gate help	TRANSLATED
+access.description.signIn	Google 계정으로 로그인해 주세요.	Google アカウントでログインしてください。	Sign in with your Google Account.	Google бүртгэлээрээ нэвтэрнэ үү.	Signed-out access gate help	TRANSLATED
+access.description.unavailable	잠시 후 다시 시도해 주세요.	しばらくしてからもう一度お試しください。	Try again shortly.	Түр хүлээгээд дахин оролдоно уу.	503 or network access gate help	TRANSLATED
+access.title.forbidden	접근할 수 없음	アクセスできません	Access unavailable	Хандах боломжгүй	Non-admin access gate heading	TRANSLATED
+access.title.signIn	관리자 로그인	管理者ログイン	Administrator sign-in	Администратор нэвтрэх	Signed-out access gate heading	TRANSLATED
+access.title.unavailable	관리자 서비스를 사용할 수 없음	管理者サービスを利用できません	Administrator service unavailable	Удирдлагын үйлчилгээ ашиглах боломжгүй	503 or network access gate heading	TRANSLATED
+audit.column.target	대상	対象	Target	Зорилтот бүртгэл	Audit table column	TRANSLATED
+audit.column.time	시각	時刻	Time	Огноо, цаг	Audit table column	TRANSLATED
+audit.description	관리자의 계정 조치 이력을 확인합니다.	管理者によるアカウント操作の履歴を確認します。	Review administrator actions on user accounts.	Администраторын хэрэглэгчийн бүртгэлд хийсэн үйлдлүүдийг харна уу.	Administrator console, audit.description	TRANSLATED
+audit.filter.action	작업	操作	Action	Үйлдэл	Audit filter	TRANSLATED
+audit.filter.actor	관리자	管理者	Administrator	Администратор	Audit actor filter	TRANSLATED
+common.accessExpired	관리자 세션 또는 권한을 확인해 주세요.	管理者セッションまたは権限を確認してください。	Check your administrator session and access.	Администраторын сесс болон хандах эрхээ шалгана уу.	Administrator console, common.accessExpired	TRANSLATED
+common.action.confirm	확인	確認	Confirm	Батлах	Confirmation dialog	TRANSLATED
+common.action.next	다음	次へ	Next	Дараах	Cursor pagination	TRANSLATED
+common.action.previous	이전	前へ	Previous	Өмнөх	Cursor pagination	TRANSLATED
+common.all	전체	すべて	All	Бүгд	Administrator console, common.all	TRANSLATED
+common.details	상세 보기	詳細	Details	Дэлгэрэнгүй	Administrator console, common.details	TRANSLATED
+common.empty	표시할 데이터가 없습니다.	表示するデータがありません。	No data to display.	Харуулах өгөгдөл алга.	Empty list or aggregate	TRANSLATED
+common.from	시작일	開始日	From	Эхлэх огноо	Administrator console, common.from	TRANSLATED
+common.generatedAt	집계 시각, {{date}}	集計日時、{{date}}	Generated at {{date}}	Нэгтгэсэн цаг, {{date}}	Administrator console, common.generatedAt	TRANSLATED
+common.loadFailed	데이터를 불러오지 못했습니다.	データを読み込めませんでした。	Could not load data.	Өгөгдөл ачаалж чадсангүй.	Administrator data error	TRANSLATED
+common.no	아니요	いいえ	No	Үгүй	Administrator console, common.no	TRANSLATED
+common.notFound	페이지를 찾을 수 없습니다.	ページが見つかりません。	Page not found.	Хуудас олдсонгүй.	Administrator console, common.notFound	TRANSLATED
+common.page	{{page}}페이지	{{page}}ページ	Page {{page}}	{{page}}-р хуудас	Administrator console, common.page	TRANSLATED
+common.pageTotal	전체 {{total}}개, {{page}}페이지	全{{total}}件、{{page}}ページ	{{total}} total, page {{page}}	Нийт {{total}}, {{page}}-р хуудас	Administrator console, common.pageTotal	TRANSLATED
+common.processing	처리 중	処理中	Processing	Боловсруулж байна	Administrator console, common.processing	TRANSLATED
+common.reset	초기화	リセット	Reset	Сэргээх	Administrator console, common.reset	TRANSLATED
+common.search	검색	検索	Search	Хайх	Administrator console, common.search	TRANSLATED
+common.skipToContent	본문으로 이동	本文へ移動	Skip to content	Үндсэн агуулга руу шилжих	Administrator console, common.skipToContent	TRANSLATED
+common.to	종료일	終了日	To	Дуусах огноо	Administrator console, common.to	TRANSLATED
+common.viewAll	전체 보기	すべて表示	View all	Бүгдийг харах	Administrator console, common.viewAll	TRANSLATED
+common.yes	예	はい	Yes	Тийм	Administrator console, common.yes	TRANSLATED
+dashboard.activeNote	정지되지 않은 계정입니다.	停止されていないアカウントです。	Accounts that are not suspended.	Түр зогсоогоогүй бүртгэлүүд.	Administrator console, dashboard.activeNote	TRANSLATED
+dashboard.activeUsers	활성 계정	有効なアカウント	Active accounts	Идэвхтэй бүртгэл	Summary KPI	TRANSLATED
+dashboard.apiLastWeek	최근 7일 API 현황	過去7日間の API 状況	API activity in the last 7 days	Сүүлийн 7 хоногийн API хэрэглээ	Administrator console, dashboard.apiLastWeek	TRANSLATED
+dashboard.description	사용자, 여행과 외부 서비스의 운영 현황을 한눈에 확인합니다.	ユーザー、旅行と外部サービスの運用状況を確認します。	An overview of users, Trips and outbound services.	Хэрэглэгч, аялал болон гадаад үйлчилгээний төлөвийг нэг дор харна уу.	Administrator console, dashboard.description	TRANSLATED
+dashboard.loginNote	최근 7일 동안 로그인한 사용자 수입니다.	過去7日間にログインしたユーザー数です。	Distinct users who signed in during the last 7 days.	Сүүлийн 7 хоногт нэвтэрсэн давхардаагүй хэрэглэгчийн тоо.	Administrator console, dashboard.loginNote	TRANSLATED
+dashboard.recentLoginUsers	최근 7일 로그인	過去7日間のログイン	Logins in the last 7 days	Сүүлийн 7 хоногт нэвтэрсэн	Summary KPI	TRANSLATED
+dashboard.totalTrips	전체 여행	総旅行数	Total Trips	Нийт аялал	Summary KPI	TRANSLATED
+dashboard.totalUsers	전체 가입자	総登録者数	Total users	Нийт хэрэглэгч	Summary KPI	TRANSLATED
+navigation.apiUsage	API 사용량	API 使用量	API usage	API хэрэглээ	Sidebar item	TRANSLATED
+navigation.audit	감사 로그	監査ログ	Audit log	Үйлдлийн бүртгэл	Sidebar item	TRANSLATED
+navigation.dashboard	대시보드	ダッシュボード	Dashboard	Хяналтын самбар	Sidebar item	TRANSLATED
+navigation.operations	운영 현황	運用状況	Operations	Үйл ажиллагааны төлөв	Sidebar item	TRANSLATED
+navigation.trips	여행	旅行	Trips	Аялал	Sidebar item	TRANSLATED
+navigation.users	사용자	ユーザー	Users	Хэрэглэгч	Sidebar item	TRANSLATED
+operations.available	조회 가능	参照可能	Available	Харах боломжтой	Administrator console, operations.available	TRANSLATED
+operations.configured	설정됨	設定済み	Configured	Тохируулсан	Service configuration state	TRANSLATED
+operations.description	최근 24시간의 서비스 호출과 작업 현황을 확인합니다.	過去24時間のサービス呼び出しとジョブの状況を確認します。	Review service calls over the last 24 hours and recent jobs.	Сүүлийн 24 цагийн үйлчилгээний дуудлага болон сүүлийн ажлуудын төлөвийг харна уу.	Administrator console, operations.description	TRANSLATED
+operations.failedJobs	실패	失敗	Failed	Амжилтгүй	Administrator console, operations.failedJobs	TRANSLATED
+operations.jobs	최근 작업 현황	最近のジョブ状況	Recent jobs	Сүүлийн ажлуудын төлөв	Administrator console, operations.jobs	TRANSLATED
+operations.jobsNote	작업 수는 최근 troute 미러의 최대 1,000개 작업 기준입니다. tcache 작업 미러는 제공되지 않습니다.	ジョブ数は最近の troute ミラーの最大1,000件に基づきます。tcache ジョブミラーは提供されません。	Counts cover up to 1,000 recent mirrored troute jobs. A tcache job mirror is unavailable.	Тоо нь troute-ийн дотоод бүртгэл дэх сүүлийн 1,000 хүртэлх ажлыг хамарна. tcache-ийн ажлын дотоод бүртгэл байхгүй.	Administrator console, operations.jobsNote	TRANSLATED
+operations.lastObservedAt	마지막 관측	最終観測	Last observed	Сүүлд ажигласан	Operations card field	TRANSLATED
+operations.lastUpdated	마지막 갱신	最終更新	Last updated	Сүүлд шинэчилсэн	Administrator console, operations.lastUpdated	TRANSLATED
+operations.noData	데이터 없음	データなし	No data	Өгөгдөл алга	No observations in range	TRANSLATED
+operations.noObservedErrors	관측된 오류 없음	観測されたエラーなし	No observed errors	Ажиглагдсан алдаа алга	Administrator console, operations.noObservedErrors	TRANSLATED
+operations.notConfigured	미설정	未設定	Not configured	Тохируулаагүй	Service configuration state	TRANSLATED
+operations.observation	관측 상태	観測状態	Observation status	Ажиглалтын төлөв	Administrator console, operations.observation	TRANSLATED
+operations.observationNote	설정 여부와 최근 호출 기록을 표시합니다. 실시간 연결 검사 결과는 아닙니다.	設定状態と最近の呼び出し記録を表示します。リアルタイムの接続検査結果ではありません。	Shows configuration and recent observations, rather than live connectivity checks.	Тохиргоо болон сүүлийн дуудлагын бүртгэлийг харуулна. Энэ нь холболтыг бодит цагт шалгасан үр дүн биш.	Administrator console, operations.observationNote	TRANSLATED
+operations.observed	관측 기록 있음	観測記録あり	Observed	Ажиглалтын бүртгэлтэй	Administrator console, operations.observed	TRANSLATED
+operations.observedJobs	관측된 작업	観測されたジョブ	Observed jobs	Ажиглагдсан ажил	Administrator console, operations.observedJobs	TRANSLATED
+operations.recentErrors	최근 오류 코드	最近のエラーコード	Recent error codes	Сүүлийн алдааны код	Administrator console, operations.recentErrors	TRANSLATED
+operations.runningJobs	진행 중	実行中	Running	Ажиллаж байна	Administrator console, operations.runningJobs	TRANSLATED
+operations.unavailable	조회 미지원	参照未対応	Unavailable	Харах боломжгүй	Administrator console, operations.unavailable	TRANSLATED
+operations.unknown	확인 불가	不明	Unknown	Тодорхойгүй	Administrator console, operations.unknown	TRANSLATED
+operations.window	관측 기간, {{from}} ~ {{to}}	観測期間、{{from}} ～ {{to}}	Observation window, {{from}} to {{to}}	Ажиглалтын хугацаа, {{from}} - {{to}}	Administrator console, operations.window	TRANSLATED
+routes.loading	관리자 페이지를 불러오는 중입니다.	管理者ページを読み込んでいます。	Loading administrator page.	Удирдлагын хуудсыг ачаалж байна.	Route suspense and access check	TRANSLATED
+shell.management	관리	管理	Management	Удирдлага	Administrator console, shell.management	TRANSLATED
+shell.timeZoneNote	날짜와 시각은 한국 시간 기준입니다.	日時は韓国標準時で表示されます。	Dates and times are shown in Korea Standard Time.	Огноо, цагийг Солонгосын стандарт цагаар харуулна.	Administrator console, shell.timeZoneNote	TRANSLATED
+shell.workspace	관리자 콘솔	管理コンソール	Admin console	Удирдлагын консол	Administrator console, shell.workspace	TRANSLATED
+trips.column.createdAt	생성일	作成日	Created	Үүсгэсэн огноо	Trip table column	TRANSLATED
+trips.column.dayCount	일수	日数	Days	Хоног	Trip table column	TRANSLATED
+trips.column.placeCount	장소 수	場所数	Places	Газрын тоо	Trip table column	TRANSLATED
+trips.column.title	제목	タイトル	Title	Гарчиг	Trip table column	TRANSLATED
+trips.column.updatedAt	최종 수정일	最終更新日	Updated	Сүүлд шинэчилсэн	Trip table column	TRANSLATED
+trips.dateRange	여행 기간	旅行期間	Trip dates	Аяллын хугацаа	Administrator console, trips.dateRange	TRANSLATED
+trips.description	여행의 소유자, 구성과 공유 상태를 확인합니다.	旅行の所有者、構成と共有状態を確認します。	Review Trip ownership, structure and sharing status.	Аяллын эзэмшигч, бүтэц болон хуваалцах төлөвийг харна уу.	Administrator console, trips.description	TRANSLATED
+trips.detailTitle	여행 상세 정보	旅行の詳細情報	Trip metadata	Аяллын үндсэн мэдээлэл	Administrator console, trips.detailTitle	TRANSLATED
+trips.filter.owner	소유자	所有者	Owner	Эзэмшигч	Trip owner filter	TRANSLATED
+trips.filter.shared	공유 상태	共有状態	Sharing state	Хуваалцах төлөв	Trip sharing filter	TRANSLATED
+trips.id	여행 ID	旅行 ID	Trip ID	Аяллын ID	Administrator console, trips.id	TRANSLATED
+trips.metadataNote	여행의 기본 정보만 조회합니다. 메모, 좌표와 상세 경로는 표시하지 않습니다.	旅行の基本情報のみを表示します。メモ、座標、詳細経路は含まれません。	Only Trip metadata is shown. Notes, coordinates and detailed routes are excluded.	Зөвхөн аяллын үндсэн мэдээллийг харуулна. Тэмдэглэл, координат болон дэлгэрэнгүй чиглэл орохгүй.	Administrator console, trips.metadataNote	TRANSLATED
+trips.revision	문서 버전	文書バージョン	Revision	Баримтын хувилбар	Administrator console, trips.revision	TRANSLATED
+trips.schemaVersion	스키마 버전	スキーマバージョン	Schema version	Схемийн хувилбар	Administrator console, trips.schemaVersion	TRANSLATED
+trips.search.placeholder	여행 제목 검색	旅行タイトルを検索	Search Trip titles	Аяллын гарчгаар хайх	Trip search input	TRANSLATED
+trips.searchable	검색 공개	検索で公開	Searchable	Хайлтад харагдах	Administrator console, trips.searchable	TRANSLATED
+trips.share.disabled	공유 안 함	共有なし	Not shared	Хуваалцаагүй	Trip sharing value	TRANSLATED
+trips.share.enabled	공유됨	共有中	Shared	Хуваалцсан	Trip sharing value	TRANSLATED
+usage.actualCalls	실제 호출	実呼び出し	Actual calls	Бодит дуудлага	API usage KPI	TRANSLATED
+usage.avgLatency	평균 응답 시간	平均応答時間	Average latency	Хариу өгөх дундаж хугацаа	Administrator console, usage.avgLatency	TRANSLATED
+usage.blockedCalls	차단된 호출	ブロックされた呼び出し	Blocked calls	Хориглосон дуудлага	API usage classification	TRANSLATED
+usage.bucketSummary	{{date}}, 호출 {{calls}}건, 실패 {{failed}}건	{{date}}、呼び出し{{calls}}件、失敗{{failed}}件	{{date}}, {{calls}} calls, {{failed}} failed	{{date}}, {{calls}} дуудлага, {{failed}} амжилтгүй	Administrator console, usage.bucketSummary	TRANSLATED
+usage.byService	서비스별 사용량	サービス別使用量	Usage by service	Үйлчилгээгээрх хэрэглээ	Administrator console, usage.byService	TRANSLATED
+usage.byUser	사용자별 사용량	ユーザー別使用量	Usage by user	Хэрэглэгчээрх хэрэглээ	Administrator console, usage.byUser	TRANSLATED
+usage.coverage	서버 outbound 호출만 집계하며 브라우저 Google Maps SDK 호출은 포함하지 않습니다.	サーバーの outbound 呼び出しのみを集計し、ブラウザの Google Maps SDK 呼び出しは含みません。	Only backend outbound calls are measured; browser Google Maps SDK calls are excluded.	Зөвхөн серверээс гадагш илгээсэн дуудлагыг тоолно. Хөтчийн Google Maps SDK дуудлага орохгүй.	API usage scope note	TRANSLATED
+usage.description	기간과 서비스별 외부 API 호출 현황을 확인합니다.	期間とサービスごとに外部 API の呼び出し状況を確認します。	Review outbound API calls by period and service.	Гадаад API дуудлагыг хугацаа болон үйлчилгээгээр харна уу.	Administrator console, usage.description	TRANSLATED
+usage.failedCalls	실패한 호출	失敗した呼び出し	Failed calls	Амжилтгүй дуудлага	Administrator console, usage.failedCalls	TRANSLATED
+usage.failureCount	실패 {{count}}건	失敗{{count}}件	{{count}} failed calls	{{count}} амжилтгүй дуудлага	Administrator console, usage.failureCount	TRANSLATED
+usage.failureRate	실패율	失敗率	Failure rate	Амжилтгүй дуудлагын хувь	API usage KPI	TRANSLATED
+usage.invalidFilters	조회 조건을 확인해 주세요. 기간은 최대 90일이며, 유효한 서비스와 사용자 UUID를 입력해야 합니다.	条件を確認してください。期間は最大90日で、有効なサービスとユーザー UUID が必要です。	Check the filters. Use up to 90 days and a valid service and user UUID.	Шүүлтүүрээ шалгана уу. 90 хүртэлх хоног, хүчинтэй үйлчилгээ болон хэрэглэгчийн UUID оруулна уу.	Administrator console, usage.invalidFilters	TRANSLATED
+usage.invalidRange	종료일은 시작일 이후여야 하며, 조회 기간은 최대 90일입니다.	終了日は開始日以降、期間は最大90日です。	The end date must be on or after the start date, within 90 days.	Дуусах огноо нь эхлэх огнооноос өмнө байж болохгүй. Хугацаа 90 хоногоос хэтрэхгүй байна.	Administrator console, usage.invalidRange	TRANSLATED
+usage.mockCalls	모의 호출	モック呼び出し	Mock calls	Дуурайлгасан дуудлага	API usage classification	TRANSLATED
+usage.noCost	이 수치는 청구 금액이 아닙니다.	この数値は請求金額ではありません。	These values are not billing totals.	Эдгээр үзүүлэлт нь нэхэмжилсэн төлбөр биш.	API usage cost disclaimer	TRANSLATED
+usage.p95Latency	P95 지연시간	P95 レイテンシ	P95 latency	P95 хариу өгөх хугацаа	API usage KPI	TRANSLATED
+usage.service	서비스	サービス	Service	Үйлчилгээ	Administrator console, usage.service	TRANSLATED
+usage.topUsersNote	선택한 조건에서 실제 호출이 많은 상위 20명입니다. 사용자 식별이 없는 호출은 제외합니다.	選択条件で実呼び出しが多い上位20人です。ユーザーを識別できない呼び出しは除きます。	Top 20 identified users by actual calls under the selected filters. Unattributed calls are excluded.	Сонгосон нөхцөлөөр бодит дуудлага хамгийн их хийсэн, танигдсан эхний 20 хэрэглэгч. Хэрэглэгч нь тодорхойгүй дуудлага орохгүй.	Administrator console, usage.topUsersNote	TRANSLATED
+usage.trend	호출 추이	呼び出し推移	Call volume	Дуудлагын өөрчлөлт	Administrator console, usage.trend	TRANSLATED
+usage.trendDescription	선택한 기간의 실제 호출과 실패한 호출입니다.	選択期間の実呼び出しと失敗した呼び出しです。	Actual and failed calls during the selected period.	Сонгосон хугацааны бодит болон амжилтгүй дуудлага.	Administrator console, usage.trendDescription	TRANSLATED
+usage.trendSummary	실제 호출 {{calls}}건, 실패 {{failed}}건	実呼び出し{{calls}}件、失敗{{failed}}件	{{calls}} actual calls, {{failed}} failed calls	{{calls}} бодит дуудлага, {{failed}} амжилтгүй дуудлага	Administrator console, usage.trendSummary	TRANSLATED
+usage.userId	사용자 ID	ユーザー ID	User ID	Хэрэглэгчийн ID	Administrator console, usage.userId	TRANSLATED
+usage.userIdPlaceholder	내부 사용자 UUID로 필터	内部ユーザー UUID で絞り込み	Filter by internal user UUID	Дотоод хэрэглэгчийн UUID-ээр шүүх	Administrator console, usage.userIdPlaceholder	TRANSLATED
+usage.viewChartData	표로 보기	表で表示	View chart data	Хүснэгтээр харах	Administrator console, usage.viewChartData	TRANSLATED
+users.action.restore	계정 복구	アカウントを復元	Restore account	Бүртгэлийг сэргээх	User detail action	TRANSLATED
+users.action.revokeSessions	모든 세션 종료	すべてのセッションを終了	Revoke all sessions	Бүх сессийг дуусгах	User detail action	TRANSLATED
+users.action.suspend	계정 정지	アカウントを停止	Suspend account	Бүртгэлийг түр зогсоох	User detail action	TRANSLATED
+users.actionSuccess	처리가 완료되었습니다. 종료된 세션은 {{count}}개입니다.	処理が完了しました。終了したセッションは{{count}}件です。	Action completed. {{count}} sessions revoked.	Үйлдэл дууслаа. {{count}} сессийг дуусгалаа.	Administrator console, users.actionSuccess	TRANSLATED
+users.actionsTitle	계정 관리	アカウント管理	Account actions	Бүртгэлийн удирдлага	Administrator console, users.actionsTitle	TRANSLATED
+users.column.createdAt	가입일	登録日	Joined	Бүртгүүлсэн огноо	User table column	TRANSLATED
+users.column.email	이메일	メール	Email	И-мэйл	User table column	TRANSLATED
+users.column.lastLoginAt	마지막 로그인	最終ログイン	Last login	Сүүлд нэвтэрсэн	User table column	TRANSLATED
+users.column.name	이름	名前	Name	Нэр	User table column	TRANSLATED
+users.column.tripCount	여행 수	旅行数	Trips	Аяллын тоо	User table column	TRANSLATED
+users.confirm.restore	이 계정의 정지를 해제할까요?	このアカウントの停止を解除しますか？	Restore this account?	Энэ бүртгэлийн түр зогсоолтыг цуцлах уу?	Restore confirmation	TRANSLATED
+users.confirm.revokeSessions	이 계정의 모든 세션을 종료할까요?	このアカウントのすべてのセッションを終了しますか？	Revoke all sessions for this account?	Энэ бүртгэлийн бүх сессийг дуусгах уу?	Session confirmation	TRANSLATED
+users.confirm.suspend	이 계정을 정지하고 모든 세션을 종료할까요?	このアカウントを停止し、すべてのセッションを終了しますか？	Suspend this account and revoke all sessions?	Энэ бүртгэлийг түр зогсоож, бүх сессийг дуусгах уу?	Destructive confirmation	TRANSLATED
+users.description	가입 계정과 로그인 정보를 확인하고 이용 상태를 관리합니다.	登録アカウントとログイン情報を確認し、利用状態を管理します。	Review registered accounts, sign-ins and account status.	Бүртгэл, нэвтрэлтийн мэдээллийг шалгаж, ашиглах төлөвийг удирдана уу.	Administrator console, users.description	TRANSLATED
+users.detailTitle	사용자 상세	ユーザー詳細	User details	Хэрэглэгчийн дэлгэрэнгүй	Administrator console, users.detailTitle	TRANSLATED
+users.emailVerified	이메일 인증	メール認証	Email verified	И-мэйл баталгаажсан	Administrator console, users.emailVerified	TRANSLATED
+users.filter.role	역할	ロール	Role	Эрх	User role filter	TRANSLATED
+users.filter.state	상태	状態	State	Төлөв	User state filter	TRANSLATED
+users.identities	연결된 로그인 정보	連携ログイン情報	Linked identities	Холбосон нэвтрэх бүртгэл	Administrator console, users.identities	TRANSLATED
+users.identityIssuer	인증 제공자	認証プロバイダー	Identity provider	Баталгаажуулалтын үйлчилгээ	Administrator console, users.identityIssuer	TRANSLATED
+users.reason	정지 사유	停止理由	Suspension reason	Түр зогсоох шалтгаан	Administrator console, users.reason	TRANSLATED
+users.reasonAbuse	서비스 악용	サービスの不正利用	Abuse	Үйлчилгээг зүй бусаар ашигласан	Administrator console, users.reasonAbuse	TRANSLATED
+users.reasonOther	기타	その他	Other	Бусад	Administrator console, users.reasonOther	TRANSLATED
+users.reasonRequest	사용자 요청	ユーザーからの依頼	User request	Хэрэглэгчийн хүсэлт	Administrator console, users.reasonRequest	TRANSLATED
+users.role.admin	관리자	管理者	Administrator	Администратор	User role value	TRANSLATED
+users.role.user	사용자	ユーザー	User	Хэрэглэгч	User role value	TRANSLATED
+users.search.placeholder	이름 또는 이메일 검색	名前またはメールを検索	Search by name or email	Нэр эсвэл и-мэйлээр хайх	User search input	TRANSLATED
+users.selfActionNote	현재 로그인한 관리자 계정에는 이 조치를 적용할 수 없습니다.	現在ログイン中の管理者にはこの操作を適用できません。	These actions are unavailable for your current administrator account.	Одоо нэвтэрсэн администраторын бүртгэлд эдгээр үйлдлийг хийх боломжгүй.	Administrator console, users.selfActionNote	TRANSLATED
+users.state.active	활성	有効	Active	Идэвхтэй	User state value	TRANSLATED
+users.state.suspended	정지	停止中	Suspended	Түр зогсоосон	User state value	TRANSLATED
+users.unnamed	이름 없음	名前なし	Unnamed	Нэргүй	Administrator console, users.unnamed	TRANSLATED
+common.requiresPostgres	관리자 데이터 조회에는 PostgreSQL 연결이 필요합니다. 서버의 저장 모드와 데이터베이스 설정을 확인해 주세요.	管理データの参照には PostgreSQL 接続が必要です。サーバーの保存モードとデータベース設定を確認してください。	Administrator data requires a PostgreSQL connection. Check the server persistence mode and database configuration.	Удирдлагын өгөгдлийг харахад PostgreSQL холболт шаардлагатай. Серверийн хадгалалтын горим болон өгөгдлийн сангийн тохиргоог шалгана уу.	Admin API ADMIN_REQUIRES_POSTGRES, no database configured	TRANSLATED

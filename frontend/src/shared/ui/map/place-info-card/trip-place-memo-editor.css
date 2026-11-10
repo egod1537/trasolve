@@ -1,0 +1,183 @@
+.trip-place-memo-editor {
+  display: grid;
+  gap: 8px;
+}
+
+.trip-place-memo-editor textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 76px;
+  max-height: 180px;
+  padding: 8px 10px;
+  resize: vertical;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 6px;
+  outline: 0;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.trip-place-memo-editor textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.trip-place-memo-editor textarea:disabled {
+  background: var(--color-surface-subtle);
+  cursor: wait;
+}
+
+.trip-place-memo-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.trip-place-memo-editor-actions span {
+  margin-right: auto;
+  color: var(--color-muted);
+  font-size: 10px;
+}
+
+.trip-place-memo-editor-actions button {
+  min-width: 48px;
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 5px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.trip-place-memo-editor-actions button[type='submit'] {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-accent-contrast);
+}
+
+.trip-place-memo-editor-actions button:hover:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.trip-place-memo-editor-actions button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.trip-place-mutation-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.trip-place-saving {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: 11px;
+}
+
+.trip-place-memo,
+.trip-place-address {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.trip-place-google-maps-link {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  gap: 5px;
+  margin-top: 7px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.trip-place-google-maps-link:hover,
+.trip-place-google-maps-link:focus-visible {
+  text-decoration: underline;
+}
+
+.trip-place-google-maps-link svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.trip-place-memo.is-empty {
+  color: var(--color-muted);
+}
+
+.trip-place-memo {
+  margin: -4px -6px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  cursor: text;
+}
+
+.trip-place-memo:hover:not([aria-disabled='true']) {
+  background: var(--color-surface-subtle);
+}
+
+.trip-place-memo[aria-disabled='true'] {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.trip-place-mutation-error {
+  margin: 14px 20px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--color-danger-soft);
+}
+
+.place-info-card-spinner {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 2px solid var(--color-border-strong);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: place-info-spin 700ms linear infinite;
+}
+
+@keyframes place-info-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 760px) {
+  .place-info-card {
+    border-radius: 12px;
+  }
+
+  .place-info-card-header {
+    padding-top: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .place-info-card-spinner {
+    animation: none;
+  }
+}

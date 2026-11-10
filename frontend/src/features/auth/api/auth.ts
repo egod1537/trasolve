@@ -3,6 +3,7 @@ import {
   authMeResponseSchema,
   type AuthUser,
 } from '@trasolve/shared';
+import { AUTH_SESSION_EVENT } from '@/shared/api/authEvents';
 
 export async function fetchCurrentUser(): Promise<AuthUser | null> {
   const response = await fetch(API_ROUTES.authMe, {
@@ -34,6 +35,7 @@ export async function loginAsDebugGuest(): Promise<AuthUser> {
   if (!user) {
     throw new Error('Debug guest login returned no user');
   }
+  window.dispatchEvent(new Event(AUTH_SESSION_EVENT));
   return user;
 }
 
@@ -47,4 +49,5 @@ export async function logout(): Promise<void> {
   if (!response.ok) {
     throw new Error('Logout request failed');
   }
+  window.dispatchEvent(new Event(AUTH_SESSION_EVENT));
 }

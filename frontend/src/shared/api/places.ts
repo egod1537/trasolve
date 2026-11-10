@@ -10,6 +10,7 @@ import {
   type PlaceDetails,
   type PlaceDetailsRequest,
 } from '@trasolve/shared';
+import { throwIfExternalApiDisabled } from '@/shared/api/externalApiDisabled';
 import { getLanguage, L } from '@/shared/i18n';
 
 type SearchOptions = Omit<PlaceAutocompleteRequest, 'input'> & {
@@ -31,6 +32,7 @@ async function requestPlaces(
   });
   const body: unknown = await response.json();
   if (!response.ok) {
+    throwIfExternalApiDisabled(body);
     throw new Error(
       L('errors:places.error.placeLookupFailedHttp', {
         status: response.status,

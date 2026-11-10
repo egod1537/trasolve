@@ -211,7 +211,7 @@
 }
 @media (max-width: 760px) {
   .map-toolbar-positioner {
-    top: 66px;
+    top: max(87px, calc(env(safe-area-inset-top) + 79px));
     left: 12px;
     right: 12px;
   }

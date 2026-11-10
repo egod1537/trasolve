@@ -1,0 +1,200 @@
+{
+  "access": {
+    "description": {
+      "forbidden": "허용된 관리자 계정으로 다시 로그인해 주세요.",
+      "signIn": "Google 계정으로 로그인해 주세요.",
+      "unavailable": "잠시 후 다시 시도해 주세요."
+    },
+    "title": {
+      "forbidden": "접근할 수 없음",
+      "signIn": "관리자 로그인",
+      "unavailable": "관리자 서비스를 사용할 수 없음"
+    }
+  },
+  "audit": {
+    "column": {
+      "target": "대상",
+      "time": "시각"
+    },
+    "description": "관리자의 계정 조치 이력을 확인합니다.",
+    "filter": {
+      "action": "작업",
+      "actor": "관리자"
+    }
+  },
+  "common": {
+    "accessExpired": "관리자 세션 또는 권한을 확인해 주세요.",
+    "action": {
+      "confirm": "확인",
+      "next": "다음",
+      "previous": "이전"
+    },
+    "all": "전체",
+    "details": "상세 보기",
+    "empty": "표시할 데이터가 없습니다.",
+    "from": "시작일",
+    "generatedAt": "집계 시각, {{date}}",
+    "loadFailed": "데이터를 불러오지 못했습니다.",
+    "no": "아니요",
+    "notFound": "페이지를 찾을 수 없습니다.",
+    "page": "{{page}}페이지",
+    "pageTotal": "전체 {{total}}개, {{page}}페이지",
+    "processing": "처리 중",
+    "requiresPostgres": "관리자 데이터 조회에는 PostgreSQL 연결이 필요합니다. 서버의 저장 모드와 데이터베이스 설정을 확인해 주세요.",
+    "reset": "초기화",
+    "search": "검색",
+    "skipToContent": "본문으로 이동",
+    "to": "종료일",
+    "viewAll": "전체 보기",
+    "yes": "예"
+  },
+  "dashboard": {
+    "activeNote": "정지되지 않은 계정입니다.",
+    "activeUsers": "활성 계정",
+    "apiLastWeek": "최근 7일 API 현황",
+    "description": "사용자, 여행과 외부 서비스의 운영 현황을 한눈에 확인합니다.",
+    "loginNote": "최근 7일 동안 로그인한 사용자 수입니다.",
+    "recentLoginUsers": "최근 7일 로그인",
+    "totalTrips": "전체 여행",
+    "totalUsers": "전체 가입자"
+  },
+  "navigation": {
+    "apiUsage": "API 사용량",
+    "audit": "감사 로그",
+    "dashboard": "대시보드",
+    "operations": "운영 현황",
+    "trips": "여행",
+    "users": "사용자"
+  },
+  "operations": {
+    "available": "조회 가능",
+    "configured": "설정됨",
+    "description": "최근 24시간의 서비스 호출과 작업 현황을 확인합니다.",
+    "failedJobs": "실패",
+    "jobs": "최근 작업 현황",
+    "jobsNote": "작업 수는 최근 troute 미러의 최대 1,000개 작업 기준입니다. tcache 작업 미러는 제공되지 않습니다.",
+    "lastObservedAt": "마지막 관측",
+    "lastUpdated": "마지막 갱신",
+    "noData": "데이터 없음",
+    "noObservedErrors": "관측된 오류 없음",
+    "notConfigured": "미설정",
+    "observation": "관측 상태",
+    "observationNote": "설정 여부와 최근 호출 기록을 표시합니다. 실시간 연결 검사 결과는 아닙니다.",
+    "observed": "관측 기록 있음",
+    "observedJobs": "관측된 작업",
+    "recentErrors": "최근 오류 코드",
+    "runningJobs": "진행 중",
+    "unavailable": "조회 미지원",
+    "unknown": "확인 불가",
+    "window": "관측 기간, {{from}} ~ {{to}}"
+  },
+  "routes": {
+    "loading": "관리자 페이지를 불러오는 중입니다."
+  },
+  "shell": {
+    "management": "관리",
+    "timeZoneNote": "날짜와 시각은 한국 시간 기준입니다.",
+    "workspace": "관리자 콘솔"
+  },
+  "trips": {
+    "column": {
+      "createdAt": "생성일",
+      "dayCount": "일수",
+      "placeCount": "장소 수",
+      "title": "제목",
+      "updatedAt": "최종 수정일"
+    },
+    "dateRange": "여행 기간",
+    "description": "여행의 소유자, 구성과 공유 상태를 확인합니다.",
+    "detailTitle": "여행 상세 정보",
+    "filter": {
+      "owner": "소유자",
+      "shared": "공유 상태"
+    },
+    "id": "여행 ID",
+    "metadataNote": "여행의 기본 정보만 조회합니다. 메모, 좌표와 상세 경로는 표시하지 않습니다.",
+    "revision": "문서 버전",
+    "schemaVersion": "스키마 버전",
+    "search": {
+      "placeholder": "여행 제목 검색"
+    },
+    "searchable": "검색 공개",
+    "share": {
+      "disabled": "공유 안 함",
+      "enabled": "공유됨"
+    }
+  },
+  "usage": {
+    "actualCalls": "실제 호출",
+    "avgLatency": "평균 응답 시간",
+    "blockedCalls": "차단된 호출",
+    "bucketSummary": "{{date}}, 호출 {{calls}}건, 실패 {{failed}}건",
+    "byService": "서비스별 사용량",
+    "byUser": "사용자별 사용량",
+    "coverage": "서버 outbound 호출만 집계하며 브라우저 Google Maps SDK 호출은 포함하지 않습니다.",
+    "description": "기간과 서비스별 외부 API 호출 현황을 확인합니다.",
+    "failedCalls": "실패한 호출",
+    "failureCount": "실패 {{count}}건",
+    "failureRate": "실패율",
+    "invalidFilters": "조회 조건을 확인해 주세요. 기간은 최대 90일이며, 유효한 서비스와 사용자 UUID를 입력해야 합니다.",
+    "invalidRange": "종료일은 시작일 이후여야 하며, 조회 기간은 최대 90일입니다.",
+    "mockCalls": "모의 호출",
+    "noCost": "이 수치는 청구 금액이 아닙니다.",
+    "p95Latency": "P95 지연시간",
+    "service": "서비스",
+    "topUsersNote": "선택한 조건에서 실제 호출이 많은 상위 20명입니다. 사용자 식별이 없는 호출은 제외합니다.",
+    "trend": "호출 추이",
+    "trendDescription": "선택한 기간의 실제 호출과 실패한 호출입니다.",
+    "trendSummary": "실제 호출 {{calls}}건, 실패 {{failed}}건",
+    "userId": "사용자 ID",
+    "userIdPlaceholder": "내부 사용자 UUID로 필터",
+    "viewChartData": "표로 보기"
+  },
+  "users": {
+    "action": {
+      "restore": "계정 복구",
+      "revokeSessions": "모든 세션 종료",
+      "suspend": "계정 정지"
+    },
+    "actionSuccess": "처리가 완료되었습니다. 종료된 세션은 {{count}}개입니다.",
+    "actionsTitle": "계정 관리",
+    "column": {
+      "createdAt": "가입일",
+      "email": "이메일",
+      "lastLoginAt": "마지막 로그인",
+      "name": "이름",
+      "tripCount": "여행 수"
+    },
+    "confirm": {
+      "restore": "이 계정의 정지를 해제할까요?",
+      "revokeSessions": "이 계정의 모든 세션을 종료할까요?",
+      "suspend": "이 계정을 정지하고 모든 세션을 종료할까요?"
+    },
+    "description": "가입 계정과 로그인 정보를 확인하고 이용 상태를 관리합니다.",
+    "detailTitle": "사용자 상세",
+    "emailVerified": "이메일 인증",
+    "filter": {
+      "role": "역할",
+      "state": "상태"
+    },
+    "identities": "연결된 로그인 정보",
+    "identityIssuer": "인증 제공자",
+    "reason": "정지 사유",
+    "reasonAbuse": "서비스 악용",
+    "reasonOther": "기타",
+    "reasonRequest": "사용자 요청",
+    "role": {
+      "admin": "관리자",
+      "user": "사용자"
+    },
+    "search": {
+      "placeholder": "이름 또는 이메일 검색"
+    },
+    "selfActionNote": "현재 로그인한 관리자 계정에는 이 조치를 적용할 수 없습니다.",
+    "state": {
+      "active": "활성",
+      "suspended": "정지"
+    },
+    "unnamed": "이름 없음"
+  }
+}

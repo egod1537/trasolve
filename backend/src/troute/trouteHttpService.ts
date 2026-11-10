@@ -1,4 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { TokenMeter } from '../billing/billingHttpService.js';
+import { BillingError } from '../billing/paymentProvider.js';
 import {
   trouteOptimizeRequestSchema,
   type ApiErrorResponse,
@@ -28,6 +30,10 @@ export class TrouteHttpService {
     private readonly partialVisitEnabled = false,
     private readonly externalApiPolicy: ExternalApiPolicy = loadExternalApiPolicy(),
   ) {}
+
+  public setTokenMeter(meter: TokenMeter): void {
+    this.tokenMeter = meter;
+  }
 
   public async handle(
     request: IncomingMessage,
@@ -74,10 +80,15 @@ export class TrouteHttpService {
 
       this.externalApiPolicy.resolve('troute', 'submit-job');
 
-      this.jobs.create(optimizeRequest);
-      createdJobId = optimizeRequest.job_id;
-      this.jobs.markGatewayRequestStarted(createdJobId);
-      const acceptedJobId = await this.client.submitJob(optimizeRequest);
+      const submit = async () => {
+        this.jobs.create(optimizeRequest!);
+        createdJobId = optimizeRequest!.job_id;
+        this.jobs.markGatewayRequestStarted(createdJobId);
+        return this.client!.submitJob(optimizeRequest!);
+      };
+      const acceptedJobId = this.tokenMeter
+        ? await this.tokenMeter.run(request, 'optimize', submit)
+        : await submit();
       void this.subscriptions?.track(acceptedJobId).catch((cause) => {
         console.warn('제출한 troute Job SSE 추적을 시작하지 못했습니다.', {
           jobId: acceptedJobId,
@@ -151,6 +162,7 @@ export class TrouteHttpService {
   }
 
   private readonly maxBodyBytes = 1_048_576;
+  private tokenMeter?: TokenMeter;
 
   private prepareRequestForServer(
     request: Parameters<TrouteClient['submitJob']>[0],
@@ -220,6 +232,9 @@ export class TrouteHttpService {
     cause: unknown,
     request: Parameters<TrouteClient['submitJob']>[0] | null,
   ): TrouteHttpError {
+    if (cause instanceof BillingError) {
+      return new TrouteHttpError(cause.status, cause.code, cause.code);
+    }
     if (cause instanceof TrouteHttpError) {
       return cause;
     }

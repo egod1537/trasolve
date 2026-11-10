@@ -18,11 +18,64 @@ export {
   buildSharedTripApiRoute,
   buildSharedTripCopyApiRoute,
   buildTripShareApiRoute,
+  buildAdminTripMetadataApiRoute,
+  buildAdminUserActionApiRoute,
+  buildAdminUserApiRoute,
   getGoogleMapsLocale,
   type GoogleMapsLanguageCode,
   type GoogleMapsLocale,
   type GoogleMapsRegionCode,
 } from './constants/index.js';
+
+export {
+  adminAuditEventSchema,
+  adminAuditListResponseSchema,
+  adminIdentitySummarySchema,
+  adminJobMirrorSummarySchema,
+  adminMeResponseSchema,
+  adminOperationsSummaryResponseSchema,
+  adminOperationServiceSchema,
+  adminReasonCodeSchema,
+  adminRoleSchema,
+  adminSummaryResponseSchema,
+  adminTripListResponseSchema,
+  adminTripMetadataResponseSchema,
+  adminTripSummarySchema,
+  adminUserActionResponseSchema,
+  adminUserDetailResponseSchema,
+  adminUserListResponseSchema,
+  adminUserStateSchema,
+  adminUserSummarySchema,
+  externalApiOutcomeSchema,
+  externalApiServiceSchema,
+  externalApiUsageActorSummarySchema,
+  externalApiUsageBucketSchema,
+  externalApiUsageServiceSummarySchema,
+  externalApiUsageSummaryResponseSchema,
+} from './schemas/admin.js';
+
+export type {
+  AdminAuditEvent,
+  AdminAuditListResponse,
+  AdminIdentitySummary,
+  AdminJobMirrorSummary,
+  AdminMeResponse,
+  AdminOperationsSummaryResponse,
+  AdminOperationService,
+  AdminRole,
+  AdminSummaryResponse,
+  AdminTripListResponse,
+  AdminTripMetadataResponse,
+  AdminTripSummary,
+  AdminUserActionResponse,
+  AdminUserDetailResponse,
+  AdminUserListResponse,
+  AdminUserState,
+  AdminUserSummary,
+  ExternalApiOutcome,
+  ExternalApiService,
+  ExternalApiUsageSummaryResponse,
+} from './types/admin.js';
 
 export {
   googleMapsLanguageCodeSchema,
@@ -137,6 +190,7 @@ export {
   routeRequestDiagnosticsSchema,
   routeUpstreamDiagnosticsSchema,
   routeLocationSchema,
+  upstreamApiErrorDetailsSchema,
 } from './schemas/routes.js';
 
 export type {
@@ -147,6 +201,7 @@ export type {
   DirectionsResult,
   MapRoute,
   RouteLocation,
+  UpstreamApiErrorDetails,
 } from './types/routes.js';
 
 export {
@@ -359,3 +414,4 @@ export type {
   TrouteVisitPolicy,
   TrouteTravelMode,
 } from './types/troute.js';
+export * from './schemas/billing.js';

@@ -1,11 +1,21 @@
 import { z } from 'zod';
+import type { UpstreamApiErrorDetails } from '@trasolve/shared';
 import { OPENWEBUI_OPTIONS } from '../options.js';
 import {
   loadExternalApiPolicy,
   type ExternalApiPolicy,
 } from '../configuration/externalApiPolicy.js';
+import {
+  assertInstrumentedNetworkAllowed,
+  instrumentExternalApiFetch,
+  resolveInstrumentedExternalApiMode,
+} from '../observability/externalApiUsage/externalApiUsage.js';
 
 export const DEFAULT_OPENWEBUI_BASE_URL = 'https://chat.mangagaki.net';
+
+const MAX_UPSTREAM_ERROR_BODY_BYTES = 32 * 1024;
+const MAX_UPSTREAM_ERROR_MESSAGE_LENGTH = 2_000;
+const MAX_UPSTREAM_ERROR_IDENTIFIER_LENGTH = 256;
 
 const chatMessageSchema = z.strictObject({
   role: z.enum(['system', 'user', 'assistant']),
@@ -66,20 +76,34 @@ export type OpenWebUIClientErrorKind =
   | 'configuration'
   | 'invalid_request'
   | 'authentication'
+  | 'permission_denied'
+  | 'not_found'
+  | 'conflict'
+  | 'request_too_large'
   | 'upstream_rejected'
+  | 'upstream_failure'
   | 'rate_limited'
   | 'timeout'
   | 'unavailable'
   | 'malformed_response';
 
+export type OpenWebUIUpstreamError = UpstreamApiErrorDetails & {
+  service: 'openwebui';
+  status: number;
+};
+
 export class OpenWebUIClientError extends Error {
   public constructor(
     public readonly kind: OpenWebUIClientErrorKind,
     message: string,
-    public readonly upstreamStatus?: number,
+    public readonly upstream?: OpenWebUIUpstreamError,
   ) {
     super(message);
     this.name = 'OpenWebUIClientError';
+  }
+
+  public get upstreamStatus(): number | undefined {
+    return this.upstream?.status;
   }
 }
 
@@ -126,13 +150,20 @@ export class OpenWebUIClient {
   }
 
   public async listModels(): Promise<OpenWebUIModel[]> {
-    if (this.externalApiPolicy.resolve('openwebui', 'list-models') === 'mock') {
+    if (
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'openwebui',
+        'list-models',
+      ) === 'mock'
+    ) {
       return [{ id: 'trasolve-mock-v1', name: 'Trasolve Mock v1' }];
     }
     const rawResponse = await this.requestJson(
       'openai/models',
       { method: 'GET' },
       this.modelsTimeoutMs,
+      'list-models',
     );
     const parsed = modelsResponseSchema.safeParse(rawResponse);
     if (!parsed.success) {
@@ -153,7 +184,13 @@ export class OpenWebUIClient {
         'The OpenWebUI chat request is invalid.',
       );
     }
-    if (this.externalApiPolicy.resolve('openwebui', 'chat') === 'mock') {
+    if (
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'openwebui',
+        'chat',
+      ) === 'mock'
+    ) {
       return {
         model: request.data.model,
         message: {
@@ -188,6 +225,7 @@ export class OpenWebUIClient {
         }),
       },
       this.chatTimeoutMs,
+      'chat',
     );
     const parsed = chatResponseSchema.safeParse(rawResponse);
     if (!parsed.success) {
@@ -226,8 +264,13 @@ export class OpenWebUIClient {
     endpoint: string,
     init: RequestInit,
     timeoutMs: number,
+    operation: 'list-models' | 'chat',
   ): Promise<unknown> {
-    this.externalApiPolicy.assertNetworkAllowed('openwebui', endpoint);
+    assertInstrumentedNetworkAllowed(
+      this.externalApiPolicy,
+      'openwebui',
+      operation,
+    );
     if (!this.apiKey) {
       throw new OpenWebUIClientError(
         'configuration',
@@ -246,15 +289,19 @@ export class OpenWebUIClient {
           this.cloudflareAccessClientSecret,
         );
       }
-      const response = await fetch(new URL(endpoint, this.baseUrl), {
-        ...init,
-        headers,
-        signal,
-      });
+      const response = await instrumentExternalApiFetch(
+        'openwebui',
+        operation,
+        () =>
+          fetch(new URL(endpoint, this.baseUrl), {
+            ...init,
+            headers,
+            signal,
+          }),
+      );
 
       if (!response.ok) {
-        void response.body?.cancel().catch(() => {});
-        throw this.upstreamError(response.status);
+        throw await this.upstreamError(response);
       }
 
       try {
@@ -311,25 +358,16 @@ export class OpenWebUIClient {
     return value;
   }
 
-  private upstreamError(status: number): OpenWebUIClientError {
-    if (status === 401 || status === 403) {
-      return new OpenWebUIClientError(
-        'authentication',
-        'The OpenWebUI upstream rejected authentication.',
-        status,
-      );
-    }
-    if (status === 429) {
-      return new OpenWebUIClientError(
-        'rate_limited',
-        'The OpenWebUI upstream rate limit was reached.',
-        status,
-      );
-    }
+  private async upstreamError(
+    response: Response,
+  ): Promise<OpenWebUIClientError> {
+    const upstream = await parseOpenWebUIUpstreamError(response);
+    const identifier = upstream.code ? ` (${upstream.code})` : '';
+    const explanation = upstream.message ? `: ${upstream.message}` : '';
     return new OpenWebUIClientError(
-      'upstream_rejected',
-      'The OpenWebUI upstream rejected the request.',
-      status,
+      classifyOpenWebUIError(upstream),
+      `The OpenWebUI upstream returned HTTP ${response.status}${identifier}${explanation}`,
+      upstream,
     );
   }
 
@@ -346,4 +384,357 @@ export class OpenWebUIClient {
       `The OpenWebUI ${response} response is malformed.`,
     );
   }
+}
+
+async function parseOpenWebUIUpstreamError(
+  response: Response,
+): Promise<OpenWebUIUpstreamError> {
+  const body = await readBoundedResponseBody(response);
+  const payload = parseErrorPayload(body.text);
+  const records = collectErrorRecords(payload);
+  const code = findIdentifier(records, ['code', 'error_code', 'errorCode']);
+  const type = findIdentifier(records, ['type', 'error_type', 'errorType']);
+  const param = findIdentifier(records, ['param', 'parameter']);
+  const message = extractErrorMessage(payload);
+  const requestId = firstHeader(response.headers, [
+    'x-request-id',
+    'x-correlation-id',
+    'cf-ray',
+  ]);
+  const retryAfterMs = parseRetryAfterMs(response.headers);
+
+  return {
+    service: 'openwebui',
+    status: response.status,
+    ...(code ? { code } : {}),
+    ...(type ? { type } : {}),
+    ...(param ? { param } : {}),
+    ...(message ? { message } : {}),
+    ...(requestId ? { requestId } : {}),
+    ...(retryAfterMs === undefined ? {} : { retryAfterMs }),
+    ...(body.truncated ? { bodyTruncated: true } : {}),
+  };
+}
+
+async function readBoundedResponseBody(
+  response: Response,
+): Promise<{ text: string; truncated: boolean }> {
+  if (!response.body) {
+    return { text: '', truncated: false };
+  }
+
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  let truncated = false;
+  try {
+    while (true) {
+      const result = await reader.read();
+      if (result.done) {
+        break;
+      }
+      const remaining = MAX_UPSTREAM_ERROR_BODY_BYTES - size;
+      if (remaining <= 0) {
+        truncated = true;
+        await reader.cancel().catch(() => {});
+        break;
+      }
+      const chunk = result.value;
+      const accepted =
+        chunk.byteLength > remaining ? chunk.subarray(0, remaining) : chunk;
+      chunks.push(accepted);
+      size += accepted.byteLength;
+      if (accepted.byteLength !== chunk.byteLength) {
+        truncated = true;
+        await reader.cancel().catch(() => {});
+        break;
+      }
+    }
+  } catch {
+    truncated = true;
+  } finally {
+    reader.releaseLock();
+  }
+
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return {
+    text: new TextDecoder('utf-8', { fatal: false }).decode(bytes),
+    truncated,
+  };
+}
+
+function parseErrorPayload(text: string): unknown {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  try {
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    if (/^(?:<!doctype\s+html|<html\b)/i.test(trimmed)) {
+      return undefined;
+    }
+    return trimmed;
+  }
+}
+
+function collectErrorRecords(value: unknown): Record<string, unknown>[] {
+  const records: Record<string, unknown>[] = [];
+  const visit = (candidate: unknown, depth: number): void => {
+    if (!isRecord(candidate) || depth > 3 || records.includes(candidate)) {
+      return;
+    }
+    records.push(candidate);
+    for (const key of ['error', 'errors', 'detail', 'cause', 'issues']) {
+      visit(candidate[key], depth + 1);
+    }
+  };
+  visit(value, 0);
+  return records;
+}
+
+function findIdentifier(
+  records: readonly Record<string, unknown>[],
+  keys: readonly string[],
+): string | undefined {
+  for (const record of records) {
+    for (const key of keys) {
+      const normalized = normalizeIdentifier(record[key]);
+      if (normalized) {
+        return normalized;
+      }
+    }
+  }
+  return undefined;
+}
+
+function extractErrorMessage(value: unknown, depth = 0): string | undefined {
+  if (depth > 4 || value === null || value === undefined) {
+    return undefined;
+  }
+  if (typeof value === 'string') {
+    return normalizeDiagnosticText(value);
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return normalizeDiagnosticText(String(value));
+  }
+  if (Array.isArray(value)) {
+    const messages = value
+      .map((item) => extractErrorMessage(item, depth + 1))
+      .filter((item): item is string => Boolean(item));
+    return normalizeDiagnosticText(messages.join('; '));
+  }
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const location = Array.isArray(value.loc)
+    ? value.loc
+        .map((part) => normalizeIdentifier(part))
+        .filter((part): part is string => Boolean(part))
+        .join('.')
+    : undefined;
+  const directMessage = extractFirstMessage(value, depth, [
+    'message',
+    'msg',
+    'error_description',
+    'description',
+    'reason',
+    'title',
+  ]);
+  if (directMessage) {
+    return normalizeDiagnosticText(
+      location ? `${location}: ${directMessage}` : directMessage,
+    );
+  }
+
+  return extractFirstMessage(value, depth, [
+    'error',
+    'errors',
+    'detail',
+    'cause',
+    'issues',
+  ]);
+}
+
+function extractFirstMessage(
+  value: Record<string, unknown>,
+  depth: number,
+  keys: readonly string[],
+): string | undefined {
+  for (const key of keys) {
+    const message = extractErrorMessage(value[key], depth + 1);
+    if (message) {
+      return message;
+    }
+  }
+  return undefined;
+}
+
+function normalizeDiagnosticText(value: string): string | undefined {
+  const normalized = redactSensitiveText(value).replace(/\s+/g, ' ').trim();
+  if (!normalized) {
+    return undefined;
+  }
+  return normalized.slice(0, MAX_UPSTREAM_ERROR_MESSAGE_LENGTH);
+}
+
+function normalizeIdentifier(value: unknown): string | undefined {
+  if (
+    typeof value !== 'string' &&
+    typeof value !== 'number' &&
+    typeof value !== 'boolean'
+  ) {
+    return undefined;
+  }
+  const normalized = redactSensitiveText(String(value)).trim();
+  if (!normalized) {
+    return undefined;
+  }
+  return normalized.slice(0, MAX_UPSTREAM_ERROR_IDENTIFIER_LENGTH);
+}
+
+function redactSensitiveText(value: string): string {
+  return value
+    .replace(/(bearer\s+)[a-z0-9._~+/=-]+/gi, '$1[REDACTED]')
+    .replace(
+      /((?:api[_ -]?key|token|secret|password|authorization)\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi,
+      '$1[REDACTED]',
+    )
+    .replace(/(https?:\/\/)[^/\s:@]+:[^@\s/]+@/gi, '$1[REDACTED]@');
+}
+
+function firstHeader(
+  headers: Headers,
+  names: readonly string[],
+): string | undefined {
+  for (const name of names) {
+    const value = normalizeIdentifier(headers.get(name));
+    if (value) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
+function parseRetryAfterMs(headers: Headers): number | undefined {
+  const explicitMilliseconds = parseNonNegativeNumber(
+    headers.get('retry-after-ms'),
+  );
+  if (explicitMilliseconds !== undefined) {
+    return normalizeRetryDelay(explicitMilliseconds);
+  }
+
+  const retryAfter = headers.get('retry-after')?.trim();
+  const seconds = parseNonNegativeNumber(retryAfter);
+  if (seconds !== undefined) {
+    return normalizeRetryDelay(seconds * 1_000);
+  }
+  if (!retryAfter) {
+    return undefined;
+  }
+  const date = Date.parse(retryAfter);
+  return Number.isFinite(date)
+    ? normalizeRetryDelay(Math.max(0, date - Date.now()))
+    : undefined;
+}
+
+function normalizeRetryDelay(value: number): number | undefined {
+  if (!Number.isFinite(value) || value < 0) {
+    return undefined;
+  }
+  return Math.min(Number.MAX_SAFE_INTEGER, Math.ceil(value));
+}
+
+function parseNonNegativeNumber(
+  value: string | null | undefined,
+): number | undefined {
+  if (!value || !/^\d+(?:\.\d+)?$/.test(value.trim())) {
+    return undefined;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
+function classifyOpenWebUIError(
+  upstream: OpenWebUIUpstreamError,
+): OpenWebUIClientErrorKind {
+  const diagnostic =
+    `${upstream.code ?? ''} ${upstream.type ?? ''} ${upstream.message ?? ''}`
+      .trim()
+      .toLowerCase();
+  if (
+    /\bmodel(?:[\s_-]+\w+){0,3}[\s_-]+not[\s_-]+found\b|\bmodel_not_found\b/.test(
+      diagnostic,
+    )
+  ) {
+    return 'not_found';
+  }
+  if (
+    /\brate[\s_-]*limit|too many requests|quota exceeded\b/.test(diagnostic)
+  ) {
+    return 'rate_limited';
+  }
+  if (/\btime(?:d[\s_-]*out|out)|deadline exceeded\b/.test(diagnostic)) {
+    return 'timeout';
+  }
+  if (/\brequest(?: body)? too large|payload too large\b/.test(diagnostic)) {
+    return 'request_too_large';
+  }
+  if (/\bconflict\b/.test(diagnostic)) {
+    return 'conflict';
+  }
+  if (
+    /\binvalid token\b|\bunauthori[sz]ed\b|\bauthentication failed\b|\bapi[\s_-]*key\b.*\b(?:invalid|missing)\b/.test(
+      diagnostic,
+    )
+  ) {
+    return 'authentication';
+  }
+  if (
+    /\bpermission denied\b|\bforbidden\b|\baccess prohibited\b|\bnot allowed\b/.test(
+      diagnostic,
+    )
+  ) {
+    return 'permission_denied';
+  }
+
+  const { status } = upstream;
+  if (status === 401) {
+    return 'authentication';
+  }
+  if (status === 403) {
+    return 'permission_denied';
+  }
+  if (status === 404) {
+    return 'not_found';
+  }
+  if (status === 408 || status === 504) {
+    return 'timeout';
+  }
+  if (status === 409) {
+    return 'conflict';
+  }
+  if (status === 413) {
+    return 'request_too_large';
+  }
+  if (status === 429) {
+    return 'rate_limited';
+  }
+  if (status >= 400 && status < 500) {
+    return 'invalid_request';
+  }
+  if (status >= 500) {
+    return 'upstream_failure';
+  }
+  return 'upstream_rejected';
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

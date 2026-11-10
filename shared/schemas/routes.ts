@@ -33,6 +33,7 @@ export const directionsRequestSchema = z.strictObject({
   computeAlternativeRoutes: z.boolean().optional(),
   languageCode: googleMapsLanguageCodeSchema.optional(),
   regionCode: googleMapsRegionCodeSchema.optional(),
+  countryCode: googleMapsRegionCodeSchema.optional(),
 });
 
 export const routeRequestDiagnosticsSchema = z.strictObject({
@@ -119,11 +120,24 @@ export const directionsResultSchema = z.object({
   debug: directionsDebugDetailsSchema.optional(),
 });
 
+export const upstreamApiErrorDetailsSchema = z.object({
+  service: z.string(),
+  status: z.number().int().min(100).max(599).optional(),
+  code: z.string().optional(),
+  type: z.string().optional(),
+  param: z.string().optional(),
+  message: z.string().optional(),
+  requestId: z.string().optional(),
+  retryAfterMs: z.number().int().nonnegative().optional(),
+  bodyTruncated: z.boolean().optional(),
+});
+
 export const apiErrorSchema = z.object({
   error: z.object({
     code: z.string(),
     message: z.string(),
     service: z.string().optional(),
+    upstream: upstreamApiErrorDetailsSchema.optional(),
   }),
 });
 

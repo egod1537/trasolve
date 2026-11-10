@@ -17,20 +17,22 @@ import type {
 } from '@/entities/trip';
 import type { LayerSelectionModifiers } from '@/features/map-workspace/model/useMapWorkspace';
 import { LayerItemChevron } from '@/features/map-workspace/components/layer-panel/LayerItemChevron';
-import { LayerItemShell } from '@/features/map-workspace/components/layer-panel/LayerItemShell';
-import { LayerTypeIcon } from '@/features/map-workspace/components/layer-panel/LayerTypeIcon';
+import { LayerVisibilityControl } from './LayerVisibilityControl';
 import { PolylineLayerItem } from '@/features/map-workspace/components/layer-panel/PolylineLayerItem';
-import { useLayerDetailCardPlacement } from '@/features/map-workspace/components/layer-panel/LayerDetailCard';
-import { TripPolylineCard } from '@/features/map-workspace/components/viewport/TripPolylineCard';
-import { PlaceDetailContent, PlaceTimeTimeline } from '@/features/place-editor';
-import { formatDurationMinutes } from '@/shared/i18n/formatters';
 import { useL } from '@/shared/i18n';
+import {
+  ReadonlyPlaceLayerItem,
+  ReadonlyPlaceDetail,
+  ReadonlyPolylineDetail,
+} from '@/features/map-workspace/components/layer-panel/ReadonlyLayerDetails';
 
 type DetailTarget =
   { type: 'place'; id: string } | { type: 'polyline'; id: string } | null;
 
 type Props = {
   trip: Trip;
+  visibleDayIds: ReadonlySet<string>;
+  onToggleAllDayVisibility: () => void;
   sidebarRef: RefObject<HTMLElement | null>;
   selectionRevision: number;
   selectedPlaceId: string | null;
@@ -70,173 +72,10 @@ function resolveLayerItems(day: TripDay): RenderedLayerItem[] {
   });
 }
 
-function ReadonlyPlaceLayerItem({
-  day,
-  place,
-  isLast,
-  selected,
-  detailsOpen,
-  routeRole,
-  onSelect,
-  onFocus,
-  onOpenDetails,
-}: {
-  day: TripDay;
-  place: TripPlace;
-  isLast: boolean;
-  selected: boolean;
-  detailsOpen: boolean;
-  routeRole?: 'start' | 'destination';
-  onSelect: (id: string, modifiers: LayerSelectionModifiers) => void;
-  onFocus: (id: string) => void;
-  onOpenDetails: (id: string) => void;
-}) {
-  const L = useL();
-  const openDetails = () => onOpenDetails(place.id);
-
-  return (
-    <LayerItemShell
-      type="place"
-      itemId={place.id}
-      dayId={day.id}
-      isLast={isLast}
-      selected={selected}
-      detailsOpen={detailsOpen}
-      treeNodeVariant={routeRole}
-      endpointRole={routeRole === 'destination' ? 'end' : routeRole}
-      onOpenDetails={openDetails}
-      chevron={
-        <LayerItemChevron
-          variant="item"
-          expanded={detailsOpen}
-          controls={detailsOpen ? 'layer-place-detail-card' : undefined}
-          label={L('map:placeLayerItem.text.details', {
-            name: place.name,
-            value: detailsOpen
-              ? L('common:action.close')
-              : L('map:placeLayerItem.text.open'),
-          })}
-          detailControl
-          onClick={(event) => {
-            event.stopPropagation();
-            openDetails();
-          }}
-        />
-      }
-    >
-      <LayerTypeIcon type="place" />
-      <button
-        type="button"
-        className="trip-layer-item-content trip-place"
-        aria-pressed={selected}
-        onDoubleClick={() => onFocus(place.id)}
-        onClick={(event) =>
-          onSelect(place.id, {
-            additive: event.ctrlKey || event.metaKey,
-            range: event.shiftKey,
-          })
-        }
-      >
-        <span className="trip-place-content">
-          <span className="trip-place-name-row">
-            <span className="trip-place-name">{place.name}</span>
-            {place.preferredDurationMinutes !== undefined && (
-              <span className="trip-place-stay-duration">
-                {L('map:placeLayerItem.text.stay', {
-                  formatDurationMinutes: formatDurationMinutes(
-                    place.preferredDurationMinutes,
-                    L,
-                  ),
-                })}
-              </span>
-            )}
-          </span>
-          <PlaceTimeTimeline
-            time={place.time}
-            visitDurationMinutes={
-              place.preferredDurationMinutes ?? place.visitDurationMinutes
-            }
-            openingHours={place.openingHours}
-            variant="compact"
-          />
-        </span>
-      </button>
-    </LayerItemShell>
-  );
-}
-
-function ReadonlyPlaceDetail({
-  day,
-  place,
-  sidebarRef,
-  onClose,
-}: {
-  day: TripDay;
-  place: TripPlace;
-  sidebarRef: RefObject<HTMLElement | null>;
-  onClose: () => void;
-}) {
-  const style = useLayerDetailCardPlacement({
-    anchorKey: `place:${place.id}`,
-    sidebarRef,
-    onClose,
-    width: 442,
-  });
-  return (
-    <PlaceDetailContent
-      day={day}
-      place={place}
-      busy={false}
-      mutationError={null}
-      readOnly
-      groupClassName="map-popup-card-group layer-place-detail-card-group"
-      groupStyle={style}
-      layerDetail
-      onClose={onClose}
-    />
-  );
-}
-
-function ReadonlyPolylineDetail({
-  day,
-  polyline,
-  fromPlace,
-  toPlace,
-  sidebarRef,
-  onClose,
-}: {
-  day: TripDay;
-  polyline: TripPolyline;
-  fromPlace: TripPlace;
-  toPlace: TripPlace;
-  sidebarRef: RefObject<HTMLElement | null>;
-  onClose: () => void;
-}) {
-  const style = useLayerDetailCardPlacement({
-    anchorKey: `polyline:${polyline.id}`,
-    sidebarRef,
-    onClose,
-    width: 442,
-  });
-  return (
-    <TripPolylineCard
-      day={day}
-      polyline={polyline}
-      fromPlace={fromPlace}
-      toPlace={toPlace}
-      busy={false}
-      mutationError={null}
-      readOnly
-      groupClassName="map-popup-card-group layer-place-detail-card-group"
-      groupStyle={style}
-      layerDetail
-      onClose={onClose}
-    />
-  );
-}
-
 export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
   trip,
+  visibleDayIds,
+  onToggleAllDayVisibility,
   sidebarRef,
   selectionRevision,
   selectedPlaceId,
@@ -265,15 +104,17 @@ export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
     () =>
       detailTarget?.type === 'place'
         ? trip.days
+            .filter((day) => visibleDayIds.has(day.id))
             .flatMap((day) => day.places.map((place) => ({ day, place })))
             .find(({ place }) => place.id === detailTarget.id)
         : undefined,
-    [detailTarget, trip.days],
+    [detailTarget, trip.days, visibleDayIds],
   );
   const detailPolylineContext = useMemo(
     () =>
       detailTarget?.type === 'polyline'
         ? trip.days
+            .filter((day) => visibleDayIds.has(day.id))
             .flatMap((day) =>
               day.polylines.flatMap((polyline) => {
                 const fromPlace = day.places.find(
@@ -289,7 +130,7 @@ export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
             )
             .find(({ polyline }) => polyline.id === detailTarget.id)
         : undefined,
-    [detailTarget, trip.days],
+    [detailTarget, trip.days, visibleDayIds],
   );
   const closeDetails = useCallback(() => setDetailTarget(null), []);
   const toggleDay = useCallback((dayId: string) => {
@@ -338,6 +179,11 @@ export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
             </div>
           </div>
         </header>
+        <LayerVisibilityControl
+          dayCount={trip.days.length}
+          visibleCount={visibleDayIds.size}
+          onToggle={onToggleAllDayVisibility}
+        />
         <div className="layer-panel-scroll trip-sidebar-scroll" ref={scrollRef}>
           {trip.days.map((day) => {
             const expanded = expandedDayIds.has(day.id);
@@ -351,7 +197,7 @@ export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
             return (
               <section
                 key={day.id}
-                className={`day-layer-section trip-day${selectedDayId === day.id ? ' is-active' : ''}`}
+                className={`day-layer-section trip-day${selectedDayId === day.id ? ' is-active' : ''}${visibleDayIds.has(day.id) ? '' : ' is-hidden'}`}
                 style={{ '--day-color': day.color } as CSSProperties}
                 data-day-id={day.id}
                 aria-labelledby={`title-${day.id}`}

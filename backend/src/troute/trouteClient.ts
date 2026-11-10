@@ -23,6 +23,11 @@ import {
   loadExternalApiPolicy,
   type ExternalApiPolicy,
 } from '../configuration/externalApiPolicy.js';
+import {
+  assertInstrumentedNetworkAllowed,
+  instrumentExternalApiFetch,
+  resolveInstrumentedExternalApiMode,
+} from '../observability/externalApiUsage/externalApiUsage.js';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -78,7 +83,13 @@ export class TrouteClient {
         'The troute optimization request is invalid.',
       );
     }
-    if (this.externalApiPolicy.resolve('troute', 'submit-job') === 'mock') {
+    if (
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'troute',
+        'submit-job',
+      ) === 'mock'
+    ) {
       this.mockJobs.set(
         parsedRequest.data.job_id,
         this.createMockJob(parsedRequest.data),
@@ -114,7 +125,13 @@ export class TrouteClient {
 
   public async getJob(jobId: string): Promise<TrouteRemoteJob> {
     const normalizedJobId = this.parseJobId(jobId);
-    if (this.externalApiPolicy.resolve('troute', 'get-job') === 'mock') {
+    if (
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'troute',
+        'get-job',
+      ) === 'mock'
+    ) {
       return this.getMockJob(normalizedJobId);
     }
     const endpoint = `integration/jobs/${encodeURIComponent(normalizedJobId)}`;
@@ -142,7 +159,13 @@ export class TrouteClient {
         'The troute job list limit must be between 1 and 100.',
       );
     }
-    if (this.externalApiPolicy.resolve('troute', 'list-jobs') === 'mock') {
+    if (
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'troute',
+        'list-jobs',
+      ) === 'mock'
+    ) {
       return [...this.mockJobs.values()].slice(0, limit).map((job) => ({
         job_id: job.job_id,
         status: job.status,
@@ -161,7 +184,13 @@ export class TrouteClient {
 
   public async getTimeline(jobId: string): Promise<TrouteRemoteTimeline> {
     const normalizedJobId = this.parseJobId(jobId);
-    if (this.externalApiPolicy.resolve('troute', 'get-timeline') === 'mock') {
+    if (
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'troute',
+        'get-timeline',
+      ) === 'mock'
+    ) {
       this.getMockJob(normalizedJobId);
       return { job_id: normalizedJobId, entries: [] };
     }
@@ -177,7 +206,13 @@ export class TrouteClient {
 
   public async cancelJob(jobId: string): Promise<void> {
     const normalizedJobId = this.parseJobId(jobId);
-    if (this.externalApiPolicy.resolve('troute', 'cancel-job') === 'mock') {
+    if (
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'troute',
+        'cancel-job',
+      ) === 'mock'
+    ) {
       const job = this.getMockJob(normalizedJobId);
       this.mockJobs.set(normalizedJobId, {
         ...job,
@@ -199,7 +234,13 @@ export class TrouteClient {
     options: OpenTrouteJobEventStreamOptions,
   ): AsyncGenerator<TrouteJobEvent> {
     const normalizedJobId = this.parseJobId(jobId);
-    if (this.externalApiPolicy.resolve('troute', 'job-events') === 'mock') {
+    if (
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'troute',
+        'job-events',
+      ) === 'mock'
+    ) {
       const job = this.getMockJob(normalizedJobId);
       const type = job.status === 'cancelled' ? 'cancelled' : 'completed';
       const body = JSON.stringify({
@@ -234,11 +275,21 @@ export class TrouteClient {
 
     let response: Response;
     try {
-      this.externalApiPolicy.assertNetworkAllowed('troute', 'job-events');
-      response = await fetch(new URL(endpoint, this.baseUrl), {
-        headers,
-        signal: options.signal,
-      });
+      assertInstrumentedNetworkAllowed(
+        this.externalApiPolicy,
+        'troute',
+        'job-events',
+      );
+      response = await instrumentExternalApiFetch(
+        'troute',
+        'job-events',
+        () =>
+          fetch(new URL(endpoint, this.baseUrl), {
+            headers,
+            signal: options.signal,
+          }),
+        'gateway',
+      );
     } catch {
       if (options.signal.aborted) {
         return;
@@ -308,7 +359,13 @@ export class TrouteClient {
   }
 
   public async checkHealth(): Promise<void> {
-    if (this.externalApiPolicy.resolve('troute', 'health') === 'mock') {
+    if (
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'troute',
+        'health',
+      ) === 'mock'
+    ) {
       return;
     }
     const body = await this.requestJson('health');
@@ -396,13 +453,24 @@ export class TrouteClient {
     init: RequestInit | undefined,
     parseJson: boolean,
   ): Promise<{ status: number; body: unknown }> {
-    this.externalApiPolicy.assertNetworkAllowed('troute', path);
+    const operation = trouteOperationName(path, init?.method);
+    assertInstrumentedNetworkAllowed(
+      this.externalApiPolicy,
+      'troute',
+      operation,
+    );
     const signal = AbortSignal.timeout(this.timeoutMs);
     try {
-      const response = await fetch(new URL(path, this.baseUrl), {
-        ...init,
-        signal,
-      });
+      const response = await instrumentExternalApiFetch(
+        'troute',
+        operation,
+        () =>
+          fetch(new URL(path, this.baseUrl), {
+            ...init,
+            signal,
+          }),
+        'gateway',
+      );
       if (!response.ok) {
         const upstreamBody = await this.readResponseBody(response);
         throw new TrouteClientError(
@@ -604,6 +672,25 @@ export class TrouteClient {
 }
 
 const MOCK_TIMESTAMP = 1_700_000_000_000;
+
+function trouteOperationName(path: string, method: string | undefined): string {
+  if (path === 'health') {
+    return 'health';
+  }
+  if (path === 'integration/jobs') {
+    return method === 'POST' ? 'submit-job' : 'list-jobs';
+  }
+  if (path.endsWith('/timeline')) {
+    return 'get-timeline';
+  }
+  if (path.endsWith('/cancel')) {
+    return 'cancel-job';
+  }
+  if (path.endsWith('/events')) {
+    return 'job-events';
+  }
+  return 'get-job';
+}
 
 function addClockMinutes(value: string, minutes: number): string {
   const [hours = 0, currentMinutes = 0] = value.split(':').map(Number);

@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import type { Trip } from '@trasolve/shared';
+import type { TripEditController } from '../controller/TripEditController';
 import type { GeoPoint } from '@/shared/types/mapTypes';
 import { resolveLayerSelection } from '@/features/map-workspace/domain/layerSelection';
 import { useActiveDay } from '@/features/map-workspace/hooks/useActiveDay';
@@ -22,12 +23,12 @@ type MapObjectSelection =
   | { type: 'polyline'; id: string; anchor?: GeoPoint };
 
 /** Composes independent map UI state and coordinates cross-state policies. */
-export function useMapWorkspace(trip: Trip) {
-  const visibility = useDayVisibility(trip.days);
-  const activeDay = useActiveDay(trip.days);
-  const selection = useMapSelection(trip);
+export function useMapWorkspace(trip: Trip, controller?: TripEditController) {
+  const visibility = useDayVisibility(trip.days, controller);
+  const activeDay = useActiveDay(trip.days, visibility.visibleDayIds);
+  const selection = useMapSelection(trip, visibility.visibleDayIds);
   const focus = useMapFocus(trip);
-  const { visibleDayIds, toggleDayVisibility } = visibility;
+  const { visibleDayIds, toggleDayVisibility: toggleVisibility } = visibility;
   const { selectedDayId, setActiveDayId } = activeDay;
   const {
     selectedPlaceId,
@@ -42,6 +43,20 @@ export function useMapWorkspace(trip: Trip) {
     clear,
   } = selection;
   const { focusTarget, revision: focusRevision, focusAll, focusPlace } = focus;
+  const toggleAllVisibility = visibility.toggleAllDayVisibility;
+  const toggleAllDayVisibility = useCallback(() => {
+    clear();
+    toggleAllVisibility();
+  }, [clear, toggleAllVisibility]);
+  const toggleDayVisibility = useCallback(
+    (dayId: string) => {
+      if (visibleDayIds.has(dayId) && selectedDayId === dayId) {
+        clear();
+      }
+      toggleVisibility(dayId);
+    },
+    [clear, selectedDayId, toggleVisibility, visibleDayIds],
+  );
   useSelectedPlaceFocusShortcut(selectedPlaceId, focusPlace);
   const layerSelection = useMemo(
     () =>
@@ -64,7 +79,7 @@ export function useMapWorkspace(trip: Trip) {
           ? candidate.places.some((place) => place.id === target.id)
           : candidate.polylines.some((polyline) => polyline.id === target.id),
       );
-      if (!day) {
+      if (!day || !visibleDayIds.has(day.id)) {
         return;
       }
       selectItemState(
@@ -76,7 +91,7 @@ export function useMapWorkspace(trip: Trip) {
       );
       setActiveDayId(day.id);
     },
-    [selectItemState, setActiveDayId, trip.days],
+    [selectItemState, setActiveDayId, trip.days, visibleDayIds],
   );
   const selectMapObject = useCallback(
     (target: MapObjectSelection) => {
@@ -139,13 +154,16 @@ export function useMapWorkspace(trip: Trip) {
   );
   const selectDay = useCallback(
     (dayId: string) => {
-      if (!trip.days.some((day) => day.id === dayId)) {
+      if (
+        !visibleDayIds.has(dayId) ||
+        !trip.days.some((day) => day.id === dayId)
+      ) {
         return;
       }
       clear();
       setActiveDayId(dayId);
     },
-    [clear, setActiveDayId, trip.days],
+    [clear, setActiveDayId, trip.days, visibleDayIds],
   );
   const showAll = useCallback(() => {
     clear();
@@ -176,6 +194,7 @@ export function useMapWorkspace(trip: Trip) {
       selectPolylineForDetails,
       selectDay,
       toggleDayVisibility,
+      toggleAllDayVisibility,
       showAll,
     }),
     [
@@ -202,6 +221,7 @@ export function useMapWorkspace(trip: Trip) {
       selectionRevision,
       showAll,
       toggleDayVisibility,
+      toggleAllDayVisibility,
       visibleDayIds,
     ],
   );

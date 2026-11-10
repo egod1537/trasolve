@@ -12,8 +12,14 @@ function isNativeUndoTarget(target: EventTarget | null): boolean {
   return editable !== null && editable.contentEditable !== 'false';
 }
 
-export function useTripHistoryShortcuts(controller: TripEditController): void {
+export function useTripHistoryShortcuts(
+  controller: TripEditController,
+  enabled = true,
+): void {
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         event.defaultPrevented ||
@@ -40,5 +46,5 @@ export function useTripHistoryShortcuts(controller: TripEditController): void {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [controller]);
+  }, [controller, enabled]);
 }

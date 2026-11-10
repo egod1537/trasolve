@@ -4,6 +4,11 @@ import {
   loadExternalApiPolicy,
   type ExternalApiPolicy,
 } from './configuration/externalApiPolicy.js';
+import {
+  assertInstrumentedNetworkAllowed,
+  instrumentExternalApiFetch,
+  resolveInstrumentedExternalApiMode,
+} from './observability/externalApiUsage/externalApiUsage.js';
 
 const authorizationEndpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
 const tokenEndpoint = 'https://oauth2.googleapis.com/token';
@@ -84,7 +89,8 @@ export class GoogleOAuthClient {
   }
 
   public createAuthorizationRequest(): GoogleOAuthAuthorizationRequest {
-    const mode = this.externalApiPolicy.resolve(
+    const mode = resolveInstrumentedExternalApiMode(
+      this.externalApiPolicy,
       'google-oauth',
       'authorization-redirect',
     );
@@ -132,7 +138,8 @@ export class GoogleOAuthClient {
     );
     const verifier = requireAuthorizationValue(codeVerifier, 'PKCE verifier');
     if (
-      this.externalApiPolicy.resolve(
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
         'google-oauth',
         'complete-authorization',
       ) === 'mock'
@@ -159,26 +166,32 @@ export class GoogleOAuthClient {
     let response: Response;
 
     try {
-      this.externalApiPolicy.assertNetworkAllowed(
+      assertInstrumentedNetworkAllowed(
+        this.externalApiPolicy,
         'google-oauth',
         'token-exchange',
       );
-      response = await fetch(tokenEndpoint, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          client_id: this.config.clientId,
-          client_secret: this.config.clientSecret,
-          code: authorizationCode,
-          code_verifier: codeVerifier,
-          grant_type: 'authorization_code',
-          redirect_uri: this.config.redirectUri,
-        }),
-        signal: AbortSignal.timeout(upstreamTimeoutMs),
-      });
+      response = await instrumentExternalApiFetch(
+        'google-oauth',
+        'token-exchange',
+        () =>
+          fetch(tokenEndpoint, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              client_id: this.config.clientId,
+              client_secret: this.config.clientSecret,
+              code: authorizationCode,
+              code_verifier: codeVerifier,
+              grant_type: 'authorization_code',
+              redirect_uri: this.config.redirectUri,
+            }),
+            signal: AbortSignal.timeout(upstreamTimeoutMs),
+          }),
+      );
     } catch {
       throw new GoogleOAuthError(
         'token_exchange_failed',
@@ -212,14 +225,23 @@ export class GoogleOAuthClient {
     let response: Response;
 
     try {
-      this.externalApiPolicy.assertNetworkAllowed('google-oauth', 'userinfo');
-      response = await fetch(userInfoEndpoint, {
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        signal: AbortSignal.timeout(upstreamTimeoutMs),
-      });
+      assertInstrumentedNetworkAllowed(
+        this.externalApiPolicy,
+        'google-oauth',
+        'userinfo',
+      );
+      response = await instrumentExternalApiFetch(
+        'google-oauth',
+        'userinfo',
+        () =>
+          fetch(userInfoEndpoint, {
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+            signal: AbortSignal.timeout(upstreamTimeoutMs),
+          }),
+      );
     } catch {
       throw new GoogleOAuthError(
         'userinfo_request_failed',

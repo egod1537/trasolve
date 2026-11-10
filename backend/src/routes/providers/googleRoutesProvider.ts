@@ -15,6 +15,11 @@ import {
   loadExternalApiPolicy,
   type ExternalApiPolicy,
 } from '../../configuration/externalApiPolicy.js';
+import {
+  assertInstrumentedNetworkAllowed,
+  instrumentExternalApiFetch,
+  resolveInstrumentedExternalApiMode,
+} from '../../observability/externalApiUsage/externalApiUsage.js';
 
 export class GoogleRoutesProvider implements RouteProvider {
   public constructor(
@@ -29,8 +34,11 @@ export class GoogleRoutesProvider implements RouteProvider {
     request: DirectionsRequest,
   ): Promise<RouteProviderResult> {
     if (
-      this.externalApiPolicy.resolve('google-routes', 'compute-routes') ===
-      'mock'
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'google-routes',
+        'compute-routes',
+      ) === 'mock'
     ) {
       return this.mockRoutes(request);
     }
@@ -164,7 +172,8 @@ export class GoogleRoutesProvider implements RouteProvider {
     request: DirectionsRequest,
     signal = AbortSignal.timeout(this.timeoutMs),
   ): Promise<RouteProviderResult> {
-    this.externalApiPolicy.assertNetworkAllowed(
+    assertInstrumentedNetworkAllowed(
+      this.externalApiPolicy,
       'google-routes',
       'compute-routes',
     );
@@ -178,19 +187,21 @@ export class GoogleRoutesProvider implements RouteProvider {
 
     try {
       const upstreamRequest = this.buildRequest(request);
-      const response = await fetch(
-        'https://routes.googleapis.com/directions/v2:computeRoutes',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Goog-Api-Key': this.apiKey,
-            'X-Goog-FieldMask':
-              'routes.description,routes.distanceMeters,routes.duration,routes.travelAdvisory.transitFare,routes.legs.distanceMeters,routes.legs.duration,routes.legs.startLocation,routes.legs.endLocation,routes.legs.steps.distanceMeters,routes.legs.steps.staticDuration,routes.legs.steps.startLocation,routes.legs.steps.endLocation,routes.legs.steps.navigationInstruction.instructions,routes.legs.steps.travelMode,routes.legs.steps.transitDetails.stopDetails,routes.legs.steps.transitDetails.headsign,routes.legs.steps.transitDetails.transitLine.name,routes.legs.steps.transitDetails.transitLine.nameShort,routes.legs.steps.transitDetails.transitLine.vehicle.type,routes.legs.steps.transitDetails.stopCount,routes.polyline.geoJsonLinestring,routes.viewport,routes.warnings',
-          },
-          signal,
-          body: JSON.stringify(upstreamRequest),
-        },
+      const response = await instrumentExternalApiFetch(
+        'google-routes',
+        'compute-routes',
+        () =>
+          fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Goog-Api-Key': this.apiKey,
+              'X-Goog-FieldMask':
+                'routes.description,routes.distanceMeters,routes.duration,routes.travelAdvisory.transitFare,routes.legs.distanceMeters,routes.legs.duration,routes.legs.startLocation,routes.legs.endLocation,routes.legs.steps.distanceMeters,routes.legs.steps.staticDuration,routes.legs.steps.startLocation,routes.legs.steps.endLocation,routes.legs.steps.navigationInstruction.instructions,routes.legs.steps.travelMode,routes.legs.steps.transitDetails.stopDetails,routes.legs.steps.transitDetails.headsign,routes.legs.steps.transitDetails.transitLine.name,routes.legs.steps.transitDetails.transitLine.nameShort,routes.legs.steps.transitDetails.transitLine.vehicle.type,routes.legs.steps.transitDetails.stopCount,routes.polyline.geoJsonLinestring,routes.viewport,routes.warnings',
+            },
+            signal,
+            body: JSON.stringify(upstreamRequest),
+          }),
       );
       const rawResponse = await this.readUpstreamBody(response);
       if (!response.ok) {

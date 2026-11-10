@@ -1,16 +1,25 @@
+import { createGoogleMarker } from './createGoogleMarker';
 import type {
   MapObjectController,
   MapObjectHandle,
   MapObjectBaseOptions,
   MapMarkerHandle,
-  MapMarkerIcon,
   MapMarkerOptions,
   MapPolylineHandle,
   MapPolylineOptions,
-  MapPolylinePattern,
   MapPolylineStyle,
+  MapPolygonOptions,
+  MapPolygonHandle,
 } from '@/map/adapters/MapObjectController';
 import '@/map/adapters/map-objects.css';
+import {
+  resolvePolylineStyle,
+  updatePolylineStyle,
+  createPolylineIcons,
+  applyPolylineStyle,
+  arePolylineStylesEqual,
+  arePathsEqual,
+} from '@/map/adapters/googlePolylineStyle';
 
 type ObjectBinding = {
   setVisible(visible: boolean): void;
@@ -18,358 +27,18 @@ type ObjectBinding = {
   remove(): void;
 };
 
-type ResolvedPolylineStyle = {
-  color: string;
-  width: number;
-  opacity: number;
-  pattern: MapPolylinePattern;
-  patternRepeatPx: number;
-  directional: boolean;
-  directionRepeatPx: number;
-  directionScale: number;
-};
-
-const DIRECTION_ARROW_OUTLINE_COLOR = '#ffffff';
-const DIRECTION_ARROW_OUTLINE_WIDTH = 1.5;
-
-function resolvePolylineStyle(
-  style: MapPolylineStyle | undefined,
-): ResolvedPolylineStyle {
-  return {
-    color: style?.color ?? '#2563eb',
-    width: style?.width ?? 5,
-    opacity: style?.opacity ?? 0.85,
-    pattern: style?.pattern ?? 'solid',
-    patternRepeatPx: style?.patternRepeatPx ?? 20,
-    directional: style?.directional ?? false,
-    directionRepeatPx: style?.directionRepeatPx ?? 88,
-    directionScale: style?.directionScale ?? 3.5,
-  };
-}
-
-function updatePolylineStyle(
-  current: ResolvedPolylineStyle,
-  update: MapPolylineStyle,
-): void {
-  for (const key of Object.keys(update) as Array<keyof MapPolylineStyle>) {
-    const value = update[key];
-    if (value !== undefined) {
-      Object.assign(current, { [key]: value });
-    }
-  }
-}
-
-function createPolylineIcons(
-  style: ResolvedPolylineStyle,
-): google.maps.IconSequence[] {
-  const icons: google.maps.IconSequence[] = [];
-  if (style.pattern === 'short-dash') {
-    icons.push({
-      icon: {
-        path: 'M 0,-2 0,2',
-        scale: 1,
-        strokeColor: style.color,
-        strokeOpacity: style.opacity,
-        strokeWeight: style.width,
-      },
-      offset: '0',
-      repeat: `${style.patternRepeatPx}px`,
-    });
-  } else if (style.pattern === 'stations') {
-    icons.push({
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        fillColor: style.color,
-        fillOpacity: style.opacity,
-        scale: Math.max(2.4, style.width * 0.55),
-        strokeColor: '#ffffff',
-        strokeOpacity: style.opacity,
-        strokeWeight: 1,
-      },
-      offset: `${Math.round(style.patternRepeatPx / 2)}px`,
-      repeat: `${style.patternRepeatPx}px`,
-    });
-  }
-  if (style.directional) {
-    const directionIcon: google.maps.Symbol = {
-      path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-      fillColor: style.color,
-      fillOpacity: style.opacity,
-      scale: style.directionScale,
-      strokeColor: DIRECTION_ARROW_OUTLINE_COLOR,
-      strokeOpacity: 1,
-      strokeWeight: DIRECTION_ARROW_OUTLINE_WIDTH,
-    };
-    icons.push({
-      icon: directionIcon,
-      offset: '50%',
-    });
-    icons.push({
-      icon: directionIcon,
-      offset: `${Math.round(style.directionRepeatPx / 2)}px`,
-      repeat: `${style.directionRepeatPx}px`,
-    });
-  }
-  return icons;
-}
-
-function applyPolylineStyle(
-  line: google.maps.Polyline | null,
-  style: ResolvedPolylineStyle,
-): void {
-  line?.setOptions({
-    strokeColor: style.color,
-    strokeWeight: style.width,
-    strokeOpacity: style.pattern === 'short-dash' ? 0 : style.opacity,
-    icons: createPolylineIcons(style),
-  });
-}
-
-function arePolylineStylesEqual(
-  left: ResolvedPolylineStyle,
-  right: ResolvedPolylineStyle,
-): boolean {
-  return (
-    left.color === right.color &&
-    left.width === right.width &&
-    left.opacity === right.opacity &&
-    left.pattern === right.pattern &&
-    left.patternRepeatPx === right.patternRepeatPx &&
-    left.directional === right.directional &&
-    left.directionRepeatPx === right.directionRepeatPx &&
-    left.directionScale === right.directionScale
-  );
-}
-
-function arePathsEqual(
-  left: readonly { lat: number; lng: number }[],
-  right: readonly { lat: number; lng: number }[],
-): boolean {
-  return (
-    left.length === right.length &&
-    left.every(
-      (point, index) =>
-        point.lat === right[index]!.lat && point.lng === right[index]!.lng,
-    )
-  );
-}
-
-const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
-
-function applyMarkerIcon(
-  svg: SVGSVGElement,
-  icon: MapMarkerIcon | undefined,
-): void {
-  svg.replaceChildren();
-  svg.setAttribute('viewBox', icon?.viewBox ?? '0 0 24 24');
-  for (const pathData of icon?.paths ?? []) {
-    const path = document.createElementNS(SVG_NAMESPACE, 'path');
-    path.setAttribute('d', pathData);
-    svg.append(path);
-  }
-}
-
-// Owns native SDK objects only; no React lifecycle or application state.
 export class GoogleMapObjectController implements MapObjectController {
   public constructor(map: google.maps.Map) {
     this.map = map;
   }
 
   public addMarker(options: MapMarkerOptions): MapMarkerHandle {
-    const id = this.reserveId(options.id);
-    const content = document.createElement('span');
-    content.className = 'trip-map-marker';
-    content.setAttribute('aria-hidden', 'true');
-    const markerIcon = document.createElementNS(SVG_NAMESPACE, 'svg');
-    markerIcon.classList.add('trip-map-marker-icon');
-    markerIcon.setAttribute('fill', 'none');
-    const markerLabel = document.createElement('span');
-    markerLabel.className = 'trip-map-marker-label';
-    content.replaceChildren(markerIcon, markerLabel);
-    let marker: google.maps.marker.AdvancedMarkerElement | null =
-      new google.maps.marker.AdvancedMarkerElement({
-        map: options.visible === false ? null : this.map,
-        position: { ...options.position },
-        zIndex: options.zIndex ?? 0,
-        gmpClickable: true,
-        anchorLeft: '-50%',
-        anchorTop: '-50%',
-      });
-    marker.replaceChildren(content);
-    let visible = options.visible !== false;
-    let zIndex = options.zIndex ?? 0;
-    let position = options.position;
-    let title: string | null = null;
-    let selected: boolean | null = null;
-    let color: string | null | undefined = null;
-    let icon: MapMarkerIcon | null | undefined = null;
-    let label: string | null | undefined = null;
-    let emphasis: Parameters<MapMarkerHandle['setEmphasis']>[0] | null = null;
-    const listeners = new Set<() => void>();
-    const handleEntranceAnimationEnd = (event: AnimationEvent) => {
-      if (event.animationName === 'trip-map-marker-enter') {
-        content.classList.remove('is-entering');
-      }
-    };
-    content.addEventListener('animationend', handleEntranceAnimationEnd);
-    const base = this.register(id, options.layer, {
-      setVisible: (nextVisible) => {
-        if (!marker || visible === nextVisible) {
-          return;
-        }
-        visible = nextVisible;
-        content.classList.toggle('is-entering', visible);
-        marker.map = visible ? this.map : null;
-      },
-      setZIndex: (nextZIndex) => {
-        if (marker && zIndex !== nextZIndex) {
-          marker.zIndex = nextZIndex;
-          zIndex = nextZIndex;
-        }
-      },
-      remove: () => {
-        for (const unsubscribe of [...listeners]) {
-          unsubscribe();
-        }
-        content.removeEventListener('animationend', handleEntranceAnimationEnd);
-        if (marker) {
-          marker.map = null;
-          marker.replaceChildren();
-          marker = null;
-        }
-        content.remove();
-      },
-    });
-    const handle: MapMarkerHandle = {
-      ...base,
-      setPosition: (nextPosition) => {
-        if (
-          marker &&
-          (position.lat !== nextPosition.lat ||
-            position.lng !== nextPosition.lng)
-        ) {
-          marker.position = { ...nextPosition };
-          position = nextPosition;
-        }
-      },
-      setTitle: (nextTitle) => {
-        const resolvedTitle = nextTitle ?? '';
-        if (marker && title !== resolvedTitle) {
-          marker.title = resolvedTitle;
-          title = resolvedTitle;
-        }
-      },
-      setSelected: (nextSelected) => {
-        if (!marker || selected === nextSelected) {
-          return;
-        }
-        content.classList.toggle('is-selected', nextSelected);
-        marker.setAttribute('aria-pressed', String(nextSelected));
-        selected = nextSelected;
-      },
-      setColor: (nextColor) => {
-        if (marker && color !== nextColor) {
-          content.style.setProperty('--place-color', nextColor ?? '#2563eb');
-          color = nextColor;
-        }
-      },
-      setIcon: (nextIcon) => {
-        if (marker && icon !== nextIcon) {
-          applyMarkerIcon(markerIcon, nextIcon);
-          icon = nextIcon;
-        }
-      },
-      setLabel: (nextLabel) => {
-        if (!marker || label === nextLabel) {
-          return;
-        }
-        markerLabel.textContent = nextLabel ?? '';
-        content.classList.toggle('has-label', Boolean(nextLabel));
-        label = nextLabel;
-      },
-      setEmphasis: (nextEmphasis) => {
-        if (!marker || emphasis === nextEmphasis) {
-          return;
-        }
-        for (const value of ['selectable', 'source', 'target', 'unavailable']) {
-          content.classList.toggle(
-            `is-drawing-${value}`,
-            nextEmphasis === value,
-          );
-        }
-        emphasis = nextEmphasis;
-      },
-      onClick: (callback) => {
-        if (!marker) {
-          return () => undefined;
-        }
-        let target: google.maps.marker.AdvancedMarkerElement | null = marker;
-        const listener = () => callback();
-        target.addEventListener('gmp-click', listener);
-        const unsubscribe = () => {
-          target?.removeEventListener('gmp-click', listener);
-          target = null;
-          listeners.delete(unsubscribe);
-        };
-        listeners.add(unsubscribe);
-        return unsubscribe;
-      },
-      onDoubleClick: (callback) => {
-        const listener = (event: MouseEvent) => {
-          event.preventDefault();
-          event.stopPropagation();
-          callback();
-        };
-        content.addEventListener('dblclick', listener);
-        const unsubscribe = () => {
-          content.removeEventListener('dblclick', listener);
-          listeners.delete(unsubscribe);
-        };
-        listeners.add(unsubscribe);
-        return unsubscribe;
-      },
-      onContextMenu: (callback) => {
-        const listener = (event: MouseEvent) => {
-          event.preventDefault();
-          event.stopPropagation();
-          callback({ clientX: event.clientX, clientY: event.clientY });
-        };
-        content.addEventListener('contextmenu', listener);
-        const unsubscribe = () => {
-          content.removeEventListener('contextmenu', listener);
-          listeners.delete(unsubscribe);
-        };
-        listeners.add(unsubscribe);
-        return unsubscribe;
-      },
-      onPointerEnter: (callback) => {
-        const listener = () => callback();
-        content.addEventListener('pointerenter', listener);
-        const unsubscribe = () => {
-          content.removeEventListener('pointerenter', listener);
-          listeners.delete(unsubscribe);
-        };
-        listeners.add(unsubscribe);
-        return unsubscribe;
-      },
-      onPointerLeave: (callback) => {
-        const listener = () => callback();
-        content.addEventListener('pointerleave', listener);
-        const unsubscribe = () => {
-          content.removeEventListener('pointerleave', listener);
-          listeners.delete(unsubscribe);
-        };
-        listeners.add(unsubscribe);
-        return unsubscribe;
-      },
-    };
-    handle.setTitle(options.title);
-    handle.setSelected(options.selected ?? false);
-    handle.setColor(options.color);
-    handle.setIcon(options.icon);
-    handle.setLabel(options.label);
-    handle.setEmphasis('none');
-    return handle;
+    return createGoogleMarker(
+      this.map,
+      this.reserveId(options.id),
+      options,
+      this.register.bind(this),
+    );
   }
 
   public addPolyline(options: MapPolylineOptions): MapPolylineHandle {
@@ -453,6 +122,37 @@ export class GoogleMapObjectController implements MapObjectController {
         };
       },
     };
+  }
+
+  public addPolygon(options: MapPolygonOptions): MapPolygonHandle {
+    const id = this.reserveId(options.id);
+    const polygon = new google.maps.Polygon({
+      map: this.map,
+      paths: options.path.map((point) => ({ ...point })),
+      clickable: false,
+      visible: options.visible ?? true,
+      zIndex: options.zIndex ?? 0,
+    });
+    const base = this.register(id, options.layer, {
+      setVisible: (value) => polygon.setVisible(value),
+      setZIndex: (value) => polygon.setOptions({ zIndex: value }),
+      remove: () => polygon.setMap(null),
+    });
+    const handle = {
+      ...base,
+      setPath: (path: MapPolygonOptions['path']) =>
+        polygon.setPath(path.map((point) => ({ ...point }))),
+      setStyle: (style: NonNullable<MapPolygonOptions['style']>) =>
+        polygon.setOptions({
+          strokeColor: style.strokeColor,
+          strokeWeight: style.strokeWidth,
+          strokeOpacity: style.strokeOpacity,
+          fillColor: style.fillColor,
+          fillOpacity: style.fillOpacity,
+        }),
+    };
+    handle.setStyle(options.style ?? {});
+    return handle;
   }
 
   public remove(object: MapObjectHandle): void {

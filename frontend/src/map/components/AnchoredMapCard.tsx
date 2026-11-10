@@ -217,13 +217,13 @@ export function AnchoredMapCard({
       const availableAbove = Math.max(0, point.y - ANCHOR_GAP - viewportTop);
       const availableBelow = Math.max(0, viewportBottom - point.y - ANCHOR_GAP);
       const content = card.firstElementChild;
-      const desiredHeight =
-        content instanceof HTMLElement
-          ? Math.max(
-              content.scrollHeight,
-              content.getBoundingClientRect().height,
-            )
-          : card.getBoundingClientRect().height;
+      if (!(content instanceof HTMLElement)) {
+        return null;
+      }
+      const desiredHeight = Math.max(
+        content.scrollHeight,
+        content.getBoundingClientRect().height,
+      );
       const placement = choosePlacement(
         desiredHeight,
         availableAbove,

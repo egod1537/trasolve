@@ -1,6 +1,9 @@
 name: Code quality
 
 on:
+  push:
+    branches:
+      - impl
   pull_request:
     branches:
       - main

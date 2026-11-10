@@ -97,6 +97,37 @@ export class LocalAuthRepository implements AuthRepository, SessionRepository {
     });
   }
 
+  public attachIdentity(
+    userId: string,
+    input: CreateUserWithIdentityInput,
+  ): Promise<AuthIdentityRecord> {
+    return this.mutate((document) => {
+      if (!document.users.some((user) => user.id === userId)) {
+        throw new Error('User is unavailable.');
+      }
+      if (
+        document.identities.some(
+          (identity) =>
+            identity.issuer === input.issuer &&
+            identity.subject === input.subject,
+        )
+      ) {
+        throw new AuthIdentityConflictError();
+      }
+      const identity: LocalIdentity = {
+        id: randomUUID(),
+        userId,
+        issuer: input.issuer,
+        subject: input.subject,
+        email: input.email,
+        emailVerified: input.emailVerified,
+        lastLoginAt: new Date().toISOString(),
+      };
+      document.identities.push(identity);
+      return this.toIdentityRecord(identity);
+    });
+  }
+
   public updateLastLogin(
     identityId: string,
     input: UpdateIdentityLoginInput,
@@ -123,15 +154,16 @@ export class LocalAuthRepository implements AuthRepository, SessionRepository {
       return undefined;
     }
     const identity = document.identities
-      .filter((candidate) => candidate.userId === userId && candidate.email)
+      .filter((candidate) => candidate.userId === userId)
       .sort((left, right) =>
         right.lastLoginAt.localeCompare(left.lastLoginAt),
       )[0];
-    if (!identity?.email) {
+    if (!identity) {
       return undefined;
     }
     return {
       id: user.id,
+      issuer: identity.issuer,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
       email: identity.email,

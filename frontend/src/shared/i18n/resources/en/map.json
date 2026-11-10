@@ -10,6 +10,12 @@
       "locations": "{{length}} locations"
     }
   },
+  "capture": {
+    "busy": "Saving view",
+    "chooseTab": "Choose the current tab in the share picker to capture the map. A PNG downloads automatically.",
+    "download": "Download current view",
+    "failed": "Could not save the view. Please try again."
+  },
   "dayColorControl": {
     "ariaLabel": {
       "changeColor": "{{dayTitle}} change color",
@@ -184,6 +190,21 @@
     "title": {
       "newTravel": "new travel"
     }
+  },
+  "measurement": {
+    "area": "Measure area",
+    "clear": "Clear measurement",
+    "distance": "Measure distance",
+    "hint": "Click the map to add points, drag points to adjust. Press Esc to exit.",
+    "kilometers": "{{value}} km",
+    "meters": "{{value}} m",
+    "point": "Measurement point {{index}}",
+    "segment": "Segment {{index}}: {{value}}",
+    "simplePolygon": "Place points so the polygon edges do not cross.",
+    "squareKilometers": "{{value}} km²",
+    "squareMeters": "{{value}} m²",
+    "surface": "Area {{value}}",
+    "total": "Total distance {{value}}"
   },
   "place": {
     "welcome": "{{name}}, please choose a destination"
@@ -427,6 +448,22 @@
       }
     }
   },
+  "tripFiles": {
+    "chooseFile": "Choose file",
+    "exportAction": "Export",
+    "exportDescription": "Save places and routes from all Days to a file.",
+    "failed": "Could not process the file. Check the file and current itinerary.",
+    "format": "File format",
+    "importAction": "Import from file",
+    "importDescription": "Choose a KML or KMZ file to append to this Day.",
+    "importSubmit": "Import",
+    "importTitle": "Import places and routes",
+    "invalidFile": "Choose a valid KML or KMZ file.",
+    "missingPlaceIds": "Places without a place ID must be added again through map search before route optimization.",
+    "noPlaces": "No supported places or routes were found.",
+    "ready": "{{places}} places, {{routes}} routes",
+    "tooLarge": "The file size or number of places exceeds the supported limit."
+  },
   "tripLayer": {
     "toTripLayerModel": {
       "title": {
@@ -455,6 +492,14 @@
     },
     "tooltip": {
       "wayMoving": "way of moving"
+    }
+  },
+  "tripRecovery": {
+    "message": {
+      "unconfirmed": "We couldn’t confirm whether your changes were saved. Select “Refresh” to check the save status."
+    },
+    "status": {
+      "unconfirmed": "Save confirmation needed"
     }
   },
   "useTrip": {

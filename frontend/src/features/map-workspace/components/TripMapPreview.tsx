@@ -1,89 +1,146 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Trip } from '@trasolve/shared';
+import { GoogleMap, useGoogleMap } from '@/map/components/GoogleMap';
+import type { MapOptions } from '@/shared/types/mapTypes';
 import { LocationIcon } from '@/shared/ui/icons';
 
 type Props = {
   trip: Trip;
+  disabled: boolean;
+  onOpen: () => void;
 };
 
-const VIEW_SIZE = 100;
-const PADDING = 14;
+const PREVIEW_OPTIONS: MapOptions = {
+  gestureHandling: 'none',
+  keyboardShortcuts: false,
+  clickableIcons: false,
+  disableDefaultUI: true,
+  scrollwheel: false,
+  maxZoom: 16,
+};
 
-export function TripMapPreview({ trip }: Props) {
-  const days = trip.days.filter((day) => day.places.length > 0);
-  const points = days.flatMap((day) =>
-    day.places.map((place) => place.location),
+function TripPreviewContents({ trip }: { trip: Trip }) {
+  const { adapter, objects, canvasRef } = useGoogleMap();
+  const days = useMemo(
+    () =>
+      trip.days.map((day) => ({
+        ...day,
+        places: day.places.slice().sort((a, b) => a.order - b.order),
+      })),
+    [trip.days],
   );
 
-  if (points.length === 0) {
-    return (
-      <div className="trip-map-picker-item-preview is-empty" aria-hidden="true">
-        <LocationIcon />
-      </div>
+  useEffect(() => {
+    const markers = days.flatMap((day) =>
+      day.places.map((place) =>
+        objects.addMarker({
+          layer: 'trip-preview',
+          position: place.location,
+          color: day.color,
+        }),
+      ),
     );
-  }
+    const lines = days
+      .filter((day) => day.places.length > 1)
+      .map((day) =>
+        objects.addPolyline({
+          layer: 'trip-preview',
+          path: day.places.map((place) => place.location),
+          style: { color: day.color, width: 3, opacity: 0.75 },
+        }),
+      );
+    return () => {
+      for (const object of [...markers, ...lines]) {
+        object.remove();
+      }
+    };
+  }, [objects, days]);
 
-  const lats = points.map((point) => point.lat);
-  const lngs = points.map((point) => point.lng);
-  const minLat = Math.min(...lats);
-  const maxLat = Math.max(...lats);
-  const minLng = Math.min(...lngs);
-  const maxLng = Math.max(...lngs);
-  const latSpan = maxLat - minLat || 1;
-  const lngSpan = maxLng - minLng || 1;
-  const span = Math.max(latSpan, lngSpan);
-  const usable = VIEW_SIZE - PADDING * 2;
+  useEffect(() => {
+    const points = days.flatMap((day) =>
+      day.places.map((place) => place.location),
+    );
+    if (!points.length) {
+      return;
+    }
+    const latitudes = points.map((point) => point.lat);
+    // Remove the largest empty longitude arc to also fit trips crossing 180°.
+    const longitudes = points.map((point) => point.lng).sort((a, b) => a - b);
+    let gapIndex = longitudes.length - 1;
+    let largestGap = longitudes[0]! + 360 - longitudes[gapIndex]!;
+    for (let index = 0; index < longitudes.length - 1; index += 1) {
+      const gap = longitudes[index + 1]! - longitudes[index]!;
+      if (gap > largestGap) {
+        largestGap = gap;
+        gapIndex = index;
+      }
+    }
+    const bounds = {
+      north: Math.max(...latitudes),
+      south: Math.min(...latitudes),
+      west: longitudes[(gapIndex + 1) % longitudes.length]!,
+      east: longitudes[gapIndex]!,
+    };
+    const fit = () => {
+      adapter.fitBounds(bounds, { top: 24, right: 24, bottom: 40, left: 24 });
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    if (canvasRef.current) {
+      observer.observe(canvasRef.current);
+    }
+    return () => observer.disconnect();
+  }, [adapter, canvasRef, days]);
 
-  const project = (point: { lat: number; lng: number }) => {
-    const x = PADDING + ((point.lng - minLng) / span) * usable;
-    // Latitude increases northward, SVG y increases downward.
-    const y = PADDING + ((maxLat - point.lat) / span) * usable;
-    return { x, y };
-  };
+  return null;
+}
+
+export function TripMapPreview({ trip, disabled, onOpen }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  const hasPlaces = trip.days.some((day) => day.places.length > 0);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !hasPlaces) {
+      return;
+    }
+    // Keep loaded previews mounted until the picker closes, avoiding new map
+    // loads each time the user scrolls back to a card.
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [hasPlaces]);
 
   return (
-    <svg
-      className="trip-map-picker-item-preview"
-      viewBox={`0 0 ${VIEW_SIZE} ${VIEW_SIZE}`}
-      aria-hidden="true"
-    >
-      {days.map((day) => {
-        const path = day.places
-          .slice()
-          .sort((a, b) => a.order - b.order)
-          .map((place) => project(place.location));
-        if (path.length === 0) {
-          return null;
-        }
-        const linePoints = path
-          .map((point) => `${point.x},${point.y}`)
-          .join(' ');
-        return (
-          <g key={day.id}>
-            {path.length > 1 && (
-              <polyline
-                points={linePoints}
-                fill="none"
-                stroke={day.color}
-                strokeWidth={2.5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                opacity={0.75}
-              />
-            )}
-            {path.map((point, index) => (
-              <circle
-                key={`${day.id}-${index}`}
-                cx={point.x}
-                cy={point.y}
-                r={points.length > 20 ? 2 : 3}
-                fill={day.color}
-                stroke="var(--color-surface-raised, #fff)"
-                strokeWidth={1}
-              />
-            ))}
-          </g>
-        );
-      })}
-    </svg>
+    <div ref={containerRef} className="trip-map-picker-item-preview">
+      {hasPlaces && visible ? (
+        <GoogleMap
+          className="trip-map-picker-preview-map"
+          options={PREVIEW_OPTIONS}
+        >
+          <TripPreviewContents trip={trip} />
+        </GoogleMap>
+      ) : (
+        <span
+          className="trip-map-picker-preview-placeholder"
+          aria-hidden="true"
+        >
+          <LocationIcon />
+        </span>
+      )}
+      <button
+        type="button"
+        className="trip-map-picker-preview-open"
+        aria-label={trip.title}
+        disabled={disabled}
+        onClick={onOpen}
+      />
+    </div>
   );
 }

@@ -1,0 +1,116 @@
+.trip-map-status {
+  position: absolute;
+  z-index: 1;
+  top: 42%;
+  left: calc(var(--trip-panel-width) + 64px);
+  right: 32px;
+  max-width: 440px;
+  margin-inline: auto;
+  padding: 24px;
+  border: 1px solid var(--color-floating-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-floating-surface);
+  box-shadow: var(--shadow-map-overlay);
+}
+
+.trip-map-status h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.trip-map-status p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--color-muted);
+}
+
+.trip-map-status button {
+  margin-top: 16px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface-raised);
+  cursor: pointer;
+}
+
+.trip-panel-header-menu,
+.trip-day-color-picker,
+.trip-place-style-popover,
+.trip-place-duration-popup,
+.layer-detail-card,
+.route-settings-card,
+.trip-map-ai-unread-previews button,
+.trip-map-status {
+  border-color: var(--color-map-overlay-ring);
+  background: var(--color-map-overlay-surface);
+  backdrop-filter: blur(var(--map-overlay-blur));
+}
+
+@media (max-width: 1000px) {
+  .trip-map-page {
+    --trip-panel-width: 320px;
+  }
+}
+
+@media (max-width: 760px) {
+  .trip-map-page {
+    --map-ai-toggle-size: 78px;
+    --map-ai-toggle-icon-size: 36px;
+  }
+  .map-viewport {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+
+  .bottom-map-controls-positioner {
+    right: 12px;
+    bottom: calc(44% + 44px);
+    left: 12px;
+    padding: 0;
+  }
+
+  .trip-sidebar {
+    top: auto;
+    bottom: 28px;
+    left: 12px;
+    right: calc(var(--map-ai-toggle-right) + var(--map-ai-toggle-size) + 12px);
+    width: auto;
+    height: 44%;
+    min-height: 220px;
+  }
+  .trip-sidebar-header {
+    padding: 0;
+  }
+  .trip-panel-header-body {
+    padding: 14px;
+  }
+  .trip-panel-header-actions {
+    padding: 7px 8px;
+  }
+  .trip-plan-title {
+    font-size: 18px;
+  }
+  .trip-place {
+    padding: 7px 2px 4px 23px;
+    gap: 8px;
+  }
+  .trip-place-time {
+    display: none;
+  }
+  .trip-map-status {
+    top: 84px;
+    left: 12px;
+    right: 12px;
+    padding: 18px;
+  }
+  .route-settings-modes {
+    grid-template-columns: repeat(4, minmax(82px, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-settings-card {
+    animation: none;
+  }
+}

@@ -1,5 +1,6 @@
 import type { TripPlace } from '@trasolve/shared';
 import { useId, useMemo } from 'react';
+import type { RouteDirections } from '@/features/route-optimization/model/useRouteTravelMinutes';
 import {
   RouteComparisonMap,
   RouteComparisonPlaceholder,
@@ -14,6 +15,8 @@ type Props = {
   dayTitle: string;
   beforePlaces: readonly TripPlace[];
   afterPlaces: readonly TripPlace[];
+  beforePath: RouteDirections['path'];
+  afterPath: RouteDirections['path'];
   hasAfter: boolean;
   selectedStartPlaceId: string;
   selectedEndPlaceId: string;
@@ -25,6 +28,8 @@ export function RouteMapComparisonDialog({
   dayTitle,
   beforePlaces,
   afterPlaces,
+  beforePath,
+  afterPath,
   hasAfter,
   selectedStartPlaceId,
   selectedEndPlaceId,
@@ -85,6 +90,7 @@ export function RouteMapComparisonDialog({
           )}
           layer={`route-optimization-expanded-before-${dayId}`}
           places={beforePlaces}
+          routePath={beforePath}
           viewportPlaces={viewportPlaces}
           selectedStartPlaceId={selectedStartPlaceId}
           selectedEndPlaceId={selectedEndPlaceId}
@@ -99,6 +105,7 @@ export function RouteMapComparisonDialog({
             )}
             layer={`route-optimization-expanded-after-${dayId}`}
             places={afterPlaces}
+            routePath={afterPath}
             viewportPlaces={viewportPlaces}
             selectedStartPlaceId={selectedStartPlaceId}
             selectedEndPlaceId={selectedEndPlaceId}

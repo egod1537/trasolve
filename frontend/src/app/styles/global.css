@@ -1,3 +1,5 @@
+@import './popup-motion.css';
+
 :root {
   font-size: var(--font-size-root, 15px);
   font-family: var(
@@ -16,6 +18,23 @@
 
 * {
   box-sizing: border-box;
+}
+
+:root:lang(ja) {
+  --font-family-sans:
+    'Noto Sans JP', 'Hiragino Kaku Gothic ProN', Meiryo, Inter, Pretendard,
+    sans-serif;
+}
+
+:root:lang(mn) {
+  --font-family-sans:
+    'Noto Sans', Inter, 'Segoe UI', 'Noto Sans JP', Pretendard, sans-serif;
+}
+
+:root:lang(en) {
+  --font-family-sans:
+    Inter, 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Noto Sans JP', Pretendard, sans-serif;
 }
 
 html {
@@ -118,6 +137,25 @@ body {
   overflow: auto;
   text-align: start;
   white-space: pre-wrap;
+}
+
+.external-api-disabled-notice {
+  position: fixed;
+  z-index: var(--z-tooltip);
+  top: 16px;
+  left: 50%;
+  width: max-content;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 10px 14px;
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-soft);
+  box-shadow: var(--shadow-map-overlay);
+  color: var(--color-danger);
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  transform: translateX(-50%);
 }
 
 @media (prefers-reduced-motion: reduce) {

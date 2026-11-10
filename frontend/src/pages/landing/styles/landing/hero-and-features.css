@@ -1,0 +1,339 @@
+.landing-page {
+  --landing-map-dot: #5d8fc5;
+  --landing-globe-fill: #f0f6fe;
+  --landing-globe-label-size: 14;
+  min-height: 100vh;
+  overflow: clip;
+  background: var(--color-surface);
+}
+
+[data-theme='dark'] .landing-page {
+  --landing-map-dot: #719bcd;
+  --landing-globe-fill: #15253a;
+}
+
+.landing-page .header-inner,
+.landing-page .hero,
+.landing-page .features-inner,
+.landing-page .planning-inner,
+.landing-page .site-footer {
+  width: min(100% - 144px, 1440px);
+  margin-inline: auto;
+}
+
+.landing-page .site-header {
+  position: relative;
+  z-index: 2;
+  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.landing-page .header-inner {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+  min-height: 80px;
+}
+
+.landing-page .header-brand {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 16px;
+}
+
+.landing-page .brand {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-primary);
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  text-decoration: none;
+}
+
+.landing-page .brand-mark {
+  width: 44px;
+  height: 40px;
+  overflow: visible;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.landing-page .brand-mark path:last-child {
+  fill: var(--color-surface);
+}
+
+.landing-page .header-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-inline-start: auto;
+}
+
+.landing-page .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 52px;
+  padding: 12px 26px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 160ms ease;
+}
+
+.landing-page .button:not(:disabled) {
+  cursor: pointer;
+}
+
+.landing-page .button-small {
+  min-height: 42px;
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+.landing-page .button-primary {
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+.landing-page .button-primary:not(:disabled):hover {
+  background: var(--color-accent-hover);
+}
+
+.landing-page .button-outline {
+  padding-inline: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+.landing-page .button-outline:not(:disabled):hover {
+  color: var(--color-accent);
+}
+
+.landing-page .button-arrow {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.landing-page .hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 690px;
+  isolation: isolate;
+}
+
+.landing-page .hero::before {
+  position: absolute;
+  z-index: -1;
+  top: 30%;
+  left: -120px;
+  width: min(65vw, 700px);
+  height: 350px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    color-mix(in srgb, var(--color-accent) 7%, transparent),
+    transparent 70%
+  );
+  filter: blur(48px);
+  pointer-events: none;
+  content: '';
+}
+
+.landing-page .hero-copy {
+  position: relative;
+  z-index: 1;
+  width: 53%;
+  padding-block: 100px 120px;
+}
+
+.landing-page .hero h1 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: clamp(48px, 5.2vw, 80px);
+  font-weight: 750;
+  letter-spacing: -0.065em;
+  line-height: 1.22;
+  word-break: keep-all;
+}
+
+.landing-page .hero-title-line {
+  display: block;
+}
+
+.landing-page .hero-title-accent {
+  color: var(--color-accent);
+}
+
+.landing-page .hero-description {
+  margin: 24px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 23px;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.landing-page .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px 36px;
+  margin-top: 56px;
+}
+
+.landing-page .hero-auth-notice {
+  max-width: 440px;
+  margin: 20px 0 0;
+  color: var(--color-danger);
+  font-size: 14px;
+}
+
+.landing-page .hero-visual {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  right: -225px;
+  width: min(80vw, 1200px);
+  aspect-ratio: 1;
+  transform: translateY(-45%);
+  pointer-events: none;
+  mask-image: linear-gradient(180deg, #000 75%, transparent 98%);
+}
+
+.landing-page .hero-globe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.landing-page .features {
+  position: relative;
+  z-index: 1;
+  background: var(--color-surface-subtle);
+  scroll-margin-top: 20px;
+}
+
+.landing-page .features-inner {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 0.85fr;
+  align-items: center;
+  gap: 40px;
+  min-height: 290px;
+  padding-block: 34px;
+}
+
+.landing-page .features h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: clamp(30px, 3.3vw, 50px);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.06em;
+  word-break: keep-all;
+}
+
+.landing-page .example-map {
+  display: block;
+  width: 100%;
+  max-height: 230px;
+  overflow: visible;
+}
+
+.landing-page .example-map-land {
+  fill: var(--landing-map-dot);
+  opacity: 0.7;
+}
+
+.landing-page .example-map-halo {
+  fill: var(--color-accent);
+  opacity: 0.12;
+}
+
+.landing-page .example-map-pin {
+  fill: var(--color-accent);
+  stroke: var(--color-surface-subtle);
+  stroke-width: 2;
+}
+
+.landing-page .example-map text {
+  fill: var(--color-text-primary);
+  stroke: var(--color-surface-subtle);
+  stroke-width: 3px;
+  paint-order: stroke fill;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.landing-page .example-itinerary {
+  padding-inline-start: 40px;
+  border-inline-start: 1px solid var(--color-border);
+}
+
+.landing-page .example-itinerary h3 {
+  margin: 0 0 24px;
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.5;
+  letter-spacing: -0.035em;
+  word-break: keep-all;
+}
+
+.landing-page .example-itinerary ol {
+  display: grid;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-page .example-itinerary li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 17px;
+  font-weight: 550;
+}
+
+.landing-page .example-itinerary li:not(:last-child)::before {
+  position: absolute;
+  top: 24px;
+  left: 11px;
+  width: 2px;
+  height: 22px;
+  background: var(--color-accent);
+  content: '';
+}
+
+.landing-page .example-stop {
+  display: grid;
+  flex: 0 0 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  font-size: 13px;
+}

@@ -39,56 +39,80 @@
   border: 0;
 }
 
-.preferences-group legend {
+.preferences-group legend,
+.preferences-language-label {
+  display: block;
   margin-bottom: var(--space-2);
   color: var(--text-primary);
   font-size: 13px;
   font-weight: 700;
 }
 
-.preferences-options {
+.preferences-theme-options {
   display: grid;
-  gap: 2px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
 }
 
-.preferences-option {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 38px;
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font-size: 13px;
+.preferences-group .ui-select {
+  width: 100%;
+}
+
+.preferences-theme-option {
+  position: relative;
+  min-width: 0;
   cursor: pointer;
 }
 
-.preferences-option:hover,
-.preferences-option:focus-within {
+.preferences-theme-choice {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.preferences-theme-option:hover .preferences-theme-choice {
   background: var(--bg-hover);
 }
 
-.preferences-option input {
-  width: 16px;
-  height: 16px;
+.preferences-theme-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
   margin: 0;
-  accent-color: var(--accent);
+  opacity: 0;
 }
 
-.preferences-option:has(input:disabled) {
-  cursor: wait;
-  opacity: 0.6;
+.preferences-theme-option input:checked + .preferences-theme-choice {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.preferences-theme-option input:focus-visible + .preferences-theme-choice {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.preferences-theme-choice svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .preferences-error {
   margin: var(--space-2) var(--space-3) 0;
   color: var(--danger);
   font-size: 12px;
-}
-
-.preferences-actions {
-  display: flex;
-  justify-content: flex-end;
 }
 
 @media (max-width: 480px) {

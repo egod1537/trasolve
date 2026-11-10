@@ -11,6 +11,7 @@ export class RandomChatProvider implements ChatProvider {
       Math.random() * RandomChatProvider.responses.length,
     );
     return {
+      model: 'trasolve-random-v1',
       message: {
         role: 'assistant',
         content: RandomChatProvider.responses[index],

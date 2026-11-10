@@ -354,6 +354,18 @@
       "serverStatus": "サーバーの状態：{{status}}"
     }
   },
+  "routeReviewSummary": {
+    "basis": "予定時刻とピン間の直線距離に基づきます。",
+    "distanceAdded": "{{distance}}増加",
+    "distanceLabel": "直線移動距離",
+    "distanceSaved": "{{distance}}短縮",
+    "percentDecrease": "{{percent}}減少",
+    "percentIncrease": "{{percent}}増加",
+    "timeAdded": "{{duration}}増加",
+    "timeLabel": "移動・待ち時間",
+    "timeSaved": "{{duration}}短縮",
+    "title": "ルート最適化の結果"
+  },
   "routeSchedulePreview": {
     "afterSchedule": {
       "description": {

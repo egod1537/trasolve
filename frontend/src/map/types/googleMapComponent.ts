@@ -19,7 +19,8 @@ export type {
   MapEvents as GoogleMapEvents,
 } from '@/shared/types/mapTypes';
 
-export type GoogleMapStatus = 'loading' | 'ready' | 'missing-key' | 'error';
+export type GoogleMapStatus =
+  'loading' | 'ready' | 'disabled' | 'missing-key' | 'error';
 
 export type GoogleMapProps = MapEvents & {
   ref?: Ref<MapHandle>;

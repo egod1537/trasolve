@@ -8,6 +8,7 @@ import {
   type DirectionsRequest,
   type DirectionsResult,
 } from '@trasolve/shared';
+import { reportExternalApiDisabled } from '@/shared/api/externalApiDisabled';
 import { getLanguage, L } from '@/shared/i18n';
 import { captureUnexpectedApiException } from '@/shared/observability/sentry';
 
@@ -51,12 +52,14 @@ export async function getDirections(
   if (!response.ok) {
     const parsed = directionsErrorResponseSchema.safeParse(body);
     if (parsed.success) {
+      const disabledError = reportExternalApiDisabled(body);
       const error = new DirectionsApiError(
         response.status,
         parsed.data.error.code,
-        L('errors:routes.error.routeLookupFailedHttp', {
-          status: response.status,
-        }),
+        disabledError?.message ??
+          L('errors:routes.error.routeLookupFailedHttp', {
+            status: response.status,
+          }),
         parsed.data.error.details,
       );
       captureUnexpectedApiException(

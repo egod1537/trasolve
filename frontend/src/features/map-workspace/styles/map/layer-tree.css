@@ -1,0 +1,293 @@
+.trip-layer-list {
+  position: relative;
+  margin: 5px 0 0 18px;
+  padding: 2px 0 7px;
+  background: transparent;
+  list-style: none;
+  --trip-tree-axis: 35px;
+  --trip-tree-row-anchor: 22px;
+  --trip-layer-type-center-x: 65px;
+  --trip-layer-icon-start-x: 50px;
+  --trip-tree-content-gap: 8px;
+  --trip-route-row-bg: color-mix(
+    in srgb,
+    var(--color-text-primary) 3.5%,
+    transparent
+  );
+  --trip-route-row-bg-hover: color-mix(
+    in srgb,
+    var(--color-text-primary) 5.5%,
+    transparent
+  );
+  --place-tree-color: color-mix(
+    in srgb,
+    var(--day-color) 42%,
+    var(--color-border)
+  );
+  --place-tree-node-color: color-mix(
+    in srgb,
+    var(--day-color) 58%,
+    var(--color-border)
+  );
+}
+
+.trip-layer-item {
+  position: relative;
+  display: block;
+  border-left: 3px solid transparent;
+  transform: translateY(var(--layer-preview-offset, 0));
+  transition: transform 120ms ease;
+}
+
+.trip-polyline-item::after {
+  position: absolute;
+  z-index: 2;
+  right: 12px;
+  bottom: 0;
+  left: calc(var(--trip-layer-type-center-x) - 15px);
+  height: 1px;
+  background: color-mix(in srgb, var(--color-border) 72%, transparent);
+  content: '';
+  pointer-events: none;
+}
+
+.trip-layer-row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  isolation: isolate;
+  background: transparent;
+}
+
+.trip-layer-row::before {
+  position: absolute;
+  z-index: 1;
+  top: var(--trip-tree-row-anchor);
+  left: var(--trip-tree-axis);
+  width: calc(
+    var(--trip-layer-icon-start-x) - var(--trip-tree-axis) -
+      var(--trip-tree-content-gap)
+  );
+  height: 2px;
+  border-radius: 999px;
+  background: var(--place-tree-color);
+  content: '';
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.trip-layer-row::after {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  left: var(--trip-tree-axis);
+  width: 2px;
+  border-radius: 999px;
+  background: var(--place-tree-color);
+  content: '';
+  pointer-events: none;
+}
+
+.trip-layer-item:first-child > .trip-layer-row::after {
+  top: -8px;
+}
+
+.trip-layer-item.is-last > .trip-layer-row::after {
+  bottom: calc(100% - var(--trip-tree-row-anchor));
+}
+
+.trip-layer-tree-node {
+  position: absolute;
+  z-index: 2;
+  top: var(--trip-tree-row-anchor);
+  left: var(--trip-tree-axis);
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--place-tree-node-color);
+  border-radius: 50%;
+  background: var(--color-surface-raised);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.trip-layer-tree-node:is(.is-start, .is-destination) {
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-color: var(--day-color);
+  color: var(--day-color);
+  box-shadow: 0 0 0 2px var(--color-surface-raised);
+}
+
+.trip-layer-tree-node.is-start {
+  border: 0;
+  background: var(--day-color);
+  color: var(--color-visualization-contrast);
+}
+
+.trip-layer-tree-node.is-destination {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 0;
+  background: var(--color-surface-raised);
+}
+
+.trip-layer-tree-node svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.trip-layer-tree-node.is-start svg {
+  width: 11px;
+  height: 11px;
+  fill: currentColor;
+  stroke: none;
+}
+
+.trip-layer-tree-node.is-destination svg {
+  width: 14px;
+  height: 14px;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
+  stroke-width: 1;
+}
+
+.trip-layer-tree-node.is-destination .checker-filled {
+  fill: currentColor;
+  stroke: none;
+}
+
+.trip-layer-tree-node.is-destination .checker-outline,
+.trip-layer-tree-node.is-destination .checker-grid {
+  fill: none;
+  stroke: currentColor;
+}
+
+.trip-layer-item.is-selected {
+  border-left-color: var(--color-primary);
+}
+
+.trip-polyline-item > .trip-layer-row {
+  background: var(--trip-route-row-bg);
+}
+
+.trip-place-item.is-start-place > .trip-layer-row {
+  background: color-mix(in srgb, var(--color-success) 7%, transparent);
+}
+
+.trip-place-item.is-end-place > .trip-layer-row {
+  background: color-mix(in srgb, var(--color-danger) 7%, transparent);
+}
+
+.trip-layer-item:where(:not(.is-disabled)) > .trip-layer-row:hover {
+  background: var(--color-surface-hover);
+}
+
+.trip-polyline-item:where(:not(.is-disabled)) > .trip-layer-row:hover {
+  background: var(--trip-route-row-bg-hover);
+}
+
+.trip-layer-item.is-selected > .trip-layer-row {
+  background: var(--color-accent-soft);
+}
+
+.trip-layer-item.is-details-open > .trip-layer-row {
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--color-primary) 44%, var(--color-surface-raised));
+}
+
+.trip-layer-item.is-dragging {
+  z-index: 3;
+  box-shadow: var(--shadow-floating-sm);
+  opacity: 0.82;
+  transition: none;
+  transform: translateY(var(--layer-preview-offset));
+}
+
+.trip-layer-item.is-dragging > .trip-layer-row {
+  background: var(--color-accent-soft);
+}
+
+.trip-layer-item.is-drop-before::before {
+  position: absolute;
+  z-index: 4;
+  top: -1px;
+  right: 12px;
+  left: 12px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  content: '';
+  pointer-events: none;
+}
+
+.trip-layer-item.is-drop-after > .trip-layer-row {
+  background-image: linear-gradient(var(--color-primary), var(--color-primary));
+  background-position: left 12px bottom;
+  background-repeat: no-repeat;
+  background-size: calc(100% - 24px) 2px;
+}
+
+.trip-layer-list.is-layer-drop-target-empty {
+  padding: 8px 10px 12px;
+}
+
+.trip-layer-list.is-layer-drop-target-empty > .trip-empty-day {
+  padding: 10px;
+  border: 1px dashed var(--color-primary);
+  border-radius: 6px;
+  background: var(--color-accent-soft);
+  color: var(--color-primary);
+  font-size: 11px;
+  text-align: center;
+}
+
+.trip-layer-drag-handle {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  width: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.trip-layer-drag-handle:hover,
+.trip-layer-drag-handle:focus-visible {
+  color: var(--color-muted);
+}
+
+.trip-layer-drag-handle.is-dragging {
+  color: var(--color-primary);
+  cursor: grabbing;
+}
+
+.trip-layer-drag-handle svg {
+  width: 16px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.trip-layer-leading-slot {
+  position: relative;
+  z-index: 3;
+  align-self: stretch;
+  flex: 0 0 30px;
+  width: 30px;
+}

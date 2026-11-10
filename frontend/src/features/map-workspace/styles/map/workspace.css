@@ -1,0 +1,96 @@
+.trip-map-page {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--color-map-background);
+  --trip-panel-width: 468px;
+  --map-ai-toggle-size: 84px;
+  --map-ai-toggle-icon-size: 39px;
+  --map-ai-toggle-right: max(24px, calc(env(safe-area-inset-right) + 16px));
+  --map-ai-toggle-bottom: max(24px, calc(env(safe-area-inset-bottom) + 16px));
+  --map-floating-bar-height: 64px;
+}
+
+.map-viewport {
+  position: relative;
+  display: grid;
+  grid-template-columns: calc(var(--trip-panel-width) + 16px) minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+}
+
+.map-viewport-tools {
+  position: relative;
+  grid-column: 2;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.map-ai-region {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.map-ai-region > .trip-map-ai-button {
+  pointer-events: auto;
+}
+
+.trip-map-root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.trip-map-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.trip-map-overlay-host {
+  position: absolute;
+  z-index: 2000;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.bottom-map-controls-positioner {
+  position: absolute;
+  z-index: 1900;
+  right: calc(var(--map-ai-toggle-right) + var(--map-ai-toggle-size) + 16px);
+  bottom: max(24px, calc(env(safe-area-inset-bottom) + 16px));
+  left: calc(var(--trip-panel-width) + 16px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  gap: 14px;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+.bottom-map-controls {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  width: min(554px, 100%);
+  max-width: 100%;
+  min-width: 0;
+  gap: 10px;
+}
+
+.trip-map-picker-item-actions .trip-map-picker-item-delete {
+  color: var(--color-danger);
+}
+.trip-map-picker-item-actions
+  .trip-map-picker-item-delete:hover:not(:disabled) {
+  color: var(--color-danger-strong);
+  background: var(--color-danger-soft);
+}

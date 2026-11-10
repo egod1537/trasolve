@@ -21,7 +21,16 @@ import type {
   TrouteCancelGatewayResult,
   TrouteGatewayResult,
 } from '@/entities/route-job';
+import {
+  normalizeExternalApiDisabledErrorResponse,
+  throwIfExternalApiDisabled,
+} from '@/shared/api/externalApiDisabled';
 import { L } from '@/shared/i18n';
+import {
+  billingHeaders,
+  notifyBillingChanged,
+  withBillingMode,
+} from '@/shared/api/billingContext';
 import { captureUnexpectedApiException } from '@/shared/observability/sentry';
 
 const REQUEST_TIMEOUT_MS = 35_000;
@@ -61,10 +70,12 @@ export async function checkTrouteHealth(
   signal?: AbortSignal,
 ): Promise<boolean> {
   const response = await fetch(API_ROUTES.trouteInternalHealth, { signal });
+  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
+    throwIfExternalApiDisabled(body);
     return false;
   }
-  return trouteHealthResponseSchema.safeParse(await response.json()).success;
+  return trouteHealthResponseSchema.safeParse(body).success;
 }
 
 export function getTrouteCancelPath(jobId: string): string {
@@ -163,7 +174,9 @@ export async function cancelTrouteJob(
     durationMs: performance.now() - startedAt,
     rawResponse,
     responseBody,
-    errorResponse: parsedError?.success ? parsedError.data : null,
+    errorResponse: parsedError?.success
+      ? normalizeExternalApiDisabledErrorResponse(parsedError.data)
+      : null,
     jobState: parsedState?.success ? parsedState.data : null,
   };
 }
@@ -179,7 +192,9 @@ export async function getTrouteJob(
     `${API_ROUTES.trouteInternalJobs}/${encodeURIComponent(parsedJobId)}`,
     { signal: requestSignal },
   );
+  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
+    throwIfExternalApiDisabled(body);
     const error = new Error(
       L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
     );
@@ -190,7 +205,7 @@ export async function getTrouteJob(
     throw error;
   }
 
-  const parsed = trouteJobStateSchema.safeParse(await response.json());
+  const parsed = trouteJobStateSchema.safeParse(body);
   if (!parsed.success) {
     throw trouteContractViolation(
       'troute.validate-job',
@@ -211,7 +226,9 @@ export async function listTrouteJobs(
     `${API_ROUTES.trouteInternalJobs}?${query.toString()}`,
     { signal: requestSignal },
   );
+  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
+    throwIfExternalApiDisabled(body);
     const error = new Error(
       L('testbed:trouteTestbed.text.unknownErrorOccurredDuringTrasolveBackend'),
     );
@@ -222,9 +239,7 @@ export async function listTrouteJobs(
     throw error;
   }
 
-  const parsed = trouteJobHistoryResponseSchema.safeParse(
-    await response.json(),
-  );
+  const parsed = trouteJobHistoryResponseSchema.safeParse(body);
   if (!parsed.success) {
     throw trouteContractViolation(
       'troute.validate-job-list',
@@ -246,13 +261,14 @@ export async function optimizeRouteWithTroute(
   let response: Response;
   let rawResponse: string;
   try {
-    response = await fetch(API_ROUTES.trouteOptimize, {
+    response = await fetch(withBillingMode(API_ROUTES.trouteOptimize), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...billingHeaders() },
       body: requestBody,
       signal: requestSignal,
     });
     rawResponse = await response.text();
+    notifyBillingChanged();
   } catch {
     const durationMs = performance.now() - startedAt;
     throw new TrouteNetworkError(
@@ -321,7 +337,9 @@ export async function optimizeRouteWithTroute(
     requestBody,
     rawResponse,
     responseBody,
-    errorResponse: parsedError?.success ? parsedError.data : null,
+    errorResponse: parsedError?.success
+      ? normalizeExternalApiDisabledErrorResponse(parsedError.data)
+      : null,
     acceptedJobId,
     optimization: parsed?.success ? parsed.data : null,
     responseValidationError,

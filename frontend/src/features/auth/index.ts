@@ -3,3 +3,5 @@ export { consumeGoogleOAuthResult, startGoogleOAuth } from './api/googleOAuth';
 export { isDebugGuestMode } from './model/debugGuestMode';
 export { useCurrentUser, type CurrentUserState } from './model/useCurrentUser';
 export { MapUserControls } from './ui/MapUserControls';
+export { useLoginDialog } from './model/loginDialogContext';
+export { LoginDialogProvider } from './ui/LoginDialogProvider';

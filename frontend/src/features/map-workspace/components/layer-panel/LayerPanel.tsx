@@ -8,11 +8,12 @@ import {
   type RefObject,
 } from 'react';
 import type { PlaceStyle, TripPolylineMode } from '@trasolve/shared';
-import type { QueryRouteDuration } from '@/features/map-workspace/domain/routeDuration';
+import type { QueryRouteDetails } from '@/features/map-workspace/domain/routeDetails';
 import type { LayerValidationByItemKey, Trip } from '@/entities/trip';
 import { RouteSettingsCard } from '@/features/map-workspace/components/RouteSettingsCard';
 import type { SelectionProps } from '@/features/map-workspace/components/layer-panel/DayLayerSection';
 import { LayerPanelHeader } from '@/features/map-workspace/components/layer-panel/LayerPanelHeader';
+import { LayerVisibilityControl } from './LayerVisibilityControl';
 import { LayerPanelContent } from '@/features/map-workspace/components/layer-panel/LayerPanelContent';
 import { LayerPlaceDetailCard } from '@/features/map-workspace/components/layer-panel/LayerPlaceDetailCard';
 import { ShareTripModal } from '@/features/map-workspace/components/share/ShareTripModal';
@@ -31,6 +32,7 @@ type Props = SelectionProps & {
   debugMode: boolean;
   sidebarRef: RefObject<HTMLElement | null>;
   onAddLayer: () => void;
+  onToggleAllDayVisibility: () => void;
   onRenameTrip: (title: string) => void;
   onMoveDay: (dayId: string, targetIndex: number) => void;
   onRenameDay: (dayId: string, title: string) => void;
@@ -46,7 +48,7 @@ type Props = SelectionProps & {
     polylineId: string,
     mode: TripPolylineMode,
   ) => Promise<boolean>;
-  onQueryRouteDuration: QueryRouteDuration;
+  onQueryRouteDetails: QueryRouteDetails;
   onUpdatePlaceVisitTimeRange: (
     placeId: string,
     time: string,
@@ -73,6 +75,7 @@ export const LayerPanel = memo(function LayerPanel({
   debugMode,
   sidebarRef,
   onAddLayer,
+  onToggleAllDayVisibility,
   onRenameTrip,
   onUpdatePlaceVisitTimeRange,
   onUpdatePlacePreferredDuration,
@@ -81,13 +84,14 @@ export const LayerPanel = memo(function LayerPanel({
   onUpdatePlaceStyle,
   onRemovePlace,
   onUpdatePolylineMode,
-  onQueryRouteDuration,
+  onQueryRouteDetails,
   onSelectPlace,
   onSelectPlaceForDetails,
   onSelectPolyline,
   onSelectPolylineForDetails,
   selectedPlaceIds,
   selectedPolylineIds,
+  visibleDayIds,
   ...contentProps
 }: Props) {
   const L = useL();
@@ -100,6 +104,7 @@ export const LayerPanel = memo(function LayerPanel({
   const detailPlaceContext = useMemo(
     () =>
       trip.days
+        .filter((day) => visibleDayIds.has(day.id))
         .flatMap((day) =>
           day.places.map((place) => ({
             day,
@@ -107,11 +112,12 @@ export const LayerPanel = memo(function LayerPanel({
           })),
         )
         .find(({ place }) => place.id === detailPlaceId),
-    [detailPlaceId, trip.days],
+    [detailPlaceId, trip.days, visibleDayIds],
   );
   const detailPolylineContext = useMemo(
     () =>
       trip.days
+        .filter((day) => visibleDayIds.has(day.id))
         .flatMap((day) =>
           day.polylines.flatMap((polyline) => {
             const fromPlace = day.places.find(
@@ -126,7 +132,7 @@ export const LayerPanel = memo(function LayerPanel({
           }),
         )
         .find(({ polyline }) => polyline.id === detailPolylineId),
-    [detailPolylineId, trip.days],
+    [detailPolylineId, trip.days, visibleDayIds],
   );
   const detailOpen = !!detailPlaceContext || !!detailPolylineContext;
   const closeDetails = useCallback(() => setDetailTarget(null), []);
@@ -230,8 +236,14 @@ export const LayerPanel = memo(function LayerPanel({
           shareButtonRef={shareButtonRef}
           onRenameTrip={onRenameTrip}
         />
+        <LayerVisibilityControl
+          dayCount={trip.days.length}
+          visibleCount={visibleDayIds.size}
+          onToggle={onToggleAllDayVisibility}
+        />
         <LayerPanelContent
           days={trip.days}
+          visibleDayIds={visibleDayIds}
           debugMode={debugMode}
           detailPlaceId={detailPlaceId}
           detailPolylineId={detailPolylineId}
@@ -274,7 +286,7 @@ export const LayerPanel = memo(function LayerPanel({
           anchorKey={`polyline:${detailPolylineContext.polyline.id}`}
           busy={busy}
           sidebarRef={sidebarRef}
-          onQueryRouteDuration={onQueryRouteDuration}
+          onQueryRouteDetails={onQueryRouteDetails}
           onClose={closeDetails}
           onUpdateMode={onUpdatePolylineMode}
         />

@@ -76,6 +76,29 @@
       }
     }
   },
+  "landing": {
+    "action": {
+      "planTrip": "Аяллаа төлөвлөх",
+      "startTrip": "Аяллаа эхлүүлэх",
+      "viewExample": "Жишээ үзэх"
+    },
+    "example": {
+      "heading": "Газраас аяллын төлөвлөгөө рүү.",
+      "title": "Токиод өнгөрүүлэх нэг өдөр"
+    },
+    "hero": {
+      "description": "Газар, маршрутаа нэг дороос.",
+      "title": {
+        "connected": "Холбогдох",
+        "journey": "аялал.",
+        "places": "Очихыг хүссэн газрууд,"
+      }
+    },
+    "navigation": {
+      "about": "Үйлчилгээний тухай",
+      "signIn": "Нэвтрэх"
+    }
+  },
   "landingPage": {
     "healthLabels": {
       "text": {

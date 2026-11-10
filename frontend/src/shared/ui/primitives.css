@@ -173,6 +173,24 @@
   place-items: center;
   padding: var(--space-4);
   background: var(--bg-backdrop);
+  pointer-events: auto;
+}
+
+.ui-dialog-backdrop,
+.bp6-overlay-backdrop {
+  -webkit-backdrop-filter: blur(var(--dialog-backdrop-blur));
+  backdrop-filter: blur(var(--dialog-backdrop-blur));
+}
+
+.ui-dialog-backdrop[hidden] {
+  display: none;
+}
+
+.ui-dialog-accessory {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
 }
 
 .ui-dialog {
@@ -181,9 +199,11 @@
   overflow: auto;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
-  background: var(--bg-surface-raised);
+  background: var(--color-map-overlay-surface);
   color: var(--text-primary);
-  box-shadow: var(--shadow-dialog);
+  box-shadow: var(--shadow-map-overlay);
+  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: blur(var(--map-overlay-blur));
 }
 
 .ui-dialog:focus-visible {

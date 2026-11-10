@@ -2,7 +2,7 @@ import { loadBackendEnvironment } from './configuration/environment.js';
 import { loadExternalApiPolicy } from './configuration/externalApiPolicy.js';
 import { resolveBackendDataRoot } from './configuration/persistence.js';
 import { Places } from './google/maps/places.js';
-import { GoogleRoutesProvider } from './routes/providers/googleRoutesProvider.js';
+import { TcacheRoutesProvider } from './routes/providers/tcacheRoutesProvider.js';
 import { RouteHttpService } from './routes/routeHttpService.js';
 import { RouteService } from './routes/routeService.js';
 import { ChatService } from './ai/chatService.js';
@@ -38,12 +38,6 @@ const externalApiPolicy = loadExternalApiPolicy();
 
 // Construct shared services and providers only here. Implementation modules must
 // not import this module, which would create a circular dependency.
-const routeProvider = new GoogleRoutesProvider(
-  process.env.GOOGLE_ROUTES_API_KEY ?? '',
-  15000,
-  externalApiPolicy,
-);
-const routes = new RouteHttpService(new RouteService(routeProvider));
 const places = new Places(
   process.env.GOOGLE_PLACES_API_KEY ?? '',
   15000,
@@ -129,6 +123,8 @@ try {
   }
 }
 const tcacheJobHttp = new TcacheJobHttpService(tcache);
+const routeProvider = new TcacheRoutesProvider(tcache);
+const routes = new RouteHttpService(new RouteService(routeProvider));
 
 export interface LocalTripPersistence {
   readonly analytics: AnalyticsRepository;
@@ -155,6 +151,7 @@ export const API = {
   Troute: troute,
   TrouteHttp: trouteHttp,
   TrouteJobHttp: trouteJobHttp,
+  TrouteJobs: trouteJobs,
   Tcache: tcache,
   TcacheJobHttp: tcacheJobHttp,
 };

@@ -8,10 +8,11 @@ export interface AuthIdentityRecord {
 }
 
 export interface AuthUserRecord {
+  readonly issuer: string;
   readonly id: string;
   readonly displayName: string;
   readonly avatarUrl: string | null;
-  readonly email: string;
+  readonly email: string | null;
   readonly emailVerified: boolean;
 }
 
@@ -20,12 +21,12 @@ export interface CreateUserWithIdentityInput {
   readonly subject: string;
   readonly displayName?: string;
   readonly avatarUrl?: string;
-  readonly email: string;
+  readonly email: string | null;
   readonly emailVerified: boolean;
 }
 
 export interface UpdateIdentityLoginInput {
-  readonly email: string;
+  readonly email: string | null;
   readonly emailVerified: boolean;
 }
 
@@ -35,6 +36,10 @@ export interface AuthRepository {
     subject: string,
   ): Promise<AuthIdentityRecord | undefined>;
   createUserWithIdentity(
+    input: CreateUserWithIdentityInput,
+  ): Promise<AuthIdentityRecord>;
+  attachIdentity(
+    userId: string,
     input: CreateUserWithIdentityInput,
   ): Promise<AuthIdentityRecord>;
   updateLastLogin(

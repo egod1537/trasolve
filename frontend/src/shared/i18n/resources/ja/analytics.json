@@ -1,0 +1,160 @@
+{
+  "flow": {
+    "details": "詳細",
+    "filters": "グラフフィルター",
+    "graph": "ユーザーフローグラフ",
+    "minimumCount": "最小遷移数",
+    "mode": {
+      "domainEvent": "ドメインイベント",
+      "mixed": "画面＋主要イベント",
+      "screen": "画面"
+    },
+    "nodeMode": "ノードモード",
+    "status": {
+      "noData": "選択期間のフローデータはありません。"
+    }
+  },
+  "funnels": {
+    "funnel": {
+      "addPlace": "場所を追加",
+      "routeOptimization": "ルート最適化",
+      "routeReoptimization": "再編集・再最適化",
+      "tripEntry": "Tripの作成・開始",
+      "tripShare": "Tripを共有"
+    },
+    "kpi": {
+      "averageCompletionTime": "平均完了時間",
+      "completedSessions": "完了セッション",
+      "largestDropOff": "最大離脱",
+      "overallConversion": "全体コンバージョン",
+      "startedSessions": "開始セッション"
+    },
+    "metric": {
+      "averageTime": "平均所要時間",
+      "dropOff": "離脱",
+      "enteredSessions": "到達セッション",
+      "medianTime": "所要時間の中央値",
+      "overallConversion": "全体コンバージョン",
+      "previousConversion": "前段階からのコンバージョン"
+    },
+    "selector": {
+      "label": "分析するファネル"
+    },
+    "status": {
+      "noData": "選択期間のファネルデータはありません。"
+    },
+    "step": {
+      "addPlaceClicked": "場所追加を確定",
+      "initialResultViewed": "最初の結果を表示",
+      "landingAction": "ログインまたは開始",
+      "landingViewed": "ランディングを表示",
+      "mapWorkspaceViewed": "マップワークスペースを表示",
+      "optimizationApplied": "最適化結果を適用",
+      "optimizationCompleted": "最適化完了",
+      "optimizationStarted": "最適化開始",
+      "placeAdded": "場所追加完了",
+      "placeSearchViewed": "場所検索を表示",
+      "placeSelected": "場所を選択",
+      "reoptimizationCompleted": "再最適化完了",
+      "reoptimizationStarted": "再最適化開始",
+      "resultViewed": "結果を表示",
+      "routeModified": "ルートを編集",
+      "shareEnabled": "共有を有効化",
+      "shareLinkCopied": "共有リンクをコピー",
+      "shareModalOpened": "共有を開く",
+      "tripOpened": "Tripを作成または選択",
+      "tripPickerViewed": "Trip選択画面を表示",
+      "updatedResultViewed": "更新結果を表示"
+    }
+  },
+  "metric": {
+    "averagePathLength": "平均パス長",
+    "backtrack": "後戻り",
+    "conversion": "コンバージョン",
+    "count": "回数",
+    "dropOff": "離脱率",
+    "events": "イベント",
+    "notApplicable": "該当なし",
+    "pathLength": "パス長",
+    "ratio": "比率",
+    "sessions": "セッション",
+    "source": "遷移元",
+    "target": "対象",
+    "visits": "訪問数"
+  },
+  "overview": {
+    "status": {
+      "noData": "選択期間の分析データはありません。"
+    }
+  },
+  "page": {
+    "description": {
+      "userFlowAnalysis": "ユーザーフローとコンバージョンを確認します。"
+    },
+    "eyebrow": {
+      "internalTool": "内部分析ツール"
+    },
+    "navigation": {
+      "analyticsSections": "分析セクション"
+    },
+    "tab": {
+      "flowGraph": "フローグラフ",
+      "funnels": "ファネル",
+      "overview": "概要",
+      "sessions": "セッション"
+    },
+    "title": {
+      "analytics": "アナリティクス"
+    }
+  },
+  "period": {
+    "apply": "期間を適用",
+    "from": "開始",
+    "timezone": "タイムゾーン",
+    "to": "終了"
+  },
+  "routes": {
+    "loadingLabel": {
+      "analytics": "分析画面を読み込んでいます。"
+    }
+  },
+  "sessions": {
+    "action": {
+      "loadMore": "さらに読み込む"
+    },
+    "filters": "セッションフィルター",
+    "identity": {
+      "anonymous": "匿名",
+      "authenticated": "認証済み",
+      "mixed": "匿名 → 認証済み"
+    },
+    "metadata": {
+      "details": "メタデータ詳細"
+    },
+    "metric": {
+      "endedAt": "終了時刻",
+      "eventCount": "イベント数",
+      "eventType": "イベント種別",
+      "metadata": "メタデータ",
+      "screen": "画面",
+      "sessionId": "セッションID",
+      "startedAt": "開始時刻",
+      "timestamp": "時刻",
+      "user": "ユーザー"
+    },
+    "status": {
+      "loadingMore": "追加データを読み込んでいます。",
+      "noData": "選択期間のセッションはありません。",
+      "selectSession": "タイムラインを表示するセッションを選択してください。"
+    },
+    "timeline": "イベントタイムライン",
+    "value": {
+      "noMetadata": "メタデータなし",
+      "noTarget": "対象なし"
+    }
+  },
+  "status": {
+    "loadError": "分析データを読み込めませんでした。",
+    "loading": "分析データを読み込んでいます。"
+  }
+}

@@ -41,3 +41,13 @@ export function useTripEditController() {
 export function useTripMode(): MapWorkspaceMode {
   return useApplication().mode;
 }
+
+/** Subscribe to domain data without rerendering for save-status-only changes. */
+export function useTripData() {
+  const { store } = useApplication();
+  return useSyncExternalStore(
+    store.subscribe,
+    () => store.getState().trip,
+    () => store.getState().trip,
+  );
+}

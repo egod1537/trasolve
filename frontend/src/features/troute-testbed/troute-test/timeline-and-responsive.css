@@ -1,0 +1,143 @@
+.troute-testbed-shell .timeline-entry > summary:hover,
+.troute-testbed-shell .timeline-entry[open] > summary {
+  background: var(--testbed-row-hover);
+}
+
+.troute-testbed-shell .timeline-entry > summary:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.troute-testbed-shell .timeline-entry-time,
+.troute-testbed-shell .timeline-route,
+.troute-testbed-shell .timeline-operation {
+  min-width: 0;
+  font-size: 12px;
+}
+
+.troute-testbed-shell .timeline-route {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.troute-testbed-shell .timeline-operation {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.troute-testbed-shell .timeline-entry-detail {
+  padding: 10px 12px 14px;
+  border-top: 1px solid var(--testbed-row-border);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.troute-testbed-shell .timeline-detail-section {
+  min-width: 0;
+}
+
+.troute-testbed-shell .timeline-detail-section h3 {
+  margin: 0 0 5px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.troute-testbed-shell .timeline-code {
+  max-height: 260px;
+  margin: 0;
+  overflow: auto;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1040px) {
+  .troute-testbed-shell .job-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .troute-testbed-shell .timeline-entry > summary {
+    grid-template-columns: 82px 88px minmax(110px, 0.6fr) minmax(0, 1fr) 76px;
+  }
+}
+
+@media (max-width: 800px) {
+  .troute-testbed-shell {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .troute-testbed-shell .navbar-endpoint,
+  .troute-testbed-shell .troute-testbed-navbar .bp6-navbar-divider {
+    display: none;
+  }
+
+  .troute-testbed-shell .job-workspace {
+    overflow: visible;
+    flex: none;
+    min-height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    padding: 12px;
+  }
+
+  .troute-testbed-shell .job-sidebar,
+  .troute-testbed-shell .job-detail {
+    height: auto;
+    min-height: 360px;
+  }
+
+  .troute-testbed-shell .job-detail {
+    overflow: visible;
+  }
+
+  .troute-testbed-shell .job-detail-content {
+    overflow: visible;
+  }
+
+  .troute-testbed-shell .job-list {
+    max-height: 300px;
+  }
+
+  .troute-testbed-shell .job-result-map-comparison {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .troute-testbed-shell .timeline-entry > summary {
+    grid-template-columns: 82px 88px minmax(0, 1fr) 76px;
+  }
+
+  .troute-testbed-shell .timeline-route {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .troute-testbed-shell .navbar-api-label,
+  .troute-testbed-shell .detail-heading-copy > span {
+    display: none;
+  }
+
+  .troute-testbed-shell .job-facts,
+  .troute-testbed-shell .job-request-facts,
+  .troute-testbed-shell .job-request-debug-options,
+  .troute-testbed-shell .timeline-entry-detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .troute-testbed-shell .timeline-entry > summary {
+    grid-template-columns: 88px minmax(0, 1fr) 76px;
+  }
+
+  .troute-testbed-shell .timeline-direction {
+    display: none;
+  }
+}

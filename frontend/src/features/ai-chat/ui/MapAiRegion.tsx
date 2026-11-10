@@ -92,6 +92,7 @@ export function MapAiRegion({
         renderAssistantActions={renderAssistantActions}
         notice={notice}
         open={open}
+        onClose={() => onOpenChange(false)}
         onGeneratingChange={setGenerating}
         onUnreadPreviewsChange={setUnreadPreviews}
       />

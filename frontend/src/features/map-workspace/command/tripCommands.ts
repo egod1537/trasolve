@@ -1,12 +1,4 @@
-import {
-  tripIdSchema,
-  type PlaceStyle,
-  type Trip,
-  type TripPlace,
-  type TripPolyline,
-  type TripPolylineMode,
-  type TripScheduleUpdate,
-} from '@trasolve/shared';
+import { type Trip, type TripPlace } from '@trasolve/shared';
 import {
   DEFAULT_PLACE_PREFERRED_DURATION_MINUTES,
   DEFAULT_PLACE_START_TIME,
@@ -17,8 +9,21 @@ import {
   type TripCommand,
 } from '@/features/map-workspace/command/TripCommand';
 import { L } from '@/shared/i18n';
-
-export type PlaceInput = Omit<TripPlace, 'id' | 'order'>;
+import { type PlaceInput } from '@/features/map-workspace/command/tripCommandTypes';
+import { findPlace } from '@/features/map-workspace/command/tripPlacePatchCommands';
+import { readPendingId } from '@/features/map-workspace/command/tripCommandIds';
+export { type PlaceInput } from '@/features/map-workspace/command/tripCommandTypes';
+export { createApplyOptimizedScheduleCommand } from '@/features/map-workspace/command/tripScheduleCommands';
+export {
+  createUpdatePlaceCommand,
+  createRenamePlaceCommand,
+  createUpdateMemoCommand,
+  createUpdateVisitTimeRangeCommand,
+  createUpdatePreferredDurationCommand,
+  createUpdatePlaceStyleCommand,
+  createUpdatePolylineModesCommand,
+  createUpdatePolylineModeCommand,
+} from '@/features/map-workspace/command/tripPlacePatchCommands';
 
 export function createRenameTripCommand(title: string): TripCommand {
   return defineTripCommand((trip) => ({ ...trip, title }));
@@ -267,183 +272,4 @@ export function createReorderDayPlacesCommand(
     day.places = orderedIds.map((placeId) => placesById.get(placeId)!);
     return trip;
   });
-}
-
-export function createApplyOptimizedScheduleCommand(
-  dayId: string,
-  schedule: TripScheduleUpdate,
-): TripCommand {
-  const update = structuredClone(schedule);
-  return defineTripCommand((trip) => {
-    const day = trip.days.find((candidate) => candidate.id === dayId);
-    if (!day) {
-      throw new Error(
-        L('map:tripCommands.error.dateWhichScheduleAppliesCannotBe'),
-      );
-    }
-    const currentIds = new Set(day.places.map((place) => place.id));
-    const orderedIds = update.placeIds;
-    const uniqueOrderedIds = new Set(orderedIds);
-    const skippedIds = update.skippedPlaceIds ?? [];
-    const uniqueSkippedIds = new Set(skippedIds);
-    const partial = skippedIds.length > 0;
-    const stopsById = new Map(update.stops.map((stop) => [stop.placeId, stop]));
-    if (
-      (partial
-        ? orderedIds.length + skippedIds.length !== day.places.length ||
-          uniqueSkippedIds.size !== skippedIds.length ||
-          skippedIds.some(
-            (placeId) =>
-              !currentIds.has(placeId) || uniqueOrderedIds.has(placeId),
-          )
-        : orderedIds.length !== day.places.length) ||
-      uniqueOrderedIds.size !== orderedIds.length ||
-      orderedIds.some((placeId) => !currentIds.has(placeId)) ||
-      update.stops.length !== orderedIds.length ||
-      stopsById.size !== update.stops.length ||
-      orderedIds.some((placeId) => !stopsById.has(placeId)) ||
-      orderedIds[0] !== update.expectedStartPlaceId ||
-      orderedIds.at(-1) !== update.expectedEndPlaceId ||
-      !currentIds.has(update.expectedStartPlaceId) ||
-      !currentIds.has(update.expectedEndPlaceId)
-    ) {
-      throw new Error(
-        L('map:tripCommands.error.locationStartEndPointOptimizationSchedule'),
-      );
-    }
-
-    const placesById = new Map(day.places.map((place) => [place.id, place]));
-    day.places = orderedIds.map((placeId) => {
-      const place = placesById.get(placeId)!;
-      const stop = stopsById.get(placeId)!;
-      const durationMinutes =
-        stop.visitDurationMinutes ??
-        place.preferredDurationMinutes ??
-        place.visitDurationMinutes;
-      return {
-        ...place,
-        time: stop.time,
-        visitDurationMinutes: durationMinutes,
-        preferredDurationMinutes: durationMinutes,
-      };
-    });
-    return trip;
-  });
-}
-
-export function createUpdatePlaceCommand(
-  placeId: string,
-  patch: Partial<PlaceInput>,
-): TripCommand {
-  return createPlacePatchCommand(placeId, patch);
-}
-
-export function createRenamePlaceCommand(
-  placeId: string,
-  name: string,
-): TripCommand {
-  return createPlacePatchCommand(placeId, { name });
-}
-
-export function createUpdateMemoCommand(
-  placeId: string,
-  memo: string,
-): TripCommand {
-  return createPlacePatchCommand(placeId, { memo });
-}
-
-export function createUpdateVisitTimeRangeCommand(
-  placeId: string,
-  time: string,
-  visitDurationMinutes: number,
-): TripCommand {
-  return createPlacePatchCommand(placeId, { time, visitDurationMinutes });
-}
-
-export function createUpdatePreferredDurationCommand(
-  placeId: string,
-  preferredDurationMinutes: number,
-): TripCommand {
-  return createPlacePatchCommand(placeId, { preferredDurationMinutes });
-}
-
-export function createUpdatePlaceStyleCommand(
-  placeId: string,
-  placeStyle: PlaceStyle,
-): TripCommand {
-  return createPlacePatchCommand(placeId, { placeStyle });
-}
-
-export function createUpdatePolylineModesCommand(
-  polylineIds: readonly string[],
-  mode: TripPolylineMode,
-): TripCommand {
-  const uniquePolylineIds = new Set(polylineIds);
-  return defineTripCommand((trip) => {
-    for (const polylineId of uniquePolylineIds) {
-      findPolyline(trip, polylineId).mode = mode;
-    }
-    return trip;
-  });
-}
-
-export function createUpdatePolylineModeCommand(
-  polylineId: string,
-  mode: TripPolylineMode,
-): TripCommand {
-  return createUpdatePolylineModesCommand([polylineId], mode);
-}
-
-function createPlacePatchCommand(
-  placeId: string,
-  patch: Partial<PlaceInput>,
-): TripCommand {
-  const placePatch = synchronizePlaceDurations(structuredClone(patch));
-  return defineTripCommand((trip) => {
-    Object.assign(findPlace(trip, placeId), placePatch);
-    return trip;
-  });
-}
-
-function synchronizePlaceDurations(
-  patch: Partial<PlaceInput>,
-): Partial<PlaceInput> {
-  const durationMinutes =
-    patch.preferredDurationMinutes ?? patch.visitDurationMinutes;
-  if (durationMinutes === undefined) {
-    return patch;
-  }
-  return {
-    ...patch,
-    visitDurationMinutes: durationMinutes,
-    preferredDurationMinutes: durationMinutes,
-  };
-}
-
-function findPlace(trip: Trip, placeId: string): TripPlace {
-  const place = trip.days
-    .flatMap((day) => day.places)
-    .find((candidate) => candidate.id === placeId);
-  if (!place) {
-    throw new Error(L('map:tripCommands.error.locationNotFound'));
-  }
-  return place;
-}
-
-function findPolyline(trip: Trip, polylineId: string): TripPolyline {
-  const polyline = trip.days
-    .flatMap((day) => day.polylines)
-    .find((item) => item.id === polylineId);
-  if (!polyline) {
-    throw new Error(L('map:tripCommands.error.connectorNotFound'));
-  }
-  return polyline;
-}
-
-function readPendingId(value: string): string {
-  const parsed = tripIdSchema.safeParse(value);
-  if (!parsed.success || !parsed.data.startsWith('pending-')) {
-    throw new Error(L('map:tripCommands.error.newTripItemIdIncorrect'));
-  }
-  return parsed.data;
 }

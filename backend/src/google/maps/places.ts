@@ -22,6 +22,11 @@ import {
   loadExternalApiPolicy,
   type ExternalApiPolicy,
 } from '../../configuration/externalApiPolicy.js';
+import {
+  assertInstrumentedNetworkAllowed,
+  instrumentExternalApiFetch,
+  resolveInstrumentedExternalApiMode,
+} from '../../observability/externalApiUsage/externalApiUsage.js';
 
 export class Places {
   public constructor(
@@ -37,7 +42,11 @@ export class Places {
   ): Promise<PlaceAutocompleteResponse> {
     const input = this.validateRequest(placeAutocompleteRequestSchema, request);
     if (
-      this.externalApiPolicy.resolve('google-places', 'autocomplete') === 'mock'
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'google-places',
+        'autocomplete',
+      ) === 'mock'
     ) {
       return this.mockAutocomplete(input);
     }
@@ -78,7 +87,13 @@ export class Places {
 
   public async getPlace(request: PlaceDetailsRequest): Promise<PlaceDetails> {
     const input = this.validateRequest(placeDetailsRequestSchema, request);
-    if (this.externalApiPolicy.resolve('google-places', 'details') === 'mock') {
+    if (
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'google-places',
+        'details',
+      ) === 'mock'
+    ) {
       return this.mockPlace(input);
     }
     const query = new URLSearchParams({
@@ -226,9 +241,11 @@ export class Places {
     path: string,
     options: { method: 'POST' | 'GET'; fieldMask: string; body?: string },
   ): Promise<unknown> {
-    this.externalApiPolicy.assertNetworkAllowed(
+    const operation = options.method === 'POST' ? 'autocomplete' : 'details';
+    assertInstrumentedNetworkAllowed(
+      this.externalApiPolicy,
       'google-places',
-      options.method,
+      operation,
     );
     if (!this.apiKey) {
       throw new ApiError(
@@ -239,16 +256,21 @@ export class Places {
     }
     const signal = AbortSignal.timeout(this.timeoutMs);
     try {
-      const response = await fetch(`https://places.googleapis.com/v1/${path}`, {
-        method: options.method,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Goog-Api-Key': this.apiKey,
-          'X-Goog-FieldMask': options.fieldMask,
-        },
-        body: options.body,
-        signal,
-      });
+      const response = await instrumentExternalApiFetch(
+        'google-places',
+        operation,
+        () =>
+          fetch(`https://places.googleapis.com/v1/${path}`, {
+            method: options.method,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Goog-Api-Key': this.apiKey,
+              'X-Goog-FieldMask': options.fieldMask,
+            },
+            body: options.body,
+            signal,
+          }),
+      );
       if (!response.ok) {
         // Never relay Google's error body or request credentials to the client.
         void response.body?.cancel().catch(() => {});

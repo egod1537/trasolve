@@ -16,7 +16,15 @@ import {
 } from '@/features/map-workspace/domain/cameraPolicy';
 import type { MapFocusTarget } from '@/features/map-workspace/domain/mapUiTypes';
 import { TripLayer } from '@/features/map-workspace/ui/TripLayer';
+import { getExternalApiDisabledMessage } from '@/shared/api/externalApiDisabled';
 import { useL, L } from '@/shared/i18n';
+import { MeasurementLayer } from '../measurement/MeasurementLayer';
+import type { Measurement } from '../measurement/useMeasurement';
+import {
+  RouteComparisonLayer,
+  type RouteComparisonData,
+  type RouteComparisonMode,
+} from '@/features/route-optimization';
 
 type TripObjectsProps = {
   trip: Trip;
@@ -32,12 +40,17 @@ type TripObjectsProps = {
 };
 
 type Props = TripObjectsProps & {
+  measurement?: Measurement;
+  comparison?: RouteComparisonData;
+  comparisonMode?: RouteComparisonMode;
+  comparisonSidebarRef?: RefObject<HTMLElement | null>;
   onMapClick: (event: MapClickEvent) => void;
   mapRef?: RefObject<GoogleMapHandle | null>;
   overlay?: ReactNode;
 };
 
 const mapOptions: GoogleMapOptions = { clickableIcons: true };
+const noVisibleDays: ReadonlySet<string> = new Set();
 
 const TripObjects = memo(function TripObjects({
   trip,
@@ -132,7 +145,7 @@ function renderMapStatus(status: Exclude<GoogleMapStatus, 'ready'>) {
   return (
     <div
       className="trip-map-status"
-      role={status === 'error' ? 'alert' : 'status'}
+      role={status === 'error' || status === 'disabled' ? 'alert' : 'status'}
     >
       <h2>
         {status === 'loading'
@@ -140,15 +153,17 @@ function renderMapStatus(status: Exclude<GoogleMapStatus, 'ready'>) {
           : L('map:mapCanvas.renderMapStatus.title.canTLoadMap')}
       </h2>
       <p>
-        {status === 'missing-key'
-          ? L(
-              'map:mapCanvas.renderMapStatus.description.onceYouVeEstablishedMapConnection',
-            )
-          : status === 'error'
+        {status === 'disabled'
+          ? getExternalApiDisabledMessage('google-maps')
+          : status === 'missing-key'
             ? L(
-                'map:mapCanvas.renderMapStatus.description.checkMapConnectionTryAgainYou',
+                'map:mapCanvas.renderMapStatus.description.onceYouVeEstablishedMapConnection',
               )
-            : L('map:mapCanvas.renderMapStatus.description.waitMoment')}
+            : status === 'error'
+              ? L(
+                  'map:mapCanvas.renderMapStatus.description.checkMapConnectionTryAgainYou',
+                )
+              : L('map:mapCanvas.renderMapStatus.description.waitMoment')}
       </p>
       {status === 'error' && (
         <button type="button" onClick={() => window.location.reload()}>
@@ -161,7 +176,16 @@ function renderMapStatus(status: Exclude<GoogleMapStatus, 'ready'>) {
 
 export const MapCanvas = memo(function MapCanvas(props: Props) {
   const L = useL();
-  const { mapRef, onMapClick, overlay, ...tripObjectProps } = props;
+  const {
+    mapRef,
+    measurement,
+    onMapClick,
+    overlay,
+    comparison,
+    comparisonMode,
+    comparisonSidebarRef,
+    ...tripObjectProps
+  } = props;
   return (
     <GoogleMap
       ref={mapRef}
@@ -169,11 +193,40 @@ export const MapCanvas = memo(function MapCanvas(props: Props) {
       style={{ position: 'absolute', inset: 0, height: '100%' }}
       ariaLabel={L('map:mapCanvas.ariaLabel.travelLocationMap')}
       renderStatus={renderMapStatus}
-      onMapClick={onMapClick}
-      options={mapOptions}
+      onMapClick={comparison ? undefined : onMapClick}
+      options={
+        measurement && measurement.tool !== 'pan'
+          ? {
+              ...mapOptions,
+              clickableIcons: false,
+              disableDoubleClickZoom: true,
+            }
+          : mapOptions
+      }
     >
-      <TripObjects {...tripObjectProps} />
-      {overlay}
+      {measurement && !comparison && (
+        <MeasurementLayer measurement={measurement} />
+      )}
+      <TripObjects
+        {...tripObjectProps}
+        onFocusPlace={
+          measurement && measurement.tool !== 'pan'
+            ? () => undefined
+            : tripObjectProps.onFocusPlace
+        }
+        visibleDayIds={
+          comparison ? noVisibleDays : tripObjectProps.visibleDayIds
+        }
+      />
+      {comparison ? (
+        <RouteComparisonLayer
+          data={comparison}
+          mode={comparisonMode ?? 'result'}
+          sidebarRef={comparisonSidebarRef ?? tripObjectProps.sidebarRef}
+        />
+      ) : (
+        overlay
+      )}
     </GoogleMap>
   );
 });

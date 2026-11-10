@@ -1,812 +1,80 @@
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type FormEvent,
-  type ReactNode,
-  type KeyboardEvent,
-} from 'react';
-import {
-  CHAT_LIMITS,
-  type ChatMessage,
-  type ChatRequest,
-} from '@trasolve/shared';
-import { sendChat } from '@/features/ai-chat/api/chat';
+import { forwardRef, type FormEvent, type KeyboardEvent } from 'react';
+import { CHAT_LIMITS } from '@trasolve/shared';
+
 import { downloadChatMarkdown } from '@/features/ai-chat/lib/chatMarkdown';
 import { ChatMarkdown } from '@/features/ai-chat/ui/ChatMarkdown';
-import {
-  parseDebugDelayCommand,
-  waitForDebugDelay,
-} from '@/features/ai-chat/ui/debugDelay';
-import {
-  logThreadRequestLifecycle,
-  type ThreadRequestLifecycleStage,
-} from '@/features/ai-chat/ui/requestLifecycle';
-import { useThreadRequests } from '@/features/ai-chat/ui/useThreadRequests';
+import { AiPanelFrame } from '@/features/ai-chat/ui/AiPanelFrame';
+
 import { CloseIcon } from '@/shared/ui/icons';
+import { TokenCostSummary } from '@/features/billing';
 import '@/features/ai-chat/ui/chat-panel.css';
-import { getLanguage, useL, L, type Localize } from '@/shared/i18n';
 
-/**
- * System messages plus an opaque request-time context. The context is captured
- * together with the system messages, stored on the resulting assistant message,
- * and handed back to the assistant actions, so an answer is only ever
- * interpreted against the context that was sent with its own request.
- */
-export type ChatRequestPreamble = {
-  systemMessages: readonly ChatMessage[];
-  context?: string;
-  /** Tools the model may call for this request (edit mode only). */
-  tools?: ChatRequest['tools'];
-};
+import {
+  type Props,
+  type MapAiPanelHandle,
+  type ChatThread,
+} from '@/features/ai-chat/model/chatTypes';
 
-type Props = {
-  open: boolean;
-  singleSession?: boolean;
-  persistenceKey?: string;
-  getRequestPreamble?: () => Promise<ChatRequestPreamble>;
-  renderAssistantActions?: (content: string, context?: string) => ReactNode;
-  /** Always visible above the messages, independent of any message. */
-  notice?: ReactNode;
-  model?: string;
-  onClose?: () => void;
-  onGeneratingChange?: (generating: boolean) => void;
-  onUnreadPreviewsChange?: (previews: MapAiUnreadPreview[]) => void;
-};
+import { getThreadTitle } from '@/features/ai-chat/ui/chatPresentation';
+export {
+  type ChatRequestPreamble,
+  type MapAiUnreadPreview,
+  type MapAiPanelHandle,
+} from '@/features/ai-chat/model/chatTypes';
 
-type UiChatMessage = ChatMessage & {
-  id: string;
-  createdAt: number;
-  unread: boolean;
-  requestContent?: string | null;
-  /** Opaque context captured when the request for this answer was sent. */
-  requestContext?: string;
-};
-
-const MAX_REQUEST_CONTEXT_LENGTH = 100_000;
-
-export type MapAiUnreadPreview = {
-  messageId: string;
-  threadId: string;
-  threadTitle: string;
-  content: string;
-  createdAt: number;
-};
-
-export type MapAiPanelHandle = {
-  viewSelectedThread(): void;
-  viewThread(threadId: string): void;
-};
-
-type ChatThread = {
-  id: string;
-  title: string;
-  titleIsDefault: boolean;
-  messages: UiChatMessage[];
-  updatedAt: number;
-  archived: boolean;
-  error: string | null;
-};
-
-type PersistedProductChat = {
-  messages: UiChatMessage[];
-  draft: string;
-};
-
-function readProductChat(key: string | undefined): PersistedProductChat | null {
-  if (!key) {
-    return null;
-  }
-  try {
-    const stored: unknown = JSON.parse(sessionStorage.getItem(key) ?? 'null');
-    if (!stored || typeof stored !== 'object') {
-      return null;
-    }
-    const value = stored as Record<string, unknown>;
-    if (
-      value.version !== 1 ||
-      !Array.isArray(value.messages) ||
-      typeof value.draft !== 'string' ||
-      value.draft.length > CHAT_LIMITS.messageLength
-    ) {
-      return null;
-    }
-    const messages: UiChatMessage[] = [];
-    for (const item of value.messages) {
-      if (!item || typeof item !== 'object') {
-        return null;
-      }
-      const message = item as Record<string, unknown>;
-      if (
-        typeof message.id !== 'string' ||
-        !/^(user|assistant)-[1-9]\d*$/.test(message.id) ||
-        (message.role !== 'user' && message.role !== 'assistant') ||
-        typeof message.content !== 'string' ||
-        !message.content.trim() ||
-        Array.from(message.content).length > CHAT_LIMITS.messageLength ||
-        typeof message.createdAt !== 'number' ||
-        !Number.isFinite(message.createdAt) ||
-        typeof message.unread !== 'boolean' ||
-        (message.requestContent !== undefined &&
-          message.requestContent !== null &&
-          typeof message.requestContent !== 'string')
-      ) {
-        return null;
-      }
-      const { requestContext, ...rest } = message;
-      messages.push({
-        ...(rest as UiChatMessage),
-        // Only a well-formed string is trusted; anything else is dropped so a
-        // consumer treats the answer as having no verifiable request context.
-        ...(typeof requestContext === 'string' &&
-        requestContext.length <= MAX_REQUEST_CONTEXT_LENGTH
-          ? { requestContext }
-          : {}),
-      });
-    }
-    return { messages, draft: value.draft };
-  } catch {
-    return null;
-  }
-}
-
-function nextMessageId(messages: readonly UiChatMessage[]): number {
-  let next = 1;
-  for (const message of messages) {
-    const id = Number(message.id.split('-')[1]);
-    if (Number.isSafeInteger(id)) {
-      next = Math.max(next, id + 1);
-    }
-  }
-  return next;
-}
-
-function createThread(id: string): ChatThread {
-  return {
-    id,
-    title: L('ai:mapAiPanel.createThread.title.newChat'),
-    titleIsDefault: true,
-    messages: [],
-    updatedAt: Date.now(),
-    archived: false,
-    error: null,
-  };
-}
-
-function getThreadTitle(thread: ChatThread, localize: Localize): string {
-  return thread.titleIsDefault
-    ? localize('ai:mapAiPanel.createThread.title.newChat')
-    : thread.title;
-}
-
-function formatRelativeTime(timestamp: number): string {
-  const elapsedMinutes = Math.max(
-    0,
-    Math.floor((Date.now() - timestamp) / 60000),
-  );
-  if (elapsedMinutes < 1) {
-    return L('ai:mapAiPanel.formatRelativeTime.text.justNow');
-  }
-  if (elapsedMinutes < 60) {
-    return L('ai:mapAiPanel.formatRelativeTime.text.minutesAgo', {
-      elapsedMinutes: elapsedMinutes,
-    });
-  }
-  const elapsedHours = Math.floor(elapsedMinutes / 60);
-  if (elapsedHours < 24) {
-    return L('ai:mapAiPanel.formatRelativeTime.text.hoursAgo', {
-      elapsedHours: elapsedHours,
-    });
-  }
-  const elapsedDays = Math.floor(elapsedHours / 24);
-  return elapsedDays < 7
-    ? L('ai:mapAiPanel.formatRelativeTime.text.daysAgo', {
-        elapsedDays: elapsedDays,
-      })
-    : new Intl.DateTimeFormat(getLanguage(), {
-        month: 'short',
-        day: 'numeric',
-      }).format(timestamp);
-}
-
-function getUnreadPreviews(
-  threads: ChatThread[],
-  localize: Localize,
-): MapAiUnreadPreview[] {
-  return threads
-    .flatMap((thread) =>
-      thread.messages.flatMap((message) =>
-        message.role === 'assistant' && message.unread
-          ? [
-              {
-                messageId: message.id,
-                threadId: thread.id,
-                threadTitle: getThreadTitle(thread, localize),
-                content: message.content,
-                createdAt: message.createdAt,
-              },
-            ]
-          : [],
-      ),
-    )
-    .sort((left, right) => right.createdAt - left.createdAt)
-    .slice(0, 3);
-}
-
-function buildChatRequestMessages(
-  messages: readonly UiChatMessage[],
-): ChatMessage[] {
-  return messages
-    .filter((message) => message.requestContent !== null)
-    .slice(-CHAT_LIMITS.messages)
-    .map(({ role, content, requestContent }) => ({
-      role,
-      content: requestContent ?? content,
-    }));
-}
-
-function markAssistantMessagesRead(messages: UiChatMessage[]): UiChatMessage[] {
-  let changed = false;
-  const next = messages.map((message) => {
-    if (message.role !== 'assistant' || !message.unread) {
-      return message;
-    }
-    changed = true;
-    return { ...message, unread: false };
-  });
-  return changed ? next : messages;
-}
-
-function assertThreadMessageRefInvariant(
-  threads: readonly ChatThread[],
-  refs: ReadonlyMap<string, UiChatMessage[]>,
-): void {
-  if (!import.meta.env.DEV) {
-    return;
-  }
-  for (const thread of threads) {
-    const snapshot = refs.get(thread.id);
-    if (!snapshot) {
-      console.error('[Trasolve chat invariant] missing message snapshot', {
-        threadId: thread.id,
-      });
-    } else if (snapshot !== thread.messages) {
-      console.error('[Trasolve chat invariant] stale message snapshot', {
-        threadId: thread.id,
-        refMessageCount: snapshot.length,
-        stateMessageCount: thread.messages.length,
-      });
-    }
-  }
-}
+import { useChatThreads } from '../model/useChatThreads';
+import { useChatSubmission } from '../model/useChatSubmission';
+import { ChatThreadItem } from './ChatThreadItem';
 
 export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
-  function MapAiPanel(
-    {
+  function MapAiPanel(props, ref) {
+    const {
       open,
+      modal = false,
       singleSession = false,
-      persistenceKey,
       model,
       onClose,
-      onGeneratingChange,
-      onUnreadPreviewsChange,
       getRequestPreamble,
       renderAssistantActions,
       notice,
-    },
-    ref,
-  ) {
-    const L = useL();
-    const [initialProductChat] = useState(() =>
-      readProductChat(persistenceKey),
-    );
-    const [threads, setThreads] = useState<ChatThread[]>(() => [
-      {
-        ...createThread('chat-1'),
-        messages: initialProductChat?.messages ?? [],
-      },
-    ]);
-    const threadMessagesRef = useRef<Map<string, UiChatMessage[]>>(
-      new Map([['chat-1', threads[0]!.messages]]),
-    );
-    const threadsRef = useRef(threads);
-    const threadIdsRef = useRef(new Set(['chat-1']));
-    const [selectedThreadId, setSelectedThreadId] = useState('chat-1');
-    const [drafts, setDrafts] = useState<Record<string, string>>(
-      (): Record<string, string> =>
-        initialProductChat ? { 'chat-1': initialProductChat.draft } : {},
-    );
-    const draftsRef = useRef<Record<string, string>>(drafts);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [openMenuThreadId, setOpenMenuThreadId] = useState<string | null>(
-      null,
-    );
-    const [renamingThreadId, setRenamingThreadId] = useState<string | null>(
-      null,
-    );
-    const [renameDraft, setRenameDraft] = useState('');
-    const [listDrawerOpen, setListDrawerOpen] = useState(false);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const messagesRef = useRef<HTMLDivElement>(null);
-    const nextThreadIdRef = useRef(2);
-    const nextMessageIdRef = useRef(
-      nextMessageId(initialProductChat?.messages ?? []),
-    );
-    const openRef = useRef(open);
-    const selectedThreadIdRef = useRef(selectedThreadId);
-    const getSelectedThreadId = useCallback(
-      () => selectedThreadIdRef.current,
-      [],
-    );
+    } = props;
+    const state = useChatThreads(props, ref);
     const {
-      sendingThreadIds,
-      isThreadSending,
-      beginRequest,
-      finishRequest,
-      setDebugDelayPending,
-      cancelThreadRequest,
-    } = useThreadRequests(getSelectedThreadId);
-    const selectedThread = useMemo(
-      () =>
-        threads.find((thread) => thread.id === selectedThreadId) ?? threads[0]!,
-      [selectedThreadId, threads],
-    );
-    const draft = drafts[selectedThread.id] ?? '';
-    const normalizedQuery = useMemo(
-      () => searchQuery.trim().toLocaleLowerCase(getLanguage()),
-      [searchQuery],
-    );
-    const visibleThreads = useMemo(
-      () =>
-        threads
-          .filter(
-            (thread) =>
-              !normalizedQuery ||
-              getThreadTitle(thread, L)
-                .toLocaleLowerCase(getLanguage())
-                .includes(normalizedQuery),
-          )
-          .sort((left, right) => right.updatedAt - left.updatedAt),
-      [L, normalizedQuery, threads],
-    );
-    const [recentThreads, archivedThreads] = useMemo(
-      () => [
-        visibleThreads.filter((thread) => !thread.archived),
-        visibleThreads.filter((thread) => thread.archived),
-      ],
-      [visibleThreads],
-    );
-    const selectedThreadSending = sendingThreadIds.has(selectedThread.id);
-    const generating = sendingThreadIds.size > 0;
-    const unreadPreviews = useMemo(
-      () => getUnreadPreviews(threads, L),
-      [L, threads],
-    );
-
-    useLayoutEffect(() => {
-      openRef.current = open;
-      selectedThreadIdRef.current = selectedThreadId;
-    }, [open, selectedThreadId]);
-
-    useLayoutEffect(() => {
-      threadsRef.current = threads;
-      threadIdsRef.current = new Set(threads.map((thread) => thread.id));
-      assertThreadMessageRefInvariant(threads, threadMessagesRef.current);
-    }, [threads]);
-
-    useEffect(() => {
-      onGeneratingChange?.(generating);
-      return () => onGeneratingChange?.(false);
-    }, [generating, onGeneratingChange]);
-
-    useEffect(() => {
-      onUnreadPreviewsChange?.(unreadPreviews);
-    }, [onUnreadPreviewsChange, unreadPreviews]);
-
-    useEffect(() => {
-      if (!persistenceKey) {
-        return;
-      }
-      try {
-        sessionStorage.setItem(
-          persistenceKey,
-          JSON.stringify({
-            version: 1,
-            messages: threads[0]?.messages ?? [],
-            draft: drafts['chat-1'] ?? '',
-          }),
-        );
-      } catch {
-        // The active conversation remains available when browser storage is full.
-      }
-    }, [drafts, persistenceKey, threads]);
-
-    useEffect(() => {
-      if (open) {
-        textareaRef.current?.focus({ preventScroll: true });
-      }
-    }, [open, selectedThreadId]);
-
-    useEffect(() => {
-      messagesRef.current?.scrollTo({
-        top: messagesRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
-    }, [
-      selectedThread.id,
-      selectedThread.messages.length,
-      selectedThread.error,
+      changeDraft,
+      cancelRename,
+      toggleThreadMenu,
+      cancelCreation,
+      searchQuery,
+      setSearchQuery,
       selectedThreadSending,
-      open,
-    ]);
-
-    useEffect(() => {
-      if (!openMenuThreadId) {
-        return;
-      }
-      const closeOnOutsidePointer = (event: PointerEvent) => {
-        if (
-          event.target instanceof Element &&
-          !event.target.closest('.trip-ai-chat-item-more')
-        ) {
-          setOpenMenuThreadId(null);
-        }
-      };
-      const closeOnEscape = (event: globalThis.KeyboardEvent) => {
-        if (event.key === 'Escape') {
-          setOpenMenuThreadId(null);
-        }
-      };
-      document.addEventListener('pointerdown', closeOnOutsidePointer);
-      document.addEventListener('keydown', closeOnEscape);
-      return () => {
-        document.removeEventListener('pointerdown', closeOnOutsidePointer);
-        document.removeEventListener('keydown', closeOnEscape);
-      };
-    }, [openMenuThreadId]);
-
-    const changeSelectedThread = useCallback((threadId: string) => {
-      selectedThreadIdRef.current = threadId;
-      setSelectedThreadId(threadId);
-    }, []);
-
-    const markThreadRead = useCallback((threadId: string) => {
-      const messageSnapshot = threadMessagesRef.current.get(threadId);
-      if (!messageSnapshot) {
-        return;
-      }
-      const nextMessages = markAssistantMessagesRead(messageSnapshot);
-      threadMessagesRef.current.set(threadId, nextMessages);
-      setThreads((current) => {
-        const next = current.map((thread) => {
-          if (thread.id !== threadId) {
-            return thread;
-          }
-          return nextMessages === thread.messages
-            ? thread
-            : { ...thread, messages: nextMessages };
-        });
-        return next.some((thread, index) => thread !== current[index])
-          ? next
-          : current;
-      });
-    }, []);
-
-    useImperativeHandle(
-      ref,
-      () => ({
-        viewSelectedThread: () => {
-          markThreadRead(selectedThreadIdRef.current);
-        },
-        viewThread: (threadId) => {
-          changeSelectedThread(threadId);
-          setOpenMenuThreadId(null);
-          setRenamingThreadId(null);
-          setListDrawerOpen(false);
-          markThreadRead(threadId);
-        },
-      }),
-      [changeSelectedThread, markThreadRead],
-    );
-
-    const createNewThread = () => {
-      const thread = createThread(`chat-${nextThreadIdRef.current++}`);
-      threadMessagesRef.current.set(thread.id, thread.messages);
-      threadIdsRef.current.add(thread.id);
-      setThreads((current) => [thread, ...current]);
-      changeSelectedThread(thread.id);
-      setOpenMenuThreadId(null);
-      setRenamingThreadId(null);
-      setListDrawerOpen(false);
-    };
-
-    const selectThread = (threadId: string) => {
-      changeSelectedThread(threadId);
-      markThreadRead(threadId);
-      setOpenMenuThreadId(null);
-      setRenamingThreadId(null);
-      setListDrawerOpen(false);
-    };
-
-    const beginRename = (thread: ChatThread) => {
-      setRenamingThreadId(thread.id);
-      setRenameDraft(getThreadTitle(thread, L));
-      setOpenMenuThreadId(null);
-    };
-
-    const commitRename = (threadId: string) => {
-      const title = renameDraft.trim();
-      if (!title) {
-        return;
-      }
-      setThreads((current) =>
-        current.map((thread) =>
-          thread.id === threadId
-            ? {
-                ...thread,
-                title,
-                titleIsDefault: false,
-                updatedAt: Date.now(),
-              }
-            : thread,
-        ),
-      );
-      setRenamingThreadId(null);
-      setRenameDraft('');
-    };
-
-    const setArchived = (threadId: string, archived: boolean) => {
-      let replacement: ChatThread | null = null;
-      if (archived && selectedThreadIdRef.current === threadId) {
-        const fallback = threads.find(
-          (thread) => thread.id !== threadId && !thread.archived,
-        );
-        if (fallback) {
-          changeSelectedThread(fallback.id);
-        } else {
-          replacement = createThread(`chat-${nextThreadIdRef.current++}`);
-          threadMessagesRef.current.set(replacement.id, replacement.messages);
-          threadIdsRef.current.add(replacement.id);
-          changeSelectedThread(replacement.id);
-        }
-      }
-      setThreads((current) => {
-        const next = current.map((thread) =>
-          thread.id === threadId
-            ? { ...thread, archived, updatedAt: Date.now() }
-            : thread,
-        );
-        return replacement ? [replacement, ...next] : next;
-      });
-      setOpenMenuThreadId(null);
-    };
-
-    const deleteThread = (threadId: string) => {
-      cancelThreadRequest(threadId, 'thread-deleted');
-      threadMessagesRef.current.delete(threadId);
-      threadIdsRef.current.delete(threadId);
-      const remainingThreads = threads.filter(
-        (thread) => thread.id !== threadId,
-      );
-      const replacement = remainingThreads.length
-        ? null
-        : createThread(`chat-${nextThreadIdRef.current++}`);
-      if (replacement) {
-        threadMessagesRef.current.set(replacement.id, replacement.messages);
-        threadIdsRef.current.add(replacement.id);
-      }
-      if (selectedThreadIdRef.current === threadId) {
-        changeSelectedThread(
-          remainingThreads.find((thread) => !thread.archived)?.id ??
-            remainingThreads[0]?.id ??
-            replacement!.id,
-        );
-      }
-      setThreads((current) => {
-        const next = current.filter((thread) => thread.id !== threadId);
-        return next.length ? next : [replacement!];
-      });
-      const nextDrafts = { ...draftsRef.current };
-      delete nextDrafts[threadId];
-      draftsRef.current = nextDrafts;
-      setDrafts(nextDrafts);
-      setOpenMenuThreadId(null);
-      setRenamingThreadId(null);
-    };
-
-    const submitMessage = async () => {
-      const threadId = selectedThreadIdRef.current;
-      const content = (draftsRef.current[threadId] ?? '').trim();
-      if (!content || isThreadSending(threadId)) {
-        return;
-      }
-
-      const delayCommand = parseDebugDelayCommand(content);
-      const request =
-        delayCommand.kind === 'invalid' ? null : beginRequest(threadId);
-      if (delayCommand.kind !== 'invalid' && !request) {
-        return;
-      }
-      const logLifecycle = (
-        stage: ThreadRequestLifecycleStage,
-        details: { messageCount?: number; reason?: unknown } = {},
-      ) => {
-        if (!request) {
-          return;
-        }
-        logThreadRequestLifecycle(stage, {
-          ...request,
-          ...details,
-          threadId,
-          selectedThreadId: selectedThreadIdRef.current,
-        });
-      };
-      const requestContent =
-        delayCommand.kind === 'valid'
-          ? delayCommand.prompt
-          : delayCommand.kind === 'invalid'
-            ? null
-            : undefined;
-      const userMessageId = `user-${nextMessageIdRef.current++}`;
-      const submittedAt = Date.now();
-      const userMessage: UiChatMessage = {
-        id: userMessageId,
-        role: 'user',
-        content,
-        createdAt: submittedAt,
-        unread: false,
-        requestContent,
-      };
-      const currentMessages = threadMessagesRef.current.get(threadId);
-      if (!currentMessages) {
-        logLifecycle('REQUEST_DROPPED', {
-          reason: threadIdsRef.current.has(threadId)
-            ? 'missing-message-snapshot'
-            : 'thread-deleted',
-        });
-        if (request) {
-          finishRequest(threadId, request);
-        }
-        return;
-      }
-      const nextMessages = [...currentMessages, userMessage];
-      const requestMessages = buildChatRequestMessages(nextMessages);
-      threadMessagesRef.current.set(threadId, nextMessages);
-      logLifecycle('USER_MESSAGE_APPENDED', {
-        messageCount: nextMessages.length,
-      });
-      setThreads((current) =>
-        current.map((thread) =>
-          thread.id === threadId
-            ? {
-                ...thread,
-                messages: nextMessages,
-                updatedAt: submittedAt,
-                error:
-                  delayCommand.kind === 'invalid' ? delayCommand.error : null,
-              }
-            : thread,
-        ),
-      );
-      draftsRef.current = { ...draftsRef.current, [threadId]: '' };
-      setDrafts(draftsRef.current);
-      if (delayCommand.kind === 'invalid') {
-        return;
-      }
-      if (!request) {
-        return;
-      }
-      const { controller } = request;
-      try {
-        if (delayCommand.kind === 'valid') {
-          setDebugDelayPending(threadId, request, true);
-          logLifecycle('DELAY_STARTED');
-          try {
-            await waitForDebugDelay(delayCommand.delayMs, controller.signal);
-            logLifecycle('DELAY_FINISHED');
-          } finally {
-            setDebugDelayPending(threadId, request, false);
-          }
-        }
-        logLifecycle('SEND_CHAT_STARTED', {
-          messageCount: requestMessages.length,
-        });
-        const preamble = await getRequestPreamble?.();
-        const systemMessages = preamble?.systemMessages ?? [];
-        if (controller.signal.aborted) {
-          return;
-        }
-        const result = await sendChat(
-          {
-            messages: systemMessages.length
-              ? [
-                  ...systemMessages,
-                  ...requestMessages.slice(
-                    -(CHAT_LIMITS.messages - systemMessages.length),
-                  ),
-                ]
-              : requestMessages,
-            ...(model ? { model } : {}),
-            ...(preamble?.tools ? { tools: preamble.tools } : {}),
-          },
-          controller.signal,
-        );
-        logLifecycle('SEND_CHAT_RESOLVED');
-        if (controller.signal.aborted) {
-          return;
-        }
-        const completedAt = Date.now();
-        const message: UiChatMessage = {
-          ...result.message,
-          id: `assistant-${nextMessageIdRef.current++}`,
-          createdAt: completedAt,
-          unread: !openRef.current || selectedThreadIdRef.current !== threadId,
-          ...(preamble?.context === undefined
-            ? {}
-            : { requestContext: preamble.context }),
-        };
-        let latestMessages = threadMessagesRef.current.get(threadId);
-        if (!latestMessages && threadIdsRef.current.has(threadId)) {
-          latestMessages = threadsRef.current.find(
-            (thread) => thread.id === threadId,
-          )?.messages;
-          if (latestMessages) {
-            threadMessagesRef.current.set(threadId, latestMessages);
-          }
-        }
-        if (!latestMessages) {
-          logLifecycle('REQUEST_DROPPED', {
-            reason: threadIdsRef.current.has(threadId)
-              ? 'missing-message-snapshot'
-              : 'thread-deleted',
-          });
-          return;
-        }
-        const completedMessages = [...latestMessages, message];
-        threadMessagesRef.current.set(threadId, completedMessages);
-        logLifecycle('ASSISTANT_MESSAGE_APPENDED', {
-          messageCount: completedMessages.length,
-        });
-        setThreads((current) =>
-          current.map((thread) =>
-            thread.id === threadId
-              ? {
-                  ...thread,
-                  messages: completedMessages,
-                  updatedAt: completedAt,
-                }
-              : thread,
-          ),
-        );
-      } catch (cause) {
-        if (controller.signal.aborted) {
-          return;
-        }
-        setThreads((current) =>
-          current.map((thread) =>
-            thread.id === threadId
-              ? {
-                  ...thread,
-                  error:
-                    cause instanceof Error
-                      ? cause.message
-                      : L(
-                          'ai:mapAiPanel.submitMessage.error.answerCouldNotBeRetrievedTry',
-                        ),
-                }
-              : thread,
-          ),
-        );
-      } finally {
-        finishRequest(threadId, request);
-      }
-    };
-
+      L,
+      titleId,
+      sendingThreadIds,
+      cancelThreadRequest,
+      selectedThread,
+      draft,
+      recentThreads,
+      archivedThreads,
+      textareaRef,
+      messagesRef,
+      openMenuThreadId,
+      renamingThreadId,
+      renameDraft,
+      setRenameDraft,
+      listDrawerOpen,
+      setListDrawerOpen,
+      createNewThread,
+      selectThread,
+      beginRename,
+      commitRename,
+      setArchived,
+      deleteThread,
+    } = state;
+    const submitMessage = useChatSubmission({
+      ...state,
+      getRequestPreamble,
+      model,
+    });
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       void submitMessage();
@@ -828,146 +96,33 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
     };
 
     const renderThread = (thread: ChatThread) => (
-      <li
+      <ChatThreadItem
         key={thread.id}
-        className={`trip-ai-chat-item${thread.id === selectedThread.id ? ' is-selected' : ''}${sendingThreadIds.has(thread.id) ? ' is-generating' : ''}`}
-      >
-        {renamingThreadId === thread.id ? (
-          <form
-            className="trip-ai-chat-rename"
-            onSubmit={(event) => {
-              event.preventDefault();
-              commitRename(thread.id);
-            }}
-          >
-            <input
-              autoFocus
-              value={renameDraft}
-              aria-label={L('ai:mapAiPanel.renderThread.ariaLabel.chatName')}
-              maxLength={80}
-              onChange={(event) => setRenameDraft(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key !== 'Escape') {
-                  return;
-                }
-                setRenamingThreadId(null);
-                setRenameDraft('');
-              }}
-            />
-            <button type="submit" disabled={!renameDraft.trim()}>
-              {L('common:action.save')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setRenamingThreadId(null);
-                setRenameDraft('');
-              }}
-            >
-              {L('common:action.cancel')}
-            </button>
-          </form>
-        ) : (
-          <>
-            <button
-              type="button"
-              className="trip-ai-chat-select"
-              aria-pressed={thread.id === selectedThread.id}
-              onClick={() => selectThread(thread.id)}
-            >
-              <span className="trip-ai-chat-title">
-                <span className="trip-ai-chat-title-text">
-                  {getThreadTitle(thread, L)}
-                </span>
-                {sendingThreadIds.has(thread.id) && (
-                  <span
-                    className="trip-ai-chat-generating"
-                    role="status"
-                    aria-label={L(
-                      'ai:mapAiPanel.renderThread.ariaLabel.generatingAiResponse',
-                    )}
-                  />
-                )}
-              </span>
-              <time dateTime={new Date(thread.updatedAt).toISOString()}>
-                {formatRelativeTime(thread.updatedAt)}
-              </time>
-            </button>
-            <div className="trip-ai-chat-item-more">
-              <button
-                type="button"
-                className="trip-ai-chat-more-button"
-                aria-label={L('ai:mapAiPanel.renderThread.ariaLabel.menu', {
-                  title: getThreadTitle(thread, L),
-                })}
-                title={L('ai:mapAiPanel.renderThread.tooltip.chatMenu')}
-                aria-haspopup="menu"
-                aria-expanded={openMenuThreadId === thread.id}
-                onClick={() =>
-                  setOpenMenuThreadId((current) =>
-                    current === thread.id ? null : thread.id,
-                  )
-                }
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="5" cy="12" r="1.5" />
-                  <circle cx="12" cy="12" r="1.5" />
-                  <circle cx="19" cy="12" r="1.5" />
-                </svg>
-              </button>
-              {openMenuThreadId === thread.id && (
-                <div className="trip-ai-chat-menu" role="menu">
-                  {sendingThreadIds.has(thread.id) && (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        cancelThreadRequest(thread.id, 'explicit-cancel');
-                        setOpenMenuThreadId(null);
-                      }}
-                    >
-                      {L('ai:mapAiPanel.renderThread.action.cancelCreation')}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => beginRename(thread)}
-                  >
-                    {L('ai:mapAiPanel.renderThread.action.changeName')}
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => setArchived(thread.id, !thread.archived)}
-                  >
-                    {thread.archived
-                      ? L('ai:mapAiPanel.renderThread.action.unarchive')
-                      : L('ai:mapAiPanel.renderThread.action.storage')}
-                  </button>
-                  <button
-                    type="button"
-                    className="is-destructive"
-                    role="menuitem"
-                    onClick={() => deleteThread(thread.id)}
-                  >
-                    {L('common:action.delete')}
-                  </button>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </li>
+        thread={thread}
+        selected={thread.id === selectedThread.id}
+        sending={sendingThreadIds.has(thread.id)}
+        renaming={thread.id === renamingThreadId}
+        menuOpen={thread.id === openMenuThreadId}
+        renameDraft={renameDraft}
+        onSelect={selectThread}
+        onBeginRename={beginRename}
+        onCommitRename={commitRename}
+        onRenameDraftChange={setRenameDraft}
+        onCancelRename={cancelRename}
+        onToggleMenu={toggleThreadMenu}
+        onCancelRequest={cancelCreation}
+        onSetArchived={setArchived}
+        onDelete={deleteThread}
+      />
     );
 
     return (
-      <aside
-        id="trip-map-ai-panel"
-        className={`trip-map-ai-panel${open ? ' is-open' : ''}`}
-        aria-label={L('ai:mapAiPanel.ariaLabel.trasolveAiTravelAssistant')}
-        aria-hidden={!open}
-        inert={!open}
+      <AiPanelFrame
+        open={open}
+        modal={modal}
+        titleId={titleId}
+        initialFocusRef={textareaRef}
+        onClose={onClose}
       >
         <div
           className={`trip-ai-chat-layout${singleSession ? ' is-single-session' : ''}`}
@@ -1053,7 +208,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                 </button>
               )}
               <div>
-                <h2>{getThreadTitle(selectedThread, L)}</h2>
+                <h2 id={titleId}>{getThreadTitle(selectedThread, L)}</h2>
                 <p>{L('ai:mapAiPanel.description.travelAssistant')}</p>
               </div>
               {onClose && (
@@ -1160,14 +315,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                 maxLength={CHAT_LIMITS.messageLength}
                 value={draft}
                 placeholder={L('ai:mapAiPanel.placeholder.askAboutTravel')}
-                onChange={(event) => {
-                  const threadId = selectedThreadIdRef.current;
-                  draftsRef.current = {
-                    ...draftsRef.current,
-                    [threadId]: event.target.value,
-                  };
-                  setDrafts(draftsRef.current);
-                }}
+                onChange={(event) => changeDraft(event.target.value)}
                 onKeyDown={handleComposerKeyDown}
               />
               <button
@@ -1179,9 +327,10 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                   : L('ai:mapAiPanel.action.transfer')}
               </button>
             </form>
+            <TokenCostSummary action="chat" />
           </section>
         </div>
-      </aside>
+      </AiPanelFrame>
     );
   },
 );

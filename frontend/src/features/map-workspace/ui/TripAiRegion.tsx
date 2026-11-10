@@ -1,3 +1,4 @@
+import { useTripData } from '@/features/map-workspace/hooks/useTrip';
 import {
   useEffect,
   useMemo,
@@ -32,7 +33,7 @@ type Props = {
 
 export function TripAiRegion(props: Props) {
   const mode = useTripMode();
-  const { trip } = useTripState();
+  const trip = useTripData();
   return mode === 'edit' ? (
     <EditableTripAiRegion key={trip.id} {...props} />
   ) : (
@@ -41,7 +42,7 @@ export function TripAiRegion(props: Props) {
 }
 
 function EditableTripAiRegion({ selectedPlaceIds = [], ...props }: Props) {
-  const { trip } = useTripState();
+  const trip = useTripData();
   const L = useL();
   const getRequestPreamble = async (): Promise<ChatRequestPreamble> => {
     // Freeze the selection at send time, before any await, and return it with

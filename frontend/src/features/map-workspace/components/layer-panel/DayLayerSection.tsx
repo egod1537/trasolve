@@ -6,19 +6,7 @@ import {
   type MouseEvent,
 } from 'react';
 import type { PlaceStyle } from '@trasolve/shared';
-import type { useDayReorder } from '@/features/map-workspace/hooks/useDayReorder';
-import type { LayerSelectionModifiers } from '@/features/map-workspace/model/useMapWorkspace';
-import {
-  type PlaceDragState,
-  type usePlaceReorder,
-} from '@/features/map-workspace/hooks/usePlaceReorder';
-import type {
-  LayerItem,
-  LayerValidationByItemKey,
-  TripDay,
-  TripPlace,
-  TripPolyline,
-} from '@/entities/trip';
+import type { LayerValidationByItemKey, TripDay } from '@/entities/trip';
 import { InlineRename } from '@/shared/ui/InlineRename';
 import { IconButton } from '@/shared/ui/IconButton';
 import { ShuffleIcon } from '@/shared/ui/icons';
@@ -28,90 +16,17 @@ import { LayerItemChevron } from '@/features/map-workspace/components/layer-pane
 import { PlaceLayerItem } from '@/features/map-workspace/components/layer-panel/PlaceLayerItem';
 import { PolylineLayerItem } from '@/features/map-workspace/components/layer-panel/PolylineLayerItem';
 import { useL } from '@/shared/i18n';
-
-type ReorderControls = ReturnType<typeof usePlaceReorder>;
-type DayReorderControls = ReturnType<typeof useDayReorder>;
-
-type DropIndicator = {
-  itemKey: string;
-  position: 'before' | 'after';
-} | null;
-
-type RenderedLayerItem =
-  | {
-      type: 'place';
-      key: string;
-      place: TripPlace;
-    }
-  | {
-      type: 'polyline';
-      key: string;
-      polyline: TripPolyline;
-    };
-
-export type SelectionProps = {
-  selectedPlaceId: string | null;
-  selectedPlaceIds: ReadonlySet<string>;
-  selectedPolylineId: string | null;
-  selectedPolylineIds: ReadonlySet<string>;
-  selectedDayId: string | null;
-  visibleDayIds: ReadonlySet<string>;
-  onSelectPlace: (id: string, modifiers: LayerSelectionModifiers) => void;
-  onFocusPlace: (id: string) => void;
-  onSelectPlaceForDetails: (id: string) => void;
-  onSelectPlaceForDrag: (id: string) => void;
-  onSelectPolyline: (id: string, modifiers: LayerSelectionModifiers) => void;
-  onSelectPolylineForDetails: (id: string) => void;
-  onSelectDay: (id: string) => void;
-  onToggleDayVisibility: (id: string) => void;
-};
-
-function getDropIndicator(
-  day: TripDay,
-  dragState: PlaceDragState | null,
-): DropIndicator {
-  if (
-    !dragState ||
-    dragState.targetDayId !== day.id ||
-    (dragState.sourceDayId === dragState.targetDayId &&
-      dragState.targetIndex === dragState.sourceIndex)
-  ) {
-    return null;
-  }
-
-  const stationaryPlaces = day.places.filter(
-    (place) => place.id !== dragState.placeId,
-  );
-  const nextPlace = stationaryPlaces[dragState.targetIndex];
-  if (nextPlace) {
-    return { itemKey: `place:${nextPlace.id}`, position: 'before' };
-  }
-  const lastPlace = stationaryPlaces.at(-1);
-  return lastPlace
-    ? { itemKey: `place:${lastPlace.id}`, position: 'after' }
-    : null;
-}
-
-function getPreviewOffset(
-  dayId: string,
-  placeId: string,
-  dragState: PlaceDragState | null,
-  dayPreviewOffset: number,
-): number {
-  if (!dragState) {
-    return 0;
-  }
-  const dragging =
-    dragState.sourceDayId === dayId && dragState.placeId === placeId;
-  if (dragging) {
-    return dragState.currentY - dragState.startY - dayPreviewOffset;
-  }
-  return 0;
-}
-
-function layerItemKey(item: LayerItem): string {
-  return `${item.type}:${item.id}`;
-}
+import { DayFileImport } from '@/features/map-workspace/files/TripFileDialogs';
+import {
+  type ReorderControls,
+  type DayReorderControls,
+  type RenderedLayerItem,
+  type SelectionProps,
+  getDropIndicator,
+  getPreviewOffset,
+  layerItemKey,
+} from '@/features/map-workspace/components/layer-panel/dayLayerPresentation';
+export { type SelectionProps } from '@/features/map-workspace/components/layer-panel/dayLayerPresentation';
 
 export const DayLayerSection = memo(function DayLayerSection({
   day,
@@ -289,6 +204,7 @@ export const DayLayerSection = memo(function DayLayerSection({
             <button
               type="button"
               onClick={() => onActivateDay(day.id)}
+              disabled={!visible}
               aria-pressed={active}
             >
               <span
@@ -434,6 +350,15 @@ export const DayLayerSection = memo(function DayLayerSection({
             {layerDropAtEmpty
               ? L('map:dayLayerSection.text.putHere')
               : L('map:dayLayerSection.text.thereNoRegisteredItems')}
+          </li>
+        )}
+        {day.places.length === 0 && day.layerItems.length === 0 && (
+          <li className="trip-day-file-action">
+            <DayFileImport
+              dayId={day.id}
+              dayTitle={day.title}
+              disabled={!visible}
+            />
           </li>
         )}
       </ol>

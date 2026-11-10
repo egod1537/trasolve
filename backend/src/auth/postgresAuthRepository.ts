@@ -19,10 +19,11 @@ interface IdentityRow extends QueryResultRow {
 }
 
 interface UserRow extends QueryResultRow {
+  readonly issuer: string;
   readonly id: string;
   readonly display_name: string;
   readonly avatar_url: string | null;
-  readonly email: string;
+  readonly email: string | null;
   readonly email_verified: boolean;
 }
 
@@ -34,9 +35,19 @@ export class PostgresAuthRepository implements AuthRepository {
     subject: string,
   ): Promise<AuthIdentityRecord | undefined> {
     const result = await this.database.query<IdentityRow>(
-      `SELECT id, user_id, issuer, subject, email, email_verified
-       FROM trasolve.auth_identities
-       WHERE issuer = $1 AND subject = $2`,
+      `SELECT
+         identities.id,
+         identities.user_id,
+         identities.issuer,
+         identities.subject,
+         identities.email,
+         identities.email_verified
+       FROM trasolve.auth_identities AS identities
+       JOIN trasolve.users AS users ON users.id = identities.user_id
+       WHERE identities.issuer = $1
+         AND identities.subject = $2
+         AND users.deleted_at IS NULL
+         AND users.suspended_at IS NULL`,
       [issuer, subject],
     );
     return result.rows[0] ? mapIdentity(result.rows[0]) : undefined;
@@ -85,6 +96,30 @@ export class PostgresAuthRepository implements AuthRepository {
     }
   }
 
+  public async attachIdentity(
+    userId: string,
+    input: CreateUserWithIdentityInput,
+  ): Promise<AuthIdentityRecord> {
+    try {
+      const result = await this.database.query<IdentityRow>(
+        `INSERT INTO trasolve.auth_identities (user_id, issuer, subject, email, email_verified, last_login_at)
+         SELECT id, $2, $3, $4, $5, clock_timestamp() FROM trasolve.users
+         WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NULL
+         RETURNING id, user_id, issuer, subject, email, email_verified`,
+        [userId, input.issuer, input.subject, input.email, input.emailVerified],
+      );
+      if (!result.rows[0]) {
+        throw new Error('User is unavailable.');
+      }
+      return mapIdentity(result.rows[0]);
+    } catch (cause) {
+      if (isIdentityUniqueViolation(cause)) {
+        throw new AuthIdentityConflictError();
+      }
+      throw cause;
+    }
+  }
+
   public async updateLastLogin(
     identityId: string,
     input: UpdateIdentityLoginInput,
@@ -110,17 +145,20 @@ export class PostgresAuthRepository implements AuthRepository {
          users.id,
          users.display_name,
          users.avatar_url,
+         identity.issuer,
          identity.email,
          identity.email_verified
        FROM trasolve.users AS users
        JOIN LATERAL (
-         SELECT email, email_verified
+         SELECT issuer, email, email_verified
          FROM trasolve.auth_identities
-         WHERE user_id = users.id AND email IS NOT NULL
+         WHERE user_id = users.id
          ORDER BY last_login_at DESC NULLS LAST, created_at DESC, id DESC
          LIMIT 1
        ) AS identity ON true
-       WHERE users.id = $1 AND users.deleted_at IS NULL`,
+       WHERE users.id = $1
+         AND users.deleted_at IS NULL
+         AND users.suspended_at IS NULL`,
       [userId],
     );
     const row = result.rows[0];
@@ -129,6 +167,7 @@ export class PostgresAuthRepository implements AuthRepository {
     }
     return {
       id: row.id,
+      issuer: row.issuer,
       displayName: row.display_name,
       avatarUrl: row.avatar_url,
       email: row.email,

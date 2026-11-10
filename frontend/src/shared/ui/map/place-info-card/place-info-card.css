@@ -1,0 +1,337 @@
+.place-info-card {
+  width: 100%;
+  max-height: inherit;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
+  box-shadow: var(--shadow-map-overlay);
+  pointer-events: auto;
+  backdrop-filter: blur(var(--map-overlay-blur));
+}
+
+.place-info-card:focus {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.place-info-card-header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 16px 14px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.place-info-card-header-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.place-info-card-header-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 2px;
+}
+
+.place-info-card-header-actions.is-stacked {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.place-info-card-category {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.place-info-card-header h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+
+.trip-place-card-title {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  min-width: 0;
+}
+
+.trip-place-style-control.trip-place-card-style-control {
+  align-self: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  min-height: 0;
+  padding: 0;
+}
+
+.trip-place-card-style-control .trip-place-style-icon-frame {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+}
+
+.trip-place-card-style-control .trip-place-style-icon-frame svg {
+  width: 19px;
+  height: 19px;
+}
+
+.trip-place-card-static-style-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, currentColor 12%, var(--color-surface-raised));
+}
+
+.trip-place-card-static-style-icon svg {
+  width: 19px;
+  height: 19px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.trip-place-card-title > span {
+  min-width: 0;
+  color: var(--color-text);
+}
+
+.trip-place-card-title-name {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-place-card-title-name[role='button'] {
+  border-radius: 5px;
+  cursor: text;
+}
+
+.trip-place-card-title-name[role='button']:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 42%, transparent);
+  outline-offset: 2px;
+}
+
+.trip-place-card-title-name[aria-disabled='true'] {
+  cursor: default;
+}
+
+.trip-place-card-title-input {
+  width: 100%;
+  min-width: 80px;
+  max-width: 100%;
+  height: 30px;
+  padding: 2px 6px;
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  background: var(--color-floating-surface);
+  color: var(--color-text);
+  box-sizing: border-box;
+  font: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+}
+
+.trip-place-card-title-input:focus {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+  outline-offset: 1px;
+}
+
+.place-info-card-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  margin: -8px -6px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.place-info-card-close:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.place-info-card-close svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.8;
+}
+
+.trip-place-header-action {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  margin-top: -8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.trip-place-header-action:hover:not(:disabled),
+.trip-place-header-action:focus-visible {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.trip-place-header-action:disabled {
+  cursor: wait;
+  opacity: 0.45;
+}
+
+.trip-place-header-action svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.trip-place-header-action circle[r='1.5'] {
+  fill: currentColor;
+  stroke: none;
+}
+
+.trip-place-delete-trigger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.trip-place-delete-trigger:hover:not(:disabled),
+.trip-place-delete-trigger[aria-expanded='true'] {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-strong);
+}
+
+.trip-place-delete-trigger:focus-visible {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-strong);
+  outline: 2px solid color-mix(in srgb, var(--color-danger) 38%, transparent);
+  outline-offset: 2px;
+}
+
+.place-delete-confirm-card {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  gap: 14px;
+  max-width: calc(100vw - 24px);
+  padding: 15px 16px;
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
+  box-shadow: var(--shadow-map-overlay);
+  pointer-events: auto;
+  backdrop-filter: blur(var(--map-overlay-blur));
+}
+
+.place-delete-confirm-copy {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.place-delete-confirm-copy strong {
+  color: var(--color-danger-strong);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.place-delete-confirm-copy p {
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.place-delete-confirm-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.place-delete-confirm-actions button {
+  min-width: 56px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border-floating);
+  border-radius: 7px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.place-delete-confirm-actions button:hover:not(:disabled),
+.place-delete-confirm-actions button:focus-visible {
+  border-color: var(--color-border-strong);
+}
+
+.place-delete-confirm-actions button.is-destructive {
+  border-color: var(--color-danger-fill);
+  background: var(--color-danger-fill);
+  color: var(--color-danger-contrast);
+}
+
+.place-delete-confirm-actions button.is-destructive:hover:not(:disabled),
+.place-delete-confirm-actions button.is-destructive:focus-visible {
+  border-color: var(--color-danger-fill-active);
+  background: var(--color-danger-fill-active);
+}
+
+.place-delete-confirm-actions button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.place-info-card-body {
+  padding: 15px 20px 16px;
+}
+
+.place-opening-hours {
+  padding: 14px 20px 13px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+}

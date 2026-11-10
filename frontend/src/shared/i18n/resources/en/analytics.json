@@ -1,0 +1,160 @@
+{
+  "flow": {
+    "details": "Details",
+    "filters": "Graph filters",
+    "graph": "User flow graph",
+    "minimumCount": "Minimum transition count",
+    "mode": {
+      "domainEvent": "Domain events",
+      "mixed": "Screens + key events",
+      "screen": "Screens"
+    },
+    "nodeMode": "Node mode",
+    "status": {
+      "noData": "No flow data for this period."
+    }
+  },
+  "funnels": {
+    "funnel": {
+      "addPlace": "Add place",
+      "routeOptimization": "Route optimization",
+      "routeReoptimization": "Edit and re-optimize",
+      "tripEntry": "Create or enter Trip",
+      "tripShare": "Share Trip"
+    },
+    "kpi": {
+      "averageCompletionTime": "Average completion time",
+      "completedSessions": "Completed sessions",
+      "largestDropOff": "Largest drop-off",
+      "overallConversion": "Overall conversion",
+      "startedSessions": "Started sessions"
+    },
+    "metric": {
+      "averageTime": "Average time",
+      "dropOff": "Drop-off",
+      "enteredSessions": "Entered sessions",
+      "medianTime": "Median time",
+      "overallConversion": "Overall conversion",
+      "previousConversion": "Previous-step conversion"
+    },
+    "selector": {
+      "label": "Funnel to analyze"
+    },
+    "status": {
+      "noData": "No funnel data for this period."
+    },
+    "step": {
+      "addPlaceClicked": "Confirm add place",
+      "initialResultViewed": "View initial result",
+      "landingAction": "Log in or start",
+      "landingViewed": "View landing",
+      "mapWorkspaceViewed": "Enter map workspace",
+      "optimizationApplied": "Apply optimized route",
+      "optimizationCompleted": "Complete optimization",
+      "optimizationStarted": "Start optimization",
+      "placeAdded": "Place added",
+      "placeSearchViewed": "Open place search",
+      "placeSelected": "Select place",
+      "reoptimizationCompleted": "Complete re-optimization",
+      "reoptimizationStarted": "Start re-optimization",
+      "resultViewed": "View result",
+      "routeModified": "Modify route",
+      "shareEnabled": "Enable sharing",
+      "shareLinkCopied": "Copy share link",
+      "shareModalOpened": "Open sharing",
+      "tripOpened": "Create or select Trip",
+      "tripPickerViewed": "Open Trip picker",
+      "updatedResultViewed": "View updated result"
+    }
+  },
+  "metric": {
+    "averagePathLength": "Average path length",
+    "backtrack": "Backtrack",
+    "conversion": "Conversion",
+    "count": "Count",
+    "dropOff": "Drop-off",
+    "events": "Events",
+    "notApplicable": "Not applicable",
+    "pathLength": "Path length",
+    "ratio": "Ratio",
+    "sessions": "Sessions",
+    "source": "Source",
+    "target": "Target",
+    "visits": "Visits"
+  },
+  "overview": {
+    "status": {
+      "noData": "No analytics data for this period."
+    }
+  },
+  "page": {
+    "description": {
+      "userFlowAnalysis": "Explore user flows and conversions."
+    },
+    "eyebrow": {
+      "internalTool": "Internal analytics"
+    },
+    "navigation": {
+      "analyticsSections": "Analytics sections"
+    },
+    "tab": {
+      "flowGraph": "Flow Graph",
+      "funnels": "Funnels",
+      "overview": "Overview",
+      "sessions": "Sessions"
+    },
+    "title": {
+      "analytics": "Analytics"
+    }
+  },
+  "period": {
+    "apply": "Apply period",
+    "from": "From",
+    "timezone": "Time zone",
+    "to": "To"
+  },
+  "routes": {
+    "loadingLabel": {
+      "analytics": "Loading analytics."
+    }
+  },
+  "sessions": {
+    "action": {
+      "loadMore": "Load more"
+    },
+    "filters": "Session filters",
+    "identity": {
+      "anonymous": "Anonymous",
+      "authenticated": "Authenticated",
+      "mixed": "Anonymous → authenticated"
+    },
+    "metadata": {
+      "details": "Metadata details"
+    },
+    "metric": {
+      "endedAt": "Last seen",
+      "eventCount": "Event count",
+      "eventType": "Event type",
+      "metadata": "Metadata",
+      "screen": "Screen",
+      "sessionId": "Session ID",
+      "startedAt": "Started at",
+      "timestamp": "Time",
+      "user": "User"
+    },
+    "status": {
+      "loadingMore": "Loading more data.",
+      "noData": "No sessions for this period.",
+      "selectSession": "Select a session to view its timeline."
+    },
+    "timeline": "Event timeline",
+    "value": {
+      "noMetadata": "No metadata",
+      "noTarget": "No target"
+    }
+  },
+  "status": {
+    "loadError": "Could not load analytics data.",
+    "loading": "Loading analytics data."
+  }
+}

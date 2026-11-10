@@ -1,0 +1,15 @@
+.token-remaining-gauge {
+  display: grid;
+  gap: 5px;
+  width: 140px;
+  margin-left: auto;
+  color: var(--text-primary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.token-remaining-gauge strong {
+  font-size: 16px;
+}
+.token-remaining-gauge .ui-progress {
+  height: 4px;
+}

@@ -139,6 +139,9 @@ export function GooglePlaceCard({
     }
   };
 
+  if (selection.status === 'loading') {
+    return null;
+  }
   return (
     <MapPopupCardShell
       className="google-place-card"
@@ -153,15 +156,6 @@ export function GooglePlaceCard({
       closeLabel={L('place:googlePlaceCard.text.closeGooglePlacesDetailCard')}
       onClose={onClose}
     >
-      {selection.status === 'loading' && (
-        <div className="place-info-card-state" role="status">
-          <span className="place-info-card-spinner" aria-hidden="true" />
-          <p>
-            {L('place:googlePlaceCard.description.loadingLocationInformation')}
-          </p>
-        </div>
-      )}
-
       {selection.status === 'error' && (
         <div className="place-info-card-state is-error" role="alert">
           <p>

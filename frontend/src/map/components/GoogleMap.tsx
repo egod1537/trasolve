@@ -28,6 +28,10 @@ import type {
   GoogleMapStatus,
 } from '@/map/types/googleMapComponent';
 import '@/map/components/google-map.css';
+import {
+  getExternalApiDisabledMessage,
+  notifyExternalApiDisabled,
+} from '@/shared/api/externalApiDisabled';
 import { getLanguage, useL } from '@/shared/i18n';
 
 type MapContextValue = {
@@ -40,6 +44,14 @@ type MapContextValue = {
 
 const MapContext = createContext<MapContextValue | null>(null);
 const isGoogleMapsAvailable = mapsConfig.enabled && Boolean(mapsConfig.apiKey);
+
+function initialGoogleMapStatus(): GoogleMapStatus {
+  return !mapsConfig.enabled
+    ? 'disabled'
+    : mapsConfig.apiKey
+      ? 'loading'
+      : 'missing-key';
+}
 
 function RuntimePolyline({ line }: { line: MapPolyline }) {
   const { objects } = useGoogleMap();
@@ -91,9 +103,7 @@ export function GoogleMap(props: GoogleMapProps) {
   });
   const [runtime, setRuntime] = useState<MapRuntime | null>(null);
   const [isZooming, setIsZooming] = useState(false);
-  const [status, setStatus] = useState<GoogleMapStatus>(
-    isGoogleMapsAvailable ? 'loading' : 'missing-key',
-  );
+  const [status, setStatus] = useState<GoogleMapStatus>(initialGoogleMapStatus);
   const handle = useMemo<GoogleMapHandle>(
     () => ({
       getCenter: () => runtimeRef.current?.adapter.getCenter() ?? null,
@@ -114,7 +124,11 @@ export function GoogleMap(props: GoogleMapProps) {
     }
     setRuntime(null);
     setIsZooming(false);
-    setStatus(isGoogleMapsAvailable ? 'loading' : 'missing-key');
+    const initialStatus = initialGoogleMapStatus();
+    setStatus(initialStatus);
+    if (initialStatus === 'disabled') {
+      notifyExternalApiDisabled('google-maps');
+    }
     if (!isGoogleMapsAvailable) {
       return;
     }
@@ -260,11 +274,13 @@ export function GoogleMap(props: GoogleMapProps) {
             <p>
               {status === 'loading'
                 ? L('map:mapCanvas.renderMapStatus.title.mapLoading')
-                : status === 'missing-key'
-                  ? L('map:googleMap.description.setUpMapConnection')
-                  : L(
-                      'map:googleMap.description.mapCannotBeLoadedCheckConnection',
-                    )}
+                : status === 'disabled'
+                  ? getExternalApiDisabledMessage('google-maps')
+                  : status === 'missing-key'
+                    ? L('map:googleMap.description.setUpMapConnection')
+                    : L(
+                        'map:googleMap.description.mapCannotBeLoadedCheckConnection',
+                      )}
             </p>
             {status === 'error' && (
               <button type="button" onClick={() => window.location.reload()}>

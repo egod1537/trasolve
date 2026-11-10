@@ -19,6 +19,7 @@ export const chatRequestSchema = z.strictObject({
 });
 
 export const chatResponseSchema = z.strictObject({
+  model: z.string().trim().min(1),
   message: chatMessageSchema.extend({ role: z.literal('assistant') }),
   /** The validated tool call the message content was built from. */
   toolCall: z

@@ -53,6 +53,7 @@ export type LayerValidationByItemKey = Readonly<
 export type TripDay = {
   id: string;
   title: string;
+  hidden?: boolean;
   date?: string;
   color: string;
   places: TripPlace[];

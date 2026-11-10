@@ -1,0 +1,200 @@
+{
+  "access": {
+    "description": {
+      "forbidden": "Sign in again with an authorized administrator account.",
+      "signIn": "Sign in with your Google Account.",
+      "unavailable": "Try again shortly."
+    },
+    "title": {
+      "forbidden": "Access unavailable",
+      "signIn": "Administrator sign-in",
+      "unavailable": "Administrator service unavailable"
+    }
+  },
+  "audit": {
+    "column": {
+      "target": "Target",
+      "time": "Time"
+    },
+    "description": "Review administrator actions on user accounts.",
+    "filter": {
+      "action": "Action",
+      "actor": "Administrator"
+    }
+  },
+  "common": {
+    "accessExpired": "Check your administrator session and access.",
+    "action": {
+      "confirm": "Confirm",
+      "next": "Next",
+      "previous": "Previous"
+    },
+    "all": "All",
+    "details": "Details",
+    "empty": "No data to display.",
+    "from": "From",
+    "generatedAt": "Generated at {{date}}",
+    "loadFailed": "Could not load data.",
+    "no": "No",
+    "notFound": "Page not found.",
+    "page": "Page {{page}}",
+    "pageTotal": "{{total}} total, page {{page}}",
+    "processing": "Processing",
+    "requiresPostgres": "Administrator data requires a PostgreSQL connection. Check the server persistence mode and database configuration.",
+    "reset": "Reset",
+    "search": "Search",
+    "skipToContent": "Skip to content",
+    "to": "To",
+    "viewAll": "View all",
+    "yes": "Yes"
+  },
+  "dashboard": {
+    "activeNote": "Accounts that are not suspended.",
+    "activeUsers": "Active accounts",
+    "apiLastWeek": "API activity in the last 7 days",
+    "description": "An overview of users, Trips and outbound services.",
+    "loginNote": "Distinct users who signed in during the last 7 days.",
+    "recentLoginUsers": "Logins in the last 7 days",
+    "totalTrips": "Total Trips",
+    "totalUsers": "Total users"
+  },
+  "navigation": {
+    "apiUsage": "API usage",
+    "audit": "Audit log",
+    "dashboard": "Dashboard",
+    "operations": "Operations",
+    "trips": "Trips",
+    "users": "Users"
+  },
+  "operations": {
+    "available": "Available",
+    "configured": "Configured",
+    "description": "Review service calls over the last 24 hours and recent jobs.",
+    "failedJobs": "Failed",
+    "jobs": "Recent jobs",
+    "jobsNote": "Counts cover up to 1,000 recent mirrored troute jobs. A tcache job mirror is unavailable.",
+    "lastObservedAt": "Last observed",
+    "lastUpdated": "Last updated",
+    "noData": "No data",
+    "noObservedErrors": "No observed errors",
+    "notConfigured": "Not configured",
+    "observation": "Observation status",
+    "observationNote": "Shows configuration and recent observations, rather than live connectivity checks.",
+    "observed": "Observed",
+    "observedJobs": "Observed jobs",
+    "recentErrors": "Recent error codes",
+    "runningJobs": "Running",
+    "unavailable": "Unavailable",
+    "unknown": "Unknown",
+    "window": "Observation window, {{from}} to {{to}}"
+  },
+  "routes": {
+    "loading": "Loading administrator page."
+  },
+  "shell": {
+    "management": "Management",
+    "timeZoneNote": "Dates and times are shown in Korea Standard Time.",
+    "workspace": "Admin console"
+  },
+  "trips": {
+    "column": {
+      "createdAt": "Created",
+      "dayCount": "Days",
+      "placeCount": "Places",
+      "title": "Title",
+      "updatedAt": "Updated"
+    },
+    "dateRange": "Trip dates",
+    "description": "Review Trip ownership, structure and sharing status.",
+    "detailTitle": "Trip metadata",
+    "filter": {
+      "owner": "Owner",
+      "shared": "Sharing state"
+    },
+    "id": "Trip ID",
+    "metadataNote": "Only Trip metadata is shown. Notes, coordinates and detailed routes are excluded.",
+    "revision": "Revision",
+    "schemaVersion": "Schema version",
+    "search": {
+      "placeholder": "Search Trip titles"
+    },
+    "searchable": "Searchable",
+    "share": {
+      "disabled": "Not shared",
+      "enabled": "Shared"
+    }
+  },
+  "usage": {
+    "actualCalls": "Actual calls",
+    "avgLatency": "Average latency",
+    "blockedCalls": "Blocked calls",
+    "bucketSummary": "{{date}}, {{calls}} calls, {{failed}} failed",
+    "byService": "Usage by service",
+    "byUser": "Usage by user",
+    "coverage": "Only backend outbound calls are measured; browser Google Maps SDK calls are excluded.",
+    "description": "Review outbound API calls by period and service.",
+    "failedCalls": "Failed calls",
+    "failureCount": "{{count}} failed calls",
+    "failureRate": "Failure rate",
+    "invalidFilters": "Check the filters. Use up to 90 days and a valid service and user UUID.",
+    "invalidRange": "The end date must be on or after the start date, within 90 days.",
+    "mockCalls": "Mock calls",
+    "noCost": "These values are not billing totals.",
+    "p95Latency": "P95 latency",
+    "service": "Service",
+    "topUsersNote": "Top 20 identified users by actual calls under the selected filters. Unattributed calls are excluded.",
+    "trend": "Call volume",
+    "trendDescription": "Actual and failed calls during the selected period.",
+    "trendSummary": "{{calls}} actual calls, {{failed}} failed calls",
+    "userId": "User ID",
+    "userIdPlaceholder": "Filter by internal user UUID",
+    "viewChartData": "View chart data"
+  },
+  "users": {
+    "action": {
+      "restore": "Restore account",
+      "revokeSessions": "Revoke all sessions",
+      "suspend": "Suspend account"
+    },
+    "actionSuccess": "Action completed. {{count}} sessions revoked.",
+    "actionsTitle": "Account actions",
+    "column": {
+      "createdAt": "Joined",
+      "email": "Email",
+      "lastLoginAt": "Last login",
+      "name": "Name",
+      "tripCount": "Trips"
+    },
+    "confirm": {
+      "restore": "Restore this account?",
+      "revokeSessions": "Revoke all sessions for this account?",
+      "suspend": "Suspend this account and revoke all sessions?"
+    },
+    "description": "Review registered accounts, sign-ins and account status.",
+    "detailTitle": "User details",
+    "emailVerified": "Email verified",
+    "filter": {
+      "role": "Role",
+      "state": "State"
+    },
+    "identities": "Linked identities",
+    "identityIssuer": "Identity provider",
+    "reason": "Suspension reason",
+    "reasonAbuse": "Abuse",
+    "reasonOther": "Other",
+    "reasonRequest": "User request",
+    "role": {
+      "admin": "Administrator",
+      "user": "User"
+    },
+    "search": {
+      "placeholder": "Search by name or email"
+    },
+    "selfActionNote": "These actions are unavailable for your current administrator account.",
+    "state": {
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "unnamed": "Unnamed"
+  }
+}

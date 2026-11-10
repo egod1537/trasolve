@@ -1,0 +1,54 @@
+.map-measurement-panel {
+  max-width: min(340px, calc(100vw - 32px));
+  padding: 14px;
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-map-overlay);
+  backdrop-filter: blur(var(--map-overlay-blur));
+  pointer-events: auto;
+}
+.map-measurement-panel p {
+  margin: 6px 0 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.map-measurement-panel output {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.map-measurement-panel ol {
+  max-height: 120px;
+  overflow-y: auto;
+  padding-left: 20px;
+  font-size: 12px;
+}
+.map-measurement-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+.map-capture-status {
+  padding: 10px 14px;
+  max-width: min(380px, calc(100vw - 32px));
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-map-overlay);
+  pointer-events: auto;
+  font-size: 12px;
+}
+@media (max-width: 760px) {
+  .bottom-map-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .map-tool-panel {
+    max-width: calc(100vw - 24px);
+    gap: 2px;
+  }
+  .map-tool-panel button {
+    width: 32px;
+  }
+}

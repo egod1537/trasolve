@@ -76,6 +76,29 @@
       }
     }
   },
+  "landing": {
+    "action": {
+      "planTrip": "Plan a trip",
+      "startTrip": "Start planning",
+      "viewExample": "See an example"
+    },
+    "example": {
+      "heading": "From places to plans.",
+      "title": "A day in Tokyo"
+    },
+    "hero": {
+      "description": "Your places and routes, at a glance.",
+      "title": {
+        "connected": "one connected",
+        "journey": "journey.",
+        "places": "Your places,"
+      }
+    },
+    "navigation": {
+      "about": "How it works",
+      "signIn": "Log in"
+    }
+  },
   "landingPage": {
     "healthLabels": {
       "text": {

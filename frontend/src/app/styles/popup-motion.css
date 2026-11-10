@@ -1,0 +1,77 @@
+@keyframes popup-backdrop-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popup-surface-enter {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+    scale: 0.98;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+:root :is(.ui-dialog-backdrop, .quick-search-overlay, .bp6-overlay-backdrop) {
+  animation: popup-backdrop-enter var(--popup-enter-duration)
+    var(--popup-easing);
+}
+
+:root
+  :is(
+    .ui-dialog,
+    .route-review-mode-switch,
+    .route-review-controls,
+    .bp6-dialog,
+    .place-info-card,
+    .route-settings-card,
+    .quick-search-card,
+    .quick-search-mode-menu,
+    .trip-panel-header-menu,
+    .trip-day-color-picker,
+    .trip-place-style-popover,
+    .trip-place-duration-popup,
+    .map-user-menu,
+    .map-place-search-results,
+    .trip-ai-chat-menu,
+    .layer-bulk-mode-popover,
+    .layer-bulk-delete-popover,
+    .route-endpoint-context-menu
+  ) {
+  animation: popup-surface-enter var(--popup-enter-duration) var(--popup-easing);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root :is(.ui-dialog-backdrop, .quick-search-overlay, .bp6-overlay-backdrop),
+  :root
+    :is(
+      .ui-dialog,
+      .route-review-mode-switch,
+      .route-review-controls,
+      .bp6-dialog,
+      .place-info-card,
+      .route-settings-card,
+      .quick-search-card,
+      .quick-search-mode-menu,
+      .trip-panel-header-menu,
+      .trip-day-color-picker,
+      .trip-place-style-popover,
+      .trip-place-duration-popup,
+      .map-user-menu,
+      .map-place-search-results,
+      .trip-ai-chat-menu,
+      .layer-bulk-mode-popover,
+      .layer-bulk-delete-popover,
+      .route-endpoint-context-menu
+    ) {
+    animation: none;
+  }
+}

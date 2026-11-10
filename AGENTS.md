@@ -87,6 +87,14 @@
 ## Google Maps 경계
 
 - `google.maps` 객체 및 타입의 직접 사용은 `frontend/src/map/runtime/`와 `frontend/src/map/adapters/`에 둔다. 컴포넌트·페이지·도메인은 provider-neutral 타입과 `MapRuntime` 계약을 사용한다.
-- `map/runtime/`는 브라우저 SDK 로딩과 지도 렌더링만 담당한다. HTTP 요청은 공용 `frontend/src/api/` 또는 페이지 전용 `frontend/src/pages/map/api/`에 두고 React 컴포넌트에서 직접 `fetch`하지 않는다.
+- `map/runtime/`는 브라우저 SDK 로딩과 지도 렌더링만 담당한다. HTTP 요청은 `frontend/src/api/`, `frontend/src/shared/api/` 또는 기능별 `api/`에 두고 React 컴포넌트에서 직접 `fetch`하지 않는다.
 - Routes 계산과 Places 조회는 Trasolve backend를 경유한다. Google 원본 응답은 도메인 데이터로 사용하지 않으며, 기존 Test Bed의 Routes 원본 응답은 Debug 표시 용도로만 사용한다.
 - 브라우저 키는 Maps JavaScript API 전용이며 HTTP referrer 제한을 적용한다. Routes·Places 서버 키와 공유하거나 서버 키를 `VITE_` 환경변수에 넣지 않는다.
+
+## 프런트엔드 구조와 크기
+
+- `docs/frontend-source-layout.md`의 책임과 의존성 방향을 유지한다. 기능/entity 외부에서는 해당 slice의 공개 `index.ts`를 사용한다. 타입 참조를 포함한 순환 의존성은 허용하지 않는다.
+- TS/TSX 파일은 빈 줄과 주석을 제외한 300줄 이내를 목표로 하며, 400줄 초과는 lint 오류다. 일반 함수/훅 80줄, TSX 함수 150줄 초과 경고는 책임 분리 검토 신호다.
+- 줄 수를 맞추기 위해 코드를 압축하거나 의미 없는 조각 파일을 만들지 않는다. 표시 컴포넌트는 필요한 데이터와 명시적인 이벤트를 받고, 기능 훅과 조합 지점에서 요청과 변경을 연결한다.
+- 여행 데이터 변경은 공통 Command/Controller 경로를 유지한다. 불변 스냅샷과 세션별 생성/정리, 취소된 요청의 결과 무시, 미확정 저장의 canonical readback을 보존한다.
+- 구조 변경 시 `npm run architecture:check`를 실행한다. 파일 이동과 함께 관련 설계 문서, CSS import 순서와 검증 기록을 갱신한다.

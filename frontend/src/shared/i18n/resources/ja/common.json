@@ -76,6 +76,29 @@
       }
     }
   },
+  "landing": {
+    "action": {
+      "planTrip": "旅を計画する",
+      "startTrip": "旅をはじめる",
+      "viewExample": "プラン例を見る"
+    },
+    "example": {
+      "heading": "場所から、旅のプランへ。",
+      "title": "東京で過ごす一日"
+    },
+    "hero": {
+      "description": "場所もルートも、ひと目で。",
+      "title": {
+        "connected": "つながる",
+        "journey": "旅。",
+        "places": "行きたい場所、"
+      }
+    },
+    "navigation": {
+      "about": "サービス紹介",
+      "signIn": "ログイン"
+    }
+  },
   "landingPage": {
     "healthLabels": {
       "text": {

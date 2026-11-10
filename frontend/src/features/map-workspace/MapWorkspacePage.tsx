@@ -143,6 +143,7 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
     const selectedTrip = selectTripById(trips, selectedTripId);
     const showPicker = pickerOpen || !selectedTrip;
     const pickerProps = {
+      debugMode,
       trips,
       busy:
         authenticationStatus === 'loading' || catalogLoading || action !== null,

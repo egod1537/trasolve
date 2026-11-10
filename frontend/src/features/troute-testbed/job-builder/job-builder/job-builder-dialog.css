@@ -1,0 +1,347 @@
+.job-builder-dialog {
+  width: min(1200px, calc(100vw - 32px));
+  height: min(860px, calc(100vh - 32px));
+  max-height: calc(100vh - 32px);
+}
+
+.job-builder-dialog .bp6-dialog-body {
+  min-height: 0;
+  flex: 1;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.job-builder-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
+
+.job-builder-visual {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.job-builder-preset {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-subtle);
+}
+
+.job-builder-preset-controls {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.job-builder-preset-controls > label {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.job-builder-preset-controls .bp6-html-select select {
+  min-width: 160px;
+}
+
+.job-builder-preset > p {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.job-builder-main-grid {
+  min-height: 480px;
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 65fr) minmax(340px, 35fr);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.job-builder-map {
+  position: relative;
+  min-width: 0;
+  min-height: 480px;
+  overflow: hidden;
+  background: var(--color-map-background);
+}
+
+.job-builder-map > .google-map {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+
+.job-builder-map .map-toolbar-positioner {
+  top: 16px;
+  right: 16px;
+  left: 16px;
+}
+
+.job-builder-map .map-toolbar {
+  width: min(560px, 100%);
+}
+
+.job-builder-place-candidate {
+  position: absolute;
+  z-index: 3100;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  display: grid;
+  width: min(420px, calc(100% - 32px));
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-md);
+  background: var(--color-map-overlay-surface);
+  box-shadow: var(--shadow-map-overlay);
+  color: var(--color-text-primary);
+  backdrop-filter: blur(var(--map-overlay-blur));
+  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
+}
+
+.job-builder-place-candidate > strong,
+.job-builder-place-candidate > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.job-builder-place-candidate > strong {
+  padding-right: 28px;
+  font-size: 15px;
+}
+
+.job-builder-place-candidate > span,
+.job-builder-place-candidate > p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.job-builder-candidate-close {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.job-builder-candidate-close:hover,
+.job-builder-candidate-close:focus-visible {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.job-builder-add-place {
+  justify-self: start;
+  margin-top: 5px;
+  padding: 7px 12px;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.job-builder-add-place:hover,
+.job-builder-add-place:focus-visible {
+  background: var(--color-accent-hover);
+}
+
+.job-builder-location-panel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.job-builder-location-panel > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.job-builder-location-panel > header > div:first-child {
+  min-width: 0;
+  flex: 1;
+}
+
+.job-builder-location-panel h2,
+.job-builder-location-panel p {
+  margin: 0;
+}
+
+.job-builder-location-panel h2 {
+  font-size: 15px;
+}
+
+.job-builder-location-panel header p {
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.job-builder-location-count {
+  flex: none;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.job-builder-location-meta {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.job-builder-location-meta .bp6-button {
+  flex: none;
+}
+
+.job-builder-validation-indicator {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--color-text-muted);
+}
+
+.job-builder-validation-indicator:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.job-builder-validation-indicator.is-validating {
+  color: var(--color-accent);
+}
+
+.job-builder-validation-indicator.is-validating svg {
+  animation: job-builder-validation-spin 0.8s linear infinite;
+}
+
+.job-builder-validation-indicator.is-valid {
+  color: var(--color-success);
+}
+
+.job-builder-validation-indicator.is-invalid {
+  color: var(--color-danger);
+}
+
+@keyframes job-builder-validation-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.job-builder-location-scroll {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.job-builder-location-empty {
+  min-height: 100%;
+  padding: 24px 16px;
+}
+
+.job-builder-location-list {
+  min-height: 100%;
+}
+
+.job-builder-location-item {
+  position: relative;
+  padding: 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  transition:
+    background-color 120ms ease,
+    opacity 120ms ease;
+}
+
+.job-builder-location-item:hover,
+.job-builder-location-item.is-selected {
+  background: var(--color-surface-hover);
+}
+
+.job-builder-location-item.is-selected {
+  box-shadow: inset 3px 0 var(--color-accent);
+}
+
+.job-builder-location-item.is-dragging {
+  z-index: 2;
+  opacity: 0.58;
+}
+
+.job-builder-location-item.is-drop-target-before::before,
+.job-builder-location-item.is-drop-target-after::after {
+  position: absolute;
+  z-index: 3;
+  right: 8px;
+  left: 8px;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  content: '';
+}
+
+.job-builder-location-item.is-drop-target-before::before {
+  top: -2px;
+}
+
+.job-builder-location-item.is-drop-target-after::after {
+  bottom: -2px;
+}
+
+.job-builder-location-heading {
+  display: grid;
+  grid-template-columns: 28px auto minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 6px;
+}
+
+.job-builder-location-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}

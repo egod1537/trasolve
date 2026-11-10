@@ -1,0 +1,79 @@
+.login-dialog-backdrop {
+  backdrop-filter: blur(8px);
+}
+.login-dialog {
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  padding: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-map-overlay);
+}
+.login-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.login-dialog-brand {
+  color: var(--color-accent);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.login-dialog h2 {
+  margin: 28px 0 8px;
+  color: var(--color-text-primary);
+  font-size: 30px;
+  letter-spacing: -0.04em;
+}
+.login-dialog p {
+  margin: 0 0 28px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+.login-dialog-providers {
+  display: grid;
+  gap: 12px;
+}
+.login-dialog-providers button {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+.login-dialog-providers button:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-accent);
+}
+.login-dialog-providers button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+.login-dialog-providers button:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+.login-dialog-providers svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.login-provider-arrow {
+  margin-inline-start: auto;
+  color: var(--color-text-secondary);
+}

@@ -20,6 +20,7 @@ const TcacheRouteTestPage = lazy(
 const LocalizationTestPage = lazy(
   () => import('@/pages/testbed/LocalizationTestPage'),
 );
+const AdminPage = lazy(() => import('@/pages/admin/AdminPage'));
 
 type RouteDefinition = {
   Component: ComponentType;
@@ -91,6 +92,14 @@ export const routes: Record<string, RouteDefinition> = {
 
 export function resolveRoute(pathname: string): RouteDefinition {
   const path = pathname.replace(/\/$/, '') || '/';
+  if (path === '/admin' || path.startsWith('/admin/')) {
+    return {
+      Component: AdminPage,
+      get loadingLabel() {
+        return L('common:routes.loadingLabel.pageLoading');
+      },
+    };
+  }
   if (/^\/share\/[^/]+$/.test(path)) {
     return {
       Component: PublicSharePage,

@@ -155,7 +155,10 @@ export const trouteOptimizeRequestSchema = z
     visit_policy: trouteVisitPolicySchema.optional(),
     start_policy: trouteStartPolicySchema.optional(),
     start_time: timeOfDaySchema.optional(),
-    travel_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    travel_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
     time_zone: nonEmptyStringSchema.optional(),
     travel_mode: trouteTravelModeSchema.optional(),
     country_code: z.string().max(512).optional(),

@@ -113,6 +113,15 @@ export function TcacheRouteOptions({
               }
             />
           </FormGroup>
+          <FormGroup label={NL('countryCode')} labelFor="tcache-country-code">
+            <InputGroup
+              id="tcache-country-code"
+              value={state.countryCode}
+              onChange={(event) =>
+                onChange({ countryCode: event.currentTarget.value })
+              }
+            />
+          </FormGroup>
         </div>
       </details>
     </section>

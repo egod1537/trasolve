@@ -1,0 +1,316 @@
+.route-optimization-metrics-placeholder {
+  display: grid;
+  min-height: 112px;
+  margin: 0;
+  padding: 20px;
+  place-items: center;
+  border: 1px dashed var(--border-default);
+  border-radius: 11px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.route-optimization-metrics-placeholder.is-running::before {
+  width: 7px;
+  height: 7px;
+  margin-bottom: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  content: '';
+  animation: route-optimization-pulse 1.1s ease-in-out infinite;
+}
+
+.route-optimization-modal-notice,
+.route-optimization-modal-error {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.route-optimization-modal-notice {
+  color: var(--text-muted);
+}
+
+.route-optimization-modal-error {
+  color: var(--danger);
+}
+
+.route-optimization-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-default);
+}
+
+.route-optimization-progress {
+  min-width: 0;
+  margin-right: auto;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-optimization-progress.is-blocked {
+  color: var(--danger);
+  font-weight: 650;
+}
+
+@keyframes route-optimization-backdrop-in {
+  from {
+    background: transparent;
+  }
+}
+
+@keyframes route-optimization-modal-in {
+  from {
+    transform: translateY(6px) scale(0.985);
+    opacity: 0;
+  }
+}
+
+@keyframes route-optimization-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 1100px) {
+  .route-optimization-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .route-optimization-modal-backdrop {
+    padding: 0;
+  }
+
+  .route-optimization-modal {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+  }
+
+  .route-optimization-modal-body {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .route-optimization-days {
+    width: auto;
+    padding: 10px 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .route-optimization-days h3 {
+    display: none;
+  }
+
+  .route-optimization-day-list {
+    display: flex;
+    width: max-content;
+    margin-top: 0;
+  }
+
+  .route-optimization-day-list button {
+    width: 142px;
+  }
+
+  .route-optimization-departure-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .route-optimization-comparison-card-body {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .route-optimization-map-panel {
+    height: 340px;
+    border-right: 0;
+  }
+
+  .route-optimization-schedule-panel {
+    max-height: 420px;
+    min-height: 240px;
+    border-top: 1px solid var(--border-default);
+  }
+
+  .route-optimization-result {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .route-optimization-google-map {
+    height: 100%;
+  }
+
+  .route-optimization-map-placeholder {
+    min-height: 0;
+  }
+
+  .route-optimization-marker-legend {
+    display: none;
+  }
+
+  .route-optimization-modal-actions {
+    flex-wrap: wrap;
+  }
+
+  .route-optimization-progress {
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .route-map-comparison-backdrop {
+    padding: 0;
+  }
+
+  .route-map-comparison-dialog {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+  }
+
+  .route-map-comparison-grid {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-y: auto;
+  }
+
+  .route-map-comparison-grid > .route-optimization-map-panel {
+    height: min(480px, 70vh);
+    min-height: 340px;
+  }
+
+  .route-optimization-progress-backdrop {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 560px) {
+  .route-optimization-settings-group-heading {
+    display: grid;
+    gap: 2px;
+  }
+
+  .route-optimization-time-setting {
+    width: 100%;
+  }
+
+  .route-optimization-metric-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .route-optimization-day-title {
+    align-items: flex-start;
+  }
+
+  .route-optimization-modal-actions > button {
+    flex: 1;
+  }
+}
+
+.bottom-context-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: color-mix(
+    in srgb,
+    var(--context-accent) 10%,
+    var(--color-surface-raised)
+  );
+  color: var(--context-accent);
+}
+
+.bottom-context-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.bottom-context-copy {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.bottom-context-copy > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bottom-context-copy small {
+  color: var(--context-accent);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.bottom-context-copy strong {
+  color: var(--color-text);
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.bottom-context-copy > span {
+  color: var(--color-muted);
+  font-size: 11px;
+  line-height: 1.15;
+}
+
+@keyframes bottom-context-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-context-panel {
+    animation: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .layer-bulk-action-bar {
+    width: 100%;
+  }
+
+  .bottom-context-panel {
+    width: auto;
+  }
+
+  .map-tool-panel {
+    gap: 2px;
+    padding: 5px;
+  }
+
+  .map-tool-panel button {
+    width: 34px;
+    height: 34px;
+  }
+}
