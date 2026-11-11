@@ -1,4 +1,4 @@
-import { CHAT_LIMITS } from '@trasolve/shared';
+import { CHAT_LIMITS, chatResponseSchema } from '@trasolve/shared';
 import {
   type UiChatMessage,
   type PersistedProductChat,
@@ -48,9 +48,24 @@ export function readProductChat(
       ) {
         return null;
       }
-      const { requestContext, ...rest } = message;
+      const { requestContext, followUps, summary, webImages, ...rest } =
+        message;
+      const savedFollowUps =
+        chatResponseSchema.shape.followUps.safeParse(followUps);
+      const savedSummary = chatResponseSchema.shape.summary.safeParse(summary);
+      const savedWebImages =
+        chatResponseSchema.shape.webImages.safeParse(webImages);
       messages.push({
         ...(rest as UiChatMessage),
+        ...(savedFollowUps.success && savedFollowUps.data
+          ? { followUps: savedFollowUps.data }
+          : {}),
+        ...(savedSummary.success && savedSummary.data
+          ? { summary: savedSummary.data }
+          : {}),
+        ...(savedWebImages.success && savedWebImages.data
+          ? { webImages: savedWebImages.data }
+          : {}),
         // Only a well-formed string is trusted; anything else is dropped so a
         // consumer treats the answer as having no verifiable request context.
         ...(typeof requestContext === 'string' &&

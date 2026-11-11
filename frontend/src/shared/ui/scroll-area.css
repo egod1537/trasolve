@@ -1,0 +1,108 @@
+/* Layout stays on Root. The viewport remains the native scroll element. */
+:where(.ui-scroll-area) {
+  position: relative;
+}
+.ui-scroll-area {
+  --scroll-content-display: block;
+  display: flex !important;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden !important;
+  scrollbar-gutter: auto;
+}
+.ui-scroll-viewport {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-height: inherit;
+  border-radius: inherit;
+  overscroll-behavior: contain;
+}
+.ui-scroll-content {
+  display: var(--scroll-content-display, block) !important;
+  min-width: 100%;
+  box-sizing: border-box;
+}
+.ui-scroll-viewport:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: -2px;
+}
+.ui-scrollbar {
+  z-index: 20;
+  display: flex;
+  box-sizing: border-box;
+  padding: 2px;
+  user-select: none;
+  touch-action: none;
+  cursor: default;
+  background: var(--color-scrollbar-track);
+  transition: background-color 140ms ease;
+}
+.ui-scrollbar[data-orientation='vertical'] {
+  width: 10px;
+}
+.ui-scrollbar[data-orientation='horizontal'] {
+  height: 10px;
+  flex-direction: column;
+}
+.ui-scrollbar[data-state='visible'] {
+  animation: ui-scrollbar-appear 140ms ease;
+}
+.ui-scrollbar[data-state='hidden'] {
+  animation: ui-scrollbar-disappear 140ms ease;
+}
+@keyframes ui-scrollbar-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes ui-scrollbar-disappear {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.ui-scroll-thumb {
+  position: relative;
+  flex: 1;
+  border-radius: 999px;
+  background: var(--color-scrollbar-thumb);
+  transition: background-color 140ms ease;
+}
+.ui-scrollbar:hover .ui-scroll-thumb,
+.ui-scrollbar[data-state='visible']:active .ui-scroll-thumb {
+  background: var(--color-scrollbar-thumb-hover);
+}
+.ui-scroll-thumb::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  min-width: 20px;
+  min-height: 20px;
+  content: '';
+  transform: translate(-50%, -50%);
+}
+.ui-scroll-corner {
+  background: var(--color-scrollbar-track);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-scrollbar,
+  .ui-scroll-thumb {
+    transition: none;
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  .ui-scroll-thumb {
+    background: ButtonText;
+  }
+}

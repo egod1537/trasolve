@@ -1,4 +1,8 @@
-import { CHAT_LIMITS } from '@trasolve/shared';
+import {
+  CHAT_LIMITS,
+  type ChatRequest,
+  type ChatResponse,
+} from '@trasolve/shared';
 import { sendChat } from '@/features/ai-chat/api/chat';
 
 import {
@@ -35,6 +39,7 @@ export function useChatSubmission({
   setDebugDelayPending,
   getRequestPreamble,
   model,
+  sendRequest = sendChat,
 }: Pick<
   ReturnType<typeof useChatThreads>,
   | 'L'
@@ -52,7 +57,13 @@ export function useChatSubmission({
   | 'finishRequest'
   | 'setDebugDelayPending'
 > &
-  Pick<Props, 'getRequestPreamble' | 'model'>) {
+  Pick<Props, 'getRequestPreamble' | 'model'> & {
+    sendRequest?: (
+      request: ChatRequest,
+      signal: AbortSignal,
+      threadId: string,
+    ) => Promise<ChatResponse>;
+  }) {
   const submitMessage = async () => {
     const threadId = selectedThreadIdRef.current;
     const content = (draftsRef.current[threadId] ?? '').trim();
@@ -155,7 +166,7 @@ export function useChatSubmission({
       if (controller.signal.aborted) {
         return;
       }
-      const result = await sendChat(
+      const result = await sendRequest(
         {
           messages: systemMessages.length
             ? [
@@ -169,6 +180,7 @@ export function useChatSubmission({
           ...(preamble?.tools ? { tools: preamble.tools } : {}),
         },
         controller.signal,
+        threadId,
       );
       logLifecycle('SEND_CHAT_RESOLVED');
       if (controller.signal.aborted) {
@@ -177,6 +189,9 @@ export function useChatSubmission({
       const completedAt = Date.now();
       const message: UiChatMessage = {
         ...result.message,
+        ...(result.followUps ? { followUps: result.followUps } : {}),
+        ...(result.summary ? { summary: result.summary } : {}),
+        ...(result.webImages ? { webImages: result.webImages } : {}),
         id: `assistant-${nextMessageIdRef.current++}`,
         createdAt: completedAt,
         unread: !openRef.current || selectedThreadIdRef.current !== threadId,

@@ -37,11 +37,15 @@ export function TokenCostSummary({
       </div>
     );
   }
+  if (billing.summary.unlimited) {
+    return null;
+  }
   const cost = cached ? 0 : billing.summary.costs[action];
   const remaining = billing.summary.wallet.remaining;
   const number = new Intl.NumberFormat(getLanguage());
+  const insufficient = remaining < cost;
   return (
-    <div className="token-cost-summary" data-insufficient={remaining < cost}>
+    <div className="token-cost-summary" data-insufficient={insufficient}>
       <div className="token-cost-values">
         <strong>
           {L('auth:billing.usageCost', { cost: number.format(cost) })}
@@ -52,7 +56,7 @@ export function TokenCostSummary({
           })}
         </span>
       </div>
-      {remaining < cost ? (
+      {insufficient ? (
         <div className="token-cost-warning">
           <span>{L('auth:billing.insufficient')}</span>
           <Button size="sm" onClick={billing.openPlans}>

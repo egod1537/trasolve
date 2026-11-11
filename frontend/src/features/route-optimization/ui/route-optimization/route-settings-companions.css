@@ -1,0 +1,377 @@
+.route-settings-dialog {
+  --route-settings-panel-height: min(680px, calc(100dvh - 48px));
+  --route-settings-validation-width: 468px;
+  position: relative;
+  display: grid;
+  grid-template-columns:
+    240px minmax(0, 520px)
+    var(--route-settings-validation-width);
+  align-items: start;
+  gap: 16px;
+  width: min(1260px, 100%);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: none;
+  overflow: visible;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.route-settings-dialog .route-settings-popup {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  max-height: var(--route-settings-panel-height);
+  min-height: 0;
+  overflow: hidden;
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-overlay);
+  background: var(--color-map-overlay-surface);
+  box-shadow: var(--shadow-map-overlay);
+  pointer-events: auto;
+  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: blur(var(--map-overlay-blur));
+}
+
+.route-settings-side-panel {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-overlay);
+  background: var(--color-map-overlay-surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-map-overlay);
+  pointer-events: auto;
+  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: blur(var(--map-overlay-blur));
+}
+
+.route-settings-side-panel h3 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.route-settings-day-trigger {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.route-settings-day-trigger > svg:first-child {
+  color: var(--color-accent-foreground);
+}
+
+.route-settings-day-trigger > span {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 4px;
+}
+
+.route-settings-day-trigger strong,
+.route-settings-day-list strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-settings-day-trigger > span > span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.route-settings-day-trigger:disabled {
+  cursor: default;
+  opacity: var(--opacity-disabled);
+}
+
+.route-settings-day-trigger svg,
+.route-settings-day-list svg,
+.route-settings-validation svg {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route-settings-day-trigger > svg:last-child {
+  width: 18px;
+  height: 18px;
+  color: var(--text-secondary);
+}
+
+.route-settings-day-portal {
+  display: contents;
+}
+
+.route-settings-day-popover {
+  position: fixed;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(240px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  visibility: hidden;
+}
+
+.route-settings-day-popover h3 {
+  flex: none;
+}
+
+.route-settings-day-list {
+  flex: none;
+  height: min(var(--route-day-list-height), 400px, calc(100dvh - 112px));
+  min-height: 0;
+  margin-top: 12px;
+  overscroll-behavior: contain;
+}
+
+.route-settings-day-list-content {
+  --scroll-content-display: grid;
+  gap: 4px;
+}
+
+.route-settings-day-list button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.route-settings-day-list strong {
+  flex: 1;
+}
+
+.route-settings-day-list span {
+  flex: none;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.route-settings-day-list svg {
+  width: 16px;
+  height: 16px;
+  visibility: hidden;
+}
+
+.route-settings-day-list [aria-selected='true'] {
+  background: var(--accent-soft);
+  color: var(--color-accent-foreground);
+}
+
+.route-settings-day-list [aria-selected='true'] svg {
+  visibility: visible;
+}
+
+.route-settings-day-list button:hover,
+.route-settings-day-list button:focus-visible {
+  background: var(--accent-soft);
+}
+
+.route-settings-validation {
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  /* Follow the settings height without making the grid row grow with issues. */
+  contain: size;
+  align-self: stretch;
+  height: auto;
+  min-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.route-settings-validation header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.route-settings-validation header svg {
+  color: var(--warning);
+}
+
+.route-settings-validation[data-severity='error'] header svg {
+  color: var(--danger);
+}
+
+.route-settings-validation-day {
+  flex: none;
+  margin: 8px 0 16px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.route-settings-validation-content {
+  flex: 1;
+  min-height: 0;
+  overscroll-behavior: contain;
+  border-top: 1px solid var(--border-default);
+}
+
+.route-settings-validation-content-content {
+  --scroll-content-display: grid;
+  align-content: start;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.route-settings-validation-item {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.route-settings-validation-item strong {
+  color: var(--text-primary);
+}
+
+.route-settings-validation-item p {
+  margin: 0;
+}
+
+.route-settings-validation-resolution {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 1308px) {
+  .route-settings-dialog {
+    grid-template-columns:
+      minmax(0, 520px)
+      var(--route-settings-validation-width);
+    width: min(1004px, 100%);
+  }
+
+  .route-settings-dialog .route-settings-popup {
+    grid-column: 1;
+  }
+
+  .route-settings-validation {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 1052px) {
+  .route-settings-dialog {
+    display: block;
+    width: min(520px, 100%);
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+  }
+
+  .route-settings-validation {
+    contain: none;
+    height: var(--route-settings-panel-height);
+    margin-top: 16px;
+  }
+}
+
+.route-settings-validation-status {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.route-settings-popup-header,
+.route-settings-popup-actions {
+  flex: none;
+}
+
+.route-settings-popup-body {
+  flex: 0 1 auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+.route-settings-popup-body-content {
+  align-content: start;
+}
+
+.route-settings-validation-tabs {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  padding-bottom: 12px;
+}
+
+.route-settings-validation-tabs button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 38px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.route-settings-validation-tabs [aria-selected='true'] {
+  border-color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 10%, var(--bg-surface));
+  color: var(--warning);
+}
+
+.route-settings-validation-tabs [data-severity='error'][aria-selected='true'] {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, var(--bg-surface));
+  color: var(--danger);
+}
+
+.route-settings-validation-tabs button span {
+  font-variant-numeric: tabular-nums;
+}

@@ -36,6 +36,7 @@ function ToolButton({
   controls,
   hasPopup,
   buttonRef,
+  tutorialTarget,
   children,
   onClick,
 }: {
@@ -46,12 +47,14 @@ function ToolButton({
   controls?: string;
   hasPopup?: 'dialog';
   buttonRef?: RefObject<HTMLButtonElement | null>;
+  tutorialTarget?: string;
   children: ReactNode;
   onClick: () => void;
 }) {
   return (
     <button
       ref={buttonRef}
+      data-tutorial={tutorialTarget}
       type="button"
       aria-label={label}
       title={label}
@@ -132,6 +135,7 @@ export function MapToolPanel({
         controls={routeToolsOpen ? routeToolsControlId : undefined}
         hasPopup="dialog"
         buttonRef={routeToolButtonRef}
+        tutorialTarget="optimize"
         onClick={() => onOpenRouteTools?.()}
       >
         <ToolIcon path="M5 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm14-8a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM7 16h3a3 3 0 0 0 3-3v-2a3 3 0 0 1 3-3h1" />

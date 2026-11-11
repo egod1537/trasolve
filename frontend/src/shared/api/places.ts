@@ -12,6 +12,9 @@ import {
 } from '@trasolve/shared';
 import { throwIfExternalApiDisabled } from '@/shared/api/externalApiDisabled';
 import { getLanguage, L } from '@/shared/i18n';
+import { createRequestCoalescer } from './inflightRequests';
+
+const placeDetailsRequests = createRequestCoalescer<PlaceDetails>();
 
 type SearchOptions = Omit<PlaceAutocompleteRequest, 'input'> & {
   signal?: AbortSignal;
@@ -78,6 +81,17 @@ export async function getPlace(
     ...options,
     ...getGoogleMapsLocale(getLanguage()),
   });
+  return placeDetailsRequests(
+    JSON.stringify(request),
+    (sharedSignal) => fetchPlaceDetails(request, sharedSignal),
+    signal,
+  );
+}
+
+async function fetchPlaceDetails(
+  request: PlaceDetailsRequest,
+  signal: AbortSignal,
+): Promise<PlaceDetails> {
   const query = new URLSearchParams();
   if (request.languageCode) {
     query.set('languageCode', request.languageCode);

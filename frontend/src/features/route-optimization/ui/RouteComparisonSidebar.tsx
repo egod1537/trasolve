@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { useMemo, type RefObject } from 'react';
 import { PlaceTimeTimeline } from '@/features/place-editor';
 import {
@@ -51,26 +52,28 @@ export function RouteComparisonSidebar({ comparison, sidebarRef }: Props) {
               )}
         </span>
       </div>
-      <ol className="route-review-place-list">
-        {places.map((place, index) => (
-          <li key={place.id}>
-            <div className="route-review-place-heading">
-              <span className="route-review-place-number">{index + 1}</span>
-              <strong>{place.name}</strong>
-            </div>
-            <div className="route-review-place-timeline">
-              <PlaceTimeTimeline
-                variant="compact"
-                time={place.time}
-                visitDurationMinutes={
-                  place.preferredDurationMinutes ?? place.visitDurationMinutes
-                }
-                readOnly
-              />
-            </div>
-          </li>
-        ))}
-      </ol>
+      <ScrollArea className="route-review-place-list-scroll" contentAsChild>
+        <ol className="route-review-place-list">
+          {places.map((place, index) => (
+            <li key={place.id}>
+              <div className="route-review-place-heading">
+                <span className="route-review-place-number">{index + 1}</span>
+                <strong>{place.name}</strong>
+              </div>
+              <div className="route-review-place-timeline">
+                <PlaceTimeTimeline
+                  variant="compact"
+                  time={place.time}
+                  visitDurationMinutes={
+                    place.preferredDurationMinutes ?? place.visitDurationMinutes
+                  }
+                  readOnly
+                />
+              </div>
+            </li>
+          ))}
+        </ol>
+      </ScrollArea>
     </aside>
   );
 }

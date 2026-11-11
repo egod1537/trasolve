@@ -14,6 +14,7 @@ import type { AnalyticsQueryHttpService } from './analytics/analyticsQueryHttpSe
 import type { CurrentUserResolver } from './auth/currentUserResolver.js';
 import type { AdminHttpService } from './admin/adminHttpService.js';
 import type { BillingHttpService } from './billing/billingHttpService.js';
+import type { TutorialHttpService } from './auth/tutorialHttpService.js';
 import { runWithExternalApiRequestContext } from './observability/externalApiUsage/externalApiUsage.js';
 
 export function createBackendServer(
@@ -26,12 +27,17 @@ export function createBackendServer(
   currentUser: CurrentUserResolver,
   adminHttp: AdminHttpService,
   billingHttp: BillingHttpService,
+  tutorialHttp: TutorialHttpService,
 ): Server {
   const server = createServer((request, response) => {
     const dispatch = (): void => {
       const requestUrl = new URL(request.url ?? '/', 'http://localhost');
       const { pathname } = requestUrl;
       response.setHeader('Content-Type', 'application/json; charset=utf-8');
+      if (pathname === API_ROUTES.tutorial) {
+        void tutorialHttp.handle(request, response);
+        return;
+      }
       if (
         pathname === API_ROUTES.billing ||
         pathname.startsWith(`${API_ROUTES.billing}/`)
@@ -150,6 +156,11 @@ export function createBackendServer(
         return;
       }
 
+      if (pathname === API_ROUTES.chatStream) {
+        void api.Chat.handle(request, response, true);
+        return;
+      }
+
       if (pathname === API_ROUTES.openWebUIModels) {
         void api.OpenWebUIModels.handle(request, response);
         return;
@@ -187,6 +198,11 @@ export function createBackendServer(
 
       if (pathname === API_ROUTES.routes) {
         void api.Route.handle(request, response);
+        return;
+      }
+
+      if (pathname === API_ROUTES.trouteValidate) {
+        void api.TrouteHttp.handleValidation(request, response);
         return;
       }
 

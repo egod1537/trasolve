@@ -1,3 +1,5 @@
+import { WorkspaceCommandProvider } from './command-console/CommandProvider';
+import { CatalogCommands } from './command-console/CatalogCommands';
 import { Component, useEffect } from 'react';
 import type { Trip } from '@trasolve/shared';
 import { GoogleMap } from '@/map/components/GoogleMap';
@@ -18,6 +20,11 @@ import {
   type CurrentUserState,
 } from '@/features/auth';
 import { AnalyticsOverlay } from '@/features/analytics-overlay';
+import {
+  TutorialProvider,
+  TutorialWorkspaceBridge,
+  useTutorial,
+} from '@/features/onboarding';
 
 type Action = 'opening' | 'creating' | 'deleting';
 type OperationErrors = Record<Action, string | null>;
@@ -30,6 +37,7 @@ type Props = {
   authenticationStatus: CurrentUserState['status'];
   authNotice: string | null;
   onLogin: () => void;
+  onTutorialCreated: (tripId: string) => void;
 };
 
 type State = {
@@ -71,16 +79,32 @@ export default function MapWorkspaceFeature({
   }
 
   return (
+    <TutorialProvider
+      key={state.user.id}
+      userId={state.user.id}
+      enabled={mode === 'edit' && !analyticsMode}
+      debug={debugMode || import.meta.env.DEV}
+    >
+      <GuidedWorkspace
+        L={L}
+        mode={mode}
+        analyticsMode={analyticsMode}
+        debugMode={debugMode}
+        initialTripId={initialTripId}
+        authenticationStatus={state.status}
+        authNotice={authNotice}
+        onLogin={() => void login()}
+      />
+    </TutorialProvider>
+  );
+}
+
+function GuidedWorkspace(props: Omit<Props, 'onTutorialCreated'>) {
+  const tutorial = useTutorial();
+  return (
     <MapWorkspaceFeatureView
-      key={`signed-in:${state.user.id}`}
-      L={L}
-      mode={mode}
-      analyticsMode={analyticsMode}
-      debugMode={debugMode}
-      initialTripId={initialTripId}
-      authenticationStatus={state.status}
-      authNotice={authNotice}
-      onLogin={() => void login()}
+      {...props}
+      onTutorialCreated={(tripId) => tutorial?.created(tripId)}
     />
   );
 }
@@ -160,51 +184,71 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
     };
 
     return (
-      <div className="trip-maps-workspace">
-        <div inert={showPicker}>
-          {selectedTrip ? (
-            mode === 'readonly' ? (
-              <TripSession
-                key={`${selectedTrip.id}:${sessionRevision}`}
-                mode="readonly"
-                trip={selectedTrip}
-              />
+      <WorkspaceCommandProvider>
+        <div className="trip-maps-workspace">
+          <CatalogCommands
+            repository={this.repository}
+            selectedTrip={selectedTrip}
+            onSelect={this.selectTrip}
+            onDelete={this.deleteTrip}
+            onCreated={this.props.onTutorialCreated}
+            onOpenPicker={this.openPicker}
+            readOnly={mode === 'readonly'}
+          />
+          <TutorialWorkspaceBridge
+            selectedTripId={selectedTrip?.id ?? null}
+            tripIds={trips.map((trip) => trip.id)}
+            pickerOpen={showPicker}
+            busy={catalogLoading || action !== null}
+            onOpenPicker={this.openPicker}
+            onClosePicker={this.closePicker}
+            onOpenTrip={this.openTrip}
+          />
+          <div inert={showPicker}>
+            {selectedTrip ? (
+              mode === 'readonly' ? (
+                <TripSession
+                  key={`${selectedTrip.id}:${sessionRevision}`}
+                  mode="readonly"
+                  trip={selectedTrip}
+                />
+              ) : (
+                <TripSession
+                  key={`${selectedTrip.id}:${sessionRevision}`}
+                  mode="edit"
+                  trip={selectedTrip}
+                  repository={this.repository}
+                  onOpenTripPicker={this.openPicker}
+                  debugMode={debugMode}
+                />
+              )
             ) : (
-              <TripSession
-                key={`${selectedTrip.id}:${sessionRevision}`}
+              <main className="trip-map-empty-background">
+                <GoogleMap
+                  ariaLabel={L(
+                    'map:mapWorkspacePage.render.ariaLabel.travelSelectionMapBackground',
+                  )}
+                  style={{ position: 'absolute', inset: 0, height: '100%' }}
+                />
+              </main>
+            )}
+          </div>
+          {showPicker &&
+            (mode === 'readonly' ? (
+              <TripPickerPopup mode="readonly" {...pickerProps} />
+            ) : (
+              <TripPickerPopup
                 mode="edit"
-                trip={selectedTrip}
-                repository={this.repository}
-                onOpenTripPicker={this.openPicker}
-                debugMode={debugMode}
+                {...pickerProps}
+                onCreate={this.createTrip}
+                onCreateSeoulExample={this.createSeoulExampleTrip}
+                onCreateTokyoExample={this.createTokyoExampleTrip}
+                onDelete={this.deleteTrip}
               />
-            )
-          ) : (
-            <main className="trip-map-empty-background">
-              <GoogleMap
-                ariaLabel={L(
-                  'map:mapWorkspacePage.render.ariaLabel.travelSelectionMapBackground',
-                )}
-                style={{ position: 'absolute', inset: 0, height: '100%' }}
-              />
-            </main>
-          )}
+            ))}
+          {analyticsMode ? <AnalyticsOverlay /> : null}
         </div>
-        {showPicker &&
-          (mode === 'readonly' ? (
-            <TripPickerPopup mode="readonly" {...pickerProps} />
-          ) : (
-            <TripPickerPopup
-              mode="edit"
-              {...pickerProps}
-              onCreate={this.createTrip}
-              onCreateSeoulExample={this.createSeoulExampleTrip}
-              onCreateTokyoExample={this.createTokyoExampleTrip}
-              onDelete={this.deleteTrip}
-            />
-          ))}
-        {analyticsMode ? <AnalyticsOverlay /> : null}
-      </div>
+      </WorkspaceCommandProvider>
     );
   }
 
@@ -283,7 +327,10 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
           },
           signal,
         ),
-      this.selectTrip,
+      (trip) => {
+        this.selectTrip(trip);
+        this.props.onTutorialCreated(trip.id);
+      },
     );
   };
 

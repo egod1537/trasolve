@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
 import { useCurrentUser } from '@/features/auth';
@@ -91,7 +92,10 @@ export function ShareTripModal({ tripId, onClose }: Props) {
         />
       </header>
 
-      <div className="share-trip-modal-content">
+      <ScrollArea
+        className="share-trip-modal-content"
+        contentClassName="share-trip-modal-content-content"
+      >
         {loading ? (
           <p
             id={descriptionId}
@@ -234,7 +238,7 @@ export function ShareTripModal({ tripId, onClose }: Props) {
             {error}
           </p>
         )}
-      </div>
+      </ScrollArea>
 
       <footer className="share-trip-modal-actions">
         <Button variant="primary" onClick={onClose}>

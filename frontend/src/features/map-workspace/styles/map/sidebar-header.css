@@ -9,9 +9,10 @@
   width: var(--trip-panel-width);
   overflow: hidden;
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-overlay);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
+  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
   backdrop-filter: blur(var(--map-overlay-blur));
 }
 
@@ -28,7 +29,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px 18px 17px 20px;
+  padding: var(--panel-padding);
 }
 
 .trip-panel-header-copy {
@@ -44,8 +45,8 @@
   min-width: 0;
   min-height: 34px;
   margin: 0 0 3px;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: var(--panel-title-weight);
   letter-spacing: -0.025em;
   line-height: 1.2;
 }
@@ -80,7 +81,7 @@
   margin: 0;
   overflow: hidden;
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: var(--panel-meta-size);
   line-height: 1.45;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -167,6 +168,7 @@
   border-radius: var(--radius-md);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
+  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
   backdrop-filter: blur(var(--map-overlay-blur));
 }
 
@@ -175,7 +177,7 @@
   min-height: 34px;
   padding: 6px 9px;
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-control);
   background: transparent;
   color: var(--color-text);
   font: inherit;
@@ -195,8 +197,7 @@
   align-items: stretch;
   gap: 4px;
   padding: 9px 10px;
-  border-top: 1px solid var(--color-map-overlay-ring);
-  background: color-mix(in srgb, var(--color-surface-subtle) 72%, transparent);
+  background: var(--panel-header-bg);
 }
 
 .trip-panel-header-action {
@@ -214,7 +215,7 @@
   color: var(--color-text-primary);
   font: inherit;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
   transition:
@@ -225,8 +226,8 @@
 .trip-panel-header-action:hover:not(:disabled),
 .trip-panel-header-action:focus-visible,
 .trip-panel-header-action[aria-expanded='true'] {
-  background: var(--color-accent-soft);
-  color: var(--color-primary);
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .trip-panel-header-action:disabled {
@@ -253,7 +254,7 @@
 
 .trip-layer-visibility-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   padding: 2px 10px;
   border-bottom: 1px solid var(--color-map-overlay-ring);
 }
@@ -266,5 +267,5 @@
 
 .trip-layer-visibility-toggle[aria-pressed='true'],
 .trip-layer-visibility-toggle[aria-pressed='mixed'] {
-  color: var(--color-primary);
+  color: var(--color-accent-foreground);
 }

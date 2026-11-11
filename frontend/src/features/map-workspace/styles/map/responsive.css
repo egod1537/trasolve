@@ -56,8 +56,8 @@
 
 @media (max-width: 760px) {
   .trip-map-page {
-    --map-ai-toggle-size: 78px;
-    --map-ai-toggle-icon-size: 36px;
+    --map-ai-toggle-size: 56px;
+    --map-ai-toggle-icon-size: 25px;
   }
   .map-viewport {
     grid-template-columns: 0 minmax(0, 1fr);

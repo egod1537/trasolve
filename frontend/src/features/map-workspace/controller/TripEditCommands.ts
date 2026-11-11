@@ -15,6 +15,7 @@ import {
   createApplyOptimizedScheduleCommand,
   createMoveDayCommand,
   createMovePlaceCommand,
+  createRemoveDayCommand,
   createRemovePlaceCommand,
   createRemovePlacesCommand,
   createReorderDayPlacesCommand,
@@ -53,6 +54,10 @@ export abstract class TripEditCommands {
 
   public addDay(title: string): Promise<boolean> {
     return this.dispatch(createAddDayCommand(title));
+  }
+
+  public removeDay(dayId: string): Promise<boolean> {
+    return this.dispatch(createRemoveDayCommand(dayId));
   }
 
   public renameDay(dayId: string, title: string): Promise<boolean> {

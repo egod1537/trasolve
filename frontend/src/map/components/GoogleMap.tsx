@@ -261,6 +261,7 @@ export function GoogleMap(props: GoogleMapProps) {
       <div
         ref={canvasRef}
         className="google-map-canvas"
+        data-scroll-gesture-surface
         aria-label={ariaLabel}
       />
       {status !== 'ready' &&

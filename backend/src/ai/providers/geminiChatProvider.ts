@@ -150,7 +150,10 @@ export class GeminiChatProvider implements ChatProvider {
     }
   }
 
-  public async chat(request: ChatRequest): Promise<ChatResponse> {
+  public async chat(
+    request: ChatRequest,
+    parentSignal?: AbortSignal,
+  ): Promise<ChatResponse> {
     if (
       resolveInstrumentedExternalApiMode(
         this.externalApiPolicy,
@@ -166,7 +169,10 @@ export class GeminiChatProvider implements ChatProvider {
         },
       };
     }
-    const signal = AbortSignal.timeout(this.timeoutMs);
+    const timeout = AbortSignal.timeout(this.timeoutMs);
+    const signal = parentSignal
+      ? AbortSignal.any([parentSignal, timeout])
+      : timeout;
     const useTools =
       this.nativeTools &&
       request.tools?.includes(TRIP_COMMAND_PLAN_TOOL_NAME) === true;

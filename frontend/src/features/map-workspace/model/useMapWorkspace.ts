@@ -42,7 +42,13 @@ export function useMapWorkspace(trip: Trip, controller?: TripEditController) {
     clearPlace,
     clear,
   } = selection;
-  const { focusTarget, revision: focusRevision, focusAll, focusPlace } = focus;
+  const {
+    focusTarget,
+    revision: focusRevision,
+    focusAll,
+    focusPlace,
+    focusDay,
+  } = focus;
   const toggleAllVisibility = visibility.toggleAllDayVisibility;
   const toggleAllDayVisibility = useCallback(() => {
     clear();
@@ -184,6 +190,7 @@ export function useMapWorkspace(trip: Trip, controller?: TripEditController) {
       layerSelection,
       visibleDayIds,
       focusPlace,
+      focusDay,
       selectPlace,
       selectPlaceWithModifiers,
       selectPlaceForDetails,
@@ -201,6 +208,7 @@ export function useMapWorkspace(trip: Trip, controller?: TripEditController) {
       clear,
       clearPlace,
       focusTarget,
+      focusDay,
       focusPlace,
       layerSelection,
       focusRevision,

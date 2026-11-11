@@ -15,10 +15,15 @@
 ## Environments and URL debug mode
 
 Billing always uses `TossPaymentProvider`; `?debug=1` does not change the
-payment provider, wallet, checkout, or token metering mode. The URL flag remains
-available to unrelated developer features only. `TRASOLVE_DEBUG_PAYMENTS` stays
-`false` in local, Compose, and hosted configuration so the self-contained
-payment simulator cannot be selected accidentally.
+payment provider, wallet, or checkout. In local and preview builds, the flag
+marks billing and metered requests as unlimited. The backend honors that marker
+according to `TRASOLVE_DEBUG_UNLIMITED_TOKENS=auto|true|false`; `auto` requires
+debug guest authentication, `false` always meters, and `true` authorizes the
+marker in any sandbox runtime. Authorized requests skip token reservation and
+settlement and return `unlimited: true` so the UI renders the balance as `∞`.
+Production frontend builds ignore the URL flag, and live Toss wallets always
+remain metered. `TRASOLVE_DEBUG_PAYMENTS` stays `false` in local, Compose, and
+hosted configuration so the payment simulator cannot be selected accidentally.
 
 Matching `test_ck_...` / `test_sk_...` keys select the Toss `sandbox` wallet and
 always open the Toss test checkout. Matching `live_ck_...` / `live_sk_...` keys
@@ -128,8 +133,8 @@ Authenticated endpoints:
 - `POST /api/billing/subscription/cancel`
 - `POST /api/billing/orders/<id>/abort`
 
-Append `?debug=1` for debug mode. The debug confirm body is
-`{ orderId, outcome: "success" | "failure" | "cancel" }`.
+Append `?debug=1` in a local or preview build for unlimited token usage. This
+does not enable the debug payment provider or change checkout behavior.
 Mutation requests carry `X-Trasolve-Billing: 1`, JSON content type and a checked
 Origin/Fetch-Site. Metered chat/optimization requests additionally require
 `X-Trasolve-Request-Id`, a UUID. The existing frontend APIs set these automatically.

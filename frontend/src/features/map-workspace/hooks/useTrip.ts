@@ -51,3 +51,19 @@ export function useTripData() {
     () => store.getState().trip,
   );
 }
+
+/** Read the latest immutable Trip after awaits without subscribing a second store. */
+export function useTripSnapshotReader() {
+  const { store } = useApplication();
+  return () => store.getState().trip;
+}
+
+/** Subscribe to persistence failures without dirty/saving notifications. */
+export function useTripError() {
+  const { store } = useApplication();
+  return useSyncExternalStore(
+    store.subscribe,
+    () => store.getState().error,
+    () => store.getState().error,
+  );
+}

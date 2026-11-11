@@ -193,17 +193,15 @@
 }
 
 .trip-map-picker-list {
-  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-content: start;
   gap: 20px;
   min-height: 0;
-  overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
   padding: 4px;
-  margin: 0 -4px;
+  margin: 0;
   list-style: none;
+  --scroll-content-display: grid;
 }
 
 .trip-map-picker-item {
@@ -263,6 +261,11 @@
   border-bottom: 1px solid var(--color-border);
   background: var(--color-accent-soft);
   overflow: hidden;
+}
+
+.trip-map-picker-preview-host {
+  position: absolute;
+  inset: 0;
 }
 
 .trip-map-picker-preview-map.google-map {
@@ -442,4 +445,10 @@
   flex: 1;
   min-height: 0;
   height: auto;
+}
+
+.trip-map-picker-list-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0 -4px;
 }

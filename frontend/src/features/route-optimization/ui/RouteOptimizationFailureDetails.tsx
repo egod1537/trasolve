@@ -26,12 +26,17 @@ export function RouteOptimizationFailureDetails({ error, places }: Props) {
     places,
     readString(detail, 'to_location_id'),
   );
+  const requestedServiceStart = readString(detail, 'requested_service_start');
+  const openTime = readString(detail, 'open_time');
+  const earliestServiceStart = readString(detail, 'earliest_service_start');
   const arrivalTime = readString(detail, 'arrival_time');
   const requiredDeparture = readString(detail, 'required_departure');
   const closeTime = readString(detail, 'close_time');
   const stayMinutes = readNumber(detail, 'stay_minutes');
   const suggestions = error.suggestions ?? [];
   const hasFactValues = Boolean(
+    requestedServiceStart ||
+    openTime ||
     fromPlaceName ||
     toPlaceName ||
     arrivalTime ||
@@ -39,13 +44,14 @@ export function RouteOptimizationFailureDetails({ error, places }: Props) {
     closeTime ||
     stayMinutes !== null,
   );
-  const resolution = isScheduleFailure(error)
-    ? L(
-        'routeOptimization:routeOptimizationModal.getValidationResolution.text.checkLocationSBusinessHoursStay',
-      )
-    : L(
-        'routeOptimization:routeOptimizationProgressDialog.getMessage.text.youCanRetryRequestClosePop',
-      );
+  const resolution =
+    isScheduleFailure(error) || error.code === 'FIXED_VISIT_CONFLICT'
+      ? L(
+          'routeOptimization:routeOptimizationModal.getValidationResolution.text.checkLocationSBusinessHoursStay',
+        )
+      : L(
+          'routeOptimization:routeOptimizationProgressDialog.getMessage.text.youCanRetryRequestClosePop',
+        );
 
   return (
     <div className="route-optimization-failure-details">
@@ -68,6 +74,34 @@ export function RouteOptimizationFailureDetails({ error, places }: Props) {
                 {L('routeOptimization:routeComparisonMap.text.destination')}
               </span>
               <strong>{toPlaceName}</strong>
+            </li>
+          ) : null}
+          {requestedServiceStart ? (
+            <li>
+              <span>
+                {L(
+                  'routeOptimization:routeOptimizationApi.formatStartPolicy.text.designatedTime',
+                )}
+              </span>
+              <strong>{requestedServiceStart}</strong>
+            </li>
+          ) : null}
+          {earliestServiceStart ? (
+            <li>
+              <span>
+                {L(
+                  'routeOptimization:routeOptimizationApi.formatStartPolicy.text.asSoonAsPossible',
+                )}
+              </span>
+              <strong>{earliestServiceStart}</strong>
+            </li>
+          ) : null}
+          {openTime ? (
+            <li>
+              {L(
+                'routeOptimization:routeSchedulePreview.schedulePlace.text.message',
+                { time: openTime, departureTime: closeTime ?? openTime },
+              )}
             </li>
           ) : null}
           {arrivalTime ? (

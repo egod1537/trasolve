@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
 import {
   memo,
   useCallback,
@@ -8,13 +9,8 @@ import {
   type CSSProperties,
   type RefObject,
 } from 'react';
-import type {
-  LayerItem,
-  Trip,
-  TripDay,
-  TripPlace,
-  TripPolyline,
-} from '@/entities/trip';
+import type { Trip } from '@/entities/trip';
+import { resolveLayerItems } from './dayLayerPresentation';
 import type { LayerSelectionModifiers } from '@/features/map-workspace/model/useMapWorkspace';
 import { LayerItemChevron } from '@/features/map-workspace/components/layer-panel/LayerItemChevron';
 import { LayerVisibilityControl } from './LayerVisibilityControl';
@@ -47,30 +43,6 @@ type Props = {
   onSelectPolylineForDetails: (id: string) => void;
   onSelectDay: (id: string) => void;
 };
-
-type RenderedLayerItem =
-  | { type: 'place'; key: string; place: TripPlace }
-  | { type: 'polyline'; key: string; polyline: TripPolyline };
-
-function layerItemKey(item: LayerItem): string {
-  return `${item.type}:${item.id}`;
-}
-
-function resolveLayerItems(day: TripDay): RenderedLayerItem[] {
-  const places = new Map(day.places.map((place) => [place.id, place]));
-  const polylines = new Map(
-    day.polylines.map((polyline) => [polyline.id, polyline]),
-  );
-  return day.layerItems.flatMap((item): RenderedLayerItem[] => {
-    const key = layerItemKey(item);
-    if (item.type === 'place') {
-      const place = places.get(item.id);
-      return place ? [{ type: 'place', key, place }] : [];
-    }
-    const polyline = polylines.get(item.id);
-    return polyline ? [{ type: 'polyline', key, polyline }] : [];
-  });
-}
 
 export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
   trip,
@@ -184,10 +156,14 @@ export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
           visibleCount={visibleDayIds.size}
           onToggle={onToggleAllDayVisibility}
         />
-        <div className="layer-panel-scroll trip-sidebar-scroll" ref={scrollRef}>
+        <ScrollArea
+          className="layer-panel-scroll trip-sidebar-scroll"
+          viewportRef={scrollRef}
+          contentClassName="trip-sidebar-scroll-content"
+        >
           {trip.days.map((day) => {
             const expanded = expandedDayIds.has(day.id);
-            const layerItems = resolveLayerItems(day);
+            const layerItems = expanded ? resolveLayerItems(day) : [];
             const placeIds = layerItems.flatMap((item) =>
               item.type === 'place' ? [item.place.id] : [],
             );
@@ -246,12 +222,8 @@ export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
                           dayId={day.id}
                           polyline={item.polyline}
                           isLast={isLast}
-                          fromPlace={day.places.find(
-                            (place) => place.id === item.polyline.fromPlaceId,
-                          )}
-                          toPlace={day.places.find(
-                            (place) => place.id === item.polyline.toPlaceId,
-                          )}
+                          fromPlace={item.fromPlace}
+                          toPlace={item.toPlace}
                           selected={selectedPolylineIds.has(item.polyline.id)}
                           detailsOpen={
                             detailTarget?.type === 'polyline' &&
@@ -300,7 +272,7 @@ export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
                       />
                     );
                   })}
-                  {!layerItems.length && (
+                  {expanded && !layerItems.length && (
                     <li className="trip-empty-day">
                       {L('map:dayLayerSection.text.thereNoRegisteredItems')}
                     </li>
@@ -314,7 +286,7 @@ export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
               {L('map:layerPanelContent.description.thereNoTravelPlansYet')}
             </p>
           )}
-        </div>
+        </ScrollArea>
       </aside>
       {detailPlaceContext && (
         <ReadonlyPlaceDetail

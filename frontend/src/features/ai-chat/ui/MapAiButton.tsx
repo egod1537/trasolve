@@ -23,6 +23,7 @@ export const MapAiButton = forwardRef<HTMLButtonElement, Props>(
       <button
         ref={ref}
         type="button"
+        data-tutorial="ai"
         className={`trip-map-ai-button${open ? ' is-panel-open' : ''}${generating ? ' is-generating' : ''}`}
         aria-label={label}
         title={label}

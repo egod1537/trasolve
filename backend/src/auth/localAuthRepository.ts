@@ -3,6 +3,11 @@ import { mkdir, open, readFile, rename, unlink } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { z } from 'zod';
 import {
+  initialTutorialProgress,
+  tutorialProgressSchema,
+  type TutorialProgress,
+} from '@trasolve/shared';
+import {
   AuthIdentityConflictError,
   type AuthIdentityRecord,
   type AuthRepository,
@@ -20,6 +25,7 @@ const localUserSchema = z.strictObject({
   id: z.string().uuid(),
   displayName: z.string(),
   avatarUrl: z.string().nullable(),
+  tutorial: z.unknown().optional(),
 });
 const localIdentitySchema = z.strictObject({
   id: z.string().uuid(),
@@ -224,6 +230,30 @@ export class LocalAuthRepository implements AuthRepository, SessionRepository {
       if (session && session.revokedAt === null) {
         session.revokedAt = new Date().toISOString();
       }
+    });
+  }
+
+  public async getTutorialProgress(userId: string): Promise<TutorialProgress> {
+    const document = await this.readSnapshot();
+    const user = document.users.find((candidate) => candidate.id === userId);
+    if (!user) {
+      throw new Error('User is unavailable.');
+    }
+    return user.tutorial === undefined
+      ? initialTutorialProgress()
+      : tutorialProgressSchema.parse(user.tutorial);
+  }
+
+  public saveTutorialProgress(
+    userId: string,
+    progress: TutorialProgress,
+  ): Promise<void> {
+    return this.mutate((document) => {
+      const user = document.users.find((candidate) => candidate.id === userId);
+      if (!user) {
+        throw new Error('User is unavailable.');
+      }
+      user.tutorial = tutorialProgressSchema.parse(progress);
     });
   }
 

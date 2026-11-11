@@ -1,6 +1,15 @@
 import { z } from 'zod';
-import type { UpstreamApiErrorDetails } from '@trasolve/shared';
+import type { ChatWebImage, UpstreamApiErrorDetails } from '@trasolve/shared';
 import { OPENWEBUI_OPTIONS } from '../options.js';
+import type { ChatResponse } from '@trasolve/shared';
+import type { ChatStreamOptions } from './chatProvider.js';
+import { readResponsesStream } from './readResponsesStream.js';
+import {
+  buildOpenWebUIResponseBody,
+  extractAssistantText,
+  extractWebImages,
+  openWebUIResponseSchema,
+} from './openWebUIResponse.js';
 import {
   loadExternalApiPolicy,
   type ExternalApiPolicy,
@@ -25,6 +34,7 @@ const chatMessageSchema = z.strictObject({
 const chatInputSchema = z.strictObject({
   model: z.string().trim().min(1),
   messages: z.array(chatMessageSchema).min(1),
+  webSearch: z.boolean().optional(),
 });
 
 const modelsResponseSchema = z.object({
@@ -32,25 +42,6 @@ const modelsResponseSchema = z.object({
     z.object({
       id: z.string().trim().min(1),
       name: z.string().trim().min(1).optional(),
-    }),
-  ),
-});
-
-const chatResponseSchema = z.object({
-  model: z.string().trim().min(1),
-  status: z.string().trim().min(1).optional(),
-  output: z.array(
-    z.object({
-      type: z.string(),
-      role: z.string().optional(),
-      content: z
-        .array(
-          z.object({
-            type: z.string(),
-            text: z.string().optional(),
-          }),
-        )
-        .optional(),
     }),
   ),
 });
@@ -69,6 +60,7 @@ export type OpenWebUIChatResult = {
     role: 'assistant';
     content: string;
   };
+  webImages?: ChatWebImage[];
   finishReason: string | null;
 };
 
@@ -176,7 +168,10 @@ export class OpenWebUIClient {
     }));
   }
 
-  public async chat(input: OpenWebUIChatInput): Promise<OpenWebUIChatResult> {
+  public async chat(
+    input: OpenWebUIChatInput,
+    signal?: AbortSignal,
+  ): Promise<OpenWebUIChatResult> {
     const request = chatInputSchema.safeParse(input);
     if (!request.success) {
       throw new OpenWebUIClientError(
@@ -206,38 +201,26 @@ export class OpenWebUIClient {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: request.data.model,
-          input: request.data.messages.map((message) => ({
-            role: message.role,
-            content: [
-              {
-                type:
-                  message.role === 'assistant' ? 'output_text' : 'input_text',
-                text: message.content,
-              },
-            ],
-          })),
-          tools: [],
-          tool_choice: 'none',
-          store: false,
-          stream: false,
-        }),
+        body: JSON.stringify(
+          buildOpenWebUIResponseBody(
+            request.data.model,
+            request.data.messages,
+            false,
+            request.data.webSearch !== false,
+          ),
+        ),
       },
       this.chatTimeoutMs,
       'chat',
+      signal,
     );
-    const parsed = chatResponseSchema.safeParse(rawResponse);
+    const parsed = openWebUIResponseSchema.safeParse(rawResponse);
     if (!parsed.success) {
       throw this.malformedResponse('chat');
     }
 
-    const content = parsed.data.output
-      .filter((item) => item.type === 'message' && item.role === 'assistant')
-      .flatMap((item) => item.content ?? [])
-      .filter((item) => item.type === 'output_text')
-      .map((item) => item.text ?? '')
-      .join('');
+    const content = extractAssistantText(parsed.data.output);
+    const webImages = extractWebImages(parsed.data.output);
     if (!content.trim()) {
       throw this.malformedResponse('chat');
     }
@@ -245,11 +228,51 @@ export class OpenWebUIClient {
     return {
       model: parsed.data.model,
       message: { role: 'assistant', content },
+      ...(webImages.length ? { webImages } : {}),
       finishReason:
         parsed.data.status === 'completed'
           ? 'stop'
           : (parsed.data.status ?? null),
     };
+  }
+
+  public async stream(
+    input: OpenWebUIChatInput,
+    options: ChatStreamOptions,
+  ): Promise<ChatResponse> {
+    const request = chatInputSchema.parse(input);
+    if (
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'openwebui',
+        'chat',
+      ) === 'mock'
+    ) {
+      const result = await this.chat(request, options.signal);
+      return { model: result.model, message: result.message };
+    }
+    return this.requestJson(
+      'openai/responses',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'text/event-stream',
+        },
+        body: JSON.stringify(
+          buildOpenWebUIResponseBody(
+            request.model,
+            request.messages,
+            true,
+            request.webSearch !== false,
+          ),
+        ),
+      },
+      this.chatTimeoutMs,
+      'chat',
+      options.signal,
+      (response) => readResponsesStream(response, request.model, options),
+    );
   }
 
   private readonly apiKey: string;
@@ -260,12 +283,14 @@ export class OpenWebUIClient {
   private readonly chatTimeoutMs: number;
   private readonly externalApiPolicy: ExternalApiPolicy;
 
-  private async requestJson(
+  private async requestJson<T = unknown>(
     endpoint: string,
     init: RequestInit,
     timeoutMs: number,
     operation: 'list-models' | 'chat',
-  ): Promise<unknown> {
+    parentSignal?: AbortSignal,
+    decode?: (response: Response) => Promise<T>,
+  ): Promise<T> {
     assertInstrumentedNetworkAllowed(
       this.externalApiPolicy,
       'openwebui',
@@ -278,7 +303,10 @@ export class OpenWebUIClient {
       );
     }
 
-    const signal = AbortSignal.timeout(timeoutMs);
+    const timeout = AbortSignal.timeout(timeoutMs);
+    const signal = parentSignal
+      ? AbortSignal.any([parentSignal, timeout])
+      : timeout;
     try {
       const headers = new Headers(init.headers);
       headers.set('Authorization', `Bearer ${this.apiKey}`);
@@ -304,8 +332,11 @@ export class OpenWebUIClient {
         throw await this.upstreamError(response);
       }
 
+      if (decode) {
+        return await decode(response);
+      }
       try {
-        return (await response.json()) as unknown;
+        return (await response.json()) as T;
       } catch {
         if (signal.aborted) {
           throw this.timeoutError();
@@ -313,6 +344,7 @@ export class OpenWebUIClient {
         throw this.malformedResponse('JSON');
       }
     } catch (cause) {
+      parentSignal?.throwIfAborted();
       if (cause instanceof OpenWebUIClientError) {
         throw cause;
       }

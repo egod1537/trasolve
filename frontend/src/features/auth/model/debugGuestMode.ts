@@ -1,8 +1,5 @@
-import { buildInfo } from '@/shared/config/buildInfo';
+import { isDebugMode } from '@/shared/config/debugMode';
 
 export function isDebugGuestMode(search: string): boolean {
-  if (buildInfo.channel === 'production') {
-    return false;
-  }
-  return new URLSearchParams(search).get('debug') === '1';
+  return isDebugMode(search);
 }

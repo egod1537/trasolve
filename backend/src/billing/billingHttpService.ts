@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
+  type BillingSummary,
   confirmPaymentSchema,
   createPaymentSchema,
   type TokenAction,
@@ -10,7 +11,14 @@ import {
   type CurrentUserResolver,
 } from '../auth/currentUserResolver.js';
 import type { BillingService } from './billingService.js';
+import type { BillingOwner } from './billingRepository.js';
 import { BillingError } from './paymentProvider.js';
+
+const tokenDebugHeader = 'x-trasolve-token-debug';
+
+function isTokenDebugRequested(request: IncomingMessage): boolean {
+  return request.headers[tokenDebugHeader] === '1';
+}
 
 export function validateBillingRequest(request: IncomingMessage): void {
   if (
@@ -51,6 +59,9 @@ export class TokenMeter {
       throw new BillingError('AUTHENTICATION_REQUIRED', 401);
     }
     const owner = this.billing.owner(userId);
+    if (this.billing.isUsageUnlimited(owner, isTokenDebugRequested(request))) {
+      return operation();
+    }
     await this.billing.reserve(owner, action, key.data);
     let succeeded = false;
     try {
@@ -92,7 +103,7 @@ export class BillingHttpService {
       const owner = this.billing.owner(userId);
       if (path === '/summary') {
         this.method(request, 'GET');
-        send(response, 200, await this.billing.summary(owner));
+        send(response, 200, await this.summary(owner, request));
         return;
       }
       this.method(request, 'POST');
@@ -108,21 +119,22 @@ export class BillingHttpService {
         return;
       }
       if (path === '/confirm') {
-        send(
-          response,
-          200,
-          await this.billing.confirm(owner, confirmPaymentSchema.parse(body)),
+        const summary = await this.billing.confirm(
+          owner,
+          confirmPaymentSchema.parse(body),
         );
+        send(response, 200, this.withTokenDebug(owner, summary, request));
         return;
       }
       if (path === '/subscription/cancel') {
-        send(response, 200, await this.billing.cancelSubscription(owner));
+        const summary = await this.billing.cancelSubscription(owner);
+        send(response, 200, this.withTokenDebug(owner, summary, request));
         return;
       }
       const abort = /^\/orders\/([a-f0-9-]+)\/abort$/.exec(path);
       if (abort) {
         await this.billing.abandon(owner, z.uuid().parse(abort[1]));
-        send(response, 200, await this.billing.summary(owner));
+        send(response, 200, await this.summary(owner, request));
         return;
       }
       throw new BillingError('PAYMENT_NOT_FOUND', 404);
@@ -144,6 +156,27 @@ export class BillingHttpService {
     if (request.method !== method) {
       throw new BillingError('METHOD_NOT_ALLOWED', 405);
     }
+  }
+  private async summary(
+    owner: BillingOwner,
+    request: IncomingMessage,
+  ): Promise<BillingSummary> {
+    return this.billing.summary(owner, isTokenDebugRequested(request));
+  }
+  private withTokenDebug(
+    owner: BillingOwner,
+    summary: BillingSummary,
+    request: IncomingMessage,
+  ): BillingSummary {
+    const unlimited = this.billing.isUsageUnlimited(
+      owner,
+      isTokenDebugRequested(request),
+    );
+    return {
+      ...summary,
+      unlimited,
+      costs: unlimited ? { chat: 0, optimize: 0 } : summary.costs,
+    };
   }
 }
 

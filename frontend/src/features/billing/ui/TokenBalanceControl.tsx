@@ -1,4 +1,4 @@
-import { getLanguage, useL } from '@/shared/i18n';
+import { getLanguage, NL, useL } from '@/shared/i18n';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PlusIcon } from '@/shared/ui/icons';
 import { Progress } from '@/shared/ui/Progress';
@@ -12,6 +12,7 @@ type Props = {
   dialogId: string;
   onOpen: () => void;
   mode: PaymentMode;
+  unlimited?: boolean;
 };
 
 export function TokenBalanceControl({
@@ -21,6 +22,7 @@ export function TokenBalanceControl({
   dialogId,
   onOpen,
   mode,
+  unlimited = false,
 }: Props) {
   const L = useL();
   const number = new Intl.NumberFormat(getLanguage());
@@ -48,18 +50,21 @@ export function TokenBalanceControl({
           )}
         </span>
         <span className="map-token-balance-value">
-          <strong>{number.format(remaining)}</strong>
-          <span>
-            {L('auth:tokenPlans.allowanceSuffix', {
-              allowance: number.format(allowance),
-            })}
-          </span>
+          <strong>{unlimited ? NL('∞') : number.format(remaining)}</strong>
+          {!unlimited && (
+            <span>
+              {L('auth:tokenPlans.allowanceSuffix', {
+                allowance: number.format(allowance),
+              })}
+            </span>
+          )}
         </span>
         <Progress
           className="map-token-balance-progress"
           label={L('auth:tokenPlans.remaining')}
-          value={remaining}
-          max={allowance}
+          value={unlimited ? 1 : remaining}
+          max={unlimited ? 1 : allowance}
+          aria-valuetext={unlimited ? L('auth:billing.debugMode') : undefined}
         />
       </div>
       <IconButton

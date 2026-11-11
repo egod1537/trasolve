@@ -81,7 +81,7 @@
 }
 
 .trip-place.is-selected .trip-layer-type-icon {
-  color: var(--color-primary);
+  color: var(--color-accent-foreground);
 }
 
 .trip-polyline-content {
@@ -94,7 +94,7 @@
 .trip-polyline-name {
   overflow: hidden;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -136,7 +136,7 @@
   overflow: hidden;
   color: var(--color-text);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.45;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -147,7 +147,8 @@
   flex: none;
   margin-left: auto;
   color: var(--color-muted);
-  font-size: 10px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
   font-weight: 450;
   line-height: 1.4;
   white-space: nowrap;
@@ -177,7 +178,7 @@
   flex-wrap: wrap;
   gap: 2px 5px;
   color: var(--color-text-muted);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }

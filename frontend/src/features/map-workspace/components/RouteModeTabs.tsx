@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
 import type { TripPolylineMode } from '@trasolve/shared';
 import type { RoutableMode } from '../domain/routeDetails';
 import type {
@@ -61,7 +62,11 @@ export function RouteModeTabs({
 }) {
   const L = useL();
   return (
-    <div className="route-settings-mode-scroll">
+    <ScrollArea
+      className="route-settings-mode-scroll"
+      contentClassName="route-settings-mode-scroll-content"
+      orientation="horizontal"
+    >
       <div
         className="route-settings-modes"
         role="group"
@@ -105,6 +110,6 @@ export function RouteModeTabs({
           </button>
         ))}
       </div>
-    </div>
+    </ScrollArea>
   );
 }

@@ -1,5 +1,9 @@
 import { type ReactNode } from 'react';
-import { type ChatMessage, type ChatRequest } from '@trasolve/shared';
+import {
+  type ChatMessage,
+  type ChatRequest,
+  type ChatWebImage,
+} from '@trasolve/shared';
 
 /** Request context is captured with its answer so actions use the original trip snapshot. */
 export type ChatRequestPreamble = {
@@ -31,6 +35,9 @@ export type UiChatMessage = ChatMessage & {
   requestContent?: string | null;
   /** Opaque context captured when the request for this answer was sent. */
   requestContext?: string;
+  followUps?: string[];
+  summary?: string;
+  webImages?: ChatWebImage[];
 };
 
 export type MapAiUnreadPreview = {

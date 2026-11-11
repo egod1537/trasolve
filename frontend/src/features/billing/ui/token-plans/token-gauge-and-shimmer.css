@@ -90,7 +90,56 @@
 }
 .token-plan-card.token-shimmer::after,
 .token-plan-card.token-shimmer::before {
-  animation-delay: 1.2s;
+  animation-delay: 0.25s;
+}
+.token-plan-card.token-shimmer::after {
+  /* Keep the sheen above opaque card content without intercepting clicks. */
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  left: -80%;
+  width: 50%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    #fff3,
+    #d2e4ff22,
+    transparent
+  );
+  opacity: 0;
+  animation-name: token-plan-foil-sheen;
+}
+.token-plan-card.token-shimmer::before {
+  z-index: 3;
+  animation-name: token-plan-foil-sparkle;
+}
+@keyframes token-plan-foil-sheen {
+  0% {
+    opacity: 0;
+    transform: translateX(0) skewX(-20deg);
+  }
+  5%,
+  24% {
+    opacity: 1;
+  }
+  32%,
+  100% {
+    opacity: 0;
+    transform: translateX(440%) skewX(-20deg);
+  }
+}
+@keyframes token-plan-foil-sparkle {
+  0%,
+  12%,
+  32%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(0);
+  }
+  22% {
+    opacity: 0.9;
+    transform: scale(1.1) rotate(45deg);
+  }
 }
 @keyframes token-foil-sheen {
   0%,

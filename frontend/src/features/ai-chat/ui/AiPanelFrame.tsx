@@ -8,6 +8,7 @@ type Props = {
   initialFocusRef: RefObject<HTMLTextAreaElement | null>;
   onClose?: () => void;
   children: ReactNode;
+  className?: string;
 };
 
 export function AiPanelFrame({
@@ -17,8 +18,10 @@ export function AiPanelFrame({
   initialFocusRef,
   onClose,
   children,
+  className: extraClassName = '',
 }: Props) {
-  const className = `trip-map-ai-panel${open ? ' is-open' : ''}`;
+  const className =
+    `trip-map-ai-panel${open ? ' is-open' : ''} ${extraClassName}`.trim();
   if (modal) {
     return (
       <Dialog

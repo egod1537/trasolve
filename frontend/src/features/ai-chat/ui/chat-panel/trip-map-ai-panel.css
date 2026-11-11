@@ -10,12 +10,12 @@
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-overlay);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   opacity: 0;
   pointer-events: none;
-  transform: translateX(calc(100% + 24px));
+  transform: translateX(12px);
   contain: layout;
   will-change: transform;
   visibility: hidden;
@@ -141,13 +141,15 @@
 }
 
 .trip-ai-chat-list-content {
-  display: grid;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+.trip-ai-chat-list-content-content {
+  --scroll-content-display: grid;
   align-content: start;
   gap: 18px;
-  min-height: 0;
   padding: 4px 8px 16px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 
 .trip-ai-chat-list-content h3 {

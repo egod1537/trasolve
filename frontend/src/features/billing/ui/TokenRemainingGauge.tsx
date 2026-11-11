@@ -9,6 +9,7 @@ export function TokenRemainingGauge() {
       <TokenBalanceGauge
         remaining={summary?.wallet.remaining}
         provided={summary?.wallet.provided ?? 1}
+        unlimited={summary?.unlimited}
       />
     </div>
   );

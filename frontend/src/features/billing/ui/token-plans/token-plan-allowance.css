@@ -4,11 +4,7 @@
   gap: 8px;
   padding: 9px 10px;
   border-radius: 24px;
-  background: color-mix(
-    in srgb,
-    var(--color-primary) 7%,
-    var(--color-surface-subtle)
-  );
+  background: var(--color-surface-subtle);
   font-size: 13px;
   font-weight: 550;
   line-height: 1.5;
@@ -20,7 +16,7 @@
   width: 18px;
   height: 18px;
   fill: none;
-  stroke: var(--color-primary);
+  stroke: var(--color-accent-foreground);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.8;
@@ -55,8 +51,8 @@
 }
 
 .token-plan-select.ui-button--secondary:not(:disabled) {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
 }
 
 .token-plans-footer {
@@ -72,7 +68,7 @@
 }
 
 .token-plans-selection {
-  color: var(--color-primary);
+  color: var(--color-accent-foreground);
 }
 
 /* The map search and profile share a narrow viewport beside the trip panel. */

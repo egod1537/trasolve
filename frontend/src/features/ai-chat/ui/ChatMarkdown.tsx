@@ -1,7 +1,8 @@
 import Markdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import '@/features/ai-chat/ui/chat-markdown.css';
-import { L } from '@/shared/i18n';
+import { useL } from '@/shared/i18n';
+import { memo, type PropsWithChildren } from 'react';
 
 const components: Components = {
   a: ({ href, title, children }) => {
@@ -18,7 +19,26 @@ const components: Components = {
     );
   },
   pre: ({ children }) => <pre tabIndex={0}>{children}</pre>,
-  table: ({ children }) => (
+  table: MarkdownTable,
+};
+
+export const ChatMarkdown = memo(function ChatMarkdown({
+  content,
+}: {
+  content: string;
+}) {
+  return (
+    <div className="chat-markdown">
+      <Markdown remarkPlugins={[remarkGfm]} skipHtml components={components}>
+        {content}
+      </Markdown>
+    </div>
+  );
+});
+
+function MarkdownTable({ children }: PropsWithChildren) {
+  const L = useL();
+  return (
     <div
       className="chat-markdown-table"
       role="region"
@@ -26,16 +46,6 @@ const components: Components = {
       tabIndex={0}
     >
       <table>{children}</table>
-    </div>
-  ),
-};
-
-export function ChatMarkdown({ content }: { content: string }) {
-  return (
-    <div className="chat-markdown">
-      <Markdown remarkPlugins={[remarkGfm]} skipHtml components={components}>
-        {content}
-      </Markdown>
     </div>
   );
 }

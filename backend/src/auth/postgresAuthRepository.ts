@@ -1,4 +1,9 @@
 import type { QueryResultRow } from 'pg';
+import {
+  initialTutorialProgress,
+  tutorialProgressSchema,
+  type TutorialProgress,
+} from '@trasolve/shared';
 import type { Database } from '../database/database.js';
 import {
   AuthIdentityConflictError,
@@ -173,6 +178,33 @@ export class PostgresAuthRepository implements AuthRepository {
       email: row.email,
       emailVerified: row.email_verified,
     };
+  }
+  public async getTutorialProgress(userId: string): Promise<TutorialProgress> {
+    const result = await this.database.query<{ tutorial: unknown }>(
+      `SELECT settings -> 'tutorial' AS tutorial FROM trasolve.users
+       WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NULL`,
+      [userId],
+    );
+    if (!result.rows[0]) {
+      throw new Error('User is unavailable.');
+    }
+    return result.rows[0].tutorial == null
+      ? initialTutorialProgress()
+      : tutorialProgressSchema.parse(result.rows[0].tutorial);
+  }
+
+  public async saveTutorialProgress(
+    userId: string,
+    progress: TutorialProgress,
+  ): Promise<void> {
+    const result = await this.database.query(
+      `UPDATE trasolve.users SET settings = jsonb_set(settings, '{tutorial}', $2::jsonb)
+       WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NULL`,
+      [userId, JSON.stringify(tutorialProgressSchema.parse(progress))],
+    );
+    if (result.rowCount !== 1) {
+      throw new Error('User is unavailable.');
+    }
   }
 }
 

@@ -79,16 +79,43 @@
   z-index: 1;
 }
 
+.map-popup-card-group:has(> .trip-place-card) {
+  height: var(--map-detail-card-height);
+}
+
+.map-popup-card-group > .trip-place-card {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.trip-place-card > .place-info-card-header {
+  flex: none;
+}
+
+.trip-place-card-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+.trip-place-card-scroll:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
 .side-detail-card {
   position: absolute;
   top: 0;
   z-index: 2;
   width: min(272px, calc(100vw - 24px));
   max-height: inherit;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: visible;
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-overlay);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   pointer-events: auto;
@@ -139,15 +166,16 @@
   justify-content: space-between;
   gap: 12px;
   min-height: 52px;
-  padding: 10px 10px 10px 16px;
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3) var(--panel-padding);
+  border-bottom: 1px solid var(--panel-divider);
+  background: var(--panel-header-bg);
 }
 
 .side-detail-card-header h3 {
   margin: 0;
   color: var(--color-text);
   font-size: 15px;
-  font-weight: 650;
+  font-weight: var(--panel-title-weight);
   line-height: 1.4;
   letter-spacing: -0.015em;
 }
@@ -156,11 +184,11 @@
   display: grid;
   place-items: center;
   flex: none;
-  width: 32px;
-  height: 32px;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: transparent;
   color: var(--color-muted);
   cursor: pointer;
@@ -343,4 +371,9 @@
   font-size: 11px;
   font-weight: 600;
   line-height: 1.4;
+}
+
+.side-detail-card-scroll {
+  max-height: inherit;
+  border-radius: inherit;
 }

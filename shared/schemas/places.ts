@@ -76,6 +76,7 @@ export const placeOpeningScheduleSchema = z.object({
 });
 
 export const placeOpeningHoursSchema = z.object({
+  fetchedAt: z.iso.datetime().optional(),
   timeZone: z.string().min(1).max(100).optional(),
   utcOffsetMinutes: z.number().int().min(-840).max(840).optional(),
   current: placeOpeningScheduleSchema.optional(),

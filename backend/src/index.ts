@@ -9,6 +9,7 @@ import { LocalBillingRepository } from './billing/localBillingRepository.js';
 import { PostgresBillingRepository } from './billing/postgresBillingRepository.js';
 import type { BillingRepository } from './billing/billingRepository.js';
 import { AuthenticationService } from './auth/authenticationService.js';
+import { TutorialHttpService } from './auth/tutorialHttpService.js';
 import type { AuthRepository } from './auth/authRepository.js';
 import { CurrentUserResolver } from './auth/currentUserResolver.js';
 import { LocalAuthRepository } from './auth/localAuthRepository.js';
@@ -18,6 +19,10 @@ import type { SessionRepository } from './auth/sessionRepository.js';
 import { SessionService } from './auth/sessionService.js';
 import { loadBackendEnvironment } from './configuration/environment.js';
 import { loadExternalApiPolicy } from './configuration/externalApiPolicy.js';
+import {
+  isDebugGuestAuthenticationEnabled,
+  resolveDebugGuestSubject,
+} from './configuration/debugGuest.js';
 import {
   resolveBackendDataRoot,
   resolveBackendPersistenceMode,
@@ -149,6 +154,7 @@ async function startBackend(): Promise<void> {
       currentUser,
       adminHttp,
       new BillingHttpService(billing, currentUser),
+      new TutorialHttpService(persistence.auth, currentUser),
     );
     await listen(server, port, host);
     console.log(`Backend: http://${host}:${port}`);
@@ -280,30 +286,6 @@ async function createRuntimePersistence(
       await database.close();
     },
   };
-}
-
-function isDebugGuestAuthenticationEnabled(): boolean {
-  const configured = process.env.TRASOLVE_DEBUG_GUEST_AUTH?.trim();
-  if (!configured) {
-    return process.env.NODE_ENV !== 'production';
-  }
-  if (configured === 'true') {
-    return true;
-  }
-  if (configured === 'false') {
-    return false;
-  }
-  throw new Error('TRASOLVE_DEBUG_GUEST_AUTH must be true or false.');
-}
-
-function resolveDebugGuestSubject(): string {
-  const subject = process.env.TRASOLVE_DEBUG_GUEST_SUBJECT?.trim() || 'default';
-  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(subject)) {
-    throw new Error(
-      'TRASOLVE_DEBUG_GUEST_SUBJECT must use lowercase letters, digits, and hyphens.',
-    );
-  }
-  return subject;
 }
 
 function canUseAnalyticsReadApi(): boolean {

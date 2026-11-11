@@ -6,8 +6,8 @@
   overflow: hidden;
   background: var(--color-map-background);
   --trip-panel-width: 468px;
-  --map-ai-toggle-size: 84px;
-  --map-ai-toggle-icon-size: 39px;
+  --map-ai-toggle-size: 64px;
+  --map-ai-toggle-icon-size: 28px;
   --map-ai-toggle-right: max(24px, calc(env(safe-area-inset-right) + 16px));
   --map-ai-toggle-bottom: max(24px, calc(env(safe-area-inset-bottom) + 16px));
   --map-floating-bar-height: 64px;

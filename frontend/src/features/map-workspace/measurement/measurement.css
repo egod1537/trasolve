@@ -2,7 +2,7 @@
   max-width: min(340px, calc(100vw - 32px));
   padding: 14px;
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-overlay);
   background: var(--color-map-overlay-surface);
   color: var(--text-primary);
   box-shadow: var(--shadow-map-overlay);
@@ -32,7 +32,7 @@
 .map-capture-status {
   padding: 10px 14px;
   max-width: min(380px, calc(100vw - 32px));
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-overlay);
   background: var(--color-map-overlay-surface);
   color: var(--text-primary);
   box-shadow: var(--shadow-map-overlay);

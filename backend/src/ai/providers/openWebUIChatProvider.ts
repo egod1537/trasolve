@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { ChatRequest, ChatResponse } from '@trasolve/shared';
-import type { ChatProvider } from '../chatProvider.js';
+import type { ChatProvider, ChatStreamOptions } from '../chatProvider.js';
 import { OpenWebUIClient, OpenWebUIClientError } from '../openWebUIClient.js';
 
 export class OpenWebUIChatProvider implements ChatProvider {
@@ -9,8 +9,12 @@ export class OpenWebUIChatProvider implements ChatProvider {
     this.defaultModel = defaultModel.trim();
   }
 
-  public async chat(request: ChatRequest): Promise<ChatResponse> {
+  public async chat(
+    request: ChatRequest,
+    signal?: AbortSignal,
+  ): Promise<ChatResponse> {
     const model = request.model ?? this.defaultModel;
+    const webSearch = request.webSearch ?? model === this.defaultModel;
     const requestId = randomUUID();
     const startedAt = performance.now();
     if (!model) {
@@ -35,10 +39,14 @@ export class OpenWebUIChatProvider implements ChatProvider {
       throw error;
     }
     try {
-      const result = await this.client.chat({
-        model,
-        messages: request.messages,
-      });
+      const result = await this.client.chat(
+        {
+          model,
+          messages: request.messages,
+          webSearch,
+        },
+        signal,
+      );
       this.logRequest({
         requestId,
         requestedModel: model,
@@ -53,7 +61,11 @@ export class OpenWebUIChatProvider implements ChatProvider {
         retryAfterMs: null,
         localAbortSignalTimeout: false,
       });
-      return { model: result.model, message: result.message };
+      return {
+        model: result.model,
+        message: result.message,
+        ...(result.webImages ? { webImages: result.webImages } : {}),
+      };
     } catch (cause) {
       const error = cause instanceof OpenWebUIClientError ? cause : undefined;
       this.logRequest({
@@ -72,6 +84,24 @@ export class OpenWebUIChatProvider implements ChatProvider {
       });
       throw cause;
     }
+  }
+
+  public async stream(
+    request: ChatRequest,
+    options: ChatStreamOptions,
+  ): Promise<ChatResponse> {
+    const model = request.model ?? this.defaultModel;
+    const webSearch = request.webSearch ?? model === this.defaultModel;
+    if (!model) {
+      throw new OpenWebUIClientError(
+        'configuration',
+        'The OpenWebUI chat model is not configured.',
+      );
+    }
+    return this.client.stream(
+      { model, messages: request.messages, webSearch },
+      options,
+    );
   }
 
   private logRequest(fields: {

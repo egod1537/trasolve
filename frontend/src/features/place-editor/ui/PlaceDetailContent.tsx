@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { usePlaceDetail } from '@/features/place-editor/model/usePlaceDetail';
 
 import { PlaceStyleIcon } from '@/features/place-editor/ui/PlaceStyleIcon';
@@ -5,7 +6,6 @@ import { PlaceTimeTimeline } from '@/features/place-editor/ui/PlaceTimeTimeline'
 import { InlineRename } from '@/shared/ui/InlineRename';
 import { PlaceStyleControl } from '@/features/place-editor/ui/PlaceStyleControl';
 import { PlaceDeleteConfirmCard } from '@/features/place-editor/ui/PlaceDeleteConfirmCard';
-import { PlaceDurationControl } from '@/features/place-editor/ui/PlaceDurationControl';
 import { MapPopupCardShell } from '@/shared/ui/map/MapPopupCardShell';
 import { PlaceOpeningHours } from '@/features/place-editor/ui/PlaceOpeningHours';
 import { PlaceOpeningHoursDetails } from '@/features/place-editor/ui/PlaceOpeningHoursDetails';
@@ -55,7 +55,6 @@ export function PlaceDetailContent({
     disabled,
     canRename,
     canEditTime,
-    canEditDuration,
     canEditMemo,
     canEditStyle,
     canRemove,
@@ -191,181 +190,172 @@ export function PlaceDetailContent({
           ) : undefined
         }
       >
-        {(place.placeId || openingHours) && (
-          <PlaceOpeningHours
-            hours={openingHours}
-            loadState={openingHoursLoadState}
-            detailsOpen={openingHoursDetailOpen}
-            detailsControlId={openingHoursCardId}
-            onToggleDetails={() => {
-              setDeleteConfirmOpen(false);
-              setOpeningHoursDetailOpen((open) => !open);
-            }}
-          />
-        )}
+        <ScrollArea
+          className="trip-place-card-scroll"
+          contentClassName="trip-place-card-scroll-content"
+          viewportProps={{
+            role: 'region',
+            tabIndex: 0,
+            'aria-label': L(
+              'place:googlePlaceCard.tooltip.locationInformation',
+            ),
+          }}
+        >
+          {(place.placeId || openingHours) && (
+            <PlaceOpeningHours
+              hours={openingHours}
+              loadState={openingHoursLoadState}
+              detailsOpen={openingHoursDetailOpen}
+              detailsControlId={openingHoursCardId}
+              onToggleDetails={() => {
+                setDeleteConfirmOpen(false);
+                setOpeningHoursDetailOpen((open) => !open);
+              }}
+            />
+          )}
 
-        <PlaceTimeTimeline
-          time={place.time}
-          visitDurationMinutes={
-            place.preferredDurationMinutes ?? place.visitDurationMinutes
-          }
-          openingHours={openingHours}
-          variant="expanded"
-          readOnly={!canEditTime}
-          busy={disabled}
-          saving={timeSubmitting}
-          onChangeTimeRange={canEditTime ? saveTimeRange : undefined}
-        />
-
-        <section className="trip-place-duration-section">
-          <div className="trip-place-duration-heading">
-            <h3>{L('place:placeDetailContent.title.desiredStayTime')}</h3>
-            <small>
-              {L('place:placeDetailContent.description.setTimeYouWillStayAt')}
-            </small>
-          </div>
-          <PlaceDurationControl
-            preferredDurationMinutes={place.preferredDurationMinutes}
-            editable={canEditDuration}
-            disabled={disabled}
-            onChange={
-              canEditDuration && onUpdatePreferredDuration
-                ? (preferredDurationMinutes) =>
-                    onUpdatePreferredDuration(
-                      place.id,
-                      preferredDurationMinutes,
-                    )
-                : undefined
+          <PlaceTimeTimeline
+            time={place.time}
+            visitDurationMinutes={
+              place.preferredDurationMinutes ?? place.visitDurationMinutes
             }
+            openingHours={openingHours}
+            variant="expanded"
+            readOnly={!canEditTime}
+            busy={disabled}
+            saving={timeSubmitting}
+            onChangeTimeRange={canEditTime ? saveTimeRange : undefined}
           />
-        </section>
 
-        <div className="trip-place-card-body">
-          <section className="trip-place-management-section">
-            <h3>{L('place:placeDetailContent.title.memo')}</h3>
-            {memoEditing ? (
-              <form
-                className="trip-place-memo-editor"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void saveMemo();
-                }}
-              >
-                <textarea
-                  ref={memoTextareaRef}
-                  value={memoDraft}
-                  maxLength={4000}
-                  aria-label={L('place:placeDetailContent.ariaLabel.notes', {
+          <div className="trip-place-card-body">
+            <section className="trip-place-management-section">
+              <h3>{L('place:placeDetailContent.title.memo')}</h3>
+              {memoEditing ? (
+                <form
+                  className="trip-place-memo-editor"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void saveMemo();
+                  }}
+                >
+                  <textarea
+                    ref={memoTextareaRef}
+                    value={memoDraft}
+                    maxLength={4000}
+                    aria-label={L('place:placeDetailContent.ariaLabel.notes', {
+                      name: place.name,
+                    })}
+                    disabled={disabled}
+                    onChange={(event) => setMemoDraft(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Escape') {
+                        event.preventDefault();
+                        cancelMemoEditing();
+                        return;
+                      }
+                      if (
+                        event.key === 'Enter' &&
+                        (event.ctrlKey || event.metaKey)
+                      ) {
+                        event.preventDefault();
+                        event.currentTarget.form?.requestSubmit();
+                      }
+                    }}
+                  />
+                  <div className="trip-place-memo-editor-actions">
+                    {memoSubmitting && (
+                      <span role="status">
+                        {L('place:placeDetailContent.text.savingNote')}
+                      </span>
+                    )}
+                    <button type="submit" disabled={disabled}>
+                      {L('common:action.save')}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={cancelMemoEditing}
+                    >
+                      {L('common:action.cancel')}
+                    </button>
+                  </div>
+                </form>
+              ) : canEditMemo ? (
+                <p
+                  className={
+                    place.memo ? 'trip-place-memo' : 'trip-place-memo is-empty'
+                  }
+                  role="button"
+                  tabIndex={disabled ? -1 : 0}
+                  aria-disabled={disabled}
+                  aria-label={L('place:placeDetailContent.ariaLabel.memo', {
                     name: place.name,
+                    value: place.memo
+                      ? L('place:placeDetailContent.ariaLabel.edit')
+                      : L('common:action.add'),
                   })}
-                  disabled={disabled}
-                  onChange={(event) => setMemoDraft(event.target.value)}
+                  title={L('place:placeDetailContent.tooltip.doubleClickEdit')}
+                  onClick={startMemoEditing}
+                  onDoubleClick={startMemoEditing}
                   onKeyDown={(event) => {
-                    if (event.key === 'Escape') {
+                    if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault();
-                      cancelMemoEditing();
-                      return;
-                    }
-                    if (
-                      event.key === 'Enter' &&
-                      (event.ctrlKey || event.metaKey)
-                    ) {
-                      event.preventDefault();
-                      event.currentTarget.form?.requestSubmit();
+                      startMemoEditing();
                     }
                   }}
-                />
-                <div className="trip-place-memo-editor-actions">
-                  {memoSubmitting && (
-                    <span role="status">
-                      {L('place:placeDetailContent.text.savingNote')}
-                    </span>
-                  )}
-                  <button type="submit" disabled={disabled}>
-                    {L('common:action.save')}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={disabled}
-                    onClick={cancelMemoEditing}
-                  >
-                    {L('common:action.cancel')}
-                  </button>
-                </div>
-              </form>
-            ) : canEditMemo ? (
-              <p
-                className={
-                  place.memo ? 'trip-place-memo' : 'trip-place-memo is-empty'
-                }
-                role="button"
-                tabIndex={disabled ? -1 : 0}
-                aria-disabled={disabled}
-                aria-label={L('place:placeDetailContent.ariaLabel.memo', {
-                  name: place.name,
-                  value: place.memo
-                    ? L('place:placeDetailContent.ariaLabel.edit')
-                    : L('common:action.add'),
-                })}
-                title={L('place:placeDetailContent.tooltip.doubleClickEdit')}
-                onClick={startMemoEditing}
-                onDoubleClick={startMemoEditing}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    startMemoEditing();
+                >
+                  {place.memo ||
+                    L(
+                      'place:placeDetailContent.description.doubleClickEnterNote',
+                    )}
+                </p>
+              ) : (
+                <p
+                  className={
+                    place.memo ? 'trip-place-memo' : 'trip-place-memo is-empty'
                   }
-                }}
-              >
-                {place.memo ||
-                  L(
-                    'place:placeDetailContent.description.doubleClickEnterNote',
-                  )}
-              </p>
-            ) : (
-              <p
-                className={
-                  place.memo ? 'trip-place-memo' : 'trip-place-memo is-empty'
-                }
-              >
-                {place.memo ||
-                  L('place:placeDetailContent.description.noNotes')}
-              </p>
-            )}
-          </section>
-
-          {(place.address ||
-            googlePlace?.address ||
-            googlePlace?.googleMapsUrl) && (
-            <section className="trip-place-management-section">
-              <h3>{L('place:googlePlaceCard.tooltip.locationInformation')}</h3>
-              {(place.address || googlePlace?.address) && (
-                <p className="trip-place-address">
-                  {googlePlace?.address ?? place.address}
+                >
+                  {place.memo ||
+                    L('place:placeDetailContent.description.noNotes')}
                 </p>
               )}
-              {googlePlace?.googleMapsUrl && (
-                <a
-                  className="trip-place-google-maps-link"
-                  href={googlePlace.googleMapsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {L('place:googlePlaceCard.text.viewGoogleMaps')}
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M14 5h5v5M19 5l-8 8M18 13v6H5V6h6" />
-                  </svg>
-                </a>
-              )}
             </section>
-          )}
 
-          {mutationError && (
-            <p className="trip-place-mutation-error" role="alert">
-              {mutationError}
-            </p>
-          )}
-        </div>
+            {(place.address ||
+              googlePlace?.address ||
+              googlePlace?.googleMapsUrl) && (
+              <section className="trip-place-management-section">
+                <h3>
+                  {L('place:googlePlaceCard.tooltip.locationInformation')}
+                </h3>
+                {(place.address || googlePlace?.address) && (
+                  <p className="trip-place-address">
+                    {googlePlace?.address ?? place.address}
+                  </p>
+                )}
+                {googlePlace?.googleMapsUrl && (
+                  <a
+                    className="trip-place-google-maps-link"
+                    href={googlePlace.googleMapsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {L('place:googlePlaceCard.text.viewGoogleMaps')}
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M14 5h5v5M19 5l-8 8M18 13v6H5V6h6" />
+                    </svg>
+                  </a>
+                )}
+              </section>
+            )}
+
+            {mutationError && (
+              <p className="trip-place-mutation-error" role="alert">
+                {mutationError}
+              </p>
+            )}
+          </div>
+        </ScrollArea>
       </MapPopupCardShell>
 
       {openingHoursDetailOpen && openingHours && (

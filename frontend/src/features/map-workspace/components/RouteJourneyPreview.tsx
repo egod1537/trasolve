@@ -6,17 +6,12 @@ import {
 } from '@/shared/lib/routePresentation';
 import { useL } from '@/shared/i18n';
 import { PolylineModeIcon } from './PolylineModeIcon';
-import type { RoutableMode } from '../domain/routeDetails';
 
 const TRANSIT_COLORS = ['#c4a136', '#369c72', '#5965dc', '#a16bb5'];
 
-export function RouteJourneyPreview({
-  route,
-  mode,
-}: {
-  route: MapRoute;
-  mode: RoutableMode;
-}) {
+// The proportional journey bar describes transit rides, transfers and walks.
+// Walking/driving result cards render their own mode-specific summaries.
+export function RouteJourneyPreview({ route }: { route: MapRoute }) {
   const L = useL();
   const steps = route.legs.flatMap((leg) => leg.steps);
   const timed = steps.every((step) => step.durationMillis !== null);
@@ -58,7 +53,7 @@ export function RouteJourneyPreview({
                 }
                 title={[label, formatDuration(step.durationMillis)].join(', ')}
               >
-                <PolylineModeIcon mode={walking ? 'walking' : mode} />
+                <PolylineModeIcon mode={walking ? 'walking' : 'transit'} />
                 <span>{formatDuration(step.durationMillis)}</span>
               </span>
             );

@@ -28,6 +28,7 @@ import {
   getTodayTimelineRanges,
   getOpeningTimeline,
 } from '@/entities/place/model/openingHoursTimeline';
+import { selectOpeningSchedule } from './openingHoursSchedule';
 export {
   type PlaceOpeningTimeline,
   type PlaceOpeningStatus,
@@ -138,6 +139,7 @@ export function getPlaceOpeningStatus(
 ): PlaceOpeningStatus {
   const current = hours?.current;
   const regular = hours?.regular;
+  const schedule = selectOpeningSchedule(hours, now);
   const weeklyHours = formatWeeklyHours(regular ?? current, messages);
   const base = {
     todayHours: [] as string[],
@@ -145,7 +147,7 @@ export function getPlaceOpeningStatus(
     timelineRanges: [] as PlaceOpeningTimelineRange[],
   };
 
-  if (!hours || (!current && !regular)) {
+  if (!hours || !schedule) {
     return { ...base, type: 'unknown', label: messages.status.unavailable };
   }
 
@@ -159,7 +161,7 @@ export function getPlaceOpeningStatus(
     };
   }
 
-  if (isAlwaysOpen(regular)) {
+  if (isAlwaysOpen(schedule)) {
     return {
       ...base,
       type: 'always-open',
@@ -175,13 +177,13 @@ export function getPlaceOpeningStatus(
     };
   }
 
-  const schedule = current ?? regular;
   const periods = schedule?.periods ?? [];
   const todayHours = formatTodayHours(periods, localNow, messages);
   const timelineRanges = getTodayTimelineRanges(periods, localNow);
   const resultBase = { todayHours, weeklyHours, timelineRanges };
   const timing = getWeeklyTiming(periods, localNow);
-  const openNow = schedule?.openNow ?? timing.open;
+  // openNow is a snapshot at fetch time, not the status on the requested date.
+  const openNow = timing.open;
 
   if (openNow) {
     const closeIn =

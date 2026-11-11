@@ -58,6 +58,7 @@
   min-width: 0;
   isolation: isolate;
   background: transparent;
+  transition: background-color var(--motion-fast);
 }
 
 .trip-layer-row::before {
@@ -190,7 +191,7 @@
 }
 
 .trip-layer-item:where(:not(.is-disabled)) > .trip-layer-row:hover {
-  background: var(--color-surface-hover);
+  background: color-mix(in srgb, var(--color-text-primary) 5%, transparent);
 }
 
 .trip-polyline-item:where(:not(.is-disabled)) > .trip-layer-row:hover {
@@ -198,7 +199,12 @@
 }
 
 .trip-layer-item.is-selected > .trip-layer-row {
-  background: var(--color-accent-soft);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.trip-layer-item.is-selected .trip-place-name,
+.trip-layer-item.is-selected .trip-polyline-name {
+  color: var(--color-info);
 }
 
 .trip-layer-item.is-details-open > .trip-layer-row {

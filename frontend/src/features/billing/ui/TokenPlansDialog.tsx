@@ -84,6 +84,7 @@ export function TokenPlansDialog() {
             <TokenBalanceGauge
               remaining={summary.wallet.remaining}
               provided={summary.wallet.provided}
+              unlimited={summary.unlimited}
             />
           </div>
         )}

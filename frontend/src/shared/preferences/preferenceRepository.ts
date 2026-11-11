@@ -1,6 +1,7 @@
 export const USER_PREFERENCE_KEYS = {
   language: 'trasolve.language',
   theme: 'trasolve.theme',
+  tutorialMode: 'trasolve.tutorialMode',
 } as const;
 
 export type UserPreferenceKey =

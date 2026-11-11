@@ -1,3 +1,5 @@
+import type { TutorialProgress } from '@trasolve/shared';
+
 export interface AuthIdentityRecord {
   readonly id: string;
   readonly userId: string;
@@ -47,6 +49,11 @@ export interface AuthRepository {
     input: UpdateIdentityLoginInput,
   ): Promise<void>;
   getUserById(userId: string): Promise<AuthUserRecord | undefined>;
+  getTutorialProgress(userId: string): Promise<TutorialProgress>;
+  saveTutorialProgress(
+    userId: string,
+    progress: TutorialProgress,
+  ): Promise<void>;
 }
 
 export class AuthIdentityConflictError extends Error {

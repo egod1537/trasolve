@@ -152,5 +152,35 @@
         "system": "System"
       }
     }
+  },
+  "tutorial": {
+    "action": {
+      "finish": "Finish tutorial",
+      "skip": "Leave tutorial"
+    },
+    "addPlace": {
+      "description": "When Seoul Station's details open, choose Add to itinerary. Seoul Station will be added to the layer you just created.",
+      "title": "Add a place to your itinerary"
+    },
+    "ai": {
+      "description": "Choose the AI button to open chat. Ask for place recommendations or help planning your itinerary.",
+      "title": "Plan your trip with AI"
+    },
+    "create": {
+      "description": "Choose Create new trip to make your trip map. You can keep places and your itinerary here.",
+      "title": "Create a trip map"
+    },
+    "days": {
+      "description": "Choose Add layer to create your first day. Layers help you organize places by date.",
+      "title": "Add a layer"
+    },
+    "optimize": {
+      "description": "After adding several places, try route optimization. It helps arrange your stops based on transport and visit times.",
+      "title": "Explore route optimization"
+    },
+    "search": {
+      "description": "Search for Seoul Station. The search term is already filled in. Check the results, then choose Next.",
+      "title": "Search for a place"
+    }
   }
 }

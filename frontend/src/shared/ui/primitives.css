@@ -4,7 +4,7 @@
   justify-content: center;
   gap: var(--space-2);
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-control);
   font: inherit;
   font-weight: var(--font-weight-medium);
   line-height: 1;
@@ -14,17 +14,18 @@
     border-color var(--motion-fast),
     box-shadow var(--motion-fast),
     color var(--motion-fast),
-    opacity var(--motion-fast);
+    opacity var(--motion-fast),
+    translate var(--motion-fast) var(--popup-easing);
 }
 
 .ui-button--sm {
-  min-height: 32px;
+  min-height: var(--control-height-sm);
   padding: 0 var(--space-3);
   font-size: 12px;
 }
 
 .ui-button--md {
-  min-height: 38px;
+  min-height: var(--control-height-md);
   padding: 0 var(--space-4);
   font-size: 13px;
 }
@@ -47,7 +48,7 @@
 
 .ui-button--secondary {
   border-color: var(--border-default);
-  background: var(--bg-surface-raised);
+  background: var(--bg-subtle);
   color: var(--text-primary);
 }
 
@@ -85,6 +86,28 @@
   color: var(--text-secondary);
 }
 
+.ui-button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.ui-button:is(.ui-button--secondary, .ui-button--ghost):is(
+    [aria-pressed='true'],
+    [aria-expanded='true']
+  ) {
+  border-color: var(--info-border);
+  background: var(--accent-soft);
+  color: var(--info);
+}
+
+.ui-button:active:not(:disabled) {
+  translate: 0 1px;
+}
+
+.ui-button[aria-busy='true'] {
+  cursor: progress;
+}
+
 .ui-button:disabled {
   box-shadow: none;
   opacity: var(--opacity-disabled);
@@ -106,31 +129,33 @@
 }
 
 .ui-icon-button.ui-button--sm {
-  width: 32px;
-  min-width: 32px;
+  width: var(--control-height-sm);
+  min-width: var(--control-height-sm);
 }
 
 .ui-icon-button.ui-button--md {
-  width: 38px;
-  min-width: 38px;
+  width: var(--control-height-md);
+  min-width: var(--control-height-md);
 }
 
 .ui-panel {
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--bg-surface);
   color: var(--text-primary);
   box-shadow: var(--shadow-card);
 }
 
 :where(.ui-field, .ui-select, .ui-textarea) {
-  min-height: 38px;
+  min-height: var(--control-height-md);
   padding: 8px 10px;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
   background: var(--bg-surface);
   color: var(--text-primary);
   font: inherit;
+  font-size: var(--panel-body-size);
+  line-height: 1.5;
   transition:
     background-color var(--motion-fast),
     border-color var(--motion-fast),
@@ -197,8 +222,8 @@
   max-width: 100%;
   max-height: calc(100vh - var(--space-8));
   overflow: auto;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-floating);
+  border-radius: var(--radius-overlay);
   background: var(--color-map-overlay-surface);
   color: var(--text-primary);
   box-shadow: var(--shadow-map-overlay);

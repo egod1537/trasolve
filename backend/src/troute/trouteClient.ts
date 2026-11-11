@@ -1,4 +1,10 @@
 import {
+  routeValidationRequestSchema,
+  routeValidationResponseSchema,
+  type RouteValidationRequest,
+  type RouteValidationResponse,
+} from '@trasolve/shared';
+import {
   trouteJobCancelledEventSchema,
   trouteJobCompletedEventSchema,
   trouteJobFailedEventSchema,
@@ -73,6 +79,30 @@ export class TrouteClient {
     this.timeoutMs = this.normalizeTimeout(
       config.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     );
+  }
+
+  public async validateRoute(
+    request: RouteValidationRequest,
+    signal?: AbortSignal,
+  ): Promise<RouteValidationResponse> {
+    const parsed = routeValidationRequestSchema.safeParse(request);
+    if (!parsed.success) {
+      throw new TrouteClientError(
+        'invalid_request',
+        'The route validation request is invalid.',
+      );
+    }
+    const body = await this.requestJson('validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(parsed.data),
+      signal,
+    });
+    const result = routeValidationResponseSchema.safeParse(body);
+    if (!result.success) {
+      throw this.invalidResponseError();
+    }
+    return result.data;
   }
 
   public async submitJob(request: TrouteOptimizeRequest): Promise<string> {
@@ -459,7 +489,10 @@ export class TrouteClient {
       'troute',
       operation,
     );
-    const signal = AbortSignal.timeout(this.timeoutMs);
+    const timeoutSignal = AbortSignal.timeout(this.timeoutMs);
+    const signal = init?.signal
+      ? AbortSignal.any([init.signal, timeoutSignal])
+      : timeoutSignal;
     try {
       const response = await instrumentExternalApiFetch(
         'troute',
@@ -674,6 +707,9 @@ export class TrouteClient {
 const MOCK_TIMESTAMP = 1_700_000_000_000;
 
 function trouteOperationName(path: string, method: string | undefined): string {
+  if (path === 'validate') {
+    return 'validate-route';
+  }
   if (path === 'health') {
     return 'health';
   }

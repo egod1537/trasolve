@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
 import {
   useEffect,
   useId,
@@ -73,13 +74,15 @@ export function SideDetailCard({
       role="dialog"
       aria-labelledby={titleId}
     >
-      <header className="side-detail-card-header">
-        <h3 id={titleId}>{title}</h3>
-        <button type="button" aria-label={closeLabel} onClick={onClose}>
-          <CloseIcon />
-        </button>
-      </header>
-      {children}
+      <ScrollArea className="side-detail-card-scroll">
+        <header className="side-detail-card-header">
+          <h3 id={titleId}>{title}</h3>
+          <button type="button" aria-label={closeLabel} onClick={onClose}>
+            <CloseIcon />
+          </button>
+        </header>
+        {children}
+      </ScrollArea>
     </aside>
   );
 }

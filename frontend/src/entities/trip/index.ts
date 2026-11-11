@@ -20,7 +20,11 @@ export type {
   TripPlace,
   TripPolyline,
 } from './model/trip';
-export { tripToView, tripViewToInput } from './model/tripMapping';
+export {
+  createTripViewMapper,
+  tripToView,
+  tripViewToInput,
+} from './model/tripMapping';
 export { DAY_COLOR_PALETTE, pickRandomDayColor } from './model/dayColor';
 export {
   getTripPolylineStyle,

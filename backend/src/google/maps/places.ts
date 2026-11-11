@@ -129,6 +129,7 @@ export class Places {
       openingHours:
         place.currentOpeningHours || place.regularOpeningHours
           ? {
+              fetchedAt: new Date().toISOString(),
               timeZone: place.timeZone?.id,
               utcOffsetMinutes: place.utcOffsetMinutes,
               current: place.currentOpeningHours,

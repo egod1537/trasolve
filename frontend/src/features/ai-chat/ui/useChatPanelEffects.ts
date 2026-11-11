@@ -8,6 +8,7 @@ type Props = {
   selectedThreadSending: boolean;
   openMenuThreadId: string | null;
   setOpenMenuThreadId: (id: string | null) => void;
+  autoScroll?: boolean;
 };
 export function useChatPanelEffects({
   open,
@@ -18,6 +19,7 @@ export function useChatPanelEffects({
   selectedThreadSending,
   openMenuThreadId,
   setOpenMenuThreadId,
+  autoScroll = true,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
@@ -27,11 +29,21 @@ export function useChatPanelEffects({
     }
   }, [open, selectedThreadId]);
   useEffect(() => {
+    if (!autoScroll) {
+      return;
+    }
     messagesRef.current?.scrollTo({
       top: messagesRef.current.scrollHeight,
       behavior: 'smooth',
     });
-  }, [activeThreadId, messageCount, messageError, selectedThreadSending, open]);
+  }, [
+    activeThreadId,
+    messageCount,
+    messageError,
+    selectedThreadSending,
+    open,
+    autoScroll,
+  ]);
   useEffect(() => {
     if (!openMenuThreadId) {
       return;

@@ -4,10 +4,11 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-overlay);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   pointer-events: auto;
+  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
   backdrop-filter: blur(var(--map-overlay-blur));
 }
 
@@ -22,9 +23,10 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  padding: 18px 16px 14px 20px;
-  border-bottom: 1px solid var(--color-border);
+  gap: var(--space-3);
+  padding: var(--space-4) var(--panel-padding);
+  border-bottom: 1px solid var(--panel-divider);
+  background: var(--panel-header-bg);
 }
 
 .place-info-card-header-copy {
@@ -56,8 +58,8 @@
 
 .place-info-card-header h2 {
   margin: 0;
-  font-size: 19px;
-  font-weight: 650;
+  font-size: var(--panel-title-size);
+  font-weight: var(--panel-title-weight);
   line-height: 1.35;
   letter-spacing: -0.025em;
   overflow-wrap: anywhere;
@@ -161,12 +163,12 @@
   display: grid;
   place-items: center;
   flex: none;
-  width: 34px;
-  height: 34px;
-  margin: -8px -6px 0 0;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  margin: 0;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: transparent;
   color: var(--color-muted);
   cursor: pointer;
@@ -190,12 +192,12 @@
   display: grid;
   place-items: center;
   flex: none;
-  width: 34px;
-  height: 34px;
-  margin-top: -8px;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  margin-top: 0;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: transparent;
   color: var(--color-muted);
   cursor: pointer;

@@ -217,7 +217,8 @@ export const trouteOptimizeRequestSchema = z
         });
       }
       for (const field of ['open_time', 'close_time'] as const) {
-        if (clockMinutes(location[field]) % 10 !== 0) {
+        const endOfDay = field === 'close_time' && location[field] === '23:59';
+        if (!endOfDay && clockMinutes(location[field]) % 10 !== 0) {
           context.addIssue({
             code: 'custom',
             message: 'Location times must use a 10-minute increment.',

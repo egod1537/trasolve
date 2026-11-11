@@ -61,6 +61,14 @@ function addDay(trip: Trip, title: string, id: string): Trip {
   };
 }
 
+/** Removing the day also removes its owned places, paths and visibility state. */
+export function createRemoveDayCommand(dayId: string): TripCommand {
+  return defineTripCommand((trip) => ({
+    ...trip,
+    days: trip.days.filter((day) => day.id !== dayId),
+  }));
+}
+
 export function createRenameDayCommand(
   dayId: string,
   title: string,

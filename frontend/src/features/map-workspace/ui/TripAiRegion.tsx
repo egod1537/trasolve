@@ -1,3 +1,10 @@
+import { commandFingerprint } from '../command-console/commandFingerprint';
+import {
+  commandAiInstructions,
+  readCommandProposal,
+} from '../command-console/commandAi';
+import { useCommandRuntime } from '../command-console/CommandProvider';
+import { WorkspaceCommandAction } from '../command-console/WorkspaceCommandAction';
 import { useTripData } from '@/features/map-workspace/hooks/useTrip';
 import {
   useEffect,
@@ -43,6 +50,7 @@ export function TripAiRegion(props: Props) {
 
 function EditableTripAiRegion({ selectedPlaceIds = [], ...props }: Props) {
   const trip = useTripData();
+  const runtime = useCommandRuntime();
   const L = useL();
   const getRequestPreamble = async (): Promise<ChatRequestPreamble> => {
     // Freeze the selection at send time, before any await, and return it with
@@ -52,6 +60,7 @@ function EditableTripAiRegion({ selectedPlaceIds = [], ...props }: Props) {
     const contents = createTripCommandPlanSystemMessages(
       await createTripCommandPlanContext(trip, selection),
     );
+    contents?.push(...commandAiInstructions(runtime.available));
     const messages = (contents ?? []).map((content) =>
       chatMessageSchema.safeParse({ role: 'system', content }),
     );
@@ -63,7 +72,11 @@ function EditableTripAiRegion({ selectedPlaceIds = [], ...props }: Props) {
       systemMessages: messages.flatMap((message) =>
         message.success ? [message.data] : [],
       ),
-      context: serializeSelectionContext(selection),
+      context: JSON.stringify({
+        version: 1,
+        selectedPlaceIds: selection,
+        commandTrip: commandFingerprint(trip),
+      }),
       tools: ['propose_trip_command_plan'],
     };
   };
@@ -74,23 +87,18 @@ function EditableTripAiRegion({ selectedPlaceIds = [], ...props }: Props) {
       persistenceKey={`trasolve.trip-chat.v1:${trip.userId}:${trip.id}`}
       getRequestPreamble={getRequestPreamble}
       notice={<TripRecoveryNotice />}
-      renderAssistantActions={(content, context) => (
-        <TripPlanAction content={content} requestContext={context} />
-      )}
+      renderAssistantActions={(content, context) =>
+        readCommandProposal(content) ? (
+          <WorkspaceCommandAction content={content} requestContext={context} />
+        ) : (
+          <TripPlanAction content={content} requestContext={context} />
+        )
+      }
     />
   );
 }
 
 const SELECTION_CONTEXT_VERSION = 1;
-
-function serializeSelectionContext(
-  selectedPlaceIds: readonly string[],
-): string {
-  return JSON.stringify({
-    version: SELECTION_CONTEXT_VERSION,
-    selectedPlaceIds,
-  });
-}
 
 /**
  * Selection ordinals in a Plan refer to the selection sent with its own

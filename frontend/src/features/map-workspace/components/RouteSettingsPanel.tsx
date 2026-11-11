@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { useState, type CSSProperties, type RefObject } from 'react';
 import type { TripPolylineMode } from '@trasolve/shared';
 import type { QueryRouteDetails, RouteEndpoint } from '../domain/routeDetails';
@@ -107,50 +108,63 @@ export function RouteSettingsPanel({
         disabled={busy || submitting}
         onSelect={(next) => void selectMode(next)}
       />
-      {activeMode === 'straight' ? (
-        <div className="route-settings-summary">
-          <span className="route-settings-summary-icon">
-            <PolylineModeIcon mode="straight" />
-          </span>
-          <p>
-            {L(
-              'map:routeSettingsCard.mODEDESCRIPTIONS.text.straightLineConnectsTwoPlaces',
-            )}
-          </p>
-        </div>
-      ) : selected?.status === 'ready' ? (
-        <RouteResults
-          key={`${key}:${activeMode}`}
-          routes={selected.routes}
-          mode={activeMode}
-          from={from}
-          to={to}
-        />
-      ) : (
-        <p
-          className="route-settings-state"
-          role="status"
-          data-error-code={
-            selected?.status === 'error' ? selected.failure.code : undefined
-          }
-        >
-          {selected?.status === 'error'
-            ? formatRouteFailure(selected.failure, L)
-            : L(
-                'map:routeSettingsCard.resolveDurationPresentation.ariaLabel.viewingEstimatedTime',
+      <ScrollArea
+        className="route-settings-body"
+        key={`${key}:${activeMode}`}
+        contentClassName="route-settings-body-content"
+        viewportProps={{
+          role: 'region',
+          tabIndex: 0,
+          'aria-label': L(
+            'testbed:routeResultPanel.ariaLabel.directionsResults',
+          ),
+        }}
+      >
+        {activeMode === 'straight' ? (
+          <div className="route-settings-summary">
+            <span className="route-settings-summary-icon">
+              <PolylineModeIcon mode="straight" />
+            </span>
+            <p>
+              {L(
+                'map:routeSettingsCard.mODEDESCRIPTIONS.text.straightLineConnectsTwoPlaces',
               )}
-        </p>
-      )}
-      {submitting && (
-        <p className="route-settings-state" role="status">
-          {L('map:routeSettingsCard.description.weReSavingWayMoving')}
-        </p>
-      )}
-      {mutationError && (
-        <p className="route-settings-state is-error" role="alert">
-          {mutationError}
-        </p>
-      )}
+            </p>
+          </div>
+        ) : selected?.status === 'ready' ? (
+          <RouteResults
+            key={`${key}:${activeMode}`}
+            routes={selected.routes}
+            mode={activeMode}
+            from={from}
+            to={to}
+          />
+        ) : (
+          <p
+            className="route-settings-state"
+            role="status"
+            data-error-code={
+              selected?.status === 'error' ? selected.failure.code : undefined
+            }
+          >
+            {selected?.status === 'error'
+              ? formatRouteFailure(selected.failure, L)
+              : L(
+                  'map:routeSettingsCard.resolveDurationPresentation.ariaLabel.viewingEstimatedTime',
+                )}
+          </p>
+        )}
+        {submitting && (
+          <p className="route-settings-state" role="status">
+            {L('map:routeSettingsCard.description.weReSavingWayMoving')}
+          </p>
+        )}
+        {mutationError && (
+          <p className="route-settings-state is-error" role="alert">
+            {mutationError}
+          </p>
+        )}
+      </ScrollArea>
     </section>
   );
 }

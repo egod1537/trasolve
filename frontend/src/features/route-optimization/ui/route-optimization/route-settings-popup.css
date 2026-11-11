@@ -1,6 +1,5 @@
 .route-settings-popup {
   width: min(520px, 100%);
-  overflow: auto;
 }
 
 .route-settings-popup-header {
@@ -8,20 +7,36 @@
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border-default);
+  padding: var(--space-4) var(--panel-padding);
+  border-bottom: 1px solid var(--panel-divider);
+  background: var(--panel-header-bg);
 }
 
 .route-settings-popup h2 {
+  min-width: 0;
+  flex: 1;
   margin: 0;
-  font-size: 21px;
-  font-weight: 700;
+  font-size: var(--panel-title-size);
+  font-weight: var(--panel-title-weight);
+  letter-spacing: -0.025em;
+  line-height: 1.35;
 }
 
-.route-settings-popup-body {
-  display: grid;
-  gap: 24px;
-  padding: 24px;
+.route-settings-popup-header-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+}
+
+.route-settings-popup-header-actions .token-remaining-gauge {
+  width: clamp(72px, 16vw, 140px);
+}
+
+.route-settings-popup-body-content {
+  --scroll-content-display: grid;
+  gap: var(--space-5);
+  padding: var(--panel-padding);
 }
 
 .route-settings-popup fieldset {
@@ -35,8 +50,8 @@
 .route-settings-field > span {
   display: block;
   margin-bottom: 10px;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--panel-body-size);
+  font-weight: 600;
 }
 
 .route-settings-field {
@@ -65,21 +80,25 @@
   min-width: 0;
   min-height: 72px;
   padding: 10px 6px;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  background: var(--bg-surface);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: var(--bg-subtle);
   color: var(--text-secondary);
   font: inherit;
   font-size: 12px;
   text-align: center;
   line-height: 1.4;
   cursor: pointer;
+  transition:
+    background-color var(--motion-fast),
+    border-color var(--motion-fast),
+    color var(--motion-fast);
 }
 
 .route-settings-icon-options button[aria-pressed='true'] {
-  border-color: var(--accent);
+  border-color: var(--color-info-border);
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--color-accent-foreground);
 }
 
 .route-settings-icon-options button:disabled {
@@ -88,7 +107,7 @@
 }
 
 .route-settings-icon-options button:hover:not(:disabled) {
-  border-color: var(--accent);
+  border-color: var(--border-strong);
 }
 
 .route-settings-icon-options svg {
@@ -103,46 +122,6 @@
 
 .route-settings-departure:has(input) {
   margin-top: 10px;
-}
-
-.route-settings-day-options {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 2px 2px 8px;
-  scroll-snap-type: x proximity;
-  scrollbar-width: thin;
-}
-
-.route-settings-day-options button {
-  flex: 0 0 108px;
-  flex-direction: column;
-  scroll-snap-align: start;
-  font: inherit;
-  white-space: nowrap;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 8px 12px;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  cursor: pointer;
-}
-
-.route-settings-day-options button span {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.route-settings-day-options button[aria-pressed='true'] {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
 }
 
 .route-settings-departure {
@@ -227,8 +206,8 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 20px 24px;
-  border-top: 1px solid var(--border-default);
+  padding: var(--space-4) var(--panel-padding);
+  border-top: 1px solid var(--panel-divider);
 }
 
 .route-review-sidebar {
@@ -294,7 +273,6 @@
   list-style: none;
   margin: 0;
   padding: 0 20px 20px;
-  overflow-y: auto;
   min-height: 0;
 }
 
@@ -354,12 +332,6 @@
   --accent-active: #5131bd;
 }
 
-.route-settings-day-options button strong {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 .route-settings-departure-options {
   display: grid;
   gap: 8px;
@@ -369,12 +341,12 @@
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  border: 1px solid var(--border-default);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
-  background: var(--bg-surface);
+  background: var(--bg-subtle);
 }
 .route-settings-fixed-option[data-selected='true'] {
-  border-color: var(--accent);
+  border-color: var(--color-info-border);
   background: var(--accent-soft);
 }
 .route-settings-fixed-option button {
@@ -408,4 +380,9 @@
   background: var(--bg-subtle);
   color: var(--text-muted);
   opacity: 0.65;
+}
+
+.route-review-place-list-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
 }

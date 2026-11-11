@@ -2,10 +2,14 @@ import { buildGlobePoints, isLand, latLonToXYZ } from 'mappo';
 
 export type GlobePoint = { x: number; y: number; z: number };
 export const globePoints = buildGlobePoints(360, [-80, 85]);
-const tilt = (18 * Math.PI) / 180;
+export const defaultGlobeTilt = 18;
 
 // Land, grid, routes and markers share one polar-axis rotation.
-export function createGlobeProjection(angle: number) {
+export function createGlobeProjection(
+  angle: number,
+  tiltDegrees = defaultGlobeTilt,
+) {
+  const tilt = (tiltDegrees * Math.PI) / 180;
   const rotation = (angle * Math.PI) / 180;
   const sinR = Math.sin(rotation);
   const cosR = Math.cos(rotation);

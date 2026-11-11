@@ -15,7 +15,7 @@ import {
 
 export const FALLBACK_OPEN_TIME = '00:00';
 
-export const FALLBACK_CLOSE_TIME = '23:50';
+export const FALLBACK_CLOSE_TIME = '23:59';
 
 export function getLocationConstraint(
   activeDay: TripDay,
@@ -71,7 +71,19 @@ export function getOpeningWindow(
   }
   if (
     status.timelineRanges.some(
-      (range) => range.start < 0 || range.end >= MINUTES_PER_DAY,
+      (range) => range.start <= 0 && range.end >= MINUTES_PER_DAY,
+    )
+  ) {
+    return {
+      openTime: FALLBACK_OPEN_TIME,
+      closeTime: FALLBACK_CLOSE_TIME,
+      usedOpeningHoursFallback: false,
+      issue: null,
+    };
+  }
+  if (
+    status.timelineRanges.some(
+      (range) => range.start < 0 || range.end > MINUTES_PER_DAY,
     )
   ) {
     return invalidOpeningWindow({
@@ -86,7 +98,7 @@ export function getOpeningWindow(
       range.end <= MINUTES_PER_DAY &&
       range.start < range.end &&
       isClockTime(range.startText) &&
-      isClockTime(range.endText),
+      (isClockTime(range.endText) || range.end === MINUTES_PER_DAY),
   );
   if (ranges.length === 0) {
     return invalidOpeningWindow({
@@ -109,7 +121,9 @@ export function getOpeningWindow(
       values: { name: place.name, startText: range.startText },
     });
   }
-  if (!isTenMinuteClock(range.endText)) {
+  const closeTime =
+    range.end === MINUTES_PER_DAY ? FALLBACK_CLOSE_TIME : range.endText;
+  if (!isTenMinuteClock(closeTime) && closeTime !== FALLBACK_CLOSE_TIME) {
     return invalidOpeningWindow({
       code: 'closingTimeStep',
       values: { name: place.name, endText: range.endText },
@@ -117,7 +131,7 @@ export function getOpeningWindow(
   }
   return {
     openTime: range.startText,
-    closeTime: range.endText,
+    closeTime,
     usedOpeningHoursFallback: false,
     issue: null,
   };

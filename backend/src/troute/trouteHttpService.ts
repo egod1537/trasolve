@@ -35,6 +35,70 @@ export class TrouteHttpService {
     this.tokenMeter = meter;
   }
 
+  public async handleValidation(
+    request: IncomingMessage,
+    response: ServerResponse,
+  ): Promise<void> {
+    response.setHeader('Content-Type', 'application/json; charset=utf-8');
+    response.setHeader('Cache-Control', 'no-store');
+    const controller = new AbortController();
+    const abort = () => {
+      if (!response.writableEnded) {
+        controller.abort();
+      }
+    };
+    response.once('close', abort);
+    try {
+      if (request.method !== 'POST') {
+        response.setHeader('Allow', 'POST');
+        throw new TrouteHttpError(
+          405,
+          'METHOD_NOT_ALLOWED',
+          'POST 요청을 사용해 주세요.',
+        );
+      }
+      if (
+        request.headers['content-type']?.split(';')[0]?.trim().toLowerCase() !==
+        'application/json'
+      ) {
+        throw new TrouteHttpError(
+          415,
+          'UNSUPPORTED_MEDIA_TYPE',
+          'Content-Type을 application/json으로 지정해 주세요.',
+        );
+      }
+      if (!this.client) {
+        throw this.notConfiguredError();
+      }
+      const result = await this.client.validateRoute(
+        (await this.readJson(request)) as Parameters<
+          TrouteClient['validateRoute']
+        >[0],
+        controller.signal,
+      );
+      if (!response.destroyed) {
+        response.writeHead(200);
+        response.end(JSON.stringify(result));
+      }
+    } catch (cause) {
+      if (!controller.signal.aborted && !response.destroyed) {
+        const error = this.toHttpError(cause, null);
+        response.writeHead(error.status);
+        response.end(
+          JSON.stringify({
+            error: {
+              code: error.code,
+              message: error.message,
+              ...(error.service ? { service: error.service } : {}),
+            },
+          }),
+        );
+      }
+    } finally {
+      response.off('close', abort);
+    }
+  }
+
   public async handle(
     request: IncomingMessage,
     response: ServerResponse,

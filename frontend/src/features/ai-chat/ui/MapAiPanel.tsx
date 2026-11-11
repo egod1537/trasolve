@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { forwardRef, type FormEvent, type KeyboardEvent } from 'react';
 import { CHAT_LIMITS } from '@trasolve/shared';
 
@@ -25,8 +26,20 @@ export {
 import { useChatThreads } from '../model/useChatThreads';
 import { useChatSubmission } from '../model/useChatSubmission';
 import { ChatThreadItem } from './ChatThreadItem';
+import { ChatPanelV2 } from './ChatPanelV2';
+import { opts } from '@/shared/config/opts';
 
 export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
+  function MapAiPanel(props, ref) {
+    return opts.useChatV2 ? (
+      <ChatPanelV2 {...props} ref={ref} />
+    ) : (
+      <LegacyMapAiPanel {...props} ref={ref} />
+    );
+  },
+);
+
+const LegacyMapAiPanel = forwardRef<MapAiPanelHandle, Props>(
   function MapAiPanel(props, ref) {
     const {
       open,
@@ -163,7 +176,10 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
               </label>
-              <div className="trip-ai-chat-list-content">
+              <ScrollArea
+                className="trip-ai-chat-list-content"
+                contentClassName="trip-ai-chat-list-content-content"
+              >
                 <section aria-labelledby="trip-ai-recent-chats-title">
                   <h3 id="trip-ai-recent-chats-title">
                     {L('ai:mapAiPanel.title.recentConversations')}
@@ -184,7 +200,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                     <ul>{archivedThreads.map(renderThread)}</ul>
                   </section>
                 )}
-              </div>
+              </ScrollArea>
             </aside>
           )}
 
@@ -241,12 +257,15 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
 
             {notice}
 
-            <div
-              ref={messagesRef}
+            <ScrollArea
+              viewportRef={messagesRef}
               className="trip-map-ai-messages"
-              role="log"
-              aria-live="polite"
-              aria-relevant="additions"
+              contentClassName="trip-map-ai-messages-content"
+              viewportProps={{
+                role: 'log',
+                'aria-live': 'polite',
+                'aria-relevant': 'additions',
+              }}
             >
               {!selectedThread.messages.length && (
                 <p className="trip-map-ai-message is-assistant">
@@ -288,7 +307,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                   {selectedThread.error}
                 </p>
               )}
-            </div>
+            </ScrollArea>
 
             <form
               className="trip-map-ai-compose"

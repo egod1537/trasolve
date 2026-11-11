@@ -1,4 +1,12 @@
 export {
+  TUTORIAL_VERSION,
+  TUTORIAL_STEPS,
+  tutorialProgressSchema,
+  initialTutorialProgress,
+  type TutorialProgress,
+} from './schemas/tutorial.js';
+
+export {
   API_ROUTE_SUFFIXES,
   API_ROUTES,
   ANALYTICS_SCREENS,
@@ -234,6 +242,8 @@ export {
   chatMessageSchema,
   chatRequestSchema,
   chatResponseSchema,
+  chatStreamEventSchema,
+  chatWebImageSchema,
 } from './schemas/chat.js';
 
 export type {
@@ -241,7 +251,11 @@ export type {
   ChatMessage,
   ChatRequest,
   ChatResponse,
+  ChatStreamEvent,
+  ChatWebImage,
 } from './types/chat.js';
+
+export { readSseData } from './streaming/readSseData.js';
 
 export {
   googleOAuthProfileSchema,
@@ -415,3 +429,12 @@ export type {
   TrouteTravelMode,
 } from './types/troute.js';
 export * from './schemas/billing.js';
+
+export * from './schemas/routeValidation.js';
+export {
+  workspaceCommandDefinitions,
+  workspaceCommandRequestSchema,
+  validateWorkspaceCommand,
+  type WorkspaceCommandRequest,
+  type WorkspaceCommandDefinition,
+} from './schemas/workspaceCommand.js';

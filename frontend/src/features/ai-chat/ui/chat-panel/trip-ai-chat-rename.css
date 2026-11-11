@@ -43,16 +43,18 @@
   justify-content: space-between;
   flex: none;
   min-height: 72px;
-  padding: 14px 16px 14px 20px;
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4) var(--panel-padding);
+  border-bottom: 1px solid var(--panel-divider);
+  background: var(--panel-header-bg);
 }
 
 .trip-map-ai-panel-header h2 {
   max-width: 320px;
   margin: 0;
   overflow: hidden;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: var(--panel-title-size);
+  font-weight: var(--panel-title-weight);
+  line-height: 1.35;
   letter-spacing: -0.025em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -102,11 +104,11 @@
 .trip-map-ai-panel-export {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: transparent;
   color: var(--color-muted);
   cursor: pointer;
@@ -139,14 +141,16 @@
 }
 
 .trip-map-ai-messages {
-  display: flex;
   flex: 1;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+.trip-map-ai-messages-content {
+  --scroll-content-display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 0;
   padding: 20px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 
 .trip-map-ai-message {

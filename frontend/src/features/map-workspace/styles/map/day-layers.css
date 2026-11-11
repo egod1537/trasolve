@@ -1,14 +1,12 @@
 .trip-sidebar-scroll {
   min-height: 0;
   flex: 1;
-  overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
 }
 
 .trip-day {
   position: relative;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--panel-divider);
   background: transparent;
   transform: translateY(var(--day-preview-offset, 0));
   transition: transform 120ms ease;
@@ -48,8 +46,11 @@
   display: flex;
   align-items: center;
   padding: 10px 12px 10px 4px;
-  border-bottom: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-surface-hover) 78%, transparent);
+  border-bottom: 1px solid transparent;
+  background: var(--panel-header-bg);
+  transition:
+    background-color var(--motion-fast),
+    border-color var(--motion-fast);
 }
 
 .trip-day-heading h2 {
@@ -109,19 +110,19 @@
   font-weight: 600;
 }
 
-.trip-day-shuffle {
+.trip-day-menu-trigger {
   flex: none;
   color: var(--color-muted);
 }
 
-.trip-day-shuffle:hover:not(:disabled),
-.trip-day-shuffle:focus-visible {
-  color: var(--color-primary);
+.trip-day-menu-trigger:hover:not(:disabled),
+.trip-day-menu-trigger:focus-visible {
+  color: var(--color-accent-foreground);
 }
 
 .trip-day.is-active .trip-day-heading {
-  border-bottom-color: var(--color-border-strong);
-  background: var(--color-surface-hover);
+  border-bottom-color: transparent;
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
@@ -131,7 +132,7 @@
 
 .trip-day.is-hidden .trip-day-heading {
   border-bottom-color: var(--color-border);
-  background: var(--color-surface-hover);
+  background: color-mix(in srgb, var(--color-text-primary) 5%, transparent);
   box-shadow: none;
 }
 
@@ -244,7 +245,7 @@
 
 .trip-layer-chevron.is-day:hover,
 .trip-layer-chevron.is-day:focus-visible {
-  color: var(--color-primary);
+  color: var(--color-accent-foreground);
 }
 
 .trip-layer-chevron.is-day svg {
@@ -305,4 +306,90 @@
   border-color: var(--color-surface-raised);
   outline: 3px solid var(--palette-color);
   outline-offset: 1px;
+}
+
+.trip-day-menu {
+  position: fixed;
+  z-index: 4000;
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  padding: 5px;
+  border: 1px solid var(--color-floating-border);
+  border-radius: var(--radius-control);
+  background: var(--color-floating-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-map-overlay);
+}
+
+.trip-day-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.trip-day-menu button:hover:not(:disabled),
+.trip-day-menu button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  background: var(--color-surface-hover);
+}
+
+.trip-day-menu button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.trip-day-menu button.is-destructive {
+  color: var(--color-danger);
+}
+
+.trip-day-menu svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.trip-day-delete-dialog {
+  width: min(400px, calc(100vw - 32px));
+  padding: 24px;
+}
+
+.trip-day-delete-dialog h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.trip-day-delete-dialog p {
+  overflow-wrap: anywhere;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.trip-day-delete-dialog [role='alert'] {
+  color: var(--color-danger);
+}
+
+.trip-day-delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
 }

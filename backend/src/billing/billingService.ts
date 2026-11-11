@@ -25,6 +25,7 @@ import {
   type PaymentProvider,
   type VerifiedPayment,
 } from './paymentProvider.js';
+import { isTokenUsageUnlimited } from './tokenUsagePolicy.js';
 
 function integerSetting(name: string, fallback: number): number {
   const value = process.env[name]?.trim();
@@ -46,7 +47,15 @@ export class BillingService {
     return { userId, mode: this.normal.mode };
   }
 
-  public async summary(owner: BillingOwner): Promise<BillingSummary> {
+  public isUsageUnlimited(owner: BillingOwner, requested = false): boolean {
+    return isTokenUsageUnlimited(owner.mode, requested);
+  }
+
+  public async summary(
+    owner: BillingOwner,
+    unlimitedRequested = false,
+  ): Promise<BillingSummary> {
+    const unlimited = this.isUsageUnlimited(owner, unlimitedRequested);
     return this.repository.transact(owner, (account) => {
       this.refreshFreeAllowance(account);
       const now = Date.now();
@@ -67,6 +76,7 @@ export class BillingService {
       }
       return {
         mode: owner.mode,
+        unlimited,
         available: this.provider(owner.mode).available,
         subscriptionAvailable:
           this.provider(owner.mode).isAvailable('subscription') &&
@@ -77,7 +87,7 @@ export class BillingService {
             ).length === 32),
         topupAvailable: this.provider(owner.mode).isAvailable('topup'),
         wallet: account.wallet,
-        costs: this.costs,
+        costs: unlimited ? { chat: 0, optimize: 0 } : this.costs,
         products: this.products,
       };
     });

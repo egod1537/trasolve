@@ -1,9 +1,11 @@
 /*
- * Color provenance: Primer Primitives 11.10.0 functional light/dark themes.
+ * Base color provenance: Primer Primitives 11.10.0 functional themes.
  * docs/ui/primer-palette-audit.md
+ * Trasolve surface/interaction refinements are applied by refined-surfaces.css.
  *
- * Typography, spacing, radii, motion, and shadow geometry remain derived from
- * the pinned TRIP sources documented in docs/ui/trip-reference-audit.md.
+ * Baseline typography and geometry derive from the pinned TRIP sources in
+ * docs/ui/trip-reference-audit.md. Product refinements are documented in
+ * docs/ui/product-surface-guidelines.md.
  */
 
 :root,
@@ -124,11 +126,13 @@
   );
   --color-overlay-backdrop: var(--color-overlay);
   --color-map-background: var(--primer-bg-muted);
+  --map-overlay-opacity: 50%;
   --color-map-overlay-surface: color-mix(
     in srgb,
-    var(--primer-bg-default) 70%,
+    var(--primer-bg-default) var(--map-overlay-opacity),
     transparent
   );
+  --map-detail-card-height: 600px;
   --color-map-overlay-ring: var(--primer-overlay-border);
   --color-map-overlay-border: var(--color-map-overlay-ring);
   --color-selected-bg: var(--primer-bg-accent-emphasis);
@@ -166,7 +170,8 @@
   --shadow-card: var(--shadow-floating-sm);
   --shadow-popup: var(--shadow-md);
   --shadow-dialog: var(--shadow-xl);
-  --shadow-map-overlay: var(--shadow-floating-lg), var(--shadow-md);
+  --shadow-map-overlay:
+    0 16px 40px -12px rgba(0, 0, 0, 0.2), 0 2px 8px -2px rgba(0, 0, 0, 0.1);
   --color-primary: var(--color-accent);
   --color-primary-dark: var(--color-accent-hover);
   --color-text: var(--color-text-primary);
@@ -262,6 +267,22 @@
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-pill: 999px;
+  /* Shared product surfaces and controls; feature dimensions remain local. */
+  --radius-control: 8px;
+  --radius-overlay: 16px;
+  --control-height-sm: 32px;
+  --control-height-md: 38px;
+  --panel-padding: 20px;
+  --panel-title-size: 18px;
+  --panel-title-weight: 650;
+  --panel-body-size: 13px;
+  --panel-meta-size: 12px;
+  --panel-divider: color-mix(in srgb, var(--color-border) 70%, transparent);
+  --panel-header-bg: color-mix(
+    in srgb,
+    var(--color-surface-subtle) 15%,
+    transparent
+  );
   --z-dropdown: 1000;
   --z-map-overlay: 2000;
   --z-dialog: 10000;

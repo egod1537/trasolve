@@ -16,6 +16,7 @@ import type { ThemeMode } from '@/shared/theme/theme';
 import { requiresGoogleMapsReload } from '@/map/locale';
 import '@/features/preferences/ui/preferences-modal.css';
 import { useScreenView } from '@/shared/analytics';
+import { TutorialPreferences } from '@/features/onboarding';
 
 const THEME_MODES: readonly ThemeMode[] = ['system', 'light', 'dark'];
 const THEME_ICON_PATHS: Record<ThemeMode, string> = {
@@ -75,6 +76,7 @@ export function PreferencesModal({ onClose }: Props) {
       </header>
 
       <div className="preferences-form">
+        <TutorialPreferences onClose={onClose} />
         <fieldset className="preferences-group">
           <legend>
             {L('common:themeControl.ariaLabel.theme', {

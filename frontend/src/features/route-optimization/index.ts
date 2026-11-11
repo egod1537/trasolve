@@ -7,3 +7,12 @@ export type {
   RouteComparisonMode,
   RouteComparisonView,
 } from './model/routeComparison';
+export { optimizeDayRoute } from './api/routeOptimizationApi';
+export {
+  createRouteOptimizationRequest,
+  createRouteOptimizationSchedule,
+  createTripScheduleUpdate,
+  getBestOptimizationCandidate,
+  isApplicableCandidate,
+} from './model/routeOptimization';
+export { createDayOptimizationSettings } from './ui/optimizationSettings';

@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useId,
@@ -21,11 +23,16 @@ import {
 } from '../api/billingApi';
 import { createCheckoutProvider } from '../api/checkoutProvider';
 import { BillingContext } from '../model/billingContext';
-import { TokenPlansDialog } from './TokenPlansDialog';
 import { BILLING_REFRESH_EVENT } from '@/shared/api/billingContext';
 import { useL } from '@/shared/i18n';
 import { Dialog } from '@/shared/ui/Dialog';
 import { Button } from '@/shared/ui/Button';
+
+const TokenPlansDialog = lazy(() =>
+  import('./TokenPlansDialog').then((module) => ({
+    default: module.TokenPlansDialog,
+  })),
+);
 
 type Props = { userId: string | null; login: () => void; children: ReactNode };
 export function BillingProvider({ userId, login, children }: Props) {
@@ -263,7 +270,11 @@ export function BillingProvider({ userId, login, children }: Props) {
       }}
     >
       {children}
-      {plansOpen && <TokenPlansDialog />}
+      {plansOpen && (
+        <Suspense fallback={null}>
+          <TokenPlansDialog />
+        </Suspense>
+      )}
       {result && (
         <Dialog
           className="billing-result-dialog"

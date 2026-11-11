@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { useId, useState } from 'react';
 import {
   ANALYTICS_SCREENS,
@@ -23,7 +24,9 @@ import { useL } from '@/shared/i18n';
 import type { MapWorkspaceMode } from '@/features/map-workspace/model/mapWorkspaceMode';
 import { trackEvent, useScreenView } from '@/shared/analytics';
 import { TripMapPreview } from '@/features/map-workspace/components/TripMapPreview';
+import { TripPreviewPool } from './TripPreviewPool';
 import { TripDeleteConfirmation } from '@/features/map-workspace/components/TripDeleteConfirmation';
+import { useTutorial } from '@/features/onboarding';
 
 type CommonProps = {
   mode: MapWorkspaceMode;
@@ -75,6 +78,7 @@ export function TripPickerPopup({
   onLogin,
 }: Props) {
   const L = useL();
+  const tutorial = useTutorial();
   const titleId = useId();
   const [deletingTrip, setDeletingTrip] = useState<Trip | null>(null);
   useScreenView(ANALYTICS_SCREENS.tripPicker);
@@ -98,7 +102,7 @@ export function TripPickerPopup({
       labelledBy={titleId}
       busy={busy}
       closeOnBackdrop={false}
-      closeOnEscape={canClose && deletingTrip === null}
+      closeOnEscape={canClose && deletingTrip === null && !tutorial?.active}
       onClose={onClose}
       accessory={
         <MapUserControls onOpenTripPicker={onRefresh} showTokens={false} />
@@ -141,6 +145,7 @@ export function TripPickerPopup({
         <div className="trip-map-picker-actions">
           <Button
             className="trip-map-picker-action is-primary"
+            data-tutorial="create-trip"
             data-analytics-id={ANALYTICS_TARGETS.tripCreate}
             data-analytics-screen={ANALYTICS_SCREENS.tripPicker}
             variant="primary"
@@ -242,70 +247,80 @@ export function TripPickerPopup({
         )}
 
       {authenticationStatus === 'signed-in' && !!trips.length && (
-        <ul className="trip-map-picker-list">
-          {trips.map((trip) => (
-            <li key={trip.id} className="trip-map-picker-item">
-              <TripMapPreview
-                trip={trip}
-                disabled={busy}
-                onOpen={() => {
-                  trackPickerButton(ANALYTICS_TARGETS.tripSelect, 'saved_trip');
-                  onOpen(trip.id);
-                }}
-              />
-              <div className="trip-map-picker-item-body">
-                <div className="trip-map-picker-item-heading">
-                  <button
-                    type="button"
-                    className="trip-map-picker-item-select"
-                    data-analytics-id={ANALYTICS_TARGETS.tripSelect}
-                    data-analytics-screen={ANALYTICS_SCREENS.tripPicker}
+        <TripPreviewPool>
+          <ScrollArea className="trip-map-picker-list-scroll" contentAsChild>
+            <ul className="trip-map-picker-list">
+              {trips.map((trip) => (
+                <li key={trip.id} className="trip-map-picker-item">
+                  <TripMapPreview
+                    trip={trip}
                     disabled={busy}
-                    onClick={() => {
+                    onOpen={() => {
                       trackPickerButton(
                         ANALYTICS_TARGETS.tripSelect,
                         'saved_trip',
                       );
                       onOpen(trip.id);
                     }}
-                  >
-                    <strong
-                      className="trip-map-picker-item-title"
-                      title={trip.title}
-                    >
-                      {trip.title}
-                    </strong>
-                  </button>
-                  <div className="trip-map-picker-item-actions">
-                    {mode === 'edit' && (
-                      <IconButton
-                        className="trip-map-picker-item-delete"
-                        aria-label={L('trip:tripPickerPopup.ariaLabel.delete', {
-                          title: trip.title,
-                        })}
-                        title={L('common:action.delete')}
-                        variant="ghost"
-                        size="sm"
-                        icon={<TrashIcon />}
+                  />
+                  <div className="trip-map-picker-item-body">
+                    <div className="trip-map-picker-item-heading">
+                      <button
+                        type="button"
+                        className="trip-map-picker-item-select"
+                        data-analytics-id={ANALYTICS_TARGETS.tripSelect}
+                        data-analytics-screen={ANALYTICS_SCREENS.tripPicker}
                         disabled={busy}
-                        onClick={() => setDeletingTrip(trip)}
-                      />
-                    )}
+                        onClick={() => {
+                          trackPickerButton(
+                            ANALYTICS_TARGETS.tripSelect,
+                            'saved_trip',
+                          );
+                          onOpen(trip.id);
+                        }}
+                      >
+                        <strong
+                          className="trip-map-picker-item-title"
+                          title={trip.title}
+                        >
+                          {trip.title}
+                        </strong>
+                      </button>
+                      <div className="trip-map-picker-item-actions">
+                        {mode === 'edit' && (
+                          <IconButton
+                            className="trip-map-picker-item-delete"
+                            aria-label={L(
+                              'trip:tripPickerPopup.ariaLabel.delete',
+                              {
+                                title: trip.title,
+                              },
+                            )}
+                            title={L('common:action.delete')}
+                            variant="ghost"
+                            size="sm"
+                            icon={<TrashIcon />}
+                            disabled={busy}
+                            onClick={() => setDeletingTrip(trip)}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <span className="trip-map-picker-item-meta">
+                      {L('trip:tripPickerPopup.text.daysLocations', {
+                        dayCount: trip.days.length,
+                        placeCount: trip.days.reduce(
+                          (count, day) => count + day.places.length,
+                          0,
+                        ),
+                      })}
+                    </span>
                   </div>
-                </div>
-                <span className="trip-map-picker-item-meta">
-                  {L('trip:tripPickerPopup.text.daysLocations', {
-                    dayCount: trip.days.length,
-                    placeCount: trip.days.reduce(
-                      (count, day) => count + day.places.length,
-                      0,
-                    ),
-                  })}
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        </TripPreviewPool>
       )}
       {deletingTrip && mode === 'edit' && (
         <TripDeleteConfirmation

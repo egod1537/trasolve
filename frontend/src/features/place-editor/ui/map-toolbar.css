@@ -35,35 +35,42 @@
   width: 100%;
   height: 42px;
   overflow: hidden;
-  border-radius: var(--radius-md);
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-lg);
+  background: var(--color-map-control-surface);
   box-shadow: var(--shadow-map-overlay);
+  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
   backdrop-filter: blur(var(--map-overlay-blur));
 }
 .map-toolbar-search input {
   flex: 1;
   min-width: 0;
   padding: 8px 12px;
-  border: 1px solid var(--color-map-overlay-ring);
-  border-right: 0;
-  background: var(--color-map-overlay-surface);
+  border: 0;
+  background: transparent;
   color: var(--color-text);
   font: inherit;
+  font-size: var(--panel-body-size);
+}
+.map-toolbar-search:focus-within {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 .map-toolbar-search button {
   display: grid;
   place-items: center;
   width: 48px;
   flex: none;
-  border: 1px solid var(--color-primary);
-  background: var(--color-primary);
-  color: var(--color-accent-contrast);
+  border: 0;
+  background: transparent;
+  color: var(--color-accent-foreground);
   cursor: pointer;
 }
-.map-toolbar-search button:hover {
-  background: var(--color-primary-dark);
+.map-toolbar-search button:hover:not(:disabled) {
+  background: var(--color-surface-hover);
 }
 .map-toolbar-search button:disabled {
-  background: var(--color-border-strong);
+  color: var(--color-disabled-text);
   cursor: wait;
 }
 .map-toolbar-quick-search-trigger {
@@ -74,25 +81,26 @@
   height: 42px;
   padding: 0 8px;
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: var(--radius-md);
-  background: var(--color-map-overlay-surface);
+  border-radius: var(--radius-lg);
+  background: var(--color-map-control-surface);
   color: var(--color-text-secondary);
   box-shadow: var(--shadow-map-overlay);
   font: inherit;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   pointer-events: auto;
   cursor: pointer;
+  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
   backdrop-filter: blur(var(--map-overlay-blur));
+  transition:
+    background-color var(--motion-fast),
+    border-color var(--motion-fast),
+    color var(--motion-fast);
 }
 .map-toolbar-quick-search-trigger:hover {
-  border-color: color-mix(
-    in srgb,
-    var(--color-primary) 45%,
-    var(--color-border)
-  );
+  border-color: var(--color-border-strong);
   background: var(--color-surface-subtle);
-  color: var(--color-primary);
+  color: var(--color-text);
 }
 .map-toolbar-quick-search-trigger > svg {
   width: 16px;
@@ -117,11 +125,11 @@
   right: 0;
   left: 0;
   max-height: min(360px, calc(100vh - 90px));
-  overflow-y: auto;
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-overlay);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
+  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
   backdrop-filter: blur(var(--map-overlay-blur));
 }
 .map-place-search-results p {
@@ -135,23 +143,22 @@
 }
 .map-place-search-results ul {
   margin: 0;
-  padding: 4px 0;
+  padding: 4px;
   list-style: none;
-}
-.map-place-search-results li + li {
-  border-top: 1px solid var(--color-border);
 }
 .map-place-search-results button {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 3px;
+  gap: 4px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 16px;
   border: 0;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text);
   text-align: left;
   cursor: pointer;
+  transition: background-color var(--motion-fast);
 }
 .map-place-search-results button:hover:not(:disabled),
 .map-place-search-results button:focus-visible {
@@ -176,7 +183,7 @@
   min-width: 0;
   overflow: hidden;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -196,10 +203,12 @@
   width: 18px;
   height: 18px;
 }
-.map-toolbar button:focus-visible,
-.map-toolbar input:focus-visible {
+.map-toolbar button:focus-visible {
   outline: var(--focus-ring-width) solid var(--focus-ring);
-  outline-offset: 2px;
+  outline-offset: -3px;
+}
+.map-toolbar-search input:focus-visible {
+  outline: none;
 }
 .map-toolbar-positioner[data-ai-open='true'] {
   right: 672px;

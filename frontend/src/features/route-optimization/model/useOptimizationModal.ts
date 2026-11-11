@@ -1,3 +1,4 @@
+import { useRouteValidation } from './useRouteValidation';
 import { useEffect, useId, useRef, useState } from 'react';
 import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
 import {
@@ -61,6 +62,7 @@ export function useOptimizationModal({ days, initialDayId, onCompare }: Props) {
     : null;
   const issue =
     day && settings ? getRouteOptimizationIssue(day, settings) : null;
+  const validation = useRouteValidation(day, settings, phase !== null);
   let cached = false;
   if (day && settings && !issue) {
     try {
@@ -75,10 +77,8 @@ export function useOptimizationModal({ days, initialDayId, onCompare }: Props) {
   const canAfford =
     cached ||
     !billing.summary ||
-    Boolean(
-      billing.summary &&
-      billing.summary.wallet.remaining >= billing.summary.costs.optimize,
-    );
+    billing.summary.unlimited ||
+    billing.summary.wallet.remaining >= billing.summary.costs.optimize;
   useEffect(() => () => controllerRef.current?.abort(), []);
   const changeSettings = (patch: Partial<RouteOptimizationRequestOptions>) => {
     if (!day || !settings || running) {
@@ -91,7 +91,14 @@ export function useOptimizationModal({ days, initialDayId, onCompare }: Props) {
     setError(null);
   };
   const run = async () => {
-    if (!day || !settings || issue || !canAfford || controllerRef.current) {
+    if (
+      !day ||
+      !settings ||
+      issue ||
+      validation.blocksOptimization ||
+      !canAfford ||
+      controllerRef.current
+    ) {
       return;
     }
     const sourceDay = structuredClone(day);
@@ -226,6 +233,7 @@ export function useOptimizationModal({ days, initialDayId, onCompare }: Props) {
     settings,
     issue,
     cached,
+    validation,
     canAfford,
     changeSettings,
     run,

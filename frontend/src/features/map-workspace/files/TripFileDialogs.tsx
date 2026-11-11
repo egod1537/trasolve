@@ -43,7 +43,7 @@ export function DayFileImport({ dayId, dayTitle, disabled }: DayImportProps) {
   );
 }
 
-function ImportDialog({
+export function ImportDialog({
   dayId,
   dayTitle,
   onClose,

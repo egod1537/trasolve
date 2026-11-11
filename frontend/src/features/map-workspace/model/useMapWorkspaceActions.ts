@@ -26,6 +26,7 @@ export function useMapWorkspaceActions(
     close: closeGooglePlace,
     select: selectGooglePlace,
     show: showGooglePlace,
+    retry: retryGooglePlace,
   } = googlePlace;
   const {
     selectPlace,
@@ -139,6 +140,10 @@ export function useMapWorkspaceActions(
       void controller.moveDay(dayId, targetIndex),
     [controller],
   );
+  const removeDay = useCallback(
+    (dayId: string) => controller.removeDay(dayId),
+    [controller],
+  );
   const renameTrip = useCallback(
     (title: string) => void controller.renameTrip(title),
     [controller],
@@ -213,6 +218,7 @@ export function useMapWorkspaceActions(
         onToggleDayVisibility: toggleDayVisibility,
         onRenameTrip: renameTrip,
         onMoveDay: moveDay,
+        onRemoveDay: removeDay,
         onRenameDay: renameDay,
         onUpdateDayColor: updateDayColor,
         onMovePlace: movePlace,
@@ -231,6 +237,7 @@ export function useMapWorkspaceActions(
         onMapClick: handleMapClick,
         onSelectSearchedGooglePlace: selectSearchedGooglePlace,
         onCloseGooglePlace: closeGooglePlace,
+        onRetryGooglePlace: retryGooglePlace,
         onAddGooglePlace: addGooglePlace,
         onCloseTripPlace: clearPlaceSelection,
         onUpdateTripPlaceVisitTimeRange: updateTripPlaceVisitTimeRange,
@@ -252,8 +259,10 @@ export function useMapWorkspaceActions(
       clearMapSelection,
       clearPlaceSelection,
       closeGooglePlace,
+      retryGooglePlace,
       handleMapClick,
       moveDay,
+      removeDay,
       movePlace,
       shuffleDayPlaces,
       removeTripPlace,

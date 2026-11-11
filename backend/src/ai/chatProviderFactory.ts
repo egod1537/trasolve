@@ -62,7 +62,7 @@ export function createChatProvider(
         !configuration.openWebUIModel.trim()
       ) {
         throw new ChatProviderConfigurationError(
-          'AI_PROVIDER=openwebui requires OPENWEBUI_MODEL.',
+          'AI_PROVIDER=openwebui requires OPENWEBUI_OPTIONS.defaultModel.',
         );
       }
       return new OpenWebUIChatProvider(

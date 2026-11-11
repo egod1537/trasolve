@@ -24,6 +24,8 @@ export const tokenWalletSchema = z.object({
 });
 export const billingSummarySchema = z.object({
   mode: paymentModeSchema,
+  /** Server-owned policy; missing on older servers means metered usage. */
+  unlimited: z.boolean().optional(),
   available: z.boolean(),
   subscriptionAvailable: z.boolean(),
   topupAvailable: z.boolean(),

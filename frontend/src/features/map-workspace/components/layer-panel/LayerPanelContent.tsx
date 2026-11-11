@@ -1,3 +1,5 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
+import { useEventCallback } from '@/shared/lib/useEventCallback';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   ANALYTICS_SCREENS,
@@ -25,7 +27,6 @@ type Props = Omit<
   'onSelectPlaceForDetails' | 'onSelectPolylineForDetails'
 > & {
   days: TripDay[];
-  debugMode: boolean;
   onMoveDay: (dayId: string, targetIndex: number) => void;
   onRenameDay: (dayId: string, title: string) => void;
   onUpdateDayColor: (dayId: string, color: string) => void;
@@ -34,6 +35,7 @@ type Props = Omit<
     targetDayId: string,
     targetIndex: number,
   ) => void;
+  onRequestDeleteDay: (day: { id: string; title: string }) => void;
   onShuffleDayPlaces: (dayId: string) => void;
   onRenamePlace: (placeId: string, name: string) => void;
   onUpdatePlaceStyle: (placeId: string, style: PlaceStyle) => void;
@@ -48,12 +50,12 @@ type Props = Omit<
 
 export const LayerPanelContent = memo(function LayerPanelContent({
   days,
-  debugMode,
   onMoveDay,
   onRenameDay,
   onUpdateDayColor,
   onMovePlace,
   onShuffleDayPlaces,
+  onRequestDeleteDay,
   onRenamePlace,
   onUpdatePlaceStyle,
   detailPlaceId,
@@ -80,6 +82,7 @@ export const LayerPanelContent = memo(function LayerPanelContent({
     onSelectDay,
     onToggleDayVisibility,
   } = selection;
+  const toggleDayVisibility = useEventCallback(onToggleDayVisibility);
   const [expandedDayIds, setExpandedDayIds] = useState<Set<string>>(
     () => new Set(selectedDayId ? [selectedDayId] : []),
   );
@@ -176,6 +179,13 @@ export const LayerPanelContent = memo(function LayerPanelContent({
       next.delete(dayId);
       expandedDayIdsRef.current = next;
       setExpandedDayIds(next);
+      setEditingPlaceId((current) =>
+        daysRef.current
+          .find((day) => day.id === dayId)
+          ?.places.some((place) => place.id === current)
+          ? null
+          : current,
+      );
       onCollapseDay(dayId);
       return true;
     },
@@ -199,13 +209,10 @@ export const LayerPanelContent = memo(function LayerPanelContent({
     [collapseDay, expandDay],
   );
 
-  const beforeLayerItemDrag = useCallback(
-    (placeId: string) => {
-      cancelDayDrag();
-      onSelectPlaceForDrag(placeId);
-    },
-    [cancelDayDrag, onSelectPlaceForDrag],
-  );
+  const beforeLayerItemDrag = useEventCallback((placeId: string) => {
+    cancelDayDrag();
+    onSelectPlaceForDrag(placeId);
+  });
   const startPlaceNameEditing = useCallback(
     (placeId: string) => {
       cancelLayerItemDrag();
@@ -217,29 +224,19 @@ export const LayerPanelContent = memo(function LayerPanelContent({
   const finishPlaceNameEditing = useCallback((placeId: string) => {
     setEditingPlaceId((current) => (current === placeId ? null : current));
   }, []);
-  const activateDay = useCallback(
-    (dayId: string) => {
-      if (!visibleDayIds.has(dayId)) {
-        return;
-      }
-      cancelLayerItemDrag();
-      cancelDayDrag();
-      if (previousActiveDayIdRef.current === dayId) {
-        expandDay(dayId);
-      } else {
-        transitionActiveDay(dayId);
-      }
-      onSelectDay(dayId);
-    },
-    [
-      cancelDayDrag,
-      cancelLayerItemDrag,
-      expandDay,
-      onSelectDay,
-      transitionActiveDay,
-      visibleDayIds,
-    ],
-  );
+  const activateDay = useEventCallback((dayId: string) => {
+    if (!visibleDayIds.has(dayId)) {
+      return;
+    }
+    cancelLayerItemDrag();
+    cancelDayDrag();
+    if (previousActiveDayIdRef.current === dayId) {
+      expandDay(dayId);
+    } else {
+      transitionActiveDay(dayId);
+    }
+    onSelectDay(dayId);
+  });
   const toggleDayExpanded = useCallback(
     (dayId: string) => {
       cancelLayerItemDrag();
@@ -316,7 +313,11 @@ export const LayerPanelContent = memo(function LayerPanelContent({
   ]);
 
   return (
-    <div className="layer-panel-scroll trip-sidebar-scroll" ref={scrollRef}>
+    <ScrollArea
+      className="layer-panel-scroll trip-sidebar-scroll"
+      viewportRef={scrollRef}
+      contentClassName="trip-sidebar-scroll-content"
+    >
       {days.map((day, index) => (
         <DayLayerSection
           key={day.id}
@@ -358,8 +359,8 @@ export const LayerPanelContent = memo(function LayerPanelContent({
           }
           onRenameDay={onRenameDay}
           onUpdateDayColor={onUpdateDayColor}
-          debugMode={debugMode}
           onShuffleDayPlaces={onShuffleDayPlaces}
+          onRequestDeleteDay={onRequestDeleteDay}
           onRenamePlace={renamePlaceWithAnalytics}
           onUpdatePlaceStyle={onUpdatePlaceStyle}
           onStartPlaceNameEditing={startPlaceNameEditing}
@@ -372,7 +373,7 @@ export const LayerPanelContent = memo(function LayerPanelContent({
           onSelectPolyline={onSelectPolyline}
           onActivateDay={activateDay}
           onToggleExpanded={toggleDayExpanded}
-          onToggleDayVisibility={onToggleDayVisibility}
+          onToggleDayVisibility={toggleDayVisibility}
         />
       ))}
       {!days.length && (
@@ -380,6 +381,6 @@ export const LayerPanelContent = memo(function LayerPanelContent({
           {L('map:layerPanelContent.description.thereNoTravelPlansYet')}
         </p>
       )}
-    </div>
+    </ScrollArea>
   );
 });

@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { useEffect, useId, useRef, type RefObject } from 'react';
 import { RouteOptimizationFailureDetails } from '@/features/route-optimization/ui/RouteOptimizationFailureDetails';
 import { Button } from '@/shared/ui/Button';
@@ -114,36 +115,41 @@ export function RouteOptimizationProgressDialog({
           </div>
         ) : null}
 
-        <ol
-          className="route-optimization-progress-steps"
-          aria-label={L(
-            'routeOptimization:routeOptimizationProgressDialog.ariaLabel.pathOptimizationPhase',
-          )}
-          tabIndex={0}
+        <ScrollArea
+          className="route-optimization-progress-steps-scroll"
+          contentAsChild
         >
-          {PROGRESS_STEPS.map((step, index) => {
-            const state = getStepState(phase, stage, index);
-            return (
+          <ol
+            className="route-optimization-progress-steps"
+            aria-label={L(
+              'routeOptimization:routeOptimizationProgressDialog.ariaLabel.pathOptimizationPhase',
+            )}
+            tabIndex={0}
+          >
+            {PROGRESS_STEPS.map((step, index) => {
+              const state = getStepState(phase, stage, index);
+              return (
+                <ProgressStep
+                  key={step.stage}
+                  label={step.label}
+                  state={state}
+                  phase={phase}
+                  currentStepRef={currentStepRef}
+                />
+              );
+            })}
+            {unknownStage ? (
               <ProgressStep
-                key={step.stage}
-                label={step.label}
-                state={state}
+                label={L(
+                  'routeOptimization:routeOptimizationProgressDialog.text.processing',
+                )}
+                state={getCurrentStepState(phase)}
                 phase={phase}
                 currentStepRef={currentStepRef}
               />
-            );
-          })}
-          {unknownStage ? (
-            <ProgressStep
-              label={L(
-                'routeOptimization:routeOptimizationProgressDialog.text.processing',
-              )}
-              state={getCurrentStepState(phase)}
-              phase={phase}
-              currentStepRef={currentStepRef}
-            />
-          ) : null}
-        </ol>
+            ) : null}
+          </ol>
+        </ScrollArea>
 
         {progress && phase !== 'cancelled' ? (
           <p className="route-optimization-progress-server-status">

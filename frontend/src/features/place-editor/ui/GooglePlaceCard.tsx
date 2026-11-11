@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { useState, type ReactNode } from 'react';
 import {
   ANALYTICS_SCREENS,
@@ -9,6 +10,8 @@ import { MapPopupCardShell } from '@/shared/ui/map/MapPopupCardShell';
 import { PlaceOpeningHours } from '@/features/place-editor/ui/PlaceOpeningHours';
 import { getLanguage, useL } from '@/shared/i18n';
 import { trackEvent, useScreenView } from '@/shared/analytics';
+import { useTutorial } from '@/features/onboarding';
+import './google-place-card.css';
 
 type Props = {
   selection: Exclude<SelectedGooglePlace, null>;
@@ -16,8 +19,35 @@ type Props = {
   busy: boolean;
   mutationError: string | null;
   onClose: () => void;
+  onRetry: () => void;
   onAddToTrip: (dayId: string, place: PlaceDetails) => Promise<boolean>;
 };
+
+function PlaceLoadingSkeleton() {
+  const L = useL();
+  return (
+    <div className="google-place-card-loading" role="status">
+      <span className="sr-only">
+        {L('place:googlePlaceCard.description.loadingLocationInformation')}
+      </span>
+      <div className="google-place-card-skeleton-layout" aria-hidden="true">
+        <div className="google-place-card-skeleton-section">
+          <span className="google-place-skeleton is-medium" />
+          <span className="google-place-skeleton is-wide" />
+        </div>
+        <div className="google-place-card-skeleton-section">
+          <span className="google-place-skeleton is-short" />
+          <span className="google-place-skeleton is-wide" />
+          <span className="google-place-skeleton is-medium" />
+          <span className="google-place-skeleton is-medium" />
+        </div>
+        <div className="google-place-card-skeleton-footer">
+          <span className="google-place-skeleton is-button" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function displayUrl(url: string) {
   try {
@@ -101,10 +131,12 @@ export function GooglePlaceCard({
   busy,
   mutationError,
   onClose,
+  onRetry,
   onAddToTrip,
 }: Props) {
   const L = useL();
   useScreenView(ANALYTICS_SCREENS.placeDetail);
+  const tutorial = useTutorial();
   const [submitting, setSubmitting] = useState(false);
   const [addFailed, setAddFailed] = useState(false);
   const place = selection.status === 'loaded' ? selection.place : null;
@@ -132,6 +164,7 @@ export function GooglePlaceCard({
         target: ANALYTICS_TARGETS.addPlace,
         metadata: { source: 'google_place_card', success: true },
       });
+      tutorial?.completeStep('add-place');
     } catch {
       setAddFailed(true);
     } finally {
@@ -139,133 +172,158 @@ export function GooglePlaceCard({
     }
   };
 
-  if (selection.status === 'loading') {
-    return null;
-  }
+  const loading = selection.status === 'loading';
   return (
     <MapPopupCardShell
       className="google-place-card"
       title={
-        place?.name ?? L('place:googlePlaceCard.tooltip.locationInformation')
+        loading ? (
+          <>
+            <span className="sr-only">
+              {L('place:googlePlaceCard.tooltip.locationInformation')}
+            </span>
+            <span
+              className="google-place-skeleton is-title"
+              aria-hidden="true"
+            />
+          </>
+        ) : (
+          (place?.name ??
+          L('place:googlePlaceCard.tooltip.locationInformation'))
+        )
       }
       subtitle={
-        place?.category ? (
+        loading ? (
+          <p className="place-info-card-category" aria-hidden="true">
+            <span className="google-place-skeleton is-short" />
+          </p>
+        ) : place?.category ? (
           <p className="place-info-card-category">{place.category}</p>
         ) : undefined
       }
       closeLabel={L('place:googlePlaceCard.text.closeGooglePlacesDetailCard')}
       onClose={onClose}
     >
-      {selection.status === 'error' && (
-        <div className="place-info-card-state is-error" role="alert">
-          <p>
-            {L(
-              'place:googlePlaceCard.description.failedLoadLocationInformation',
-            )}
-          </p>
-          <span>
-            {L(
-              'place:googlePlaceCard.text.selectDifferentLocationTryAgainLater',
-            )}
-          </span>
-        </div>
-      )}
-
-      {place && (
-        <>
-          <PlaceOpeningHours hours={place.openingHours} />
-          <div className="place-info-card-body">
-            <Rating place={place} />
-
-            <dl className="place-info-details">
-              {place.address && (
-                <InfoRow
-                  icon="address"
-                  label={L('place:googlePlaceCard.text.address')}
-                >
-                  {place.address}
-                </InfoRow>
+      <ScrollArea
+        className="google-place-card-content"
+        contentClassName="google-place-card-content-content"
+        viewportProps={{ 'aria-busy': loading }}
+      >
+        {loading && <PlaceLoadingSkeleton />}
+        {selection.status === 'error' && (
+          <div className="place-info-card-state is-error" role="alert">
+            <p>
+              {L(
+                'place:googlePlaceCard.description.failedLoadLocationInformation',
               )}
-              {place.website && (
-                <InfoRow
-                  icon="web"
-                  label={L('place:googlePlaceCard.text.website')}
-                >
-                  <a href={place.website} target="_blank" rel="noreferrer">
-                    {displayUrl(place.website)}
-                  </a>
-                </InfoRow>
-              )}
-              {place.phoneNumber && (
-                <InfoRow
-                  icon="phone"
-                  label={L('place:googlePlaceCard.text.phoneNumber')}
-                >
-                  <a href={`tel:${place.phoneNumber.replace(/[^\d+]/g, '')}`}>
-                    {place.phoneNumber}
-                  </a>
-                </InfoRow>
-              )}
-            </dl>
-
-            {place.googleMapsUrl && (
-              <div className="place-info-card-links">
-                <a
-                  className="place-info-google-link"
-                  href={place.googleMapsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {L('place:googlePlaceCard.text.viewGoogleMaps')}
-                  <span aria-hidden="true">↗</span>
-                </a>
-              </div>
-            )}
-          </div>
-
-          <footer className="place-info-card-footer">
-            <span
-              className="place-info-add-control"
-              data-tooltip={
-                activeDayId
-                  ? undefined
-                  : L('place:googlePlaceCard.text.addAnotherLayer')
-              }
-              tabIndex={activeDayId ? undefined : 0}
-              aria-label={
-                activeDayId
-                  ? undefined
-                  : L('place:googlePlaceCard.text.addAnotherLayer')
-              }
+            </p>
+            <button
+              type="button"
+              className="google-place-card-retry"
+              onClick={onRetry}
             >
-              <button
-                type="button"
-                className="place-info-add-button"
-                data-analytics-id={ANALYTICS_TARGETS.addPlace}
-                data-analytics-screen={ANALYTICS_SCREENS.placeDetail}
-                aria-busy={submitting}
-                disabled={disabled || !activeDayId}
-                onClick={() => {
-                  if (activeDayId) {
-                    void addToDay(activeDayId);
-                  }
-                }}
+              {L('common:action.retry')}
+            </button>
+          </div>
+        )}
+
+        {place && (
+          <>
+            <PlaceOpeningHours hours={place.openingHours} />
+            <div className="place-info-card-body">
+              <Rating place={place} />
+
+              <dl className="place-info-details">
+                {place.address && (
+                  <InfoRow
+                    icon="address"
+                    label={L('place:googlePlaceCard.text.address')}
+                  >
+                    {place.address}
+                  </InfoRow>
+                )}
+                {place.website && (
+                  <InfoRow
+                    icon="web"
+                    label={L('place:googlePlaceCard.text.website')}
+                  >
+                    <a href={place.website} target="_blank" rel="noreferrer">
+                      {displayUrl(place.website)}
+                    </a>
+                  </InfoRow>
+                )}
+                {place.phoneNumber && (
+                  <InfoRow
+                    icon="phone"
+                    label={L('place:googlePlaceCard.text.phoneNumber')}
+                  >
+                    <a href={`tel:${place.phoneNumber.replace(/[^\d+]/g, '')}`}>
+                      {place.phoneNumber}
+                    </a>
+                  </InfoRow>
+                )}
+              </dl>
+
+              {place.googleMapsUrl && (
+                <div className="place-info-card-links">
+                  <a
+                    className="place-info-google-link"
+                    href={place.googleMapsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {L('place:googlePlaceCard.text.viewGoogleMaps')}
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                </div>
+              )}
+            </div>
+
+            <footer className="place-info-card-footer">
+              <span
+                className="place-info-add-control"
+                data-tooltip={
+                  activeDayId
+                    ? undefined
+                    : L('place:googlePlaceCard.text.addAnotherLayer')
+                }
+                tabIndex={activeDayId ? undefined : 0}
+                aria-label={
+                  activeDayId
+                    ? undefined
+                    : L('place:googlePlaceCard.text.addAnotherLayer')
+                }
               >
-                <span aria-hidden="true">＋</span>
-                {submitting
-                  ? L('place:googlePlaceCard.action.adding')
-                  : L('place:googlePlaceCard.action.addSchedule')}
-              </button>
-            </span>
-            {addFailed && (
-              <p className="place-info-action-error" role="alert">
-                {mutationError ??
-                  L('place:googlePlaceCard.description.failedAddLocation')}
-              </p>
-            )}
-          </footer>
-        </>
-      )}
+                <button
+                  type="button"
+                  className="place-info-add-button"
+                  data-tutorial="add-place"
+                  data-analytics-id={ANALYTICS_TARGETS.addPlace}
+                  data-analytics-screen={ANALYTICS_SCREENS.placeDetail}
+                  aria-busy={submitting}
+                  disabled={disabled || !activeDayId}
+                  onClick={() => {
+                    if (activeDayId) {
+                      void addToDay(activeDayId);
+                    }
+                  }}
+                >
+                  <span aria-hidden="true">＋</span>
+                  {submitting
+                    ? L('place:googlePlaceCard.action.adding')
+                    : L('place:googlePlaceCard.action.addSchedule')}
+                </button>
+              </span>
+              {addFailed && (
+                <p className="place-info-action-error" role="alert">
+                  {mutationError ??
+                    L('place:googlePlaceCard.description.failedAddLocation')}
+                </p>
+              )}
+            </footer>
+          </>
+        )}
+      </ScrollArea>
     </MapPopupCardShell>
   );
 }

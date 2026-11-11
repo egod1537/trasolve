@@ -1,3 +1,4 @@
+import { useChatPersistence } from './useChatPersistence';
 import { useChatPanelEffects } from '../ui/useChatPanelEffects';
 import {
   useCallback,
@@ -32,6 +33,8 @@ import {
 } from '@/features/ai-chat/model/chatThreads';
 import { getThreadTitle } from '@/features/ai-chat/ui/chatPresentation';
 
+const EMPTY_MESSAGES: readonly UiChatMessage[] = [];
+
 export function useChatThreads(
   {
     open,
@@ -43,6 +46,7 @@ export function useChatThreads(
     'open' | 'persistenceKey' | 'onGeneratingChange' | 'onUnreadPreviewsChange'
   >,
   ref: import('react').ForwardedRef<MapAiPanelHandle>,
+  { autoScroll = true }: { autoScroll?: boolean } = {},
 ) {
   const L = useL();
   const titleId = useId();
@@ -133,6 +137,7 @@ export function useChatThreads(
     selectedThreadSending,
     openMenuThreadId,
     setOpenMenuThreadId,
+    autoScroll,
   });
   useLayoutEffect(() => {
     openRef.current = open;
@@ -154,23 +159,11 @@ export function useChatThreads(
     onUnreadPreviewsChange?.(unreadPreviews);
   }, [onUnreadPreviewsChange, unreadPreviews]);
 
-  useEffect(() => {
-    if (!persistenceKey) {
-      return;
-    }
-    try {
-      sessionStorage.setItem(
-        persistenceKey,
-        JSON.stringify({
-          version: 1,
-          messages: threads[0]?.messages ?? [],
-          draft: drafts['chat-1'] ?? '',
-        }),
-      );
-    } catch {
-      // The active conversation remains available when browser storage is full.
-    }
-  }, [drafts, persistenceKey, threads]);
+  useChatPersistence(
+    persistenceKey,
+    threads[0]?.messages ?? EMPTY_MESSAGES,
+    drafts['chat-1'] ?? '',
+  );
 
   const changeSelectedThread = useCallback((threadId: string) => {
     selectedThreadIdRef.current = threadId;
@@ -319,11 +312,11 @@ export function useChatThreads(
     setRenamingThreadId(null);
   };
 
-  const changeDraft = (value: string) => {
+  const changeDraft = useCallback((value: string) => {
     const threadId = selectedThreadIdRef.current;
     draftsRef.current = { ...draftsRef.current, [threadId]: value };
     setDrafts(draftsRef.current);
-  };
+  }, []);
   const cancelRename = () => {
     setRenamingThreadId(null);
     setRenameDraft('');

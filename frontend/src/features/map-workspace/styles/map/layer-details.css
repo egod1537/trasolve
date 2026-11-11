@@ -139,7 +139,7 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   border: 1px solid var(--color-map-overlay-ring);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-overlay);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   backdrop-filter: blur(var(--map-overlay-blur));
@@ -153,8 +153,9 @@
 .layer-detail-card-header {
   display: flex;
   align-items: flex-start;
-  padding: 15px 16px 13px;
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4) var(--panel-padding);
+  border-bottom: 1px solid var(--panel-divider);
+  background: var(--panel-header-bg);
 }
 
 .layer-detail-card-header > div {

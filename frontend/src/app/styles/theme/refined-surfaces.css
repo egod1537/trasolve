@@ -1,0 +1,135 @@
+/* Trasolve's neutral surface palette. Primer retains status-color semantics. */
+:root,
+[data-theme='light'] {
+  --color-bg: #f5f5f7;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-overlay: #ffffff;
+  --color-surface-subtle: #f0f0f3;
+  --color-surface-hover: #e9e9ee;
+  --color-surface-active: #dedee5;
+  --color-text-primary: #1d1d1f;
+  --color-text-secondary: #626269;
+  --color-text-muted: #67676f;
+  --color-placeholder: var(--color-text-muted);
+  --color-text-inverse: #ffffff;
+  --color-border: #dedee5;
+  --color-border-strong: #85858e;
+  --color-border-floating: #d8d8df;
+  --color-accent: #0868d9;
+  --color-accent-hover: #075cbe;
+  --color-accent-active: #064fa4;
+  --color-accent-foreground: #005fc7;
+  --color-accent-contrast: #ffffff;
+  --color-accent-soft: #e8f1ff;
+  --color-info: var(--color-accent-foreground);
+  --color-info-hover: var(--color-accent-foreground);
+  --color-info-soft: var(--color-accent-soft);
+  --color-info-border: #a5c4ed;
+  --color-warning: #855600;
+  --color-warning-strong: var(--color-warning);
+  --color-focus-ring: var(--color-accent-foreground);
+  --color-selected-bg: var(--color-accent);
+  --color-selected-hover-bg: var(--color-accent-hover);
+  --color-selected-text: var(--color-accent-contrast);
+  --color-selected-border: var(--color-accent);
+  --color-selection-bg: #cce1ff;
+  --color-selection-text: var(--color-text-primary);
+  --color-disabled-bg: #ededf0;
+  --color-disabled-text: #8b8b93;
+  --color-disabled-border: #dedee5;
+  --color-tooltip-bg: #29292d;
+  --color-tooltip-text: #f5f5f7;
+  --color-overlay: #17171c59;
+  --color-overlay-light: color-mix(
+    in srgb,
+    var(--color-overlay) 55%,
+    transparent
+  );
+  --color-map-background: var(--color-bg);
+  --color-map-overlay-surface: var(--color-surface-overlay);
+  --color-map-overlay-ring: var(--color-border-floating);
+  --color-map-control-surface: var(--color-surface-overlay);
+  --color-scrollbar-thumb: #aaaab3;
+  --color-scrollbar-thumb-hover: #85858e;
+  --shadow-card: 0 2px 8px #17171c08;
+  --shadow-map-overlay: 0 16px 48px -12px #17171c33, 0 3px 12px #17171c0d;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-overlay: 18px;
+  --radius-control: 8px;
+  --panel-title-weight: 600;
+  --panel-header-bg: color-mix(
+    in srgb,
+    var(--color-surface-subtle) 15%,
+    transparent
+  );
+  --font-family-sans:
+    -apple-system, BlinkMacSystemFont, Inter, Pretendard, 'Segoe UI', sans-serif;
+  --hero-overlay-color: 245 245 247;
+}
+
+[data-theme='dark'] {
+  --color-bg: #161618;
+  --color-surface: #232325;
+  --color-surface-raised: #2c2c2e;
+  --color-surface-overlay: #232325;
+  --color-surface-subtle: #2c2c2e;
+  --color-surface-hover: #363639;
+  --color-surface-active: #424247;
+  --color-text-primary: #f5f5f7;
+  --color-text-secondary: #b7b7bf;
+  --color-text-muted: #a1a1aa;
+  --color-text-inverse: #161618;
+  --color-border: #3d3d42;
+  --color-border-strong: #80808a;
+  --color-border-floating: #48484e;
+  --color-accent: #0868d9;
+  --color-accent-hover: #075cbe;
+  --color-accent-active: #064fa4;
+  --color-accent-foreground: #79b8ff;
+  --color-accent-soft: #24384f;
+  --color-info-border: #4f79ab;
+  --color-warning: #e9bd63;
+  --color-danger: #ff827a;
+  --color-danger-strong: var(--color-danger);
+  --color-success: #71ce85;
+  --color-success-strong: var(--color-success);
+  --color-selection-bg: #284b78;
+  --color-disabled-bg: #303033;
+  --color-disabled-text: #7f7f88;
+  --color-disabled-border: #3d3d42;
+  --color-overlay: #00000066;
+  --color-scrollbar-thumb: #696973;
+  --color-scrollbar-thumb-hover: #8b8b95;
+  --shadow-card: 0 2px 8px #0000001a;
+  --shadow-map-overlay: 0 18px 52px -12px #00000070, 0 3px 12px #00000029;
+  --hero-overlay-color: 22 22 24;
+}
+
+/* Shared glass material, with solid surfaces when backdrop filtering is unavailable. */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  :root,
+  [data-theme='light'],
+  [data-theme='dark'] {
+    --color-map-overlay-surface: color-mix(
+      in srgb,
+      var(--color-surface-overlay) var(--map-overlay-opacity),
+      transparent
+    );
+    --color-map-control-surface: var(--color-map-overlay-surface);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  [data-theme='light'],
+  [data-theme='dark'] {
+    --map-overlay-opacity: 100%;
+    --color-map-overlay-surface: var(--color-surface-overlay);
+    --color-map-control-surface: var(--color-surface-overlay);
+    --map-overlay-blur: 0px;
+    --dialog-backdrop-blur: 0px;
+  }
+}

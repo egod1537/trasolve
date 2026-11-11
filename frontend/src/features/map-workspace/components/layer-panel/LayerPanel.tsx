@@ -13,10 +13,14 @@ import type { LayerValidationByItemKey, Trip } from '@/entities/trip';
 import { RouteSettingsCard } from '@/features/map-workspace/components/RouteSettingsCard';
 import type { SelectionProps } from '@/features/map-workspace/components/layer-panel/DayLayerSection';
 import { LayerPanelHeader } from '@/features/map-workspace/components/layer-panel/LayerPanelHeader';
+import { findPlaceContext, findPolylineContext } from './dayLayerPresentation';
 import { LayerVisibilityControl } from './LayerVisibilityControl';
 import { LayerPanelContent } from '@/features/map-workspace/components/layer-panel/LayerPanelContent';
 import { LayerPlaceDetailCard } from '@/features/map-workspace/components/layer-panel/LayerPlaceDetailCard';
 import { ShareTripModal } from '@/features/map-workspace/components/share/ShareTripModal';
+import { useTripError } from '@/features/map-workspace/hooks/useTrip';
+import { useEventCallback } from '@/shared/lib/useEventCallback';
+import { DayDeleteDialog } from './DayDeleteDialog';
 import { useL } from '@/shared/i18n';
 
 type DetailTarget =
@@ -26,10 +30,6 @@ type Props = SelectionProps & {
   tripId: string;
   trip: Trip;
   busy: boolean;
-  saveStatus: 'ready' | 'dirty' | 'saving' | 'error';
-  savedAt: string;
-  mutationError: string | null;
-  debugMode: boolean;
   sidebarRef: RefObject<HTMLElement | null>;
   onAddLayer: () => void;
   onToggleAllDayVisibility: () => void;
@@ -42,6 +42,7 @@ type Props = SelectionProps & {
     targetDayId: string,
     targetIndex: number,
   ) => void;
+  onRemoveDay: (dayId: string) => Promise<boolean>;
   onShuffleDayPlaces: (dayId: string) => void;
   onRenamePlace: (placeId: string, name: string) => Promise<boolean>;
   onUpdatePolylineMode: (
@@ -69,10 +70,6 @@ export const LayerPanel = memo(function LayerPanel({
   tripId,
   trip,
   busy,
-  saveStatus,
-  savedAt,
-  mutationError,
-  debugMode,
   sidebarRef,
   onAddLayer,
   onToggleAllDayVisibility,
@@ -83,8 +80,10 @@ export const LayerPanel = memo(function LayerPanel({
   onRenamePlace,
   onUpdatePlaceStyle,
   onRemovePlace,
+  onRemoveDay,
   onUpdatePolylineMode,
   onQueryRouteDetails,
+  onFocusPlace: focusPlace,
   onSelectPlace,
   onSelectPlaceForDetails,
   onSelectPolyline,
@@ -95,43 +94,24 @@ export const LayerPanel = memo(function LayerPanel({
   ...contentProps
 }: Props) {
   const L = useL();
+  const mutationError = useTripError();
+  const onFocusPlace = useEventCallback(focusPlace);
   const [detailTarget, setDetailTarget] = useState<DetailTarget>(null);
+  const [deleteDay, setDeleteDay] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const shareButtonRef = useRef<HTMLButtonElement>(null);
   const detailPlaceId = detailTarget?.type === 'place' ? detailTarget.id : null;
   const detailPolylineId =
     detailTarget?.type === 'polyline' ? detailTarget.id : null;
   const detailPlaceContext = useMemo(
-    () =>
-      trip.days
-        .filter((day) => visibleDayIds.has(day.id))
-        .flatMap((day) =>
-          day.places.map((place) => ({
-            day,
-            place,
-          })),
-        )
-        .find(({ place }) => place.id === detailPlaceId),
+    () => findPlaceContext(trip.days, visibleDayIds, detailPlaceId),
     [detailPlaceId, trip.days, visibleDayIds],
   );
   const detailPolylineContext = useMemo(
-    () =>
-      trip.days
-        .filter((day) => visibleDayIds.has(day.id))
-        .flatMap((day) =>
-          day.polylines.flatMap((polyline) => {
-            const fromPlace = day.places.find(
-              (place) => place.id === polyline.fromPlaceId,
-            );
-            const toPlace = day.places.find(
-              (place) => place.id === polyline.toPlaceId,
-            );
-            return fromPlace && toPlace
-              ? [{ polyline, fromPlace, toPlace }]
-              : [];
-          }),
-        )
-        .find(({ polyline }) => polyline.id === detailPolylineId),
+    () => findPolylineContext(trip.days, visibleDayIds, detailPolylineId),
     [detailPolylineId, trip.days, visibleDayIds],
   );
   const detailOpen = !!detailPlaceContext || !!detailPolylineContext;
@@ -141,61 +121,52 @@ export const LayerPanel = memo(function LayerPanel({
     setShareModalOpen(false);
     requestAnimationFrame(() => shareButtonRef.current?.focus());
   }, []);
-  const selectPlaceFromRow = useCallback<SelectionProps['onSelectPlace']>(
-    (placeId, modifiers) => {
-      setDetailTarget(null);
-      onSelectPlace(placeId, modifiers);
-    },
-    [onSelectPlace],
-  );
-  const selectPolylineFromRow = useCallback<SelectionProps['onSelectPolyline']>(
-    (polylineId, modifiers) => {
-      setDetailTarget(null);
-      onSelectPolyline(polylineId, modifiers);
-    },
-    [onSelectPolyline],
-  );
-  const openPlaceDetails = useCallback(
-    (placeId: string) => {
-      onSelectPlaceForDetails(placeId);
-      setDetailTarget((current) =>
-        current?.type === 'place' && current.id === placeId
-          ? null
-          : { type: 'place', id: placeId },
-      );
-    },
-    [onSelectPlaceForDetails],
-  );
-  const openPolylineDetails = useCallback(
-    (polylineId: string) => {
-      onSelectPolylineForDetails(polylineId);
-      setDetailTarget((current) =>
-        current?.type === 'polyline' && current.id === polylineId
-          ? null
-          : { type: 'polyline', id: polylineId },
-      );
-    },
-    [onSelectPolylineForDetails],
-  );
-  const closeDetailsForDay = useCallback(
-    (dayId: string) => {
-      const day = trip.days.find((candidate) => candidate.id === dayId);
-      if (!day) {
-        return;
+  const selectPlaceFromRow = useEventCallback<
+    Parameters<SelectionProps['onSelectPlace']>,
+    void
+  >((placeId, modifiers) => {
+    setDetailTarget(null);
+    onSelectPlace(placeId, modifiers);
+  });
+  const selectPolylineFromRow = useEventCallback<
+    Parameters<SelectionProps['onSelectPolyline']>,
+    void
+  >((polylineId, modifiers) => {
+    setDetailTarget(null);
+    onSelectPolyline(polylineId, modifiers);
+  });
+  const openPlaceDetails = useEventCallback((placeId: string) => {
+    onSelectPlaceForDetails(placeId);
+    setDetailTarget((current) =>
+      current?.type === 'place' && current.id === placeId
+        ? null
+        : { type: 'place', id: placeId },
+    );
+  });
+  const openPolylineDetails = useEventCallback((polylineId: string) => {
+    onSelectPolylineForDetails(polylineId);
+    setDetailTarget((current) =>
+      current?.type === 'polyline' && current.id === polylineId
+        ? null
+        : { type: 'polyline', id: polylineId },
+    );
+  });
+  const closeDetailsForDay = useEventCallback((dayId: string) => {
+    const day = trip.days.find((candidate) => candidate.id === dayId);
+    if (!day) {
+      return;
+    }
+    setDetailTarget((current) => {
+      if (!current) {
+        return null;
       }
-      setDetailTarget((current) => {
-        if (!current) {
-          return null;
-        }
-        const belongsToDay =
-          current.type === 'place'
-            ? day.places.some((place) => place.id === current.id)
-            : day.polylines.some((polyline) => polyline.id === current.id);
-        return belongsToDay ? null : current;
-      });
-    },
-    [trip.days],
-  );
+      const belongsToDay =
+        current.type === 'place'
+          ? day.places.some((place) => place.id === current.id)
+          : day.polylines.some((polyline) => polyline.id === current.id);
+      return belongsToDay ? null : current;
+    });
+  });
   useEffect(() => {
     if (!detailOpen) {
       return;
@@ -229,8 +200,6 @@ export const LayerPanel = memo(function LayerPanel({
       >
         <LayerPanelHeader
           trip={trip}
-          saveStatus={saveStatus}
-          savedAt={savedAt}
           onAddLayer={onAddLayer}
           onShareTrip={openShareModal}
           shareButtonRef={shareButtonRef}
@@ -242,9 +211,9 @@ export const LayerPanel = memo(function LayerPanel({
           onToggle={onToggleAllDayVisibility}
         />
         <LayerPanelContent
+          onRequestDeleteDay={setDeleteDay}
           days={trip.days}
           visibleDayIds={visibleDayIds}
-          debugMode={debugMode}
           detailPlaceId={detailPlaceId}
           detailPolylineId={detailPolylineId}
           onSelectPlace={selectPlaceFromRow}
@@ -253,6 +222,7 @@ export const LayerPanel = memo(function LayerPanel({
           selectedPolylineIds={selectedPolylineIds}
           onOpenPlaceDetails={openPlaceDetails}
           onOpenPolylineDetails={openPolylineDetails}
+          onFocusPlace={onFocusPlace}
           onCollapseDay={closeDetailsForDay}
           onRenamePlace={onRenamePlace}
           onUpdatePlaceStyle={onUpdatePlaceStyle}
@@ -289,6 +259,19 @@ export const LayerPanel = memo(function LayerPanel({
           onQueryRouteDetails={onQueryRouteDetails}
           onClose={closeDetails}
           onUpdateMode={onUpdatePolylineMode}
+        />
+      )}
+      {deleteDay && (
+        <DayDeleteDialog
+          day={deleteDay}
+          onRemove={onRemoveDay}
+          onClose={() => setDeleteDay(null)}
+          onRemoved={() => {
+            setDeleteDay(null);
+            sidebarRef.current
+              ?.querySelector<HTMLButtonElement>('button')
+              ?.focus();
+          }}
         />
       )}
       {shareModalOpen && (

@@ -5,11 +5,8 @@ import {
   type CSSProperties,
   type MouseEvent,
 } from 'react';
-import type { PlaceStyle } from '@trasolve/shared';
-import type { LayerValidationByItemKey, TripDay } from '@/entities/trip';
 import { InlineRename } from '@/shared/ui/InlineRename';
-import { IconButton } from '@/shared/ui/IconButton';
-import { ShuffleIcon } from '@/shared/ui/icons';
+import { DayLayerMenu } from './DayLayerMenu';
 import { DayColorControl } from '@/features/map-workspace/components/layer-panel/DayColorControl';
 import { LayerDragHandle } from '@/features/map-workspace/components/layer-panel/LayerDragHandle';
 import { LayerItemChevron } from '@/features/map-workspace/components/layer-panel/LayerItemChevron';
@@ -18,13 +15,11 @@ import { PolylineLayerItem } from '@/features/map-workspace/components/layer-pan
 import { useL } from '@/shared/i18n';
 import { DayFileImport } from '@/features/map-workspace/files/TripFileDialogs';
 import {
-  type ReorderControls,
-  type DayReorderControls,
-  type RenderedLayerItem,
-  type SelectionProps,
+  type DayLayerSectionProps,
+  areDayLayerPropsEqual,
+  resolveLayerItems,
   getDropIndicator,
   getPreviewOffset,
-  layerItemKey,
 } from '@/features/map-workspace/components/layer-panel/dayLayerPresentation';
 export { type SelectionProps } from '@/features/map-workspace/components/layer-panel/dayLayerPresentation';
 
@@ -53,8 +48,8 @@ export const DayLayerSection = memo(function DayLayerSection({
   detailPolylineId,
   onRenameDay,
   onUpdateDayColor,
-  debugMode,
   onShuffleDayPlaces,
+  onRequestDeleteDay,
   onRenamePlace,
   onUpdatePlaceStyle,
   onStartPlaceNameEditing,
@@ -62,45 +57,7 @@ export const DayLayerSection = memo(function DayLayerSection({
   onOpenPlaceDetails,
   onOpenPolylineDetails,
   validationByItemKey,
-}: Omit<
-  SelectionProps,
-  | 'selectedDayId'
-  | 'selectedPlaceId'
-  | 'selectedPolylineId'
-  | 'visibleDayIds'
-  | 'onSelectPlaceForDetails'
-  | 'onSelectPlaceForDrag'
-  | 'onSelectPolylineForDetails'
-  | 'onSelectDay'
-> & {
-  day: TripDay;
-  active: boolean;
-  visible: boolean;
-  dayIndex: number;
-  layerItemDayPreviewOffset: number;
-  expanded: boolean;
-  placeDropTargetPending: boolean;
-  reorder: ReorderControls;
-  dayReorder: DayReorderControls;
-  dayDropIndicator: 'before' | 'after' | null;
-  onBeforeLayerItemDrag: (placeId: string) => void;
-  editingPlaceId: string | null;
-  detailPlaceId: string | null;
-  detailPolylineId: string | null;
-  onRenameDay: (dayId: string, title: string) => void;
-  onUpdateDayColor: (dayId: string, color: string) => void;
-  debugMode: boolean;
-  onShuffleDayPlaces: (dayId: string) => void;
-  onRenamePlace: (placeId: string, name: string) => void;
-  onUpdatePlaceStyle: (placeId: string, style: PlaceStyle) => void;
-  onStartPlaceNameEditing: (placeId: string) => void;
-  onFinishPlaceNameEditing: (placeId: string) => void;
-  onOpenPlaceDetails: (placeId: string) => void;
-  onOpenPolylineDetails: (polylineId: string) => void;
-  validationByItemKey?: LayerValidationByItemKey;
-  onActivateDay: (dayId: string) => void;
-  onToggleExpanded: (dayId: string) => void;
-}) {
+}: DayLayerSectionProps) {
   const L = useL();
   const [titleEditing, setTitleEditing] = useState(false);
   const dragState = reorder.dragState;
@@ -130,21 +87,10 @@ export const DayLayerSection = memo(function DayLayerSection({
     }
   }
 
-  const layerItems = useMemo<RenderedLayerItem[]>(() => {
-    const places = new Map(day.places.map((place) => [place.id, place]));
-    const polylines = new Map(
-      day.polylines.map((polyline) => [polyline.id, polyline]),
-    );
-    return day.layerItems.flatMap((item): RenderedLayerItem[] => {
-      const key = layerItemKey(item);
-      if (item.type === 'place') {
-        const place = places.get(item.id);
-        return place ? [{ type: 'place', key, place }] : [];
-      }
-      const polyline = polylines.get(item.id);
-      return polyline ? [{ type: 'polyline', key, polyline }] : [];
-    });
-  }, [day.layerItems, day.places, day.polylines]);
+  const layerItems = useMemo(
+    () => (expanded ? resolveLayerItems(day) : []),
+    [expanded, day],
+  );
   const placeLayerItemIds = layerItems.flatMap((item) =>
     item.type === 'place' ? [item.place.id] : [],
   );
@@ -229,22 +175,11 @@ export const DayLayerSection = memo(function DayLayerSection({
             </span>
           )}
         </h2>
-        {debugMode && (
-          <IconButton
-            className="trip-day-shuffle"
-            icon={<ShuffleIcon />}
-            variant="ghost"
-            size="sm"
-            disabled={day.places.length < 4}
-            aria-label={L(
-              'testbed:jobBuilderLocationList.ariaLabel.shuffleIntermediatePositions',
-            )}
-            title={L(
-              'testbed:jobBuilderLocationList.ariaLabel.shuffleIntermediatePositions',
-            )}
-            onClick={() => onShuffleDayPlaces(day.id)}
-          />
-        )}
+        <DayLayerMenu
+          day={day}
+          onShuffle={onShuffleDayPlaces}
+          onRequestDelete={onRequestDeleteDay}
+        />
         <LayerItemChevron
           variant="day"
           expanded={expanded}
@@ -263,96 +198,7 @@ export const DayLayerSection = memo(function DayLayerSection({
         className={`trip-layer-list${layerDropAtEmpty ? ' is-layer-drop-target-empty' : ''}`}
         hidden={!expanded}
       >
-        {layerItems.map((renderedItem, renderedIndex) => {
-          const isLast = renderedIndex === layerItems.length - 1;
-          const dropPosition =
-            dropIndicator?.itemKey === renderedItem.key
-              ? dropIndicator.position
-              : null;
-
-          if (renderedItem.type === 'polyline') {
-            const { polyline } = renderedItem;
-            return (
-              <PolylineLayerItem
-                key={renderedItem.key}
-                dayId={day.id}
-                polyline={polyline}
-                isLast={isLast}
-                fromPlace={day.places.find(
-                  (place) => place.id === polyline.fromPlaceId,
-                )}
-                toPlace={day.places.find(
-                  (place) => place.id === polyline.toPlaceId,
-                )}
-                selected={selectedPolylineIds.has(polyline.id)}
-                detailsOpen={detailPolylineId === polyline.id}
-                validation={validationByItemKey?.[renderedItem.key]}
-                onSelect={onSelectPolyline}
-                onOpenDetails={onOpenPolylineDetails}
-              />
-            );
-          }
-
-          const { place } = renderedItem;
-          const placeIndex = day.places.findIndex(
-            (candidate) => candidate.id === place.id,
-          );
-          const dragging =
-            dragState?.sourceDayId === day.id && dragState.placeId === place.id;
-          const previewOffset = getPreviewOffset(
-            day.id,
-            place.id,
-            dragState,
-            layerItemDayPreviewOffset,
-          );
-          const routeRole =
-            startPlaceId === place.id
-              ? 'start'
-              : destinationPlaceId === place.id
-                ? 'destination'
-                : undefined;
-          return (
-            <PlaceLayerItem
-              key={renderedItem.key}
-              dayId={day.id}
-              dayColor={day.color}
-              place={place}
-              index={placeIndex}
-              isLast={isLast}
-              selected={selectedPlaceIds.has(place.id)}
-              editing={editingPlaceId === place.id}
-              detailsOpen={detailPlaceId === place.id}
-              routeRole={routeRole}
-              validation={validationByItemKey?.[renderedItem.key]}
-              onSelect={onSelectPlace}
-              onFocus={onFocusPlace}
-              onRename={onRenamePlace}
-              onUpdatePlaceStyle={onUpdatePlaceStyle}
-              onStartNameEditing={onStartPlaceNameEditing}
-              onFinishNameEditing={onFinishPlaceNameEditing}
-              onOpenDetails={onOpenPlaceDetails}
-              dragging={dragging}
-              dropPosition={dropPosition}
-              previewOffset={previewOffset}
-              onBeforeDrag={onBeforeLayerItemDrag}
-              onCancelDrag={reorder.cancelDrag}
-              onDragPointerDown={reorder.onPointerDown}
-              onDragPointerMove={reorder.onPointerMove}
-              onDragPointerUp={reorder.onPointerUp}
-              onDragPointerCancel={reorder.onPointerCancel}
-              onDragLostPointerCapture={reorder.onLostPointerCapture}
-              onDragKeyDown={reorder.onKeyDown}
-            />
-          );
-        })}
-        {!day.layerItems.length && (
-          <li className="trip-empty-day">
-            {layerDropAtEmpty
-              ? L('map:dayLayerSection.text.putHere')
-              : L('map:dayLayerSection.text.thereNoRegisteredItems')}
-          </li>
-        )}
-        {day.places.length === 0 && day.layerItems.length === 0 && (
+        {expanded && day.places.length === 0 && day.layerItems.length === 0 && (
           <li className="trip-day-file-action">
             <DayFileImport
               dayId={day.id}
@@ -361,7 +207,92 @@ export const DayLayerSection = memo(function DayLayerSection({
             />
           </li>
         )}
+        {expanded &&
+          layerItems.map((renderedItem, renderedIndex) => {
+            const isLast = renderedIndex === layerItems.length - 1;
+            const dropPosition =
+              dropIndicator?.itemKey === renderedItem.key
+                ? dropIndicator.position
+                : null;
+
+            if (renderedItem.type === 'polyline') {
+              const { polyline } = renderedItem;
+              return (
+                <PolylineLayerItem
+                  key={renderedItem.key}
+                  dayId={day.id}
+                  polyline={polyline}
+                  isLast={isLast}
+                  fromPlace={renderedItem.fromPlace}
+                  toPlace={renderedItem.toPlace}
+                  selected={selectedPolylineIds.has(polyline.id)}
+                  detailsOpen={detailPolylineId === polyline.id}
+                  validation={validationByItemKey?.[renderedItem.key]}
+                  onSelect={onSelectPolyline}
+                  onOpenDetails={onOpenPolylineDetails}
+                />
+              );
+            }
+
+            const { place } = renderedItem;
+            const placeIndex = renderedItem.index;
+            const dragging =
+              dragState?.sourceDayId === day.id &&
+              dragState.placeId === place.id;
+            const previewOffset = getPreviewOffset(
+              day.id,
+              place.id,
+              dragState,
+              layerItemDayPreviewOffset,
+            );
+            const routeRole =
+              startPlaceId === place.id
+                ? 'start'
+                : destinationPlaceId === place.id
+                  ? 'destination'
+                  : undefined;
+            return (
+              <PlaceLayerItem
+                key={renderedItem.key}
+                dayId={day.id}
+                dayColor={day.color}
+                place={place}
+                index={placeIndex}
+                isLast={isLast}
+                selected={selectedPlaceIds.has(place.id)}
+                editing={editingPlaceId === place.id}
+                detailsOpen={detailPlaceId === place.id}
+                routeRole={routeRole}
+                validation={validationByItemKey?.[renderedItem.key]}
+                onSelect={onSelectPlace}
+                onFocus={onFocusPlace}
+                onRename={onRenamePlace}
+                onUpdatePlaceStyle={onUpdatePlaceStyle}
+                onStartNameEditing={onStartPlaceNameEditing}
+                onFinishNameEditing={onFinishPlaceNameEditing}
+                onOpenDetails={onOpenPlaceDetails}
+                dragging={dragging}
+                dropPosition={dropPosition}
+                previewOffset={previewOffset}
+                onBeforeDrag={onBeforeLayerItemDrag}
+                onCancelDrag={reorder.cancelDrag}
+                onDragPointerDown={reorder.onPointerDown}
+                onDragPointerMove={reorder.onPointerMove}
+                onDragPointerUp={reorder.onPointerUp}
+                onDragPointerCancel={reorder.onPointerCancel}
+                onDragLostPointerCapture={reorder.onLostPointerCapture}
+                onDragKeyDown={reorder.onKeyDown}
+              />
+            );
+          })}
+        {expanded && !day.layerItems.length && (
+          <li className="trip-empty-day">
+            {layerDropAtEmpty
+              ? L('map:dayLayerSection.text.putHere')
+              : L('map:dayLayerSection.text.thereNoRegisteredItems')}
+          </li>
+        )}
       </ol>
     </section>
   );
-});
+}, areDayLayerPropsEqual);

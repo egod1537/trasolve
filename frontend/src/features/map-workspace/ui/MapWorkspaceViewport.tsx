@@ -1,3 +1,4 @@
+import { ViewportCommands } from '../command-console/ViewportCommands';
 import {
   RouteComparisonBar,
   type RouteComparisonData,
@@ -26,6 +27,7 @@ import type { GoogleMapHandle } from '@/map/types/googleMapComponent';
 import type { GeoPoint } from '@/shared/types/mapTypes';
 import type { SelectedGooglePlace } from '@/entities/place';
 import { useMeasurement } from '../measurement/useMeasurement';
+import { useTripError } from '@/features/map-workspace/hooks/useTrip';
 import { MapCanvas } from '@/features/map-workspace/ui/MapCanvas';
 import { GooglePlaceCard } from '@/features/place-editor';
 import { TripPlaceCard } from '@/features/place-editor';
@@ -51,6 +53,7 @@ type Props = Omit<
   selectedGooglePlace: SelectedGooglePlace;
   onSelectSearchedGooglePlace: (place: PlaceDetails) => void;
   onCloseGooglePlace: () => void;
+  onRetryGooglePlace: () => void;
   onAddGooglePlace: (dayId: string, place: PlaceDetails) => Promise<boolean>;
   selectedTripPlace: { day: TripDay; place: TripPlace } | null;
   selectedTripPolyline: {
@@ -64,7 +67,6 @@ type Props = Omit<
   selectedPolylineIds: ReadonlySet<string>;
   selectedItemCount: number;
   tripMutationBusy: boolean;
-  tripMutationError: string | null;
   canUndo: boolean;
   canRedo: boolean;
   onUndo: () => void;
@@ -104,6 +106,7 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
   selectedGooglePlace,
   onSelectSearchedGooglePlace,
   onCloseGooglePlace,
+  onRetryGooglePlace,
   onAddGooglePlace,
   selectedTripPlace,
   selectedTripPolyline,
@@ -111,7 +114,6 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
   selectedPolylineIds,
   selectedItemCount,
   tripMutationBusy,
-  tripMutationError,
   canUndo,
   canRedo,
   onUndo,
@@ -135,6 +137,7 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
   sidebarRef,
   ...mapProps
 }: Props) {
+  const tripMutationError = useTripError();
   const measurement = useMeasurement();
   const mapRef = useRef<GoogleMapHandle>(null);
   const selectedCardRef = useRef<HTMLElement>(null);
@@ -264,11 +267,7 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
     measurement.tool !== 'pan' ? null : selectedGooglePlace ? (
       <AnchoredMapCard
         anchorId={`google:${selectedGooglePlace.placeId}`}
-        anchor={
-          selectedGooglePlace.status === 'loaded'
-            ? selectedGooglePlace.place.location
-            : selectedGooglePlace.clickedLocation
-        }
+        anchor={selectedGooglePlace.clickedLocation}
         occlusionRef={sidebarRef}
       >
         <GooglePlaceCard
@@ -278,6 +277,7 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
           busy={tripMutationBusy}
           mutationError={tripMutationError}
           onClose={onCloseGooglePlace}
+          onRetry={onRetryGooglePlace}
           onAddToTrip={onAddGooglePlace}
         />
       </AnchoredMapCard>
@@ -326,6 +326,17 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
 
   return (
     <div className="map-viewport">
+      <ViewportCommands
+        mapRef={mapRef}
+        measurement={measurement}
+        openOptimization={() => {
+          if (!transient.routeOptimizationOpen) {
+            toggleRouteOptimization();
+          }
+        }}
+        onPreviewPlace={onSelectSearchedGooglePlace}
+        onSelectSavedPlace={selectMapPlace}
+      />
       <MapCanvas
         {...mapProps}
         measurement={measurement}

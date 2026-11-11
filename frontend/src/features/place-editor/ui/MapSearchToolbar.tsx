@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
 import {
   memo,
   useCallback,
@@ -18,6 +19,10 @@ import { PlaceTypeIcon } from '@/features/place-editor/ui/PlaceTypeIcon';
 import '@/features/place-editor/ui/map-toolbar.css';
 import { useL } from '@/shared/i18n';
 import { screenView, trackEvent } from '@/shared/analytics';
+import {
+  useGuidedPlaceSearch,
+  type GuidedPlaceSearch,
+} from '../model/useGuidedPlaceSearch';
 
 type SearchStatus = 'idle' | 'loading' | 'ready' | 'selecting' | 'error';
 type SearchBias = PlaceAutocompleteRequest['locationBias'];
@@ -31,6 +36,7 @@ type Props = {
   onOpenQuickSearch: () => void;
   onSelectPlace: (place: PlaceDetails) => void;
   showQuickSearch?: boolean;
+  guidedSearch?: GuidedPlaceSearch;
 };
 
 function Icon({ path }: { path: string }) {
@@ -48,9 +54,11 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
   onOpenQuickSearch,
   onSelectPlace,
   showQuickSearch = true,
+  guidedSearch,
 }: Props) {
   const L = useL();
-  const [query, setQuery] = useState('');
+  const [draftQuery, setQuery] = useState('');
+  const query = guidedSearch?.query ?? draftQuery;
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle');
   const [searchError, setSearchError] = useState('');
   const [suggestions, setSuggestions] = useState<PlaceAutocompleteSuggestion[]>(
@@ -129,6 +137,9 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
 
   useEffect(() => {
     const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (guidedSearch) {
+        return;
+      }
       if (
         event.target instanceof Node &&
         !searchRootRef.current?.contains(event.target)
@@ -139,7 +150,7 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
     document.addEventListener('pointerdown', closeOnOutsidePointer);
     return () =>
       document.removeEventListener('pointerdown', closeOnOutsidePointer);
-  }, [closeResults]);
+  }, [closeResults, guidedSearch]);
 
   useEffect(
     () => () => {
@@ -241,6 +252,14 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
     }
   };
 
+  useGuidedPlaceSearch(
+    guidedSearch,
+    searchStatus,
+    suggestions,
+    selectSuggestion,
+    closeResults,
+  );
+
   return (
     <div className="map-toolbar-positioner" data-ai-open={aiOpen}>
       <div
@@ -252,6 +271,7 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
           <div
             ref={searchRootRef}
             className="map-toolbar-search-root"
+            data-tutorial="place-search"
             onKeyDown={(event) => {
               if (event.key !== 'Escape') {
                 return;
@@ -277,6 +297,7 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
                 aria-label={L('place:mapSearchToolbar.ariaLabel.searchPlace')}
                 placeholder={L('place:mapSearchToolbar.ariaLabel.searchPlace')}
                 value={query}
+                readOnly={Boolean(guidedSearch)}
                 onChange={(event) => {
                   const nextQuery = event.target.value;
                   clearSearchDebounce();
@@ -307,13 +328,14 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
               </button>
             </form>
             {dropdownOpen && (
-              <div
+              <ScrollArea
                 id="map-place-search-results"
                 className="map-place-search-results"
                 role="listbox"
                 aria-label={L(
                   'place:mapSearchToolbar.ariaLabel.placeSearchResults',
                 )}
+                contentClassName="map-place-search-results-content"
               >
                 {searchStatus === 'loading' && (
                   <p role="status">
@@ -361,7 +383,7 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
                     ))}
                   </ul>
                 )}
-              </div>
+              </ScrollArea>
             )}
           </div>
           {showQuickSearch ? (

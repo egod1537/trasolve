@@ -30,6 +30,7 @@ import type { TripShareRepository } from './share/tripShareRepository.js';
 import { LocalFileTripShareRepository } from './trip-sharing/localFileTripShareRepository.js';
 import { LocalNdjsonAnalyticsEventRepository } from './analytics/localNdjsonAnalyticsEventRepository.js';
 import type { AnalyticsRepository } from './analytics/analyticsEventRepository.js';
+import { OPENWEBUI_OPTIONS } from './options.js';
 
 // Preserve direct module use while the normal bootstrap loads configuration
 // before running database migrations and importing these instances.
@@ -65,7 +66,7 @@ const chatProvider = createChatProvider(
   {
     provider: process.env.AI_PROVIDER,
     openWebUIApiKey,
-    openWebUIModel: process.env.OPENWEBUI_MODEL ?? '',
+    openWebUIModel: OPENWEBUI_OPTIONS.defaultModel,
     geminiApiKey: process.env.GEMINI_API_KEY ?? '',
     geminiModel: process.env.GEMINI_MODEL ?? '',
     geminiNativeTools: process.env.GEMINI_NATIVE_TOOLS === '1',

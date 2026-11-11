@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/shared/ui/ScrollArea';
 import type { TripPlace } from '@trasolve/shared';
 import type { ReactNode } from 'react';
 import type { RouteOptimizationSchedule } from '@/features/route-optimization/model/routeOptimization';
@@ -75,46 +76,51 @@ function BeforeSchedule({
         'routeOptimization:routeSchedulePreview.beforeSchedule.text.currentSchedule',
       )}
     >
-      <ol className="route-optimization-schedule-list">
-        {places.map((place, index) => {
-          const stayMinutes = getStayMinutes(place);
-          const departureTime = place.time
-            ? addMinutes(place.time, stayMinutes)
-            : null;
-          const nextPlace = places[index + 1];
-          const intervalMinutes =
-            departureTime && nextPlace?.time
-              ? getForwardMinutes(departureTime, nextPlace.time)
+      <ScrollArea
+        className="route-optimization-schedule-list-scroll"
+        contentAsChild
+      >
+        <ol className="route-optimization-schedule-list">
+          {places.map((place, index) => {
+            const stayMinutes = getStayMinutes(place);
+            const departureTime = place.time
+              ? addMinutes(place.time, stayMinutes)
               : null;
-          return (
-            <li key={place.id}>
-              <SchedulePlace
-                index={index}
-                place={place}
-                time={place.time ?? null}
-                departureTime={departureTime}
-                stayMinutes={stayMinutes}
-                endpointActions={{
-                  isStart: place.id === selectedStartPlaceId,
-                  isEnd: place.id === selectedEndPlaceId,
-                  onSetStart: () => onSetStartPlace(place.id),
-                  onSetEnd: () => onSetEndPlace(place.id),
-                }}
-              />
-              {nextPlace ? (
-                <ScheduleLeg
-                  label={L(
-                    'routeOptimization:routeSchedulePreview.beforeSchedule.text.untilNextSchedule',
-                  )}
-                  minutes={intervalMinutes}
-                  startTime={departureTime}
-                  endTime={nextPlace.time}
+            const nextPlace = places[index + 1];
+            const intervalMinutes =
+              departureTime && nextPlace?.time
+                ? getForwardMinutes(departureTime, nextPlace.time)
+                : null;
+            return (
+              <li key={place.id}>
+                <SchedulePlace
+                  index={index}
+                  place={place}
+                  time={place.time ?? null}
+                  departureTime={departureTime}
+                  stayMinutes={stayMinutes}
+                  endpointActions={{
+                    isStart: place.id === selectedStartPlaceId,
+                    isEnd: place.id === selectedEndPlaceId,
+                    onSetStart: () => onSetStartPlace(place.id),
+                    onSetEnd: () => onSetEndPlace(place.id),
+                  }}
                 />
-              ) : null}
-            </li>
-          );
-        })}
-      </ol>
+                {nextPlace ? (
+                  <ScheduleLeg
+                    label={L(
+                      'routeOptimization:routeSchedulePreview.beforeSchedule.text.untilNextSchedule',
+                    )}
+                    minutes={intervalMinutes}
+                    startTime={departureTime}
+                    endTime={nextPlace.time}
+                  />
+                ) : null}
+              </li>
+            );
+          })}
+        </ol>
+      </ScrollArea>
     </SchedulePanel>
   );
 }
@@ -177,75 +183,80 @@ function AfterSchedule({
         'routeOptimization:routeSchedulePreview.afterSchedule.text.optimizationSchedule',
       )}
     >
-      <ol className="route-optimization-schedule-list">
-        {schedule.stops.map((stop, index) => {
-          const place = placesById.get(stop.placeId);
-          const previousStop = schedule.stops[index - 1];
-          if (!place) {
-            return null;
-          }
-          return (
-            <li key={stop.placeId}>
-              {index > 0 ? (
-                <ScheduleLeg
-                  label={L(
-                    'routeOptimization:routeSchedulePreview.afterSchedule.text.move',
-                  )}
-                  minutes={stop.travelMinutesFromPrevious}
-                  startTime={previousStop?.departureTime}
-                  endTime={stop.arrivalTime}
+      <ScrollArea
+        className="route-optimization-schedule-list-scroll"
+        contentAsChild
+      >
+        <ol className="route-optimization-schedule-list">
+          {schedule.stops.map((stop, index) => {
+            const place = placesById.get(stop.placeId);
+            const previousStop = schedule.stops[index - 1];
+            if (!place) {
+              return null;
+            }
+            return (
+              <li key={stop.placeId}>
+                {index > 0 ? (
+                  <ScheduleLeg
+                    label={L(
+                      'routeOptimization:routeSchedulePreview.afterSchedule.text.move',
+                    )}
+                    minutes={stop.travelMinutesFromPrevious}
+                    startTime={previousStop?.departureTime}
+                    endTime={stop.arrivalTime}
+                  />
+                ) : null}
+                {stop.waitMinutes > 0 ? (
+                  <ScheduleLeg
+                    label={L(
+                      'routeOptimization:routeOptimizationProgressDialog.formatStepState.text.waiting',
+                    )}
+                    minutes={stop.waitMinutes}
+                    startTime={stop.arrivalTime}
+                    endTime={stop.serviceStartTime}
+                    kind="wait"
+                  />
+                ) : null}
+                <SchedulePlace
+                  index={index}
+                  place={place}
+                  time={stop.serviceStartTime}
+                  arrivalTime={stop.arrivalTime}
+                  departureTime={stop.departureTime}
+                  waitMinutes={stop.waitMinutes}
+                  stayMinutes={stop.stayMinutes}
+                  endpointRole={
+                    stop.placeId === selectedStartPlaceId
+                      ? 'start'
+                      : stop.placeId === selectedEndPlaceId
+                        ? 'end'
+                        : undefined
+                  }
                 />
-              ) : null}
-              {stop.waitMinutes > 0 ? (
-                <ScheduleLeg
-                  label={L(
-                    'routeOptimization:routeOptimizationProgressDialog.formatStepState.text.waiting',
-                  )}
-                  minutes={stop.waitMinutes}
-                  startTime={stop.arrivalTime}
-                  endTime={stop.serviceStartTime}
-                  kind="wait"
-                />
-              ) : null}
-              <SchedulePlace
-                index={index}
-                place={place}
-                time={stop.serviceStartTime}
-                arrivalTime={stop.arrivalTime}
-                departureTime={stop.departureTime}
-                waitMinutes={stop.waitMinutes}
-                stayMinutes={stop.stayMinutes}
-                endpointRole={
-                  stop.placeId === selectedStartPlaceId
-                    ? 'start'
-                    : stop.placeId === selectedEndPlaceId
-                      ? 'end'
-                      : undefined
-                }
-              />
-            </li>
-          );
-        })}
-        {skippedPlaces.map((place) => (
-          <li key={place.id} className="is-skipped">
-            <div className="route-optimization-schedule-stop">
-              <span
-                className="route-optimization-schedule-index"
-                aria-hidden="true"
-              >
-                ×
-              </span>
-              <div className="route-optimization-schedule-place">
-                <div className="route-optimization-schedule-place-heading">
-                  <strong>
-                    <s>{place.name}</s>
-                  </strong>
+              </li>
+            );
+          })}
+          {skippedPlaces.map((place) => (
+            <li key={place.id} className="is-skipped">
+              <div className="route-optimization-schedule-stop">
+                <span
+                  className="route-optimization-schedule-index"
+                  aria-hidden="true"
+                >
+                  ×
+                </span>
+                <div className="route-optimization-schedule-place">
+                  <div className="route-optimization-schedule-place-heading">
+                    <strong>
+                      <s>{place.name}</s>
+                    </strong>
+                  </div>
                 </div>
               </div>
-            </div>
-          </li>
-        ))}
-      </ol>
+            </li>
+          ))}
+        </ol>
+      </ScrollArea>
     </SchedulePanel>
   );
 }
