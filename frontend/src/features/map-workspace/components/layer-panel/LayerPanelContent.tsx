@@ -39,6 +39,7 @@ type Props = Omit<
   onShuffleDayPlaces: (dayId: string) => void;
   onRenamePlace: (placeId: string, name: string) => void;
   onUpdatePlaceStyle: (placeId: string, style: PlaceStyle) => void;
+  onUpdatePlaceOrderLock: (placeId: string, locked: boolean) => void;
   detailPlaceId: string | null;
   detailPolylineId: string | null;
   onOpenPlaceDetails: (placeId: string) => void;
@@ -58,6 +59,7 @@ export const LayerPanelContent = memo(function LayerPanelContent({
   onRequestDeleteDay,
   onRenamePlace,
   onUpdatePlaceStyle,
+  onUpdatePlaceOrderLock,
   detailPlaceId,
   detailPolylineId,
   onOpenPlaceDetails,
@@ -363,6 +365,7 @@ export const LayerPanelContent = memo(function LayerPanelContent({
           onRequestDeleteDay={onRequestDeleteDay}
           onRenamePlace={renamePlaceWithAnalytics}
           onUpdatePlaceStyle={onUpdatePlaceStyle}
+          onUpdatePlaceOrderLock={onUpdatePlaceOrderLock}
           onStartPlaceNameEditing={startPlaceNameEditing}
           onFinishPlaceNameEditing={finishPlaceNameEditing}
           onOpenPlaceDetails={onOpenPlaceDetails}

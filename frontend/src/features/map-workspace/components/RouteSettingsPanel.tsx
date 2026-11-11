@@ -17,7 +17,6 @@ export function RouteSettingsPanel({
   busy,
   mutationError,
   readOnly = false,
-  deferUntilReady = false,
   onQuery,
   onUpdateMode,
   onClose,
@@ -32,7 +31,6 @@ export function RouteSettingsPanel({
   busy: boolean;
   mutationError?: string | null;
   readOnly?: boolean;
-  deferUntilReady?: boolean;
   onQuery: QueryRouteDetails;
   onUpdateMode?: (mode: TripPolylineMode) => Promise<boolean>;
   onClose: () => void;
@@ -42,15 +40,16 @@ export function RouteSettingsPanel({
   layerDetail?: boolean;
 }) {
   const L = useL();
-  const { states, key, settled } = useRouteOptions(
+  const [submitting, setSubmitting] = useState(false);
+  const [previewMode, setPreviewMode] = useState(mode);
+  const activeMode = readOnly ? previewMode : mode;
+  const { states, key } = useRouteOptions(
     from,
     to,
     getLanguage(),
     onQuery,
+    activeMode,
   );
-  const [submitting, setSubmitting] = useState(false);
-  const [previewMode, setPreviewMode] = useState(mode);
-  const activeMode = readOnly ? previewMode : mode;
   const selected = activeMode === 'straight' ? null : states[activeMode];
   const selectMode = async (next: TripPolylineMode) => {
     if (readOnly) {
@@ -67,9 +66,6 @@ export function RouteSettingsPanel({
       setSubmitting(false);
     }
   };
-  if (deferUntilReady && !settled) {
-    return null;
-  }
   return (
     <section
       ref={cardRef}

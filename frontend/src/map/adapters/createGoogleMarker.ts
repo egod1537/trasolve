@@ -9,6 +9,7 @@ import {
   SVG_NAMESPACE,
   applyMarkerIcon,
 } from '@/map/adapters/googleMarkerIcon';
+import { getMarkerRoutePalette } from './googleMarkerColor';
 type ObjectBinding = {
   setVisible(visible: boolean): void;
   setZIndex(zIndex: number): void;
@@ -184,7 +185,19 @@ export function createGoogleMarker(
     },
     setColor: (nextColor) => {
       if (marker && color !== nextColor) {
-        content.style.setProperty('--place-color', nextColor ?? '#2563eb');
+        const resolvedColor = nextColor ?? '#2563eb';
+        const palette = getMarkerRoutePalette(resolvedColor);
+        content.style.setProperty('--place-color', resolvedColor);
+        for (const role of ['start', 'end'] as const) {
+          content.style.setProperty(
+            `--route-${role}-color`,
+            palette[role].background,
+          );
+          content.style.setProperty(
+            `--route-${role}-foreground`,
+            palette[role].foreground,
+          );
+        }
         color = nextColor;
       }
     },

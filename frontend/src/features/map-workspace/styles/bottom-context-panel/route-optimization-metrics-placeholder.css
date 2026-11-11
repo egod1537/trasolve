@@ -305,12 +305,6 @@
   }
 
   .map-tool-panel {
-    gap: 2px;
-    padding: 5px;
-  }
-
-  .map-tool-panel button {
-    width: 34px;
-    height: 34px;
+    --map-tool-cell-width: 40px;
   }
 }

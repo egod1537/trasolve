@@ -4,8 +4,9 @@
   font-size: var(--font-size-root, 15px);
   font-family: var(
     --font-family-sans,
-    Inter,
+    'Pretendard Variable',
     Pretendard,
+    Inter,
     -apple-system,
     BlinkMacSystemFont,
     'Segoe UI',
@@ -33,8 +34,8 @@
 
 :root:lang(en) {
   --font-family-sans:
-    -apple-system, BlinkMacSystemFont, Inter, 'Noto Sans', 'Segoe UI',
-    'Noto Sans JP', Pretendard, sans-serif;
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, Inter,
+    'Noto Sans', 'Segoe UI', 'Noto Sans JP', sans-serif;
 }
 
 html {

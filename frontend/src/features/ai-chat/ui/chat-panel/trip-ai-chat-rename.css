@@ -318,8 +318,6 @@
     padding: 0;
     border: 0;
     background: var(--color-overlay-light);
-    -webkit-backdrop-filter: blur(var(--dialog-backdrop-blur));
-    backdrop-filter: blur(var(--dialog-backdrop-blur));
     cursor: pointer;
   }
 }

@@ -8,6 +8,7 @@ export type RouteQueryFailure = {
 };
 
 export type RouteQueryState =
+  | { status: 'idle' }
   | { status: 'loading' }
   | { status: 'ready'; routes: readonly MapRoute[] }
   | { status: 'error'; failure: RouteQueryFailure };

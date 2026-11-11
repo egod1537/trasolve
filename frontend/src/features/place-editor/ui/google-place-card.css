@@ -33,6 +33,44 @@
   overscroll-behavior: contain;
 }
 
+.google-place-card-content-content {
+  --scroll-content-display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.google-place-card-hours {
+  flex: none;
+  min-height: 190px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-subtle);
+}
+
+.google-place-card-hours > .place-opening-hours {
+  border-bottom: 0;
+}
+
+.google-place-card .place-info-card-body {
+  flex: 1 0 auto;
+}
+
+.google-place-card .place-info-rating {
+  min-height: 20px;
+}
+
+.google-place-card .place-info-row {
+  min-height: 21px;
+}
+
+.google-place-card .place-info-card-links {
+  min-height: 20px;
+}
+
+.google-place-card .place-info-card-footer {
+  flex: none;
+  margin-top: auto;
+}
+
 .google-place-card-content-content > .place-info-card-state.is-error {
   align-content: center;
   justify-items: start;

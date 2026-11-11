@@ -191,6 +191,8 @@
 }
 
 .ui-dialog-backdrop {
+  /* The full-screen backdrop supplies the blur for every contained surface. */
+  --map-overlay-filter: none;
   position: fixed;
   inset: 0;
   z-index: var(--z-dialog);
@@ -203,8 +205,21 @@
 
 .ui-dialog-backdrop,
 .bp6-overlay-backdrop {
-  -webkit-backdrop-filter: blur(var(--dialog-backdrop-blur));
-  backdrop-filter: blur(var(--dialog-backdrop-blur));
+  -webkit-backdrop-filter: var(--dialog-backdrop-filter);
+  backdrop-filter: var(--dialog-backdrop-filter);
+}
+
+/* Suspend map glass behind a modal so its full-screen blur is the only pass.
+   :has() also follows inline dialogs, hidden persistent dialogs and body portals. */
+body:has(.ui-dialog-backdrop:not([hidden])) {
+  --map-overlay-filter: none;
+}
+
+/* Stacked dialogs keep the top backdrop; covered backdrops only supply tint. */
+.ui-dialog-backdrop:not([hidden]):has(~ .ui-dialog-backdrop:not([hidden])),
+.ui-dialog-backdrop:has(.ui-dialog-backdrop:not([hidden])) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .ui-dialog-backdrop[hidden] {
@@ -227,8 +242,8 @@
   background: var(--color-map-overlay-surface);
   color: var(--text-primary);
   box-shadow: var(--shadow-map-overlay);
-  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
-  backdrop-filter: blur(var(--map-overlay-blur));
+  -webkit-backdrop-filter: var(--map-overlay-filter);
+  backdrop-filter: var(--map-overlay-filter);
 }
 
 .ui-dialog:focus-visible {

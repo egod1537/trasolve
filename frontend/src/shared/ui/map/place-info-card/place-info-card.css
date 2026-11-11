@@ -8,8 +8,8 @@
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   pointer-events: auto;
-  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
-  backdrop-filter: blur(var(--map-overlay-blur));
+  -webkit-backdrop-filter: var(--map-overlay-filter);
+  backdrop-filter: var(--map-overlay-filter);
 }
 
 .place-info-card:focus {
@@ -259,7 +259,7 @@
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   pointer-events: auto;
-  backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: var(--map-overlay-filter);
 }
 
 .place-delete-confirm-copy {

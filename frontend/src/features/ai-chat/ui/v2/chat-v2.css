@@ -38,14 +38,6 @@
   gap: 10px;
 }
 
-.chat-v2-header .token-remaining-gauge {
-  width: 112px;
-}
-
-.chat-v2-header .token-remaining-gauge strong {
-  font-size: 18px;
-}
-
 .chat-v2-search input {
   padding-left: 10px;
 }
@@ -385,12 +377,6 @@
   }
   .chat-v2-header-actions {
     gap: 4px;
-  }
-  .chat-v2-header .token-remaining-gauge {
-    width: 72px;
-  }
-  .chat-v2-header .token-remaining-gauge strong {
-    font-size: 16px;
   }
   .chat-v2-header .trip-map-ai-panel-export {
     width: 28px;

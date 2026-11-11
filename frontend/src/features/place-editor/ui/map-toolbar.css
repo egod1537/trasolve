@@ -39,8 +39,8 @@
   border-radius: var(--radius-lg);
   background: var(--color-map-control-surface);
   box-shadow: var(--shadow-map-overlay);
-  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
-  backdrop-filter: blur(var(--map-overlay-blur));
+  -webkit-backdrop-filter: var(--map-overlay-filter);
+  backdrop-filter: var(--map-overlay-filter);
 }
 .map-toolbar-search input {
   flex: 1;
@@ -90,8 +90,8 @@
   font-weight: 500;
   pointer-events: auto;
   cursor: pointer;
-  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
-  backdrop-filter: blur(var(--map-overlay-blur));
+  -webkit-backdrop-filter: var(--map-overlay-filter);
+  backdrop-filter: var(--map-overlay-filter);
   transition:
     background-color var(--motion-fast),
     border-color var(--motion-fast),
@@ -129,8 +129,8 @@
   border-radius: var(--radius-overlay);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
-  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
-  backdrop-filter: blur(var(--map-overlay-blur));
+  -webkit-backdrop-filter: var(--map-overlay-filter);
+  backdrop-filter: var(--map-overlay-filter);
 }
 .map-place-search-results p {
   margin: 0;

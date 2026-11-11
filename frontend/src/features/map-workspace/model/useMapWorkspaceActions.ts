@@ -171,6 +171,11 @@ export function useMapWorkspaceActions(
       controller.updatePlace(placeId, { name }),
     [controller],
   );
+  const updatePlaceOrderLock = useCallback(
+    (placeId: string, orderLocked: boolean) =>
+      void controller.updatePlace(placeId, { orderLocked }),
+    [controller],
+  );
   const updatePlaceStyle = useCallback(
     (placeId: string, style: PlaceStyle) =>
       void controller.updatePlaceStyle(placeId, style),
@@ -225,6 +230,7 @@ export function useMapWorkspaceActions(
         onShuffleDayPlaces: shuffleDayPlaces,
         onRenamePlace: renamePlace,
         onUpdatePlaceStyle: updatePlaceStyle,
+        onUpdatePlaceOrderLock: updatePlaceOrderLock,
         onUpdatePlaceVisitTimeRange: updateTripPlaceVisitTimeRange,
         onUpdatePlacePreferredDuration: updateTripPlacePreferredDuration,
         onUpdatePlaceMemo: updateTripPlaceMemo,
@@ -282,6 +288,7 @@ export function useMapWorkspaceActions(
       selectDay,
       toggleDayVisibility,
       updatePlaceStyle,
+      updatePlaceOrderLock,
       updateTripPlacePreferredDuration,
       updateTripPlaceVisitTimeRange,
       updateTripPlaceMemo,

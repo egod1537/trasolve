@@ -119,7 +119,7 @@
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   pointer-events: auto;
-  backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: var(--map-overlay-filter);
 }
 
 .side-detail-card.is-right {

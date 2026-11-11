@@ -54,6 +54,7 @@ const placeFields = {
     .max(TRIP_PLACE_MAX_DURATION_MINUTES)
     .optional(),
   time: tripClockTimeSchema.optional(),
+  orderLocked: z.boolean().optional(),
 };
 export const tripPlaceSchema = z.strictObject({
   id: tripIdSchema,

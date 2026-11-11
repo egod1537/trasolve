@@ -17,7 +17,8 @@ export function createApplyOptimizedScheduleCommand(
         L('map:tripCommands.error.dateWhichScheduleAppliesCannotBe'),
       );
     }
-    const currentIds = new Set(day.places.map((place) => place.id));
+    const currentPlaces = [...day.places].sort((a, b) => a.order - b.order);
+    const currentIds = new Set(currentPlaces.map((place) => place.id));
     const orderedIds = update.placeIds;
     const uniqueOrderedIds = new Set(orderedIds);
     const skippedIds = update.skippedPlaceIds ?? [];
@@ -33,6 +34,9 @@ export function createApplyOptimizedScheduleCommand(
               !currentIds.has(placeId) || uniqueOrderedIds.has(placeId),
           )
         : orderedIds.length !== day.places.length) ||
+      currentPlaces.some(
+        (place, index) => place.orderLocked && orderedIds[index] !== place.id,
+      ) ||
       uniqueOrderedIds.size !== orderedIds.length ||
       orderedIds.some((placeId) => !currentIds.has(placeId)) ||
       update.stops.length !== orderedIds.length ||

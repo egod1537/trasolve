@@ -6,7 +6,7 @@
   background: var(--color-map-overlay-surface);
   color: var(--text-primary);
   box-shadow: var(--shadow-map-overlay);
-  backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: var(--map-overlay-filter);
   pointer-events: auto;
 }
 .map-measurement-panel p {

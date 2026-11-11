@@ -8,6 +8,7 @@ import { useLayerDetailCardPlacement } from '@/features/map-workspace/components
 import { TripPolylineCard } from '@/features/map-workspace/components/viewport/TripPolylineCard';
 import { PlaceDetailContent, PlaceTimeTimeline } from '@/features/place-editor';
 import { formatDurationMinutes } from '@/shared/i18n/formatters';
+import { PinIcon } from '@/shared/ui/icons';
 import { useL } from '@/shared/i18n';
 
 export function ReadonlyPlaceLayerItem({
@@ -80,6 +81,16 @@ export function ReadonlyPlaceLayerItem({
         <span className="trip-place-content">
           <span className="trip-place-name-row">
             <span className="trip-place-name">{place.name}</span>
+            {place.orderLocked && (
+              <span
+                className="trip-place-order-lock is-readonly"
+                title={L(
+                  'routeOptimization:routeComparisonMap.text.currentVisitOrder',
+                )}
+              >
+                <PinIcon />
+              </span>
+            )}
             {place.preferredDurationMinutes !== undefined && (
               <span className="trip-place-stay-duration">
                 {L('map:placeLayerItem.text.stay', {

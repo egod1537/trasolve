@@ -1,5 +1,9 @@
-import { useEffect, useState } from 'react';
-import { TravelMode, type RouteLocation } from '@trasolve/shared';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  TravelMode,
+  type RouteLocation,
+  type TripPolylineMode,
+} from '@trasolve/shared';
 import type {
   QueryRouteDetails,
   RouteEndpoint,
@@ -13,7 +17,6 @@ export const ROUTE_MODES = [
   'transit',
   'driving',
 ] as const;
-const ROUTABLE_MODES = ['walking', 'transit', 'driving'] as const;
 export const TRAVEL_MODES = {
   walking: TravelMode.WALKING,
   transit: TravelMode.TRANSIT,
@@ -21,13 +24,30 @@ export const TRAVEL_MODES = {
 } as const;
 type States = Record<RoutableMode, RouteQueryState>;
 const INITIAL: States = {
-  walking: { status: 'loading' },
-  transit: { status: 'loading' },
-  driving: { status: 'loading' },
+  walking: { status: 'idle' },
+  transit: { status: 'idle' },
+  driving: { status: 'idle' },
 };
+type QueryContext = { key: string; query: QueryRouteDetails };
+type Snapshot = { context: QueryContext; states: States };
+type Session = { request: AbortController; snapshot: Snapshot };
 
 function toLocation(lat: number, lng: number): RouteLocation {
   return { type: 'coordinates', lat, lng };
+}
+
+function routeOptionsKey(
+  from: RouteEndpoint,
+  to: RouteEndpoint,
+  language: string,
+) {
+  return JSON.stringify([
+    from.placeId,
+    from.location,
+    to.placeId,
+    to.location,
+    language,
+  ]);
 }
 
 export function useRouteOptions(
@@ -35,77 +55,66 @@ export function useRouteOptions(
   to: RouteEndpoint,
   language: string,
   query: QueryRouteDetails,
+  mode: TripPolylineMode,
 ) {
-  const {
-    placeId: fromId,
-    location: { lat: fromLat, lng: fromLng },
-  } = from;
-  const {
-    placeId: toId,
-    location: { lat: toLat, lng: toLng },
-  } = to;
-  const key = JSON.stringify([
-    fromId,
-    fromLat,
-    fromLng,
-    toId,
-    toLat,
-    toLng,
-    language,
-  ]);
-  const [snapshot, setSnapshot] = useState<{
-    key: string;
-    states: States;
-  } | null>(null);
+  const { lat: fromLat, lng: fromLng } = from.location;
+  const { lat: toLat, lng: toLng } = to.location;
+  const key = routeOptionsKey(from, to, language);
+  const context = useMemo(() => ({ key, query }), [key, query]);
+  const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  const sessionRef = useRef<Session | null>(null);
   useEffect(() => {
-    const request = new AbortController();
+    const session = {
+      request: new AbortController(),
+      snapshot: { context, states: INITIAL },
+    };
+    sessionRef.current = session;
+    // Switching tabs keeps requests alive; changing the query or closing cancels them.
+    return () => session.request.abort();
+  }, [context]);
+  useEffect(() => {
+    const session = sessionRef.current;
+    if (
+      !session ||
+      mode === 'straight' ||
+      session.snapshot.states[mode].status !== 'idle'
+    ) {
+      return;
+    }
+    const { signal } = session.request;
     const origin = toLocation(fromLat, fromLng);
     const destination = toLocation(toLat, toLng);
-    const publish = (mode: RoutableMode, state: RouteQueryState) => {
-      if (!request.signal.aborted) {
-        setSnapshot((current) => ({
-          key,
-          states: {
-            ...(current?.key === key ? current.states : INITIAL),
-            [mode]: state,
-          },
-        }));
+    const publish = (state: RouteQueryState) => {
+      if (!signal.aborted) {
+        session.snapshot = {
+          ...session.snapshot,
+          states: { ...session.snapshot.states, [mode]: state },
+        };
+        setSnapshot(session.snapshot);
       }
     };
-    void Promise.allSettled(
-      ROUTABLE_MODES.map(async (mode) => {
-        try {
-          const routes = await query(
-            { origin, destination, travelMode: TRAVEL_MODES[mode] },
-            request.signal,
-          );
-          publish(
-            mode,
-            routes.length
-              ? { status: 'ready', routes }
-              : {
-                  status: 'error',
-                  failure: {
-                    kind: 'not-found',
-                    code: 'ROUTE_NOT_FOUND',
-                    httpStatus: null,
-                  },
+    publish({ status: 'loading' });
+    void query(
+      { origin, destination, travelMode: TRAVEL_MODES[mode] },
+      signal,
+    ).then(
+      (routes) =>
+        publish(
+          routes.length
+            ? { status: 'ready', routes }
+            : {
+                status: 'error',
+                failure: {
+                  kind: 'not-found',
+                  code: 'ROUTE_NOT_FOUND',
+                  httpStatus: null,
                 },
-          );
-        } catch (error) {
-          publish(mode, {
-            status: 'error',
-            failure: toRouteQueryFailure(error),
-          });
-        }
-      }),
+              },
+        ),
+      (error: unknown) =>
+        publish({ status: 'error', failure: toRouteQueryFailure(error) }),
     );
-    return () => request.abort();
-  }, [fromId, fromLat, fromLng, toId, toLat, toLng, language, key, query]);
-  const states = snapshot?.key === key ? snapshot.states : INITIAL;
-  return {
-    states,
-    key,
-    settled: ROUTABLE_MODES.every((mode) => states[mode].status !== 'loading'),
-  };
+  }, [fromLat, fromLng, toLat, toLng, context, query, mode]);
+  const states = snapshot?.context === context ? snapshot.states : INITIAL;
+  return { states, key };
 }

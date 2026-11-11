@@ -57,7 +57,6 @@ export function TripPolylineCard({
       busy={busy}
       mutationError={mutationError}
       readOnly={readOnly}
-      deferUntilReady={!layerDetail}
       onQuery={queryRouteDetails}
       onUpdateMode={onUpdateMode}
       onClose={onClose}

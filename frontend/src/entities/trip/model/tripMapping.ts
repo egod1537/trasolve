@@ -105,6 +105,7 @@ export function tripViewToInput(view: TripView, stored?: Trip): TripInput {
           place.preferredDurationMinutes ??
           places.get(place.id)?.preferredDurationMinutes,
         time: place.time,
+        orderLocked: place.orderLocked ?? places.get(place.id)?.orderLocked,
       })),
       polylines: day.polylines.map((polyline) => ({
         ...polyline,

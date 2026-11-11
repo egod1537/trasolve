@@ -35,6 +35,9 @@ export function formatRouteFailure(
 }
 
 function durationLabel(state: RouteQueryState, L: Localize): string {
+  if (state.status === 'idle') {
+    return '';
+  }
   if (state.status === 'loading') {
     return '…';
   }

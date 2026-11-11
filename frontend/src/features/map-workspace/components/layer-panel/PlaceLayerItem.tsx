@@ -9,6 +9,7 @@ import type { LayerSelectionModifiers } from '@/features/map-workspace/model/use
 import type { LayerValidationState, TripPlace } from '@/entities/trip';
 import { resolvePlaceStyle } from '@/entities/place';
 import { PlaceTimeTimeline } from '@/features/place-editor';
+import { PlaceOrderLock } from './PlaceOrderLock';
 import { InlineRename } from '@/shared/ui/InlineRename';
 import { LayerDragHandle } from '@/features/map-workspace/components/layer-panel/LayerDragHandle';
 import { LayerItemChevron } from '@/features/map-workspace/components/layer-panel/LayerItemChevron';
@@ -36,6 +37,7 @@ type Props = {
   onFocus: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onUpdatePlaceStyle: (id: string, style: PlaceStyle) => void;
+  onUpdatePlaceOrderLock: (id: string, locked: boolean) => void;
   onStartNameEditing: (id: string) => void;
   onFinishNameEditing: (id: string) => void;
   onOpenDetails: (id: string) => void;
@@ -67,6 +69,7 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
   onFocus,
   onRename,
   onUpdatePlaceStyle,
+  onUpdatePlaceOrderLock,
   onStartNameEditing,
   onFinishNameEditing,
   onOpenDetails,
@@ -107,26 +110,35 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
   const content = (
     <span className="trip-place-content">
       <span className="trip-place-name-row">
-        {editing ? (
-          <InlineRename
-            value={place.name}
-            ariaLabel={L('map:placeLayerItem.content.ariaLabel.editName', {
-              name: place.name,
-            })}
-            className="trip-place-name-input"
-            onCommit={commitName}
-            onCancel={finishNameEditing}
+        <span className="trip-place-title">
+          {editing ? (
+            <InlineRename
+              value={place.name}
+              ariaLabel={L('map:placeLayerItem.content.ariaLabel.editName', {
+                name: place.name,
+              })}
+              className="trip-place-name-input"
+              onCommit={commitName}
+              onCancel={finishNameEditing}
+            />
+          ) : (
+            <span
+              className="trip-place-name"
+              id={`place-name-${place.id}`}
+              data-analytics-id={ANALYTICS_TARGETS.placeEdit}
+              data-analytics-screen={ANALYTICS_SCREENS.mapWorkspace}
+              onDoubleClick={startNameEditing}
+            >
+              {place.name}
+            </span>
+          )}
+          <PlaceOrderLock
+            placeId={place.id}
+            locked={!!place.orderLocked}
+            onChange={onUpdatePlaceOrderLock}
+            onBeforeChange={onCancelDrag}
           />
-        ) : (
-          <span
-            className="trip-place-name"
-            data-analytics-id={ANALYTICS_TARGETS.placeEdit}
-            data-analytics-screen={ANALYTICS_SCREENS.mapWorkspace}
-            onDoubleClick={startNameEditing}
-          >
-            {place.name}
-          </span>
-        )}
+        </span>
         {routeRole && (
           <span className="sr-only">
             {routeRole === 'start'
@@ -233,10 +245,8 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
           {content}
         </div>
       ) : (
-        <button
-          type="button"
-          className={`trip-layer-item-content trip-place${selected ? ' is-selected' : ''}${dragging ? ' is-dragging' : ''}`}
-          aria-pressed={selected}
+        <div
+          className={`trip-layer-item-content trip-place has-order-control${selected ? ' is-selected' : ''}${dragging ? ' is-dragging' : ''}`}
           onDoubleClick={() => onFocus(place.id)}
           onClick={(event) => {
             onSelect(place.id, {
@@ -245,8 +255,14 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
             });
           }}
         >
+          <button
+            type="button"
+            className="trip-place-selection"
+            aria-label={place.name}
+            aria-pressed={selected}
+          />
           {content}
-        </button>
+        </div>
       )}
     </LayerItemShell>
   );

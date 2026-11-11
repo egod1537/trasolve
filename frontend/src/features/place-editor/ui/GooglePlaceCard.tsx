@@ -81,6 +81,9 @@ function InfoRow({
   label: string;
   children: ReactNode;
 }) {
+  if (!children) {
+    return <div className="place-info-row" aria-hidden="true" />;
+  }
   return (
     <div className="place-info-row">
       <dt>
@@ -96,7 +99,7 @@ function Rating({ place }: { place: PlaceDetails }) {
   const L = useL();
   const reviewCount = new Intl.NumberFormat(getLanguage());
   if (place.rating === undefined) {
-    return null;
+    return <p className="place-info-rating" aria-hidden="true" />;
   }
   return (
     <p
@@ -229,43 +232,48 @@ export function GooglePlaceCard({
 
         {place && (
           <>
-            <PlaceOpeningHours hours={place.openingHours} />
+            <div className="google-place-card-hours">
+              {(place.openingHours?.current || place.openingHours?.regular) && (
+                <PlaceOpeningHours hours={place.openingHours} />
+              )}
+            </div>
             <div className="place-info-card-body">
               <Rating place={place} />
 
               <dl className="place-info-details">
-                {place.address && (
-                  <InfoRow
-                    icon="address"
-                    label={L('place:googlePlaceCard.text.address')}
-                  >
-                    {place.address}
-                  </InfoRow>
-                )}
-                {place.website && (
-                  <InfoRow
-                    icon="web"
-                    label={L('place:googlePlaceCard.text.website')}
-                  >
+                <InfoRow
+                  icon="address"
+                  label={L('place:googlePlaceCard.text.address')}
+                >
+                  {place.address}
+                </InfoRow>
+                <InfoRow
+                  icon="web"
+                  label={L('place:googlePlaceCard.text.website')}
+                >
+                  {place.website && (
                     <a href={place.website} target="_blank" rel="noreferrer">
                       {displayUrl(place.website)}
                     </a>
-                  </InfoRow>
-                )}
-                {place.phoneNumber && (
-                  <InfoRow
-                    icon="phone"
-                    label={L('place:googlePlaceCard.text.phoneNumber')}
-                  >
+                  )}
+                </InfoRow>
+                <InfoRow
+                  icon="phone"
+                  label={L('place:googlePlaceCard.text.phoneNumber')}
+                >
+                  {place.phoneNumber && (
                     <a href={`tel:${place.phoneNumber.replace(/[^\d+]/g, '')}`}>
                       {place.phoneNumber}
                     </a>
-                  </InfoRow>
-                )}
+                  )}
+                </InfoRow>
               </dl>
 
-              {place.googleMapsUrl && (
-                <div className="place-info-card-links">
+              <div
+                className="place-info-card-links"
+                aria-hidden={place.googleMapsUrl ? undefined : true}
+              >
+                {place.googleMapsUrl && (
                   <a
                     className="place-info-google-link"
                     href={place.googleMapsUrl}
@@ -275,8 +283,8 @@ export function GooglePlaceCard({
                     {L('place:googlePlaceCard.text.viewGoogleMaps')}
                     <span aria-hidden="true">↗</span>
                   </a>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             <footer className="place-info-card-footer">

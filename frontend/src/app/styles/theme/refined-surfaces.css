@@ -66,7 +66,8 @@
     transparent
   );
   --font-family-sans:
-    -apple-system, BlinkMacSystemFont, Inter, Pretendard, 'Segoe UI', sans-serif;
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, Inter,
+    'Segoe UI', sans-serif;
   --hero-overlay-color: 245 245 247;
 }
 
@@ -130,6 +131,8 @@
     --color-map-overlay-surface: var(--color-surface-overlay);
     --color-map-control-surface: var(--color-surface-overlay);
     --map-overlay-blur: 0px;
+    --map-overlay-filter: none;
     --dialog-backdrop-blur: 0px;
+    --dialog-backdrop-filter: none;
   }
 }

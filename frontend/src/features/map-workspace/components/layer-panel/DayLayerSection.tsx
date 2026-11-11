@@ -52,6 +52,7 @@ export const DayLayerSection = memo(function DayLayerSection({
   onRequestDeleteDay,
   onRenamePlace,
   onUpdatePlaceStyle,
+  onUpdatePlaceOrderLock,
   onStartPlaceNameEditing,
   onFinishPlaceNameEditing,
   onOpenPlaceDetails,
@@ -268,6 +269,7 @@ export const DayLayerSection = memo(function DayLayerSection({
                 onFocus={onFocusPlace}
                 onRename={onRenamePlace}
                 onUpdatePlaceStyle={onUpdatePlaceStyle}
+                onUpdatePlaceOrderLock={onUpdatePlaceOrderLock}
                 onStartNameEditing={onStartPlaceNameEditing}
                 onFinishNameEditing={onFinishPlaceNameEditing}
                 onOpenDetails={onOpenPlaceDetails}

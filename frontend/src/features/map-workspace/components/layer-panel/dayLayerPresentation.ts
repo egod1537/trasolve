@@ -132,6 +132,7 @@ export type DayLayerSectionProps = Omit<
   onShuffleDayPlaces: (dayId: string) => void;
   onRenamePlace: (placeId: string, name: string) => void;
   onUpdatePlaceStyle: (placeId: string, style: PlaceStyle) => void;
+  onUpdatePlaceOrderLock: (placeId: string, locked: boolean) => void;
   onStartPlaceNameEditing: (placeId: string) => void;
   onFinishPlaceNameEditing: (placeId: string) => void;
   onOpenPlaceDetails: (placeId: string) => void;

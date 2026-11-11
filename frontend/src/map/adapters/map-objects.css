@@ -1,4 +1,6 @@
 .trip-map-marker {
+  --marker-color: var(--place-color);
+  --marker-foreground: white;
   position: relative;
   display: grid;
   place-items: center;
@@ -8,8 +10,8 @@
   padding: 0;
   border: 2px solid white;
   border-radius: 9px;
-  background: var(--place-color);
-  color: white;
+  background: var(--marker-color);
+  color: var(--marker-foreground);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   transition:
@@ -43,10 +45,32 @@
   display: grid;
 }
 .trip-map-marker.is-route-start {
-  background: color-mix(in srgb, var(--place-color), white 16%);
+  --marker-color: var(--route-start-color);
+  --marker-foreground: var(--route-start-foreground);
 }
 .trip-map-marker.is-route-end {
-  background: color-mix(in srgb, var(--place-color), black 20%);
+  --marker-color: var(--route-end-color);
+  --marker-foreground: var(--route-end-foreground);
+}
+.trip-map-marker:is(.is-route-start, .is-route-end) {
+  width: 39px;
+  height: 39px;
+}
+.trip-map-marker.is-route-start.is-route-end {
+  background: linear-gradient(
+    135deg,
+    var(--route-start-color) 50%,
+    var(--route-end-color) 50%
+  );
+}
+.trip-map-marker.is-route-start.is-route-end .trip-map-marker-icon,
+.trip-map-marker.is-route-start.is-route-end .trip-map-marker-label {
+  border-radius: 50%;
+  background: white;
+  color: #0f172a;
+}
+.trip-map-marker.is-route-start.is-route-end .trip-map-marker-label {
+  inset: 6px;
 }
 .trip-map-marker:is(.is-route-start, .is-route-end)::before {
   content: '';
@@ -56,11 +80,12 @@
   pointer-events: none;
 }
 .trip-map-marker.is-route-start::before {
-  border: 1.5px solid color-mix(in srgb, var(--place-color), white 30%);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--place-color), transparent 65%);
+  border: 1.5px solid var(--route-start-color);
+  box-shadow: 0 0 8px
+    color-mix(in srgb, var(--route-start-color), transparent 65%);
 }
 .trip-map-marker.is-route-end::before {
-  border: 2px solid var(--place-color);
+  border: 2px solid var(--route-end-color);
   box-shadow: 0 0 0 2px white;
 }
 .trip-map-marker-role-badge {
@@ -72,12 +97,20 @@
   place-items: center;
   width: 18px;
   height: 18px;
-  border: 1px solid var(--place-color);
+  border: 1px solid white;
   border-radius: 50%;
-  background: white;
-  color: var(--place-color);
+  background: var(--role-badge-color);
+  color: var(--role-badge-foreground);
   box-shadow: 0 1px 3px #0003;
   pointer-events: none;
+}
+.trip-map-marker-role-badge.is-start {
+  --role-badge-color: var(--route-start-color);
+  --role-badge-foreground: var(--route-start-foreground);
+}
+.trip-map-marker-role-badge.is-end {
+  --role-badge-color: var(--route-end-color);
+  --role-badge-foreground: var(--route-end-foreground);
 }
 .trip-map-marker-role-badge svg {
   width: 12px;

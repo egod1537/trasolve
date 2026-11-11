@@ -21,6 +21,7 @@ export type TripPlace = Coordinates & {
   visitDurationMinutes?: number;
   preferredDurationMinutes?: number;
   time?: string;
+  orderLocked?: boolean;
   order: number;
 };
 

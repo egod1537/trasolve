@@ -82,6 +82,15 @@ export function getRouteOptimizationIssue(
   if (resolved.selectedStartPlaceId === resolved.selectedEndPlaceId) {
     return { code: 'sameEndpoints' };
   }
+  const requestPlaces = orderRouteOptimizationPlaces(activeDay, resolved);
+  if (
+    orderedPlaces.some(
+      (place, index) =>
+        place.orderLocked && requestPlaces[index]?.id !== place.id,
+    )
+  ) {
+    return { code: 'invalidRequest' };
+  }
   if (!trouteStartPolicySchema.safeParse(resolved.startPolicy).success) {
     return { code: 'unsupportedStartPolicy' };
   }
@@ -149,9 +158,10 @@ export function createRouteOptimizationRequest(
         open_time: constraint.openTime,
         close_time: constraint.closeTime,
         stay_minutes: constraint.stayMinutes,
+        ...(place.orderLocked ? { order_locked: true } : {}),
         ...(resolved.visitPolicy === 'BEST_EFFORT_ON_FAILURE'
           ? {
-              required: endpoint || preference.required,
+              required: endpoint || !!place.orderLocked || preference.required,
               priority: preference.priority,
             }
           : {}),

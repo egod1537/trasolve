@@ -29,6 +29,7 @@ function ToolIcon({ path }: { path: string }) {
 }
 
 function ToolButton({
+  className,
   label,
   disabled = false,
   pressed,
@@ -40,6 +41,7 @@ function ToolButton({
   children,
   onClick,
 }: {
+  className?: string;
   label: string;
   disabled?: boolean;
   pressed?: boolean;
@@ -53,6 +55,7 @@ function ToolButton({
 }) {
   return (
     <button
+      className={className}
       ref={buttonRef}
       data-tutorial={tutorialTarget}
       type="button"
@@ -105,7 +108,6 @@ export function MapToolPanel({
       >
         <ToolIcon path="m15 4 5 5-5 5M20 9H10a6 6 0 0 0 0 12" />
       </ToolButton>
-      <span className="map-tool-panel-separator" aria-hidden="true" />
       <ToolButton
         label={L('map:mapToolPanel.text.moveMap')}
         pressed={activeTool === 'pan'}
@@ -127,8 +129,8 @@ export function MapToolPanel({
       >
         <ToolIcon path="m4 6 13-3 4 13-12 5Zm0 0h.01M17 3h.01M21 16h.01M9 21h.01" />
       </ToolButton>
-      <span className="map-tool-panel-separator" aria-hidden="true" />
       <ToolButton
+        className="map-tool-route-optimization"
         label={L('map:mapToolPanel.text.routeOptimization')}
         disabled={!onOpenRouteTools}
         expanded={routeToolsOpen}
@@ -140,7 +142,6 @@ export function MapToolPanel({
       >
         <ToolIcon path="M5 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm14-8a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM7 16h3a3 3 0 0 0 3-3v-2a3 3 0 0 1 3-3h1" />
       </ToolButton>
-      <span className="map-tool-panel-separator" aria-hidden="true" />
       <ToolButton
         label={captureBusy ? L('map:capture.busy') : L('map:capture.download')}
         disabled={captureBusy}

@@ -239,7 +239,8 @@
   --success-border: var(--color-success-border);
   --progress-stripe: color-mix(in srgb, currentColor 16%, transparent);
   --font-family-sans:
-    Inter, Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    'Pretendard Variable', Pretendard, Inter, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
   --font-size-root: 15px;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -290,7 +291,9 @@
   --motion-fast: 120ms;
   --motion-normal: 200ms;
   --map-overlay-blur: 24px;
+  --map-overlay-filter: blur(var(--map-overlay-blur));
   --dialog-backdrop-blur: 8px;
+  --dialog-backdrop-filter: blur(var(--dialog-backdrop-blur));
   --popup-enter-duration: 180ms;
   --popup-slide-duration: 250ms;
   --popup-easing: cubic-bezier(0.2, 0.8, 0.2, 1);

@@ -83,6 +83,7 @@
       "iMThinkingAnswer": "I'm thinking of an answer."
     },
     "title": {
+      "aiPlanner": "AI Planner",
       "archived": "Archived",
       "recentConversations": "Recent conversations",
       "trasolveAi": "Trasolve AI"

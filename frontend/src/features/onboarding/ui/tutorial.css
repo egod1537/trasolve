@@ -28,13 +28,38 @@
 .trasolve-tutorial .driver-popover-close-btn {
   color: var(--color-text-muted);
 }
+.trasolve-tutorial .driver-popover-footer {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+.trasolve-tutorial .driver-popover-navigation-btns {
+  min-width: 0;
+}
+.trasolve-tutorial .tutorial-exit-button {
+  flex: 0 0 auto;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 13px;
+  text-align: right;
+  text-shadow: none;
+}
+.trasolve-tutorial .tutorial-exit-button:hover,
+.trasolve-tutorial .tutorial-exit-button:focus-visible {
+  color: var(--color-text);
+  text-decoration: underline;
+}
 .trasolve-tutorial .driver-popover-navigation-btns button {
-  padding: 8px 12px;
+  min-width: 0;
+  padding: 8px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background: var(--color-surface-subtle);
   color: var(--color-text);
   font: inherit;
+  font-size: 12px;
   text-shadow: none;
 }
 .trasolve-tutorial .driver-popover-navigation-btns .driver-popover-next-btn {

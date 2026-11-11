@@ -17,34 +17,38 @@
   pointer-events: none;
   animation: bottom-context-panel-in 150ms ease-out;
   --context-accent: var(--color-primary);
-  backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: var(--map-overlay-filter);
 }
 
 .map-tool-panel {
+  --map-tool-cell-width: calc(var(--control-height-md) + 8px);
   display: flex;
-  align-items: center;
+  align-items: stretch;
   height: var(--map-floating-bar-height);
   min-height: var(--map-floating-bar-height);
   flex: none;
-  gap: 4px;
-  padding: 6px;
+  gap: 0;
+  padding: 0;
   border: 1px solid var(--color-map-overlay-ring);
   border-radius: var(--radius-overlay);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
+  overflow: hidden;
   pointer-events: auto;
-  backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: var(--map-overlay-filter);
 }
 
 .map-tool-panel button {
   display: grid;
   place-items: center;
-  width: var(--control-height-md);
-  height: var(--control-height-md);
+  width: var(--map-tool-cell-width);
+  height: 100%;
+  flex: 0 0 var(--map-tool-cell-width);
   padding: 0;
   border: 0;
-  border-radius: var(--radius-control);
+  border-radius: 0;
+  box-sizing: border-box;
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -53,15 +57,28 @@
     color var(--motion-fast);
 }
 
+.map-tool-panel > button + button {
+  border-inline-start: 1px solid var(--color-border);
+}
+
+.map-tool-panel > button:nth-of-type(odd) {
+  background: color-mix(in srgb, var(--color-text-primary) 7%, transparent);
+}
+
 .map-tool-panel button:hover:not(:disabled),
 .map-tool-panel button:focus-visible {
   background: var(--color-surface-hover);
   color: var(--color-text-primary);
 }
 
-.map-tool-panel button[aria-pressed='true'] {
+.map-tool-panel button[aria-pressed='true'],
+.map-tool-panel button[aria-expanded='true'] {
   background: var(--color-accent-soft);
   color: var(--color-primary);
+}
+
+.map-tool-panel button:focus-visible {
+  outline-offset: -4px;
 }
 
 .map-tool-panel button:disabled {
@@ -79,15 +96,60 @@
   stroke-width: 1.65;
 }
 
-.map-tool-panel-separator {
-  width: 1px;
-  height: 24px;
-  margin: 0 2px;
-  background: var(--color-border);
+.map-tool-panel .map-tool-route-optimization {
+  position: relative;
+  overflow: hidden;
+}
+
+.map-tool-route-optimization::after {
+  position: absolute;
+  inset: -35% -70%;
+  background: linear-gradient(
+    110deg,
+    transparent 40%,
+    color-mix(in srgb, var(--color-primary) 24%, transparent) 47%,
+    color-mix(in srgb, var(--color-surface-raised) 90%, transparent) 50%,
+    color-mix(in srgb, var(--color-primary) 24%, transparent) 53%,
+    transparent 60%
+  );
+  opacity: 0;
+  transform: translateX(-70%);
+  pointer-events: none;
+  content: '';
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .map-tool-route-optimization:not(:disabled):not([aria-expanded='true']):not(
+      :hover,
+      :focus-visible
+    )::after {
+    animation: map-tool-route-shimmer 5.4s ease-in-out infinite;
+  }
+}
+
+@keyframes map-tool-route-shimmer {
+  0%,
+  12% {
+    opacity: 0;
+    transform: translateX(-70%);
+  }
+  16% {
+    opacity: 1;
+  }
+  32% {
+    opacity: 1;
+    transform: translateX(70%);
+  }
+  36%,
+  100% {
+    opacity: 0;
+    transform: translateX(70%);
+  }
 }
 
 .layer-bulk-action-bar {
   position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -100,12 +162,25 @@
   padding: 8px 10px 8px 14px;
   border: 1px solid var(--color-map-overlay-ring);
   border-radius: var(--radius-md);
-  background: var(--color-map-overlay-surface);
+  background: transparent;
   box-shadow: var(--shadow-map-overlay);
   box-sizing: border-box;
   pointer-events: auto;
   animation: bottom-context-panel-in 150ms ease-out;
-  backdrop-filter: blur(var(--map-overlay-blur));
+}
+
+/* A sibling paint layer keeps the bar glass out of its outlying popovers'
+   backdrop ancestry while preserving their placement and event containment. */
+.layer-bulk-action-bar::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-map-overlay-surface);
+  -webkit-backdrop-filter: var(--map-overlay-filter);
+  backdrop-filter: var(--map-overlay-filter);
+  pointer-events: none;
+  content: '';
 }
 
 .layer-bulk-selection-count {
@@ -232,7 +307,7 @@
   border-radius: var(--radius-md);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
-  backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: var(--map-overlay-filter);
 }
 
 .layer-bulk-mode-popover {

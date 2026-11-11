@@ -21,8 +21,8 @@
   border-radius: var(--radius-md);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
-  backdrop-filter: blur(var(--map-overlay-blur));
-  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: var(--map-overlay-filter);
+  -webkit-backdrop-filter: var(--map-overlay-filter);
 }
 
 .public-share-brand,
@@ -92,8 +92,8 @@
   font-size: 13px;
   line-height: 1.45;
   text-align: center;
-  backdrop-filter: blur(var(--map-overlay-blur));
-  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: var(--map-overlay-filter);
+  -webkit-backdrop-filter: var(--map-overlay-filter);
 }
 
 .public-share-state {

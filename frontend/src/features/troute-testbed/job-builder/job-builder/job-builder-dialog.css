@@ -118,8 +118,8 @@
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
   color: var(--color-text-primary);
-  backdrop-filter: blur(var(--map-overlay-blur));
-  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: var(--map-overlay-filter);
+  -webkit-backdrop-filter: var(--map-overlay-filter);
 }
 
 .job-builder-place-candidate > strong,

@@ -19,12 +19,17 @@
   contain: layout;
   will-change: transform;
   visibility: hidden;
-  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
-  backdrop-filter: blur(var(--map-overlay-blur));
+  -webkit-backdrop-filter: var(--map-overlay-filter);
+  backdrop-filter: var(--map-overlay-filter);
   transition:
     transform var(--popup-slide-duration) var(--popup-easing),
     opacity var(--popup-slide-duration) ease,
     visibility 0s linear var(--popup-slide-duration);
+}
+
+/* Thread menus live on the panel glass, so they need tint without another blur. */
+.trip-map-ai-panel > * {
+  --map-overlay-filter: none;
 }
 
 .trip-map-ai-panel.is-open {
@@ -295,7 +300,7 @@
   border-radius: 7px;
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
-  backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: var(--map-overlay-filter);
 }
 
 .trip-ai-chat-menu button {

@@ -10,6 +10,15 @@ function Icon({ children, ...props }: Props) {
   );
 }
 
+export function PinIcon(props: Props) {
+  return (
+    <Icon {...props}>
+      <path d="m16 3 5 5-4 2-3 5-2 1-4-4 1-2 5-3 2-4Z" />
+      <path d="m10 14-7 7" />
+    </Icon>
+  );
+}
+
 export function CloseIcon(props: Props) {
   return (
     <Icon {...props}>

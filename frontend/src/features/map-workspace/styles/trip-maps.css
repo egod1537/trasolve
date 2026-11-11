@@ -58,6 +58,22 @@
   color: var(--color-text);
 }
 
+.trip-map-picker-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.trip-map-picker-loading {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--color-primary);
+}
+
 .trip-map-picker-header-actions {
   display: flex;
   margin-left: auto;

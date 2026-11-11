@@ -16,7 +16,6 @@ import {
   type ChatThread,
 } from '@/features/ai-chat/model/chatTypes';
 
-import { getThreadTitle } from '@/features/ai-chat/ui/chatPresentation';
 export {
   type ChatRequestPreamble,
   type MapAiUnreadPreview,
@@ -28,6 +27,7 @@ import { useChatSubmission } from '../model/useChatSubmission';
 import { ChatThreadItem } from './ChatThreadItem';
 import { ChatPanelV2 } from './ChatPanelV2';
 import { opts } from '@/shared/config/opts';
+import { isDebugMode } from '@/shared/config/debugMode';
 
 export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
   function MapAiPanel(props, ref) {
@@ -41,6 +41,7 @@ export const MapAiPanel = forwardRef<MapAiPanelHandle, Props>(
 
 const LegacyMapAiPanel = forwardRef<MapAiPanelHandle, Props>(
   function MapAiPanel(props, ref) {
+    const debugMode = isDebugMode(window.location.search);
     const {
       open,
       modal = false,
@@ -224,25 +225,27 @@ const LegacyMapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                 </button>
               )}
               <div>
-                <h2 id={titleId}>{getThreadTitle(selectedThread, L)}</h2>
+                <h2 id={titleId}>{L('ai:mapAiPanel.title.aiPlanner')}</h2>
                 <p>{L('ai:mapAiPanel.description.travelAssistant')}</p>
               </div>
               {onClose && (
                 <div className="trip-map-ai-panel-actions">
-                  <button
-                    type="button"
-                    className="trip-map-ai-panel-export"
-                    aria-label={L('ai:mapAiPanel.ariaLabel.saveAsMarkdown')}
-                    title={L('ai:mapAiPanel.ariaLabel.saveAsMarkdown')}
-                    disabled={!selectedThread.messages.length}
-                    onClick={() =>
-                      downloadChatMarkdown(selectedThread.messages)
-                    }
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4" />
-                    </svg>
-                  </button>
+                  {debugMode && (
+                    <button
+                      type="button"
+                      className="trip-map-ai-panel-export"
+                      aria-label={L('ai:mapAiPanel.ariaLabel.saveAsMarkdown')}
+                      title={L('ai:mapAiPanel.ariaLabel.saveAsMarkdown')}
+                      disabled={!selectedThread.messages.length}
+                      onClick={() =>
+                        downloadChatMarkdown(selectedThread.messages)
+                      }
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4" />
+                      </svg>
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="trip-map-ai-panel-close"

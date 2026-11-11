@@ -62,6 +62,7 @@ type Props = SelectionProps & {
   onUpdatePlaceMemo: (placeId: string, memo: string) => Promise<boolean>;
   onRemovePlace: (placeId: string) => Promise<boolean>;
   onUpdatePlaceStyle: (placeId: string, style: PlaceStyle) => void;
+  onUpdatePlaceOrderLock: (placeId: string, locked: boolean) => void;
   validationByItemKey?: LayerValidationByItemKey;
   selectionRevision: number;
 };
@@ -79,6 +80,7 @@ export const LayerPanel = memo(function LayerPanel({
   onUpdatePlaceMemo,
   onRenamePlace,
   onUpdatePlaceStyle,
+  onUpdatePlaceOrderLock,
   onRemovePlace,
   onRemoveDay,
   onUpdatePolylineMode,
@@ -226,6 +228,7 @@ export const LayerPanel = memo(function LayerPanel({
           onCollapseDay={closeDetailsForDay}
           onRenamePlace={onRenamePlace}
           onUpdatePlaceStyle={onUpdatePlaceStyle}
+          onUpdatePlaceOrderLock={onUpdatePlaceOrderLock}
           {...contentProps}
         />
       </aside>

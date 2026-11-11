@@ -73,6 +73,7 @@ export function prepareRouteValidation(
           open_time: constraints[index]!.openTime,
           close_time: constraints[index]!.closeTime,
           stay_minutes: constraints[index]!.stayMinutes,
+          ...(place.orderLocked ? { order_locked: true } : {}),
         })),
         start_policy: 'FIXED',
         start_time: arrivalStart,

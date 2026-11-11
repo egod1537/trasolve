@@ -328,7 +328,7 @@ fieldset.route-optimization-setting-field {
   border-radius: 8px;
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
-  backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: var(--map-overlay-filter);
 }
 
 .route-endpoint-context-menu > strong {

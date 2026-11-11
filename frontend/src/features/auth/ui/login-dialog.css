@@ -1,6 +1,3 @@
-.login-dialog-backdrop {
-  backdrop-filter: blur(8px);
-}
 .login-dialog {
   width: 420px;
   max-width: calc(100vw - 32px);

@@ -189,6 +189,7 @@ export function toTripLayerModel(trip: Trip): TripLayerModel {
     );
     for (const place of day.places) {
       const placeStyle = resolvePlaceStyle(place.placeStyle, day.color);
+      const routeRole = routeRoles.get(place.id);
       markers.push({
         id: place.id,
         dayId: day.id,
@@ -200,8 +201,8 @@ export function toTripLayerModel(trip: Trip): TripLayerModel {
           name: place.name,
         }),
         visitTime: formatPlaceVisitTime(place),
-        routeRole: routeRoles.get(place.id),
-        color: placeStyle.color,
+        routeRole,
+        color: routeRole ? day.color : placeStyle.color,
         icon: getPlaceStyleOption(placeStyle.type).icon,
       });
     }

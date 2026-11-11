@@ -80,6 +80,16 @@ registry, layer membership and disposal. Markers and polylines retain their IDs 
 update attributes instead of being recreated for UI changes. Map locale reload
 status is exposed through `map/locale.ts`, without leaking SDK types to preferences.
 
+Route endpoint marker colors are derived in `map/adapters/googleMarkerColor.ts`.
+Ordinary markers retain their layer/place color. `toTripLayerModel` always supplies
+the owning day/layer color for endpoints, even when a place has a custom color.
+Start and end markers rotate that layer color's HSL hue by 120 and 240 degrees,
+respectively, at 80% saturation and 46% lightness.
+Endpoint icons and badges use the higher-contrast light/dark foreground, and their
+39px marker bodies are about 15% larger than ordinary 34px markers. A combined
+start/end marker shows both colors and both badges. Color changes update the same
+marker's CSS properties; removing its route role restores the original color/size.
+
 HTTP calls live in `api`, `shared/api` or a feature's `api` directory. Components,
 domains and map runtime do not issue raw fetch calls. Routes and Places go through
 the backend. API keys and billing reconciliation remain server-owned.
@@ -516,6 +526,17 @@ tint. Feature styles consume those tokens for map cards, route companions,
 sidebar, search and AI chat. The central map surface/shadow tokens apply to both
 light and dark mode. `MapPopupCardShell` delegates close controls to `IconButton`.
 Map placement and feature-specific height constraints remain with their owners.
+
+Map glass consumes `--map-overlay-filter`, rather than constructing a blur in
+feature styles. Sidebar and AI panel children inherit `none`, retaining their
+tinted backgrounds without filtering the same surface again. Body-portaled
+pickers retain independent glass. The bulk action bar paints glass on a
+non-interactive pseudo-element so its outlying popovers are not descendants of
+a filtered element; positioning and outside-click handling stay unchanged.
+Visible shared dialogs disable map glass across the document and use only the
+shared `--dialog-backdrop-filter`; hidden dialogs do not suppress map glass.
+Covered dialog backdrops retain tint without another blur. Reduced transparency
+sets both filter tokens to `none` and uses solid map surfaces.
 
 Popup entry only changes opacity, leaving measured geometry stable. Selected
 markers, layer rows and tools share blue emphasis while retaining Day colors.

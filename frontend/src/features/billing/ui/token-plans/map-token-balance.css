@@ -11,8 +11,8 @@
   background: var(--color-map-control-surface);
   color: var(--color-text);
   box-shadow: var(--shadow-map-overlay);
-  -webkit-backdrop-filter: blur(var(--map-overlay-blur));
-  backdrop-filter: blur(var(--map-overlay-blur));
+  -webkit-backdrop-filter: var(--map-overlay-filter);
+  backdrop-filter: var(--map-overlay-filter);
 }
 
 .map-token-balance-copy {

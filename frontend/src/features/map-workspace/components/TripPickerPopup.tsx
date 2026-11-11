@@ -109,7 +109,19 @@ export function TripPickerPopup({
       }
     >
       <header className="trip-map-picker-header">
-        <h2 id={titleId}>{L('trip:tripPickerPopup.title.myTrip')}</h2>
+        <div className="trip-map-picker-title">
+          <h2 id={titleId}>{L('trip:tripPickerPopup.title.myTrip')}</h2>
+          <span className="trip-map-picker-loading" role="status">
+            {busy && (
+              <>
+                <LoadingSpinner size="md" />
+                <span className="sr-only">
+                  {L('trip:tripPickerPopup.description.itSBringingYouTravel')}
+                </span>
+              </>
+            )}
+          </span>
+        </div>
         <div className="trip-map-picker-header-actions">
           <IconButton
             className="trip-map-picker-close"
@@ -224,12 +236,6 @@ export function TripPickerPopup({
         </p>
       )}
 
-      {busy && (
-        <p className="trip-map-picker-status" role="status">
-          <LoadingSpinner />
-          {L('trip:tripPickerPopup.description.itSBringingYouTravel')}
-        </p>
-      )}
       {error && (
         <p className="trip-map-picker-status is-error" role="alert">
           {error}

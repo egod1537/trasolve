@@ -83,6 +83,7 @@
       "iMThinkingAnswer": "答えを考えています。"
     },
     "title": {
+      "aiPlanner": "AIプランナー",
       "archived": "アーカイブ",
       "recentConversations": "最近の会話",
       "trasolveAi": "トラソルブAI"

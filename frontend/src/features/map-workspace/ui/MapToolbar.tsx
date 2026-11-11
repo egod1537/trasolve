@@ -55,8 +55,11 @@ export const MapToolbar = memo(function MapToolbar({
     (place: PlaceDetails) => {
       mapRef.current?.panTo(place.location);
       onSelectPlace(place);
+      if (tutorial?.active && tutorial.progress.step === 'search') {
+        tutorial.step(3);
+      }
     },
-    [mapRef, onSelectPlace],
+    [mapRef, onSelectPlace, tutorial],
   );
 
   return (

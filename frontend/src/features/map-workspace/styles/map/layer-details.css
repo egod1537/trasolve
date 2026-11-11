@@ -142,7 +142,7 @@
   border-radius: var(--radius-overlay);
   background: var(--color-map-overlay-surface);
   box-shadow: var(--shadow-map-overlay);
-  backdrop-filter: blur(var(--map-overlay-blur));
+  backdrop-filter: var(--map-overlay-filter);
 }
 
 .map-popup-card-group.layer-place-detail-card-group {

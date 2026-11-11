@@ -127,6 +127,7 @@ export const trouteLocationSchema = z.strictObject({
   close_time: timeOfDaySchema,
   stay_minutes: z.number().int().min(0).max(MAX_U32),
   required: z.boolean().optional(),
+  order_locked: z.boolean().optional(),
   priority: z.number().int().min(1).max(100).optional(),
 });
 
@@ -225,6 +226,13 @@ export const trouteOptimizeRequestSchema = z
             path: ['locations', index, field],
           });
         }
+      }
+      if (location.order_locked && location.required === false) {
+        context.addIssue({
+          code: 'custom',
+          message: 'An order-locked location cannot be optional.',
+          path: ['locations', index, 'required'],
+        });
       }
       if (location.stay_minutes % 10 !== 0) {
         context.addIssue({

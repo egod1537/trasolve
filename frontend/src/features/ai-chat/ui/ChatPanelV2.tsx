@@ -3,7 +3,6 @@ import { useChatThreads } from '../model/useChatThreads';
 import { useChatSubmission } from '../model/useChatSubmission';
 import { useChatV2Transport } from '../model/useChatV2Transport';
 import type { Props, MapAiPanelHandle } from '../model/chatTypes';
-import { getThreadTitle } from './chatPresentation';
 import { AiPanelFrame } from './AiPanelFrame';
 import { ChatV2Header } from './v2/ChatV2Header';
 import { ChatV2Sidebar } from './v2/ChatV2Sidebar';
@@ -48,7 +47,6 @@ export const ChatPanelV2 = forwardRef<MapAiPanelHandle, Props>(
             aria-label={state.L('ai:mapAiPanel.ariaLabel.currentConversation')}
           >
             <ChatV2Header
-              title={getThreadTitle(state.selectedThread, state.L)}
               titleId={state.titleId}
               messages={state.selectedThread.messages}
               singleSession={singleSession}

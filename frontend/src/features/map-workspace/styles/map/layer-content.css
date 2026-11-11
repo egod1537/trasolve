@@ -94,7 +94,7 @@
 .trip-polyline-name {
   overflow: hidden;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 700;
   line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -136,7 +136,7 @@
   overflow: hidden;
   color: var(--color-text);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 700;
   line-height: 1.45;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -215,4 +215,101 @@
 
 .trip-polyline-time-summary .time-range-timeline.is-compact {
   --time-range-axis-height: 49px;
+}
+
+.trip-place-title {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 5px;
+}
+
+.trip-place-title .trip-place-name {
+  flex: 0 1 auto;
+}
+
+.trip-place-selection {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.has-order-control .trip-place-content {
+  position: relative;
+  pointer-events: none;
+}
+
+.has-order-control .trip-place-name,
+.trip-place-order-lock {
+  pointer-events: auto;
+}
+
+.trip-place-selection:focus-visible,
+.trip-place-order-lock:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.trip-place-order-lock {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 8px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+button.trip-place-order-lock:hover {
+  border-color: var(--color-primary);
+  background: var(--color-accent-soft);
+  color: var(--color-primary);
+}
+
+.trip-place-order-lock[aria-pressed='true'] {
+  border-color: var(--color-primary);
+  background: var(--color-accent-soft);
+  color: var(--color-primary);
+}
+
+.trip-place-order-lock svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.trip-place-order-lock[aria-pressed='true'] svg path:first-child {
+  fill: currentColor;
+}
+
+.trip-place-order-lock.is-readonly {
+  flex-basis: 24px;
+  width: 24px;
+  height: 24px;
+  border-color: transparent;
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+  cursor: default;
+}
+
+.trip-place-order-lock.is-readonly svg path:first-child {
+  fill: currentColor;
 }
