@@ -105,6 +105,7 @@ export function animateGlobe(
     if (visible && !document.hidden && !motion.matches) {
       frame = requestAnimationFrame(tick);
     } else {
+      movement.pause();
       draw();
     }
   };

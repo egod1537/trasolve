@@ -629,3 +629,23 @@ and Alt+Arrow reordering, undo/redo, and save failure/recovery in a normal brows
   limitation. Manually review a trip with many days, selected last day, wheel and
   scrollbar dragging, keyboard navigation, resized/compact viewports and both
   themes in the deployed app.
+
+## Horizontal globe rotation and inertia (2026-11-11)
+
+- Based on the updated `impl` head `ff34de3`. Fixed the presentation tilt for
+  mouse, pen and touch input. Pointer Y is no longer tracked or applied; vertical
+  touch scrolling retains `touch-action: pan-y`.
+- Added smoothed, capped horizontal release velocity and exponential damping.
+  Time-based velocity integration handles different render rates. A new drag
+  stops coasting immediately. Releasing after a pause, pointer cancellation,
+  capture loss, window blur and reduced motion do not trigger inertia.
+- Automatic forward rotation now accelerates smoothly toward the existing speed.
+  Four-second idle recovery, shortest-path return and the existing rewind loop
+  remain. Hidden/offscreen/reduced-motion playback clears residual velocities.
+- Workspace typecheck, production build, lint/localization lint and architecture
+  checks pass. Function-size warnings remain. Formatting, whitespace and LF
+  checks pass. No dependencies, localization changes or automated tests added.
+- Browser interaction verification remains pending due to the existing local
+  browser connection restriction. Review horizontal/diagonal drags, both flick
+  directions, holding before release, interruption/cancellation, idle recovery,
+  reduced motion and mobile vertical scrolling in the deployed build.

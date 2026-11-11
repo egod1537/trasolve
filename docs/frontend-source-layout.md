@@ -268,8 +268,14 @@ and automatic rotation/recovery, and `animateGlobe` coordinates observers and
 playback. Pointer capture ends on release, cancellation, capture loss, window blur
 or a hidden document. After four seconds without input, the globe returns to the
 original view over 1.2 seconds and resumes its existing forward/rewind loop.
-Mouse/pen drag adjusts longitude and tilt; horizontal touch drag rotates while
-vertical touch scrolling remains native. Reduced motion stops automatic playback.
+Mouse, pen and touch drag adjust longitude only; the presentation tilt stays
+fixed. Recent horizontal drag velocity drives a bounded, exponentially damped
+coast on release. Cancellation, stale releases, blur and reduced motion suppress
+coasting. A new drag cancels inertia and recovery immediately. Automatic forward
+rotation accelerates toward the existing cruise speed; elapsed-time integration
+keeps coast and acceleration independent of render frequency. Vertical touch
+scrolling remains native. Reduced motion stops automatic playback, and pausing
+an offscreen or hidden canvas clears residual velocity.
 
 `components/PlanningPreview` owns per-preview viewport/document visibility. Its
 SVG animations are defined in `styles/landing/planning-animation.css`, imported

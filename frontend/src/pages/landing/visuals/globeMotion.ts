@@ -2,40 +2,82 @@ import { defaultGlobeTilt } from './cartography';
 
 const idleDelay = 4000;
 const recoveryDuration = 1200;
+const maximumDragVelocity = 0.18;
+const minimumCoastVelocity = 0.0005;
+const cruiseVelocity = 0.002;
 
-type ReturnView = { angle: number; tilt: number; elapsed: number };
+type ReturnView = { angle: number; elapsed: number };
+
+// Integrate exponential acceleration/drag in milliseconds, independent of FPS.
+function integrateVelocity(
+  velocity: number,
+  target: number,
+  delta: number,
+  decayTime: number,
+) {
+  const decay = Math.exp(-delta / decayTime);
+  return {
+    velocity: target + (velocity - target) * decay,
+    angle: target * delta + (velocity - target) * decayTime * (1 - decay),
+  };
+}
 
 // Presentation state only: manual input interrupts either automatic transition.
 export function createGlobeMotion(initialAngle: number) {
   let angle = initialAngle;
-  let tilt = defaultGlobeTilt;
   let dragging = false;
   let resumeAt: number | null = null;
   let returning: ReturnView | null = null;
   let recovering = false;
+  let dragVelocity = 0;
+  let autoVelocity = 0;
+  const pause = () => {
+    dragVelocity = 0;
+    autoVelocity = 0;
+  };
   const startReturn = () => {
     // Take the shortest path home, even after several full manual turns.
     angle = initialAngle + ((((angle - initialAngle) % 360) + 540) % 360) - 180;
-    returning = { angle, tilt, elapsed: 0 };
+    returning = { angle, elapsed: 0 };
+  };
+  const coast = (delta: number) => {
+    if (Math.abs(dragVelocity) < minimumCoastVelocity) {
+      dragVelocity = 0;
+      return false;
+    }
+    const next = integrateVelocity(dragVelocity, 0, delta, 240);
+    angle += next.angle;
+    dragVelocity = next.velocity;
+    return true;
   };
   return {
     get angle() {
       return angle;
     },
     get tilt() {
-      return tilt;
+      return defaultGlobeTilt;
     },
+    pause,
     begin() {
       dragging = true;
       resumeAt = null;
       returning = null;
+      recovering = false;
+      pause();
     },
-    move(dx: number, dy: number) {
+    move(dx: number, delta: number) {
       angle += dx;
-      tilt = Math.max(-55, Math.min(65, tilt + dy));
+      const sample = Math.max(
+        -maximumDragVelocity,
+        Math.min(maximumDragVelocity, dx / Math.max(1, delta)),
+      );
+      dragVelocity += (sample - dragVelocity) * (1 - Math.exp(-delta / 45));
     },
-    end(time: number) {
+    end(time: number, allowInertia: boolean) {
       dragging = false;
+      if (!allowInertia) {
+        dragVelocity = 0;
+      }
       resumeAt = time + idleDelay;
     },
     advance(
@@ -48,10 +90,12 @@ export function createGlobeMotion(initialAngle: number) {
         return false;
       }
       if (resumeAt !== null) {
+        const changed = coast(delta);
         if (time < resumeAt) {
-          return false;
+          return changed;
         }
         resumeAt = null;
+        pause();
         recovering = true;
         startReturn();
       }
@@ -61,17 +105,23 @@ export function createGlobeMotion(initialAngle: number) {
         const progress = Math.min(1, returning.elapsed / duration);
         const eased = 1 - (1 - progress) ** 3;
         angle = returning.angle + (initialAngle - returning.angle) * eased;
-        tilt = returning.tilt + (defaultGlobeTilt - returning.tilt) * eased;
         if (progress === 1) {
           angle = initialAngle;
-          tilt = defaultGlobeTilt;
           returning = null;
           recovering = false;
+          autoVelocity = 0;
         }
       } else if (angle >= returnAngle) {
         startReturn();
       } else {
-        angle = Math.min(returnAngle, angle + delta * 0.002);
+        const next = integrateVelocity(
+          autoVelocity,
+          cruiseVelocity,
+          delta,
+          500,
+        );
+        autoVelocity = next.velocity;
+        angle = Math.min(returnAngle, angle + next.angle);
       }
       return true;
     },
@@ -83,12 +133,17 @@ export function attachGlobeInteraction(
   movement: ReturnType<typeof createGlobeMotion>,
   draw: () => void,
 ) {
-  let pointer: { id: number; x: number; y: number } | null = null;
+  let pointer: { id: number; x: number; time: number } | null = null;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const down = (event: PointerEvent) => {
     if (!event.isPrimary || event.button !== 0 || pointer) {
       return;
     }
-    pointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    pointer = {
+      id: event.pointerId,
+      x: event.clientX,
+      time: performance.now(),
+    };
     canvas.setPointerCapture(event.pointerId);
     canvas.dataset.dragging = 'true';
     movement.begin();
@@ -98,33 +153,40 @@ export function attachGlobeInteraction(
       return;
     }
     const sensitivity = 180 / Math.max(1, canvas.getBoundingClientRect().width);
-    // Vertical touch gestures remain native page scrolling (touch-action: pan-y).
+    const time = performance.now();
+    // Only longitude changes. Vertical touch gestures remain native scrolling.
     movement.move(
       (event.clientX - pointer.x) * sensitivity,
-      event.pointerType === 'touch'
-        ? 0
-        : (event.clientY - pointer.y) * sensitivity,
+      time - pointer.time,
     );
     pointer.x = event.clientX;
-    pointer.y = event.clientY;
+    pointer.time = time;
     draw();
   };
   const end = (event?: PointerEvent) => {
     if (!pointer || (event && event.pointerId !== pointer.id)) {
       return;
     }
-    const id = pointer.id;
+    const { id, time: lastMovement } = pointer;
+    const time = performance.now();
+    const allowInertia =
+      event?.type === 'pointerup' &&
+      time - lastMovement < 100 &&
+      !reducedMotion.matches;
     pointer = null;
     delete canvas.dataset.dragging;
-    movement.end(performance.now());
+    movement.end(time, allowInertia);
     if (canvas.hasPointerCapture(id)) {
       canvas.releasePointerCapture(id);
     }
   };
-  const blur = () => end();
+  const blur = () => {
+    end();
+    movement.pause();
+  };
   const visibility = () => {
     if (document.hidden) {
-      end();
+      blur();
     }
   };
   canvas.addEventListener('pointerdown', down);
