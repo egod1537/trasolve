@@ -313,6 +313,16 @@ deployment_containers_healthy() {
   done
 }
 
+backend_oauth_redirect_matches() {
+  local slug="$1" hostname="$2" actual
+  actual="$(
+    docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' \
+      "jjs-$slug-backend" 2>/dev/null \
+      | sed -n 's/^GOOGLE_OAUTH_REDIRECT_URI=//p'
+  )" || return 1
+  [[ "$actual" == "https://$hostname/api/auth/google/callback" ]]
+}
+
 edge_compose() {
   JJS_STATE_DIR="$STATE_ROOT" docker compose -p jjs-edge -f "$EDGE_COMPOSE" "$@"
 }
