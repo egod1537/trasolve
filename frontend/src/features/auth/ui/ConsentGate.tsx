@@ -8,7 +8,10 @@ import { withMobileLayout } from '@/shared/config/mobileLayout';
 export function ConsentGate() {
   useEffect(() => {
     const path = window.location.pathname.replace(/\/$/, '');
-    if (Object.values(LEGAL_PATHS).some((publicPath) => path === publicPath)) {
+    if (
+      path === '' ||
+      Object.values(LEGAL_PATHS).some((publicPath) => path === publicPath)
+    ) {
       return;
     }
     const controller = new AbortController();

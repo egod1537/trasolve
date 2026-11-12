@@ -1,3 +1,4 @@
+import type { Props } from './chatPanelTypes';
 import { AiHeaderTokenBalance } from './AiHeaderTokenBalance';
 import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { forwardRef, type FormEvent, type KeyboardEvent } from 'react';
@@ -11,7 +12,6 @@ import { CloseIcon } from '@/shared/ui/icons';
 import '@/features/ai-chat/ui/chat-panel.css';
 
 import {
-  type Props,
   type MapAiPanelHandle,
   type ChatThread,
 } from '@/features/ai-chat/model/chatTypes';
@@ -22,7 +22,7 @@ export {
   type MapAiPanelHandle,
 } from '@/features/ai-chat/model/chatTypes';
 
-import { useChatThreads } from '../model/useChatThreads';
+import { useChatPanel } from './useChatPanel';
 import { useChatSubmission } from '../model/useChatSubmission';
 import { ChatThreadItem } from './ChatThreadItem';
 import { ChatPanelV2 } from './ChatPanelV2';
@@ -52,7 +52,7 @@ const LegacyMapAiPanel = forwardRef<MapAiPanelHandle, Props>(
       renderAssistantActions,
       notice,
     } = props;
-    const state = useChatThreads(props, ref);
+    const state = useChatPanel(props, ref);
     const {
       changeDraft,
       cancelRename,

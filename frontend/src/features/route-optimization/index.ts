@@ -15,4 +15,4 @@ export {
   getBestOptimizationCandidate,
   isApplicableCandidate,
 } from './model/routeOptimization';
-export { createDayOptimizationSettings } from './ui/optimizationSettings';
+export { createDayOptimizationSettings } from './model/optimizationDefaults';

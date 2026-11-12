@@ -372,6 +372,7 @@ export type {
 
 export {
   TROUTE_MAX_DEBUG_JOB_DURATION_MS,
+  TROUTE_MAX_PREVIEW_FRAMES,
   isTrouteJobTerminalStatus,
   trouteDebugOptionsSchema,
   trouteHealthResponseSchema,

@@ -8,6 +8,8 @@ import { ANALYTICS_SCREENS } from '@trasolve/shared';
 import { useScreenView } from '@/shared/analytics';
 import { getRouteComparisonStyle } from './routeComparisonStyle';
 import { RouteComparisonSummary } from './RouteComparisonSummary';
+import { RouteComparisonActions } from './RouteComparisonActions';
+import { RouteDistanceChangeToast } from './RouteDistanceChangeToast';
 
 type Props = { comparison: RouteComparisonView };
 
@@ -44,7 +46,7 @@ export function RouteComparisonBar({ comparison }: Props) {
       : null);
   return (
     <>
-      {!mobile && (
+      {!mobile && !comparison.data.live && (
         <div className="route-review-layer-positioner">
           <section
             className="route-review-layer-heading"
@@ -71,6 +73,7 @@ export function RouteComparisonBar({ comparison }: Props) {
         </div>
       )}
       <div className="route-review-controls-positioner">
+        <RouteDistanceChangeToast data={comparison.data} />
         <section
           ref={barRef}
           tabIndex={-1}
@@ -112,6 +115,13 @@ export function RouteComparisonBar({ comparison }: Props) {
               )}
             </button>
           </div>
+          {!mobile && (
+            <RouteComparisonSummary
+              data={comparison.data}
+              compact
+              headlineOnly
+            />
+          )}
           {error && (
             <p className="route-review-error" role="alert">
               {error}
@@ -126,24 +136,7 @@ export function RouteComparisonBar({ comparison }: Props) {
                 })}
               </span>
             </div>
-            <div className="route-review-actions">
-              <Button
-                disabled={comparison.applying}
-                onClick={comparison.onExit}
-              >
-                {L('common:action.close')}
-              </Button>
-              <Button
-                variant="primary"
-                loading={comparison.applying}
-                disabled={comparison.applying || comparison.stale}
-                onClick={comparison.onApply}
-              >
-                {L(
-                  'routeOptimization:routeOptimizationModal.action.applyThisResult',
-                )}
-              </Button>
-            </div>
+            <RouteComparisonActions comparison={comparison} />
           </div>
         </section>
       </div>
@@ -211,7 +204,11 @@ function RouteApplyConfirmation({
         <Button
           variant="primary"
           loading={comparison.applying}
-          disabled={comparison.applying || comparison.stale}
+          disabled={
+            comparison.applying ||
+            comparison.stale ||
+            Boolean(comparison.data.live)
+          }
           onClick={comparison.onConfirmApply}
         >
           {L('common:action.apply')}

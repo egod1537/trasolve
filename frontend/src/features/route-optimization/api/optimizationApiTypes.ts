@@ -25,7 +25,7 @@ export class RouteOptimizationApiError extends Error {
 
 export type RouteOptimizationProgress = Pick<
   TrouteJobState,
-  'status' | 'stage' | 'progress' | 'last_message'
+  'status' | 'stage' | 'progress' | 'last_message' | 'preview'
 >;
 
 export type RouteOptimizationFailure = {

@@ -5,6 +5,7 @@ import {
   LEGAL_PATHS,
   LEGAL_VERSIONS,
   authConsentAcceptanceSchema,
+  type AuthConsentAcceptance,
   type AuthConsentStatus,
 } from '@trasolve/shared';
 import {
@@ -80,7 +81,7 @@ export class ConsentHttpFlow {
     response.setHeader('Vary', 'Cookie');
     try {
       if (request.method === 'GET' && url.pathname === API_ROUTES.authConsent) {
-        this.send(response, 200, await this.status(request, url));
+        this.send(response, 200, await this.status(request, response, url));
         return;
       }
       if (request.method !== 'POST') {
@@ -109,43 +110,7 @@ export class ConsentHttpFlow {
         this.send(response, 409, { error: { code: 'LEGAL_VERSION_CHANGED' } });
         return;
       }
-      const pendingTicket = readOpaqueCookie(request, pendingCookie);
-      const staged = this.pending.consume(pendingTicket);
-      const sessionUserId = await this.currentUser.resolveSession(request);
-      if (
-        (pendingTicket && !staged) ||
-        (!staged && !sessionUserId) ||
-        (staged?.identity.linkUserId &&
-          staged.identity.linkUserId !== sessionUserId)
-      ) {
-        this.send(response, 401, {
-          error: { code: 'CONSENT_SESSION_EXPIRED' },
-        });
-        return;
-      }
-      const user = staged
-        ? await this.authentication.completeConsent(staged.identity, acceptance)
-        : await this.authentication.acceptForUser(
-            sessionUserId!,
-            createConsentReceipt(acceptance),
-          );
-      const secret = await this.sessions.create(user.id, sessionLifetimeMs);
-      // Rotate even a pre-existing session when admitting it through the consent gate.
-      await this.sessions.revoke(readSessionSecret(request));
-      response.setHeader('Set-Cookie', [
-        createCookie(
-          sessionCookieName,
-          secret,
-          '/',
-          usesSecureOAuthCookies(),
-          sessionLifetimeMs / 1000,
-        ),
-        this.clearPendingCookie(),
-      ]);
-      this.send(response, 200, {
-        user,
-        returnTo: staged?.returnTo ?? safeReturnTo(returnTo),
-      });
+      await this.accept(request, response, acceptance, returnTo);
     } catch (cause) {
       const invalid =
         cause instanceof z.ZodError ||
@@ -169,14 +134,94 @@ export class ConsentHttpFlow {
     identity: PendingIdentity;
     returnTo: string;
   }>();
+  private readonly accepting = new Set<string>();
+
+  private async accept(
+    request: IncomingMessage,
+    response: ServerResponse,
+    acceptance: AuthConsentAcceptance,
+    returnTo: string | undefined,
+  ): Promise<void> {
+    const pendingTicket = readOpaqueCookie(request, pendingCookie);
+    if (pendingTicket && this.accepting.has(pendingTicket)) {
+      this.send(response, 429, { error: { code: 'CONSENT_IN_PROGRESS' } });
+      return;
+    }
+    if (pendingTicket) {
+      this.accepting.add(pendingTicket);
+    }
+    try {
+      // Keep the original ticket and expiry until all persistence succeeds.
+      const staged = this.pending.get(pendingTicket);
+      const sessionUserId = await this.currentUser.resolveSession(request);
+      if (
+        (pendingTicket && !staged) ||
+        (!staged && !sessionUserId) ||
+        (staged?.identity.linkUserId &&
+          staged.identity.linkUserId !== sessionUserId)
+      ) {
+        response.setHeader('Set-Cookie', this.clearPendingCookie());
+        this.send(response, 401, {
+          error: { code: 'CONSENT_SESSION_EXPIRED' },
+        });
+        return;
+      }
+      const user = staged
+        ? await this.authentication.completeConsent(staged.identity, acceptance)
+        : await this.authentication.acceptForUser(
+            sessionUserId!,
+            createConsentReceipt(acceptance),
+          );
+      const secret = await this.sessions.create(user.id, sessionLifetimeMs);
+      // Rotate even a pre-existing session when admitting it through the consent gate.
+      await this.sessions.revoke(readSessionSecret(request));
+      // Another tab may have cancelled, or the handoff may have expired, during I/O.
+      if (staged && this.pending.get(pendingTicket) !== staged) {
+        await this.sessions.revoke(secret);
+        response.setHeader('Set-Cookie', this.clearPendingCookie());
+        this.send(response, 401, {
+          error: { code: 'CONSENT_SESSION_EXPIRED' },
+        });
+        return;
+      }
+      this.pending.consume(pendingTicket);
+      response.setHeader('Set-Cookie', [
+        createCookie(
+          sessionCookieName,
+          secret,
+          '/',
+          usesSecureOAuthCookies(),
+          sessionLifetimeMs / 1000,
+        ),
+        this.clearPendingCookie(),
+      ]);
+      this.send(response, 200, {
+        user,
+        returnTo: staged?.returnTo ?? safeReturnTo(returnTo),
+      });
+    } finally {
+      if (pendingTicket) {
+        this.accepting.delete(pendingTicket);
+      }
+    }
+  }
 
   private async status(
     request: IncomingMessage,
+    response: ServerResponse,
     url: URL,
   ): Promise<AuthConsentStatus> {
     const pendingTicket = readOpaqueCookie(request, pendingCookie);
-    const staged = this.pending.get(pendingTicket);
+    let staged = this.pending.get(pendingTicket);
     const userId = await this.currentUser.resolveSession(request);
+    if (
+      pendingTicket &&
+      (!staged ||
+        (staged.identity.linkUserId && staged.identity.linkUserId !== userId))
+    ) {
+      response.setHeader('Set-Cookie', this.clearPendingCookie());
+      staged = undefined;
+    }
     const user = userId
       ? await this.authentication.getUserById(userId)
       : undefined;
@@ -186,15 +231,7 @@ export class ConsentHttpFlow {
     const required =
       staged || (user && (await this.authentication.requiresConsent(user.id)));
     return {
-      status:
-        (pendingTicket && !staged) ||
-        (staged?.identity.linkUserId && staged.identity.linkUserId !== userId)
-          ? 'signed-out'
-          : required
-            ? 'required'
-            : user
-              ? 'accepted'
-              : 'signed-out',
+      status: required ? 'required' : user ? 'accepted' : 'signed-out',
       provider: staged
         ? staged.identity.issuer === canonicalGoogleIssuer
           ? 'google'
@@ -217,13 +254,16 @@ export class ConsentHttpFlow {
     response: ServerResponse,
   ): Promise<void> {
     this.pending.consume(readOpaqueCookie(request, pendingCookie));
-    const userId = await this.currentUser.resolveSession(request);
     const cookies = [this.clearPendingCookie()];
+    // Error responses must clear the handoff too, including storage failures.
+    response.setHeader('Set-Cookie', cookies);
+    const userId = await this.currentUser.resolveSession(request);
     if (userId && (await this.authentication.requiresConsent(userId))) {
-      await this.sessions.revoke(readSessionSecret(request));
       cookies.push(
         clearCookie(sessionCookieName, '/', usesSecureOAuthCookies()),
       );
+      response.setHeader('Set-Cookie', cookies);
+      await this.sessions.revoke(readSessionSecret(request));
     }
     response.setHeader('Set-Cookie', cookies);
     this.send(response, 200, { success: true });

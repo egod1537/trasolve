@@ -65,7 +65,7 @@ export async function cancelConsent(): Promise<void> {
     cache: 'no-store',
     headers: { 'Content-Type': 'application/json' },
     body: '{}',
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(5000),
   });
   if (!response.ok) {
     throw new ConsentRequestError(response.status);

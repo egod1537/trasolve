@@ -1,4 +1,3 @@
-import { type CSSProperties, type RefObject } from 'react';
 import {
   type PlaceStyle,
   type TripDay,
@@ -9,16 +8,12 @@ export type PlaceDetailPlace = Omit<TripPlace, 'location'>;
 
 export type PlaceDetailDay = Pick<TripDay, 'id' | 'title' | 'color'>;
 
-export type Props = {
+export type PlaceDetailEditorOptions = {
   day: PlaceDetailDay;
   place: PlaceDetailPlace;
   busy: boolean;
   mutationError: string | null;
   readOnly?: boolean;
-  groupClassName: string;
-  groupStyle?: CSSProperties;
-  layerDetail?: boolean;
-  cardRef?: RefObject<HTMLElement | null>;
   onClose: () => void;
   onUpdateVisitTimeRange?: (
     placeId: string,

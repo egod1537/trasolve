@@ -6,5 +6,5 @@ export type Props = {
   days: readonly TripDay[];
   initialDayId?: string;
   onClose: () => void;
-  onCompare: (data: RouteComparisonData) => void;
+  onCompare: (data: RouteComparisonData | null) => void;
 };

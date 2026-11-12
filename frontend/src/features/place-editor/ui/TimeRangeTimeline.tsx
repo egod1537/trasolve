@@ -1,4 +1,4 @@
-import { useTimeRangeInteraction } from '@/features/place-editor/model/useTimeRangeInteraction';
+import { useTimeRangeInteraction } from '@/features/place-editor/ui/useTimeRangeInteraction';
 
 import { formatClockTime } from '@/entities/place';
 import '@/features/place-editor/ui/time-range-timeline.css';
@@ -9,13 +9,13 @@ import {
   type RangeStyle,
 } from '@/features/place-editor/ui/timeRangeTypes';
 import {
-  MINUTES_PER_DAY,
   DAY_TICKS,
   getDayPosition,
   getTimelinePositionClass,
 } from '@/features/place-editor/ui/timeRangeGeometry';
 export { type TimeRangeTimelineRange } from '@/features/place-editor/ui/timeRangeTypes';
-export { MINUTES_PER_DAY } from '@/features/place-editor/ui/timeRangeGeometry';
+import { MINUTES_PER_DAY } from '../model/timeRange';
+export { MINUTES_PER_DAY } from '../model/timeRange';
 
 export function TimeRangeTimeline({
   ranges,

@@ -1,10 +1,10 @@
 import { ScrollArea } from '@/shared/ui/ScrollArea';
-import type { useChatThreads } from '../../model/useChatThreads';
+import type { useChatPanel } from '../useChatPanel';
 import { ChatThreadItem } from '../ChatThreadItem';
 import type { ChatThread } from '../../model/chatTypes';
 
 type Props = Pick<
-  ReturnType<typeof useChatThreads>,
+  ReturnType<typeof useChatPanel>,
   | 'L'
   | 'listDrawerOpen'
   | 'setListDrawerOpen'

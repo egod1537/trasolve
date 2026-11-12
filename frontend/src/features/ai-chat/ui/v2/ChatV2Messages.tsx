@@ -2,7 +2,6 @@ import { ScrollArea } from '@/shared/ui/ScrollArea';
 import {
   memo,
   useLayoutEffect,
-  useRef,
   useState,
   type ReactNode,
   type RefObject,
@@ -13,6 +12,8 @@ import type { PendingChatResponse } from '../../model/useChatV2Transport';
 import { ChatMarkdown } from '../ChatMarkdown';
 import { ChatV2Progress } from './ChatV2Progress';
 import { ChatWebImages } from './ChatWebImages';
+import { ChatV2QuickNav } from './ChatV2QuickNav';
+import { useChatMessageNavigation } from './useChatMessageNavigation';
 
 type Props = {
   thread: ChatThread;
@@ -32,10 +33,8 @@ export const ChatV2Messages = memo(function ChatV2Messages({
   renderAssistantActions,
 }: Props) {
   const L = useL();
-  const pinned = useRef(true);
-  useLayoutEffect(() => {
-    pinned.current = true;
-  }, [thread.id]);
+  const navigation = useChatMessageNavigation(thread.messages, messagesRef);
+  const { pinned } = navigation;
   useLayoutEffect(() => {
     const container = messagesRef.current;
     if (container && pinned.current) {
@@ -48,111 +47,134 @@ export const ChatV2Messages = memo(function ChatV2Messages({
     thread.messages.length,
     sending,
     messagesRef,
+    pinned,
   ]);
   const lastMessage = thread.messages.at(-1);
   return (
-    <ScrollArea
-      viewportRef={messagesRef}
-      className="chat-v2-messages"
-      contentClassName="chat-v2-messages-content"
-      viewportProps={{
-        role: 'log',
-        'aria-live': 'polite',
-        'aria-busy': sending,
-        onWheel: (event) => {
-          if (event.deltaY < 0) {
-            pinned.current = false;
-          }
-        },
-        onTouchStart: () => {
-          pinned.current = false;
-        },
-        onScroll: (event) => {
-          const container = event.currentTarget;
-          pinned.current =
-            container.scrollHeight -
-              container.scrollTop -
-              container.clientHeight <
-            40;
-        },
-      }}
+    <div
+      className={`chat-v2-message-region${navigation.questions.length > 1 ? ' has-quick-nav' : ''}`}
     >
-      {!thread.messages.length && (
-        <div className="chat-v2-welcome">
-          <span className="chat-v2-welcome-mark" aria-hidden="true">
-            ✦
-          </span>
-          <h3>{L('ai:mapAiPanel.description.travelAssistant')}</h3>
-          <p>{L('ai:mapAiPanel.description.weWillHelpYouPlanTrip')}</p>
-          <div className="chat-v2-suggestions">
-            <button
-              type="button"
-              onClick={() =>
-                onSuggestion(L('auth:tokenPlans.feature.aiItinerary'))
-              }
-            >
-              {L('auth:tokenPlans.feature.aiItinerary')}
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                onSuggestion(
-                  L('auth:tokenPlans.feature.personalizedSuggestions'),
-                )
-              }
-            >
-              {L('auth:tokenPlans.feature.personalizedSuggestions')}
-            </button>
-          </div>
-        </div>
-      )}
-      {thread.messages.map((message) => (
-        <ChatV2Message
-          key={message.id}
-          message={message}
-          renderAssistantActions={renderAssistantActions}
-        />
-      ))}
-      {sending && (
-        <article className="chat-v2-message is-assistant is-pending">
-          <ChatV2Progress
-            busy
-            summary={pending?.summary}
-            waiting={!pending || pending.stage === 'waiting'}
-          />
-          {pending?.content && <ChatMarkdown content={pending.content} />}
-        </article>
-      )}
-      {!sending &&
-        lastMessage?.role === 'assistant' &&
-        !!lastMessage.followUps?.length && (
-          <div className="chat-v2-suggestions">
-            {lastMessage.followUps.map((suggestion) => (
+      <ScrollArea
+        viewportRef={messagesRef}
+        className="chat-v2-messages"
+        contentClassName="chat-v2-messages-content"
+        onPointerDown={navigation.onUserScroll}
+        viewportProps={{
+          role: 'log',
+          'aria-live': 'polite',
+          'aria-busy': sending,
+          onWheel: (event) => {
+            if (event.deltaY !== 0) {
+              navigation.onUserScroll();
+            }
+          },
+          onTouchStart: navigation.onUserScroll,
+          onKeyDown: (event) => {
+            if (
+              [
+                'ArrowUp',
+                'ArrowDown',
+                'PageUp',
+                'PageDown',
+                'Home',
+                'End',
+                ' ',
+              ].includes(event.key)
+            ) {
+              navigation.onUserScroll();
+            }
+          },
+          onScroll: navigation.onScroll,
+        }}
+      >
+        {!thread.messages.length && (
+          <div className="chat-v2-welcome">
+            <span className="chat-v2-welcome-mark" aria-hidden="true">
+              ✦
+            </span>
+            <h3>{L('ai:mapAiPanel.description.travelAssistant')}</h3>
+            <p>{L('ai:mapAiPanel.description.weWillHelpYouPlanTrip')}</p>
+            <div className="chat-v2-suggestions">
               <button
-                key={suggestion}
                 type="button"
-                onClick={() => onSuggestion(suggestion)}
+                onClick={() =>
+                  onSuggestion(L('auth:tokenPlans.feature.aiItinerary'))
+                }
               >
-                {suggestion}
-                <span aria-hidden="true">↗</span>
+                {L('auth:tokenPlans.feature.aiItinerary')}
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() =>
+                  onSuggestion(
+                    L('auth:tokenPlans.feature.personalizedSuggestions'),
+                  )
+                }
+              >
+                {L('auth:tokenPlans.feature.personalizedSuggestions')}
+              </button>
+            </div>
           </div>
         )}
-      {thread.error && (
-        <div className="chat-v2-error" role="alert">
-          <p>{thread.error}</p>
-        </div>
-      )}
-    </ScrollArea>
+        {thread.messages.map((message) => (
+          <ChatV2Message
+            key={message.id}
+            message={message}
+            current={
+              navigation.questions.length > 1 &&
+              message.id === navigation.activeId
+            }
+            renderAssistantActions={renderAssistantActions}
+          />
+        ))}
+        {sending && (
+          <article className="chat-v2-message is-assistant is-pending">
+            <ChatV2Progress
+              busy
+              summary={pending?.summary}
+              waiting={!pending || pending.stage === 'waiting'}
+            />
+            {pending?.content && <ChatMarkdown content={pending.content} />}
+          </article>
+        )}
+        {!sending &&
+          lastMessage?.role === 'assistant' &&
+          !!lastMessage.followUps?.length && (
+            <div className="chat-v2-suggestions">
+              {lastMessage.followUps.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => onSuggestion(suggestion)}
+                >
+                  {suggestion}
+                  <span aria-hidden="true">↗</span>
+                </button>
+              ))}
+            </div>
+          )}
+        {thread.error && (
+          <div className="chat-v2-error" role="alert">
+            <p>{thread.error}</p>
+          </div>
+        )}
+      </ScrollArea>
+      <ChatV2QuickNav
+        questions={navigation.questions}
+        activeId={navigation.activeId}
+        onJump={navigation.jump}
+      />
+    </div>
   );
 });
 
 const ChatV2Message = memo(function ChatV2Message({
   message,
+  current,
   renderAssistantActions,
 }: {
   message: UiChatMessage;
+  current: boolean;
   renderAssistantActions?: Props['renderAssistantActions'];
 }) {
   const L = useL();
@@ -166,7 +188,14 @@ const ChatV2Message = memo(function ChatV2Message({
     }
   };
   if (message.role !== 'assistant') {
-    return <p className="chat-v2-message is-user">{message.content}</p>;
+    return (
+      <p
+        data-chat-question={message.id}
+        className={`chat-v2-message is-user${current ? ' is-current-question' : ''}`}
+      >
+        {message.content}
+      </p>
+    );
   }
   return (
     <article className="chat-v2-message is-assistant">

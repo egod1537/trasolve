@@ -1,6 +1,9 @@
 import { getLanguage, L, type Localize } from '@/shared/i18n';
 
-import { type ChatThread } from '@/features/ai-chat/model/chatTypes';
+import {
+  type ChatThread,
+  type MapAiUnreadPreview,
+} from '@/features/ai-chat/model/chatTypes';
 
 export function getThreadTitle(thread: ChatThread, localize: Localize): string {
   return thread.titleIsDefault
@@ -36,4 +39,28 @@ export function formatRelativeTime(timestamp: number): string {
         month: 'short',
         day: 'numeric',
       }).format(timestamp);
+}
+
+export function getUnreadPreviews(
+  threads: ChatThread[],
+  localize: Localize,
+): MapAiUnreadPreview[] {
+  return threads
+    .flatMap((thread) =>
+      thread.messages.flatMap((message) =>
+        message.role === 'assistant' && message.unread
+          ? [
+              {
+                messageId: message.id,
+                threadId: thread.id,
+                threadTitle: getThreadTitle(thread, localize),
+                content: message.content,
+                createdAt: message.createdAt,
+              },
+            ]
+          : [],
+      ),
+    )
+    .sort((left, right) => right.createdAt - left.createdAt)
+    .slice(0, 3);
 }

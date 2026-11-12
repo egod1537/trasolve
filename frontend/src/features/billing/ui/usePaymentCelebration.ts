@@ -1,9 +1,6 @@
 import { useEffect } from 'react';
 
-export type PaymentCelebration = {
-  orderId: string;
-  plan: 'free' | 'plus' | 'pro';
-};
+import type { PaymentCelebration } from '../model/billingStateTypes';
 
 const COLORS = {
   free: ['#2f6fed', '#8bb7ff', '#ffffff'],

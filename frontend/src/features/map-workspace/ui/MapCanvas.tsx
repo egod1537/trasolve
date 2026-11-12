@@ -1,54 +1,32 @@
 import { matchesLayoutMaxWidth } from '@/shared/config/mobileLayout';
-import { memo, useEffect, type ReactNode, type RefObject } from 'react';
-import type { Trip } from '@trasolve/shared';
+import { memo, useEffect, type RefObject } from 'react';
 import { GoogleMap, useGoogleMap } from '@/map/components/GoogleMap';
 import type {
-  GoogleMapHandle,
   GoogleMapOptions,
   GoogleMapStatus,
 } from '@/map/types/googleMapComponent';
-import type { MapClickEvent } from '@/shared/types/mapTypes';
-import type { GeoPoint } from '@/shared/types/mapTypes';
 import {
   calculateBoundsZoom,
   calculateMapCenterOffset,
   calculateMapPadding,
   calculatePointFocusZoom,
 } from '@/features/map-workspace/domain/cameraPolicy';
-import type { MapFocusTarget } from '@/features/map-workspace/domain/mapUiTypes';
 import { TripLayer } from '@/features/map-workspace/ui/TripLayer';
 import { getExternalApiDisabledMessage } from '@/shared/api/externalApiDisabled';
 import { useL, L } from '@/shared/i18n';
 import { MeasurementLayer } from '../measurement/MeasurementLayer';
-import type { Measurement } from '../measurement/useMeasurement';
-import {
-  RouteComparisonLayer,
-  type RouteComparisonData,
-  type RouteComparisonMode,
-} from '@/features/route-optimization';
+import { RouteComparisonLayer } from '@/features/route-optimization';
 
-type TripObjectsProps = {
-  trip: Trip;
-  focusTarget: MapFocusTarget;
-  selectedPlaceId: string | null;
-  selectedPolylineId: string | null;
-  selectedDayId: string | null;
-  visibleDayIds: ReadonlySet<string>;
-  onSelectPlace: (id: string) => void;
-  onFocusPlace: (id: string) => void;
-  onSelectPolyline: (id: string, anchor: GeoPoint) => void;
-  sidebarRef: RefObject<HTMLElement | null>;
-};
+import type {
+  MapSelectionActions,
+  TripMapView,
+} from '../model/mapViewportTypes';
+import type { MapCanvasProps } from './mapViewportProps';
 
-type Props = TripObjectsProps & {
-  measurement?: Measurement;
-  comparison?: RouteComparisonData;
-  comparisonMode?: RouteComparisonMode;
-  comparisonSidebarRef?: RefObject<HTMLElement | null>;
-  onMapClick: (event: MapClickEvent) => void;
-  mapRef?: RefObject<GoogleMapHandle | null>;
-  overlay?: ReactNode;
-};
+type TripObjectsProps = TripMapView &
+  Omit<MapSelectionActions, 'onMapClick'> & {
+    sidebarRef: RefObject<HTMLElement | null>;
+  };
 
 const mapOptions: GoogleMapOptions = { clickableIcons: true };
 const noVisibleDays: ReadonlySet<string> = new Set();
@@ -188,7 +166,7 @@ function renderMapStatus(status: Exclude<GoogleMapStatus, 'ready'>) {
   );
 }
 
-export const MapCanvas = memo(function MapCanvas(props: Props) {
+export const MapCanvas = memo(function MapCanvas(props: MapCanvasProps) {
   const L = useL();
   const {
     mapRef,

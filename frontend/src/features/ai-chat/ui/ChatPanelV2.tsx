@@ -1,8 +1,9 @@
+import type { Props } from './chatPanelTypes';
 import { forwardRef, useCallback } from 'react';
-import { useChatThreads } from '../model/useChatThreads';
+import { useChatPanel } from './useChatPanel';
 import { useChatSubmission } from '../model/useChatSubmission';
 import { useChatV2Transport } from '../model/useChatV2Transport';
-import type { Props, MapAiPanelHandle } from '../model/chatTypes';
+import type { MapAiPanelHandle } from '../model/chatTypes';
 import { AiPanelFrame } from './AiPanelFrame';
 import { ChatV2Header } from './v2/ChatV2Header';
 import { ChatV2Sidebar } from './v2/ChatV2Sidebar';
@@ -14,7 +15,7 @@ import './v2/chat-v2.css';
 export const ChatPanelV2 = forwardRef<MapAiPanelHandle, Props>(
   function ChatPanelV2(props, ref) {
     const { singleSession = false } = props;
-    const state = useChatThreads(props, ref, { autoScroll: false });
+    const state = useChatPanel(props, ref, { autoScroll: false });
     const { pending, sendRequest } = useChatV2Transport();
     const submit = useChatSubmission({
       ...state,
@@ -22,12 +23,13 @@ export const ChatPanelV2 = forwardRef<MapAiPanelHandle, Props>(
       model: props.model,
       sendRequest,
     });
+    const { changeDraft, textareaRef } = state;
     const suggestion = useCallback(
       (text: string) => {
-        state.changeDraft(text);
-        state.textareaRef.current?.focus({ preventScroll: true });
+        changeDraft(text);
+        textareaRef.current?.focus({ preventScroll: true });
       },
-      [state.changeDraft, state.textareaRef],
+      [changeDraft, textareaRef],
     );
     return (
       <AiPanelFrame
@@ -56,6 +58,7 @@ export const ChatPanelV2 = forwardRef<MapAiPanelHandle, Props>(
             />
             {props.notice}
             <ChatV2Messages
+              key={state.selectedThread.id}
               thread={state.selectedThread}
               pending={pending[state.selectedThread.id]}
               sending={state.selectedThreadSending}

@@ -55,6 +55,40 @@ primary action first, safe-area insets are respected and the document scrolls
 normally. The existing `?mobile=1` layout preview survives the OAuth handoff,
 document links, cancellation and return to the original page.
 
+## Cancellation and retry recovery
+
+Cancellation waits at most five seconds for server cleanup, then returns to the
+public landing page even if cleanup fails. The brand button and error-state
+back button follow the same path. Cancelling aborts the initial status request
+so a late response cannot redirect the page elsewhere. The landing page stays
+public instead of immediately redirecting an unconsented session back to the
+form; other application pages retain the gate and server authorization checks.
+
+The cancellation route skips the server's preliminary user lookup and sets the
+pending-cookie deletion before querying session storage. Once a session is
+known to require consent, its cookie is also cleared before attempting session
+revocation. A cleanup failure still returns an error; it does not grant access
+or log out an already consented account merely for cancelling another signup.
+
+Pending acceptance retains the original ticket and expiry until persistence
+and session rotation succeed. Concurrent submissions for the same ticket are
+rejected with 429, and a cancelled or expired ticket cannot issue a new session
+after the asynchronous work completes. Expired pending cookies are cleared on
+status reads and no longer mask a separately valid existing session. Handoffs
+remain server-memory records; a server restart still requires a fresh login.
+
+Validation of this recovery change: workspace typecheck, production build,
+lint (zero errors, existing warnings), frontend dependency check and formatting
+checks. Direct HTTP checks against the running backend with real isolated local
+repositories covered expired-cookie deletion, a valid session with a stale
+pending cookie, authorization denial before consent, preservation of an
+already consented session, cancellation/revocation of an unconsented session,
+cross-origin rejection, and pending-cookie deletion after an actual local
+storage read failure. No provider responses or repository methods were mocked.
+The cloud browser could not reach the local server, so browser navigation,
+mobile rendering, live OAuth handoffs and PostgreSQL outage recovery remain
+to be checked in the deployment environment.
+
 ## Operator information and operational follow-through
 
 Set `TRASOLVE_LEGAL_OPERATOR_NAME` and `TRASOLVE_PRIVACY_CONTACT_EMAIL` to the

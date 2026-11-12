@@ -20,6 +20,8 @@ explicit local modules. Nested public barrels, legacy source roots, deep relativ
 imports and circular dependencies (including type-only imports) are rejected.
 Features may compose other features through their public APIs. A new dependency
 must still have a concrete responsibility; extracting code does not justify a cycle.
+Models may not directly import `ui` modules, including through type-only imports;
+`model-does-not-import-ui` enforces this direction in the dependency check.
 
 ## Component and state contracts
 
@@ -40,8 +42,12 @@ large file. Function-size warnings identify remaining candidates for decompositi
 | Selection, active day, viewer visibility and camera intent | Workspace UI hooks; read-only overrides never save               |
 | SDK map, markers, polylines and listeners                  | GoogleMap / MapRuntime / object controller                       |
 | Chat threads and browser persistence                       | `ai-chat/model/useChatThreads.ts`                                |
-| Chat request cancellation and response application         | `ai-chat/model/useChatSubmission.ts`, `ui/useThreadRequests.ts`  |
+| Chat request cancellation and response application         | `ai-chat/model/useChatSubmission.ts`, `model/useThreadRequests.ts` |
+| Chat list, menus, rename drafts and panel composition      | `ai-chat/ui/useChatPanel.ts`, `ui/useChatThreadControls.ts`        |
 | Chat focus, scroll and outside-menu listeners              | `ai-chat/ui/useChatPanelEffects.ts`                              |
+| Map viewport selection and measurement interaction        | `map-workspace/model/useMapViewportInteractions.ts`              |
+| Place field edits and saving state                        | `place-editor/model/usePlaceDetailEdits.ts`                       |
+| Billing account snapshots and exclusive operations        | `billing/model/useBillingSummary.ts`, `model/useBillingActivity.ts` |
 | Optimization request, constraints, schedule                | Separate modules under `route-optimization/model`                |
 | Testbed job state, stream and gateway requests             | Feature model hooks; views receive data and actions              |
 
@@ -94,6 +100,55 @@ HTTP calls live in `api`, `shared/api` or a feature's `api` directory. Component
 domains and map runtime do not issue raw fetch calls. Routes and Places go through
 the backend. API keys and billing reconciliation remain server-owned.
 
+## Workspace and place presentation
+
+`MapWorkspaceViewport` composes the map, tool panels and comparison controls.
+`MapSelectionCard` chooses the searched-place, saved-place or polyline card with
+the existing anchors and keys. Editable and read-only viewports share
+`useMapViewportInteractions`: map-origin selection preserves its detail card;
+external selection revisions close it; measurement tools consume map clicks and
+selected coordinates before normal selection. Camera and SDK object ownership
+remain in the existing map runtime.
+
+`model/mapViewportTypes` describes map data and selection actions without React
+render props. `ui/mapViewportProps` adds refs, measurement presentation and overlay
+slots explicitly, rather than deriving workflow contracts from component types.
+Both viewports use the entity's `SelectedTripPlace` and `SelectedTripPolyline`.
+
+`PlaceDetailContent` composes header controls, memo editing and location information
+from separate views. `usePlaceDetailEdits` owns field drafts, save state and named
+mutation callbacks; `ui/usePlaceDetail` owns DOM refs, focus, detail popovers and
+delete confirmation. Model editor options contain data/actions, while UI props add
+group styles and card refs. Every edit continues through the supplied trip commands.
+
+`model/timeRange` contains range values, snapping and minimum-duration constraints.
+Timeline drawing/labels stay in `ui/timeRangeGeometry`, with pointer/keyboard edits
+and range creation in separate UI hooks. Public timeline props and exports remain
+compatible. Chat follows the same type direction: `ChatSessionOptions` contains
+session data/actions, while `ui/chatPanelTypes` adds render callbacks and React nodes.
+
+## Billing state and presentation
+
+`BillingProvider` mounts a session keyed by account identity and supplies the existing
+context API. `useBillingSummary` owns polling, focus/storage refresh, abortable reads
+and revision-tagged updates. Confirmed mutations invalidate earlier summary reads;
+debug token-mode reads also reserve a revision before starting. Publishing a
+confirmed summary clears loading as well as the error.
+
+`useBillingActivity` shares one synchronous operation lock across checkout,
+subscription and token-mode changes. Each operation checks session ownership before
+publishing and before launching the payment SDK. Session disposal aborts UI/read
+work; dispatched payment writes keep their existing server/idempotency contract.
+Checkout creation/confirmation, subscription cancellation and debug token-mode
+changes have separate hooks. An uncertain stored-card upgrade retains the same
+pending order for retry; terminal payment failures close it.
+
+`parsePaymentReturn` copies callback values and produces a URL without one-time
+payment keys. `usePaymentReturn` consumes it once, starts after StrictMode's initial
+effect replay and publishes only to its owning account. `BillingResult` is data;
+`BillingDialogs` localizes it and renders checkout, cancellation and result dialogs.
+Payment celebration is a UI effect following a confirmed successful payment.
+
 ## AI chat V2
 
 `shared/config/opts.ts` owns `opts.useChatV2`, enabled by default. Set
@@ -103,6 +158,18 @@ panel. `MapAiPanel` keeps its public props/ref API and chooses the view;
 history, transcript, progress and composer views under `ui/v2`.
 The wallet's existing `TokenRemainingGauge` is shown beside the close button;
 the V2 footer has no cost or balance summary.
+
+Both panel versions compose through `ui/useChatPanel`. `model/useChatThreads`
+owns thread snapshots, selection refs, drafts, read state and persistence;
+`chatThreadActions` owns synchronous create, rename, archive and delete edits.
+The UI owns localized titles/unread previews, search, menus, rename input,
+drawer visibility and DOM effects. Request ownership, lifecycle logging and
+the existing development delay command live under `model`, without UI imports.
+`useChatSubmission` coordinates message publication and request cleanup;
+`chatSubmissionMessages` preserves snapshots and response metadata, while
+`chatSubmissionRequest` captures the preamble and selects the normal or streaming
+transport. Deletion cancels its active request before removing snapshots, and a
+late response cannot recreate the deleted conversation.
 
 V2 POSTs to `/api/chat/stream`. The backend meters one successful chat action,
 forwards Responses text deltas and public reasoning-summary deltas only, and
@@ -567,6 +634,24 @@ interaction states and ownership.
 
 ## Shared Radix scroll areas
 
+AI chat V2 keeps its question quick navigation beside the message viewport,
+between the header and composer. `ChatV2QuickNav` renders user-message marks,
+hover/focus previews, touch hold previews and keyboard navigation. Long histories
+scroll inside their own Radix area. `useChatMessageNavigation` tracks the current
+question from viewport geometry, observes content/viewport resizing and confines
+jumps to the message viewport. History jumps suspend response auto-follow until
+the user scrolls back to the bottom or sends a new question. The message region
+is keyed by thread so navigation and pinning reset when switching conversations.
+Question text is dynamic user content; the navigation label reuses the existing
+localized current-conversation label. No translation resources or storage format
+are changed.
+
+Quick-navigation validation: workspace typecheck/build, lint including
+localization, frontend architecture check and changed-file formatting. Live UI
+verification was blocked because Chromium could not create its process socket in
+this execution environment; desktop/mobile appearance and touch interactions
+still require a browser pass.
+
 `shared/ui/ScrollArea.tsx` owns the Radix Scroll Area integration and the themed
 thumb/track CSS. Root owns placement and sizing, Viewport owns native scrolling,
 and Content owns flex/grid spacing and padding. Radix's explicit Content API
@@ -750,3 +835,121 @@ previous responses without colors do not mask the new metadata.
 Validation: workspace build/typecheck, lint (including localization), frontend
 architecture check and formatting. Live browser verification was unavailable in
 this workspace; no pixel-identical Naver layout or palette is claimed.
+
+## Live optimization preview
+
+`useOptimizationModal` owns day/settings selection, validation and billing eligibility.
+`useOptimizationRun` owns the active request and immutable source-day snapshot.
+Its `optimizationRunState` reducer has one phase for submission, solving, playback,
+cancellation and terminal outcomes. Busy/playback flags and the public progress
+phase are derived from that phase. Revision-tagged events from older runs and
+progress after cancellation/playback/termination cannot reopen a completed stage.
+Unmount clears request ownership before aborting, so asynchronous settlement cannot
+publish into a replacement session. Retry uses the latest modal settings.
+`runRouteOptimization` owns request construction, cached frames, API progress,
+authoritative result validation and analytics independently of the UI clock.
+Day defaults and phase types live in the model; localized error presentation lives
+in `ui/formatOptimizationFailure` and is passed into the workflow at composition.
+`useLiveRoutePreview` converts validated sampled candidates into provisional
+comparison data. `RoutePreviewPlayback` starts one independent one-second UI clock
+when the request starts. Network arrivals only enqueue real candidates; they never
+restart the timer. A queued actual candidate always wins the next tick. An empty
+queue uses `createRouteSearchIllustrator` to swap two nearby unlocked stops within
+a three-stop window of the last displayed route. Selected endpoints and order-locked
+slots stay fixed; all other positions retain their order. An arriving actual sample
+becomes the starting route for subsequent local moves, including its visited subset.
+There is no full reshuffle or return to the original order between candidates.
+Routes with no movable local pair stay unchanged.
+
+Client illustrations carry `live.illustrative: true` and `hasResult: false`. They
+have no stops or computed schedule. Their map callouts omit visit times, comparison
+metrics remain unknown, and the summary shows candidate-generation progress instead
+of improvement percentages. Source place data is immutable. Illustrations never
+enter the response cache, request payload, final candidate selection, or trip edits.
+Actual server samples retain their normal schedule, deltas, and validation.
+
+Completion requires both ten seconds since the UI session started and the actual
+completed result. Frame count and retained history size do not gate completion.
+Until both conditions hold, the same one-second clock continues showing available
+real candidates or local illustrations, including after the tenth second. A result
+ready at three seconds is revealed at ten seconds; a result ready at fifteen seconds
+is revealed immediately then, without waiting for another shuffle tick or starting
+another ten-second replay. Pending intermediate frames are discarded on completion.
+The server does not retain resources for UI playback. Final apply remains unavailable
+until the actual completed result is revealed.
+
+The solver's global incumbent and the displayed candidate have separate roles.
+troute records actual distinct, accepted feasible SA states, including worsening
+moves, as well as validated strategy-completion samples. Small exact solves also
+collect a short SA trajectory from their optimum when allowed by the remaining
+resource/deadline budget. Each run retains at most ten SA samples and validates
+them before publication. The final completed result always comes from the normal
+authoritative solver selection. No routes are invented to create visual movement.
+
+troute completes and releases Job resources independently of playback. The final
+SSE envelope retains up to ten `preview.frames`, including the last sampled window.
+Source revisions increase and may have gaps. The gateway preserves completed
+frames in persisted mirrors for reconnect recovery. Older servers remain compatible
+through their optional latest-preview field.
+
+The v4 result cache stores the final response and up to ten sampled frames together,
+so repeating the same optimization replays its actual history without another solver
+request. Old v1/v2/v3 entries are intentionally ignored: their smaller history
+cannot recover ten real search samples.
+
+During playback, the status card keeps its in-progress optimization title, shows
+candidate-comparison progress, and leaves the final pipeline step active. A completed
+server job alone must not display a completed UI operation while replay still runs.
+Completion copy and all-completed steps require the completed UI phase; cancelling,
+cancelled, and failed phases take priority over playback. Applying and rerunning stay
+blocked until replay finishes. Cancel, failure, retry, and unmount clear pending
+frames and timers. Playback cancellation only stops the UI after its server request
+has ended.
+
+`RouteComparisonLayer` and the sidebar render through existing comparison state.
+Source markers and camera bounds retain their lifetime across revisions; changed
+stops briefly gain emphasis. Provisional data never reaches the trip Command/Controller.
+Only a completed, non-stale comparison can open apply confirmation.
+
+The desktop bottom comparison card also renders the shared summary headline and
+increase/decrease percentage as each sample changes. It compares with the immutable
+source schedule, preferring known between-place time and falling back to straight-line
+distance. The mobile card retains its existing compact summary without duplication.
+
+The top status card is read-only. `RouteComparisonActions` owns cancel/cancelling
+and terminal close/retry controls in the bottom comparison card; apply is available
+only for a completed comparison. Failed and cancelled previews stop their timers,
+retain a terminal live snapshot, and replace candidate-generation copy with the
+terminal state. Escape uses the same close/cancel action. The extra floating day
+heading is hidden during live work to avoid covering the status card.
+
+`RouteOptimizationFailureDetails` uses its own `route-failure-details.css`, imported
+after settings companions. Failure facts form a two-column grid, conflicting
+departure/closing times gain emphasis, and each suggested change is a separate
+card. Progress-step styles in `route-live-status.css` apply only to the direct step
+list. The failed status card omits the step list and reserves space above the bottom
+actions, with a scrollable detail body on smaller viewports.
+
+`route-review-sidebar.css` owns the result list/positioners separately from settings
+controls. The import order is settings popup, settings companions, failure details,
+review sidebar, review controls, distance toast, mobile tabs and live status.
+Settings fieldsets have an explicit component class. Option buttons, validation
+headers/icons and issue paragraphs target their direct children, preventing styles
+from leaking into nested failure cards or embedded controls.
+
+Refactor verification: workspace typecheck/build, lint/localization lint and the
+frontend dependency check pass. Lint reports zero errors and 119 remaining size
+warnings. Inline checks against production modules cover playback/cancellation,
+retry revisions, immutable read state, deleted-thread responses, archive fallback
+and shared panel composition. Further checks cover eight identical place-card
+render variants, timeline pointer rollback/commit and keyboard commit, payment
+callback cleanup, uncertain-order retention, exclusive billing operations, stale
+summary rejection and cancellation before payment SDK launch. Browser visual
+verification and live payment execution were not performed.
+
+`RouteDistanceChangeToast` appears above the bottom card when the displayed visit
+order changes. It reports the straight-line distance change from the preceding
+visible order, including local illustrations, using actual place coordinates and
+no routing calls. Different visited sets, session resets, and terminal failures
+clear the notice. One notice replaces the previous one and expires after 2.4 seconds;
+it does not stack, move the map camera, or claim a travel-time improvement.

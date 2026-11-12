@@ -220,6 +220,7 @@ export class TrouteJobRepository {
       last_message: remote.last_message,
       error: remote.error,
       result: remote.result,
+      ...(remote.preview ? { preview: remote.preview } : {}),
     };
     const storedJob: StoredTrouteJob = {
       state,

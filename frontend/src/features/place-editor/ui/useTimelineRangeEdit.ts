@@ -2,81 +2,45 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
-  type MouseEvent,
   type PointerEvent,
+  type RefObject,
 } from 'react';
-
-import { useL } from '@/shared/i18n';
+import type {
+  TimeRangeTimelineRange,
+  RangeEdge,
+  RangeEdit,
+  PointerRangeEdit,
+} from './timeRangeTypes';
 import {
-  type TimeRangeTimelineRange,
-  type Props,
-  type RangeEdge,
-  type RangeEdit,
-  type PointerRangeEdit,
-} from '@/features/place-editor/ui/timeRangeTypes';
-import {
-  MINUTES_PER_DAY,
-  clamp,
   snapTimelineMinute,
-  getMinuteFromPointerPosition,
   updateEditableRange,
   isSameRange,
-  getEditableRange,
-  prepareRanges,
-  positionEventLabels,
-} from '@/features/place-editor/ui/timeRangeGeometry';
+} from '../model/timeRange';
+import { getMinuteFromPointerPosition } from './timeRangeGeometry';
 
-export function useTimeRangeInteraction({
-  ranges,
-  backgroundRanges = [],
-  wrapAroundMidnight = false,
-  editable = false,
-  disabled = false,
-  stepMinutes = 15,
-  minimumRangeMinutes = stepMinutes,
+type Options = {
+  axisRef: RefObject<HTMLSpanElement | null>;
+  editableRange: TimeRangeTimelineRange | null;
+  rangeInteractive: boolean;
+  disabled: boolean;
+  normalizedStepMinutes: number;
+  normalizedMinimumRangeMinutes: number;
+  onRangeChange?: (range: TimeRangeTimelineRange) => void;
+  onRangeChangeEnd?: (range: TimeRangeTimelineRange) => void;
+};
+export function useTimelineRangeEdit({
+  axisRef,
+  editableRange,
+  rangeInteractive,
+  disabled,
+  normalizedStepMinutes,
+  normalizedMinimumRangeMinutes,
   onRangeChange,
   onRangeChangeEnd,
-  onCreateRange,
-}: Props) {
-  const L = useL();
-  const axisRef = useRef<HTMLSpanElement>(null);
+}: Options) {
   const pointerEditRef = useRef<PointerRangeEdit | null>(null);
   const keyboardEditRef = useRef<RangeEdit | null>(null);
   const [activeEdge, setActiveEdge] = useState<RangeEdge | null>(null);
-  const [creationMinute, setCreationMinute] = useState(MINUTES_PER_DAY / 2);
-  const [creationFocused, setCreationFocused] = useState(false);
-  const normalizedStepMinutes = Math.max(1, Math.round(stepMinutes));
-  const normalizedMinimumRangeMinutes = Math.max(
-    normalizedStepMinutes,
-    Math.round(minimumRangeMinutes),
-  );
-  const editableRange = editable
-    ? getEditableRange(ranges, normalizedMinimumRangeMinutes)
-    : null;
-  const rangeInteractive =
-    editableRange !== null &&
-    onRangeChange !== undefined &&
-    onRangeChangeEnd !== undefined;
-  const rangeCreatable = editable && ranges.length === 0 && !!onCreateRange;
-  const interactive = rangeInteractive || rangeCreatable;
-  const preparedRanges = prepareRanges(ranges, wrapAroundMidnight);
-  const positionedRanges = preparedRanges.flatMap((range) => range.segments);
-  const events = positionEventLabels(
-    preparedRanges.flatMap((range) => range.events),
-    true,
-  );
-  const preparedBackgroundRanges = prepareRanges(
-    backgroundRanges,
-    wrapAroundMidnight,
-  );
-  const positionedBackgroundRanges = preparedBackgroundRanges.flatMap(
-    (range) => range.segments,
-  );
-  const backgroundEvents = positionEventLabels(
-    preparedBackgroundRanges.flatMap((range) => range.events),
-  );
-  const backgroundLabelPosition = preparedBackgroundRanges[0]?.labelPosition;
-  const hasBackgroundRanges = positionedBackgroundRanges.length > 0;
   const getPointerRange = (
     edit: PointerRangeEdit,
     clientX: number,
@@ -99,6 +63,7 @@ export function useTimeRangeInteraction({
   ) => {
     if (
       !rangeInteractive ||
+      !editableRange ||
       disabled ||
       !event.isPrimary ||
       event.button !== 0
@@ -170,6 +135,7 @@ export function useTimeRangeInteraction({
   ) => {
     if (
       !rangeInteractive ||
+      !editableRange ||
       disabled ||
       (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
     ) {
@@ -219,81 +185,13 @@ export function useTimeRangeInteraction({
       onRangeChangeEnd?.(edit.lastRange);
     }
   };
-  const createRangeFromClick = (event: MouseEvent<HTMLSpanElement>) => {
-    if (!rangeCreatable || disabled || event.detail === 0) {
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-    const minute = getMinuteFromPointerPosition(
-      event.clientX,
-      event.currentTarget.getBoundingClientRect(),
-      normalizedStepMinutes,
-    );
-    setCreationMinute(minute);
-    onCreateRange?.(minute);
-  };
-  const moveCreationMinute = (event: KeyboardEvent<HTMLSpanElement>) => {
-    if (!rangeCreatable || disabled) {
-      return;
-    }
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      event.stopPropagation();
-      onCreateRange?.(creationMinute);
-      return;
-    }
-    if (
-      event.key !== 'ArrowLeft' &&
-      event.key !== 'ArrowRight' &&
-      event.key !== 'Home' &&
-      event.key !== 'End'
-    ) {
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-    setCreationMinute((current) => {
-      if (event.key === 'Home') {
-        return 0;
-      }
-      if (event.key === 'End') {
-        return MINUTES_PER_DAY;
-      }
-      const direction = event.key === 'ArrowLeft' ? -1 : 1;
-      return clamp(
-        snapTimelineMinute(current, normalizedStepMinutes) +
-          direction * normalizedStepMinutes,
-        0,
-        MINUTES_PER_DAY,
-      );
-    });
-  };
   return {
-    L,
-    axisRef,
     activeEdge,
-    creationMinute,
-    creationFocused,
-    setCreationFocused,
-    normalizedMinimumRangeMinutes,
-    editableRange,
-    rangeInteractive,
-    rangeCreatable,
-    interactive,
-    positionedRanges,
-    events,
-    positionedBackgroundRanges,
-    backgroundEvents,
-    backgroundLabelPosition,
-    hasBackgroundRanges,
     startPointerEdit,
     movePointerEdit,
     finishPointerEdit,
     cancelPointerEdit,
     moveKeyboardEdit,
     finishKeyboardEdit,
-    createRangeFromClick,
-    moveCreationMinute,
   };
 }

@@ -1,4 +1,3 @@
-import { type ReactNode } from 'react';
 import {
   type ChatMessage,
   type ChatRequest,
@@ -13,17 +12,11 @@ export type ChatRequestPreamble = {
   tools?: ChatRequest['tools'];
 };
 
-export type Props = {
+export type ChatSessionOptions = {
   open: boolean;
-  modal?: boolean;
-  singleSession?: boolean;
   persistenceKey?: string;
   getRequestPreamble?: () => Promise<ChatRequestPreamble>;
-  renderAssistantActions?: (content: string, context?: string) => ReactNode;
-  /** Always visible above the messages, independent of any message. */
-  notice?: ReactNode;
   model?: string;
-  onClose?: () => void;
   onGeneratingChange?: (generating: boolean) => void;
   onUnreadPreviewsChange?: (previews: MapAiUnreadPreview[]) => void;
 };

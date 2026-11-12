@@ -32,9 +32,9 @@ export function createBackendServer(
   consentHttp: ConsentHttpFlow,
 ): Server {
   const server = createServer((request, response) => {
+    const requestUrl = new URL(request.url ?? '/', 'http://localhost');
+    const { pathname } = requestUrl;
     const dispatch = (): void => {
-      const requestUrl = new URL(request.url ?? '/', 'http://localhost');
-      const { pathname } = requestUrl;
       response.setHeader('Content-Type', 'application/json; charset=utf-8');
       if (
         pathname === API_ROUTES.authConsent ||
@@ -265,6 +265,12 @@ export function createBackendServer(
       response.writeHead(404);
       response.end(JSON.stringify({ error: 'Not found' }));
     };
+
+    // Cancellation must reach cookie cleanup even if session storage is down.
+    if (pathname === API_ROUTES.authConsentCancel) {
+      runWithExternalApiRequestContext(null, dispatch);
+      return;
+    }
 
     void currentUser
       .resolve(request)

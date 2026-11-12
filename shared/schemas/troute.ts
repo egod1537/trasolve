@@ -366,6 +366,8 @@ export const trouteRouteStopSchema = z.strictObject({
 });
 
 export const trouteSolverObjectiveScoreSchema = z.strictObject({
+  visited_optional_count: z.number().int().nonnegative().optional(),
+  visited_optional_priority: z.number().int().nonnegative().optional(),
   latest_start: timeOfDaySchema,
   start_time: timeOfDaySchema.optional(),
   finish_time: timeOfDaySchema,
@@ -452,6 +454,9 @@ const trouteSolverCandidateMetadataSchema = z.strictObject({
   swap_move_count: optionalCountSchema,
   relocate_move_count: optionalCountSchema,
   two_opt_move_count: optionalCountSchema,
+  insert_optional_move_count: optionalCountSchema,
+  remove_optional_move_count: optionalCountSchema,
+  replace_optional_move_count: optionalCountSchema,
   accepted_worse_moves: optionalCountSchema,
   infeasible_candidates: optionalCountSchema,
   accepted_infeasible_moves: optionalCountSchema,
@@ -459,7 +464,15 @@ const trouteSolverCandidateMetadataSchema = z.strictObject({
   iteration_count: optionalCountSchema,
   accepted_moves: optionalCountSchema,
   improved_moves: optionalCountSchema,
-  seed: optionalCountSchema,
+  // troute emits diagnostic u64 seeds as JSON numbers. Large seeds are already
+  // rounded by JSON.parse; accept that existing wire format for display only.
+  // Never use this diagnostic value to reconstruct a solver run.
+  seed: z
+    .number()
+    .nonnegative()
+    .max(2 ** 64)
+    .refine(Number.isInteger)
+    .optional(),
   improved_global_best: z.boolean().optional(),
   job_queued_at_ms: optionalCountSchema,
   job_started_at_ms: optionalCountSchema,
@@ -532,6 +545,21 @@ export const trouteOptimizeResponseSchema = z.strictObject({
     .optional(),
 });
 
+export const TROUTE_MAX_PREVIEW_FRAMES = 10;
+
+const trouteOptimizationPreviewFrameSchema = z.strictObject({
+  revision: z.number().int().positive(),
+  result: trouteOptimizeResponseSchema,
+});
+
+const trouteOptimizationPreviewSchema =
+  trouteOptimizationPreviewFrameSchema.extend({
+    frames: z
+      .array(trouteOptimizationPreviewFrameSchema)
+      .max(TROUTE_MAX_PREVIEW_FRAMES)
+      .optional(),
+  });
+
 export const trouteJobStateSchema = z.strictObject({
   job_id: trouteJobIdSchema,
   status: trouteJobStatusSchema,
@@ -540,6 +568,7 @@ export const trouteJobStateSchema = z.strictObject({
   last_message: humanMessageSchema.nullable(),
   error: trouteErrorPayloadSchema.nullable(),
   result: trouteOptimizeResponseSchema.nullable(),
+  preview: trouteOptimizationPreviewSchema.optional(),
 });
 
 const trouteJobEventEnvelopeBaseSchema = z.strictObject({
@@ -606,6 +635,7 @@ export const trouteLegacyFlatJobEventSchema = z.strictObject({
   updated_at: z.number().int().nonnegative().optional(),
   completed_at: z.number().int().nonnegative().nullable().optional(),
   result: trouteOptimizeResponseSchema.nullable().optional(),
+  preview: trouteOptimizationPreviewSchema.optional(),
   error: trouteErrorPayloadSchema.nullable().optional(),
 });
 
@@ -639,6 +669,7 @@ export const trouteRemoteJobSchema = z
     updated_at: z.number().int().nonnegative(),
     completed_at: z.number().int().nonnegative().nullable(),
     result: trouteOptimizeResponseSchema.nullable(),
+    preview: trouteOptimizationPreviewSchema.optional(),
     error: trouteErrorPayloadSchema.nullable(),
   })
   .superRefine((job, context) => {

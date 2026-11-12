@@ -26,8 +26,10 @@ export function ConsentPage() {
   >(null);
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
+  const statusRequest = useRef<AbortController | null>(null);
   useEffect(() => {
     const controller = new AbortController();
+    statusRequest.current = controller;
     void fetchConsentStatus(controller.signal)
       .then((result) => {
         if (controller.signal.aborted) {
@@ -81,13 +83,14 @@ export function ConsentPage() {
     }
     inFlight.current = true;
     setBusy(true);
+    statusRequest.current?.abort();
     try {
       await cancelConsent();
-      window.location.replace(withMobileLayout('/'));
     } catch {
-      setFailureCode('network');
-      inFlight.current = false;
-      setBusy(false);
+      // Leaving the public consent page must remain possible during an outage.
+      // The backend still requires consent before granting account access.
+    } finally {
+      window.location.replace(withMobileLayout('/'));
     }
   };
   return (

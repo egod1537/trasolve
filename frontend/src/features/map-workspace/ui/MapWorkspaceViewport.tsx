@@ -1,329 +1,64 @@
-import { ViewportCommands } from '../command-console/ViewportCommands';
+import { memo, useCallback, useId, useMemo, useRef } from 'react';
 import {
   RouteComparisonBar,
   type RouteComparisonData,
-  type RouteComparisonView,
 } from '@/features/route-optimization';
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useReducer,
-  useRef,
-  type ComponentProps,
-} from 'react';
-import type {
-  PlaceDetails,
-  PlaceStyle,
-  TripDay,
-  TripPlace,
-  TripPolyline,
-  TripPolylineMode,
-} from '@trasolve/shared';
-import { AnchoredMapCard } from '@/map/components/AnchoredMapCard';
 import type { GoogleMapHandle } from '@/map/types/googleMapComponent';
-import type { GeoPoint } from '@/shared/types/mapTypes';
-import type { SelectedGooglePlace } from '@/entities/place';
+import { ViewportCommands } from '../command-console/ViewportCommands';
 import { useMeasurement } from '../measurement/useMeasurement';
-import { useTripError } from '@/features/map-workspace/hooks/useTrip';
-import { MapCanvas } from '@/features/map-workspace/ui/MapCanvas';
-import { GooglePlaceCard } from '@/features/place-editor';
-import { TripPlaceCard } from '@/features/place-editor';
-import { TripPolylineCard } from '@/features/map-workspace/components/viewport/TripPolylineCard';
-import { MapToolbar } from '@/features/map-workspace/ui/MapToolbar';
-import { MapOverlayHost } from '@/features/map-workspace/ui/MapOverlayHost';
-import {
-  initialMapWorkspaceTransientState,
-  reduceMapWorkspaceTransientState,
-} from '@/features/map-workspace/model/mapWorkspaceStore';
-import {
-  selectActiveDay,
-  selectPolylines,
-} from '@/features/map-workspace/model/selectors';
+import { useTripError } from '../hooks/useTrip';
+import { selectActiveDay, selectPolylines } from '../model/selectors';
+import { useMapViewportInteractions } from '../model/useMapViewportInteractions';
+import { MapCanvas } from './MapCanvas';
+import { MapOverlayHost } from './MapOverlayHost';
+import { MapToolbar } from './MapToolbar';
+import { MapSelectionCard } from './MapSelectionCard';
+import type { MapWorkspaceViewportProps } from './mapViewportProps';
 
-type Props = Omit<
-  ComponentProps<typeof MapCanvas>,
-  'mapRef' | 'overlay' | 'comparison' | 'comparisonMode'
-> & {
-  comparison: RouteComparisonView | null;
-  onCompare: (data: RouteComparisonData) => void;
-  selectionRevision: number;
-  selectedGooglePlace: SelectedGooglePlace;
-  onSelectSearchedGooglePlace: (place: PlaceDetails) => void;
-  onCloseGooglePlace: () => void;
-  onRetryGooglePlace: () => void;
-  onAddGooglePlace: (dayId: string, place: PlaceDetails) => Promise<boolean>;
-  selectedTripPlace: { day: TripDay; place: TripPlace } | null;
-  selectedTripPolyline: {
-    day: TripDay;
-    polyline: TripPolyline;
-    fromPlace: TripPlace;
-    toPlace: TripPlace;
-    anchor: GeoPoint;
-  } | null;
-  selectedPlaceIds: ReadonlySet<string>;
-  selectedPolylineIds: ReadonlySet<string>;
-  selectedItemCount: number;
-  tripMutationBusy: boolean;
-  canUndo: boolean;
-  canRedo: boolean;
-  onUndo: () => void;
-  onRedo: () => void;
-  onCloseTripPlace: () => void;
-  onUpdateTripPlaceVisitTimeRange: (
-    placeId: string,
-    time: string,
-    visitDurationMinutes: number,
-  ) => Promise<boolean>;
-  onUpdateTripPlacePreferredDuration: (
-    placeId: string,
-    preferredDurationMinutes: number,
-  ) => Promise<boolean>;
-  onUpdateTripPlaceMemo: (placeId: string, memo: string) => Promise<boolean>;
-  onRenameTripPlace: (placeId: string, name: string) => Promise<boolean>;
-  onUpdateTripPlaceStyle: (placeId: string, style: PlaceStyle) => void;
-  onRemoveTripPlace: (placeId: string) => Promise<boolean>;
-  onCloseTripPolyline: () => void;
-  onUpdateTripPolylineMode: (
-    polylineId: string,
-    mode: TripPolylineMode,
-  ) => Promise<boolean>;
-  onUpdateSelectedPolylineModes: (
-    polylineIds: readonly string[],
-    mode: TripPolylineMode,
-  ) => Promise<boolean>;
-  onRemoveSelectedPlaces: (placeIds: readonly string[]) => Promise<boolean>;
-  onClearSelection: () => void;
-  onOpenTripPicker: () => void;
-};
-
-export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
-  comparison,
-  onCompare,
-  selectionRevision,
-  selectedGooglePlace,
-  onSelectSearchedGooglePlace,
-  onCloseGooglePlace,
-  onRetryGooglePlace,
-  onAddGooglePlace,
-  selectedTripPlace,
-  selectedTripPolyline,
-  selectedPlaceIds,
-  selectedPolylineIds,
-  selectedItemCount,
-  tripMutationBusy,
-  canUndo,
-  canRedo,
-  onUndo,
-  onRedo,
-  onCloseTripPlace,
-  onUpdateTripPlaceVisitTimeRange,
-  onUpdateTripPlacePreferredDuration,
-  onUpdateTripPlaceMemo,
-  onRenameTripPlace,
-  onUpdateTripPlaceStyle,
-  onRemoveTripPlace,
-  onCloseTripPolyline,
-  onUpdateTripPolylineMode,
-  onUpdateSelectedPolylineModes,
-  onRemoveSelectedPlaces,
-  onClearSelection,
-  onOpenTripPicker,
-  onSelectPlace,
-  onSelectPolyline,
-  onMapClick,
-  sidebarRef,
-  ...mapProps
-}: Props) {
+export const MapWorkspaceViewport = memo(function MapWorkspaceViewport(
+  props: MapWorkspaceViewportProps,
+) {
+  const { comparison, onCompare, trip, sidebarRef } = props;
   const tripMutationError = useTripError();
   const measurement = useMeasurement();
   const mapRef = useRef<GoogleMapHandle>(null);
   const selectedCardRef = useRef<HTMLElement>(null);
-  const preserveNextSelectionRef = useRef(false);
-  const previousSelectionRevisionRef = useRef(selectionRevision);
-  const [transient, dispatchTransient] = useReducer(
-    reduceMapWorkspaceTransientState,
-    initialMapWorkspaceTransientState,
-  );
   const routeToolButtonRef = useRef<HTMLButtonElement>(null);
   const routeOptimizationModalId = useId();
-  const handleMapClick = useCallback(
-    (event: Parameters<typeof onMapClick>[0]) => {
-      if (measurement.tool !== 'pan') {
-        measurement.add(event);
-        return;
-      }
-      dispatchTransient({ type: 'map-clicked' });
-      onMapClick(event);
-    },
-    [dispatchTransient, onMapClick, measurement],
-  );
-  const selectMapPlace = useCallback(
-    (placeId: string) => {
-      if (measurement.tool !== 'pan') {
-        const place = mapProps.trip.days
-          .flatMap((day) => day.places)
-          .find((p) => p.id === placeId);
-        if (place) {
-          measurement.add(place.location);
-        }
-        return;
-      }
-      preserveNextSelectionRef.current = true;
-      dispatchTransient({
-        type: 'detail-selected',
-        target: { type: 'place', id: placeId },
-      });
-      onSelectPlace(placeId);
-    },
-    [dispatchTransient, onSelectPlace, measurement, mapProps.trip],
-  );
-  const selectMapPolyline = useCallback(
-    (polylineId: string, anchor: GeoPoint) => {
-      if (measurement.tool !== 'pan') {
-        measurement.add(anchor);
-        return;
-      }
-      preserveNextSelectionRef.current = true;
-      dispatchTransient({
-        type: 'detail-selected',
-        target: { type: 'polyline', id: polylineId },
-      });
-      onSelectPolyline(polylineId, anchor);
-    },
-    [dispatchTransient, onSelectPolyline, measurement],
-  );
-  const closeTripPlace = useCallback(() => {
-    dispatchTransient({ type: 'detail-closed' });
-    onCloseTripPlace();
-  }, [dispatchTransient, onCloseTripPlace]);
-  const closeTripPolyline = useCallback(() => {
-    dispatchTransient({ type: 'detail-closed' });
-    onCloseTripPolyline();
-  }, [dispatchTransient, onCloseTripPolyline]);
-
-  useEffect(() => {
-    if (previousSelectionRevisionRef.current === selectionRevision) {
-      return;
-    }
-    previousSelectionRevisionRef.current = selectionRevision;
-    if (preserveNextSelectionRef.current) {
-      preserveNextSelectionRef.current = false;
-      return;
-    }
-    dispatchTransient({ type: 'detail-closed' });
-  }, [selectionRevision]);
-
-  const activeDay =
-    selectedTripPlace?.day ??
-    selectedTripPolyline?.day ??
-    selectActiveDay(mapProps.trip, mapProps.selectedDayId);
-  const bulkSelectedPlaceIds = useMemo(
-    () => Array.from(selectedPlaceIds),
-    [selectedPlaceIds],
-  );
-  const bulkSelectedPolylines = useMemo(
-    () => selectPolylines(mapProps.trip, selectedPolylineIds),
-    [mapProps.trip, selectedPolylineIds],
-  );
+  const interactions = useMapViewportInteractions({ ...props, measurement });
+  const {
+    transient,
+    selectMapPlace,
+    selectMapPolyline,
+    handleMapClick,
+    toggleRouteOptimization,
+  } = interactions;
+  const { closeRouteOptimization: closeOptimization } = interactions;
   const closeRouteOptimization = useCallback(() => {
-    dispatchTransient({ type: 'route-optimization-closed' });
+    closeOptimization();
     requestAnimationFrame(() => routeToolButtonRef.current?.focus());
-  }, [dispatchTransient]);
-  const toggleRouteOptimization = useCallback(
-    () => dispatchTransient({ type: 'route-optimization-toggled' }),
-    [dispatchTransient],
-  );
+  }, [closeOptimization]);
   const showComparison = useCallback(
-    (data: RouteComparisonData) => {
+    (data: RouteComparisonData | null) => {
       onCompare(data);
-      closeRouteOptimization();
+      if (data && !data.live) {
+        closeRouteOptimization();
+      }
     },
     [onCompare, closeRouteOptimization],
   );
-
-  const detailPlace =
-    transient.mapDetailTarget?.type === 'place' &&
-    selectedTripPlace?.place.id === transient.mapDetailTarget.id
-      ? selectedTripPlace
-      : null;
-  const detailPolyline =
-    transient.mapDetailTarget?.type === 'polyline' &&
-    selectedTripPolyline?.polyline.id === transient.mapDetailTarget.id
-      ? selectedTripPolyline
-      : null;
-  const updateDetailPolylineMode = useCallback(
-    (mode: TripPolylineMode) => {
-      if (!detailPolyline) {
-        return Promise.resolve(false);
-      }
-      return onUpdateTripPolylineMode(detailPolyline.polyline.id, mode);
-    },
-    [detailPolyline, onUpdateTripPolylineMode],
+  const activeDay =
+    props.selectedTripPlace?.day ??
+    props.selectedTripPolyline?.day ??
+    selectActiveDay(trip, props.selectedDayId);
+  const selectedPlaceIds = useMemo(
+    () => Array.from(props.selectedPlaceIds),
+    [props.selectedPlaceIds],
   );
-  const anchoredCard =
-    measurement.tool !== 'pan' ? null : selectedGooglePlace ? (
-      <AnchoredMapCard
-        anchorId={`google:${selectedGooglePlace.placeId}`}
-        anchor={selectedGooglePlace.clickedLocation}
-        occlusionRef={sidebarRef}
-      >
-        <GooglePlaceCard
-          key={selectedGooglePlace.placeId}
-          selection={selectedGooglePlace}
-          activeDayId={mapProps.selectedDayId}
-          busy={tripMutationBusy}
-          mutationError={tripMutationError}
-          onClose={onCloseGooglePlace}
-          onRetry={onRetryGooglePlace}
-          onAddToTrip={onAddGooglePlace}
-        />
-      </AnchoredMapCard>
-    ) : detailPlace ? (
-      <AnchoredMapCard
-        anchorId={`trip:${detailPlace.place.id}`}
-        anchor={detailPlace.place.location}
-        occlusionRef={sidebarRef}
-      >
-        <TripPlaceCard
-          key={detailPlace.place.id}
-          cardRef={selectedCardRef}
-          day={detailPlace.day}
-          place={detailPlace.place}
-          busy={tripMutationBusy}
-          mutationError={tripMutationError}
-          onClose={closeTripPlace}
-          onUpdateVisitTimeRange={onUpdateTripPlaceVisitTimeRange}
-          onUpdatePreferredDuration={onUpdateTripPlacePreferredDuration}
-          onUpdateMemo={onUpdateTripPlaceMemo}
-          onRename={onRenameTripPlace}
-          onUpdateStyle={onUpdateTripPlaceStyle}
-          onRemove={onRemoveTripPlace}
-        />
-      </AnchoredMapCard>
-    ) : detailPolyline ? (
-      <AnchoredMapCard
-        anchorId={`trip-polyline:${detailPolyline.polyline.id}`}
-        anchor={detailPolyline.anchor}
-        occlusionRef={sidebarRef}
-      >
-        <TripPolylineCard
-          key={detailPolyline.polyline.id}
-          cardRef={selectedCardRef}
-          day={detailPolyline.day}
-          polyline={detailPolyline.polyline}
-          fromPlace={detailPolyline.fromPlace}
-          toPlace={detailPolyline.toPlace}
-          busy={tripMutationBusy}
-          mutationError={tripMutationError}
-          onClose={closeTripPolyline}
-          onUpdateMode={updateDetailPolylineMode}
-        />
-      </AnchoredMapCard>
-    ) : null;
-
+  const selectedPolylines = useMemo(
+    () => selectPolylines(trip, props.selectedPolylineIds),
+    [trip, props.selectedPolylineIds],
+  );
   return (
     <div className="map-viewport">
       <ViewportCommands
@@ -334,20 +69,38 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
             toggleRouteOptimization();
           }
         }}
-        onPreviewPlace={onSelectSearchedGooglePlace}
+        onPreviewPlace={props.onSelectSearchedGooglePlace}
         onSelectSavedPlace={selectMapPlace}
       />
       <MapCanvas
-        {...mapProps}
+        trip={trip}
+        focusTarget={props.focusTarget}
+        selectedPlaceId={props.selectedPlaceId}
+        selectedPolylineId={props.selectedPolylineId}
+        selectedDayId={props.selectedDayId}
+        visibleDayIds={props.visibleDayIds}
+        onFocusPlace={props.onFocusPlace}
         measurement={measurement}
         comparison={comparison?.data}
         comparisonMode={comparison?.mode}
         sidebarRef={sidebarRef}
+        comparisonSidebarRef={props.comparisonSidebarRef}
         mapRef={mapRef}
         onMapClick={handleMapClick}
         onSelectPlace={selectMapPlace}
         onSelectPolyline={selectMapPolyline}
-        overlay={anchoredCard}
+        overlay={
+          <MapSelectionCard
+            {...props}
+            enabled={measurement.tool === 'pan'}
+            target={transient.mapDetailTarget}
+            mutationError={tripMutationError}
+            occlusionRef={sidebarRef}
+            cardRef={selectedCardRef}
+            onCloseTripPlace={interactions.closeTripPlace}
+            onCloseTripPolyline={interactions.closeTripPolyline}
+          />
+        }
       />
       <div
         style={{ display: comparison ? 'none' : 'contents' }}
@@ -356,38 +109,36 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
         <MapOverlayHost
           onCompare={showComparison}
           activeDay={activeDay}
-          days={mapProps.trip.days.filter((day) =>
-            mapProps.visibleDayIds.has(day.id),
-          )}
+          days={trip.days.filter((day) => props.visibleDayIds.has(day.id))}
           measurement={measurement}
           routeOptimizationOpen={transient.routeOptimizationOpen}
           routeOptimizationModalId={routeOptimizationModalId}
           routeToolButtonRef={routeToolButtonRef}
-          selectedItemCount={selectedItemCount}
-          selectedPlaceIds={bulkSelectedPlaceIds}
-          selectedPolylines={bulkSelectedPolylines}
-          busy={tripMutationBusy}
+          selectedItemCount={props.selectedItemCount}
+          selectedPlaceIds={selectedPlaceIds}
+          selectedPolylines={selectedPolylines}
+          busy={props.tripMutationBusy}
           mutationError={tripMutationError}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          onUndo={onUndo}
-          onRedo={onRedo}
+          canUndo={props.canUndo}
+          canRedo={props.canRedo}
+          onUndo={props.onUndo}
+          onRedo={props.onRedo}
           onToggleRouteOptimization={toggleRouteOptimization}
           onCloseRouteOptimization={closeRouteOptimization}
-          onUpdatePolylineModes={onUpdateSelectedPolylineModes}
-          onDeletePlaces={onRemoveSelectedPlaces}
-          onClearSelection={onClearSelection}
+          onUpdatePolylineModes={props.onUpdateSelectedPolylineModes}
+          onDeletePlaces={props.onRemoveSelectedPlaces}
+          onClearSelection={props.onClearSelection}
         />
         <MapToolbar
           suspended={comparison !== null}
           dismissRevision={transient.searchDismissRevision}
           mapRef={mapRef}
-          selectedPlaceIds={bulkSelectedPlaceIds}
-          onSelectPlace={onSelectSearchedGooglePlace}
-          onOpenTripPicker={onOpenTripPicker}
+          selectedPlaceIds={selectedPlaceIds}
+          onSelectPlace={props.onSelectSearchedGooglePlace}
+          onOpenTripPicker={props.onOpenTripPicker}
           onMobileNavigate={() => {
-            dispatchTransient({ type: 'detail-closed' });
-            onCloseGooglePlace();
+            interactions.closeDetails();
+            props.onCloseGooglePlace();
           }}
         />
       </div>

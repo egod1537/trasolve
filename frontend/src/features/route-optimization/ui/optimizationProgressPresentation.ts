@@ -5,13 +5,8 @@ import type {
 } from '@/features/route-optimization/api/routeOptimizationApi';
 import { L } from '@/shared/i18n';
 
-export type RouteOptimizationProgressPhase =
-  | 'submitting'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'cancelling'
-  | 'cancelled';
+import type { RouteOptimizationProgressPhase } from '../model/optimizationRunState';
+export type { RouteOptimizationProgressPhase } from '../model/optimizationRunState';
 
 export type Props = {
   phase: RouteOptimizationProgressPhase;

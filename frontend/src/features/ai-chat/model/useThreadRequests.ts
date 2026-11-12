@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { logThreadRequestLifecycle } from '@/features/ai-chat/ui/requestLifecycle';
+import { logThreadRequestLifecycle } from '@/features/ai-chat/model/requestLifecycle';
 
 export type ThreadRequestHandle = {
   requestId: string;

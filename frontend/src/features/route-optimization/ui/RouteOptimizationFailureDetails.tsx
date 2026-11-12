@@ -1,5 +1,6 @@
 import type { TripPlace, TrouteErrorPayload } from '@trasolve/shared';
 import { useL } from '@/shared/i18n';
+import { LocationIcon } from '@/shared/ui/icons';
 
 type Props = {
   error: TrouteErrorPayload | null;
@@ -33,12 +34,16 @@ export function RouteOptimizationFailureDetails({ error, places }: Props) {
   const requiredDeparture = readString(detail, 'required_departure');
   const closeTime = readString(detail, 'close_time');
   const stayMinutes = readNumber(detail, 'stay_minutes');
+  const closingConflict = Boolean(
+    requiredDeparture && closeTime && requiredDeparture > closeTime,
+  );
   const suggestions = error.suggestions ?? [];
   const verified =
     suggestions.length > 0 &&
     suggestions.every((suggestion) => suggestion.feasibility_verified === true);
   const hasFactValues = Boolean(
     requestedServiceStart ||
+    earliestServiceStart ||
     openTime ||
     fromPlaceName ||
     toPlaceName ||
@@ -59,7 +64,10 @@ export function RouteOptimizationFailureDetails({ error, places }: Props) {
   return (
     <div className="route-optimization-failure-details">
       {placeName ? (
-        <p className="route-optimization-failure-place">{placeName}</p>
+        <p className="route-optimization-failure-place">
+          <LocationIcon />
+          {placeName}
+        </p>
       ) : null}
       {hasFactValues ? (
         <ul className="route-optimization-failure-facts">
@@ -122,14 +130,14 @@ export function RouteOptimizationFailureDetails({ error, places }: Props) {
             </li>
           ) : null}
           {requiredDeparture ? (
-            <li>
+            <li className={closingConflict ? 'is-conflict' : undefined}>
               {L('routeOptimization:routeSchedulePreview.text.departure', {
                 departureTime: requiredDeparture,
               })}
             </li>
           ) : null}
           {closeTime ? (
-            <li>
+            <li className={closingConflict ? 'is-conflict' : undefined}>
               <span>{L('place:placeOpeningHours.text.closed')}</span>
               <strong>{closeTime}</strong>
             </li>
@@ -137,7 +145,7 @@ export function RouteOptimizationFailureDetails({ error, places }: Props) {
         </ul>
       ) : null}
       {verified && (
-        <p className="route-optimization-failure-resolution">
+        <p className="route-optimization-failure-resolution is-verified">
           {L('routeOptimization:fastValidation.verifiedSuggestions')}
         </p>
       )}
@@ -198,8 +206,11 @@ function FailureSuggestion({
             'routeOptimization:routeOptimizationModal.optimizationSettings.text.startTime',
           )}
         </span>
-        {current ? <del>{current}</del> : null}
-        <strong>{suggested}</strong>
+        <div className="route-optimization-failure-change">
+          {current ? <del>{current}</del> : null}
+          {current && <ChangeArrow />}
+          <strong>{suggested}</strong>
+        </div>
       </li>
     );
   }
@@ -219,18 +230,21 @@ function FailureSuggestion({
     return (
       <li>
         {placeName ? <span>{placeName}</span> : null}
-        {current !== null ? (
-          <del>
+        <div className="route-optimization-failure-change">
+          {current !== null ? (
+            <del>
+              {L('routeOptimization:routeSchedulePreview.text.minutesStay', {
+                stayMinutes: current,
+              })}
+            </del>
+          ) : null}
+          {current !== null && <ChangeArrow />}
+          <strong>
             {L('routeOptimization:routeSchedulePreview.text.minutesStay', {
-              stayMinutes: current,
+              stayMinutes: suggested,
             })}
-          </del>
-        ) : null}
-        <strong>
-          {L('routeOptimization:routeSchedulePreview.text.minutesStay', {
-            stayMinutes: suggested,
-          })}
-        </strong>
+          </strong>
+        </div>
       </li>
     );
   }
@@ -262,6 +276,23 @@ function FailureSuggestion({
   }
 
   return null;
+}
+
+function ChangeArrow() {
+  return (
+    <svg
+      className="route-optimization-failure-arrow"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14m-5-5 5 5-5 5" />
+    </svg>
+  );
 }
 
 function findPlaceName(

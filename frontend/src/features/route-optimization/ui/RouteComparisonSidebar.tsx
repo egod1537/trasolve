@@ -60,7 +60,15 @@ export function RouteComparisonSidebar({ comparison, sidebarRef }: Props) {
       <ScrollArea className="route-review-place-list-scroll" contentAsChild>
         <ol className="route-review-place-list">
           {places.map((place, index) => (
-            <li key={place.id}>
+            <li
+              key={`${place.id}:${index}:${place.time ?? ''}`}
+              className={
+                comparison.data.live?.hasResult ||
+                comparison.data.live?.illustrative
+                  ? 'is-updated'
+                  : undefined
+              }
+            >
               <div className="route-review-place-heading">
                 <span className="route-review-place-number">{index + 1}</span>
                 <strong>{place.name}</strong>

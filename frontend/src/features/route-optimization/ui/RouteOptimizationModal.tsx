@@ -1,11 +1,13 @@
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { useLayoutMaxWidth } from '@/shared/hooks/useLayoutMaxWidth';
 import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { useOptimizationModal } from '@/features/route-optimization/model/useOptimizationModal';
+import { useL } from '@/shared/i18n';
+import { formatOptimizationFailure } from './formatOptimizationFailure';
 
 import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
 
-import { RouteOptimizationProgressDialog } from '@/features/route-optimization/ui/RouteOptimizationProgressDialog';
+import { RouteOptimizationLiveStatus } from './RouteOptimizationLiveStatus';
 import { Button } from '@/shared/ui/Button';
 import { Dialog } from '@/shared/ui/Dialog';
 import { IconButton } from '@/shared/ui/IconButton';
@@ -36,28 +38,30 @@ export function RouteOptimizationModal({
   const [dayPopoverHost, setDayPopoverHost] = useState<HTMLDivElement | null>(
     null,
   );
-  const state = useOptimizationModal({
-    id,
-    days,
-    initialDayId,
-    onClose,
-    onCompare,
-  });
+  const L = useL();
+  const titleId = useId();
+  const validationId = useId();
+  const state = useOptimizationModal(
+    {
+      id,
+      days,
+      initialDayId,
+      onClose,
+      onCompare,
+    },
+    (cause) => formatOptimizationFailure(cause, L),
+  );
   if (!state) {
     return null;
   }
   const {
-    L,
-    titleId,
-    validationId,
-    controllerRef,
     setDayId,
     running,
+    runRevision,
+    playback,
     phase,
-    setPhase,
     progress,
     error,
-    setError,
     day,
     settings,
     issue,
@@ -67,6 +71,18 @@ export function RouteOptimizationModal({
     changeSettings,
     run,
   } = state;
+  if (phase) {
+    return (
+      <RouteOptimizationLiveStatus
+        key={runRevision}
+        phase={phase}
+        playback={playback}
+        progress={progress}
+        error={error}
+        places={day.places}
+      />
+    );
+  }
   return (
     <Dialog
       id={id}
@@ -136,10 +152,7 @@ export function RouteOptimizationModal({
             days={days}
             day={day}
             disabled={running}
-            onSelect={(dayId) => {
-              setDayId(dayId);
-              setError(null);
-            }}
+            onSelect={setDayId}
           />
           <OptimizationSettingsFields
             day={day}
@@ -188,20 +201,6 @@ export function RouteOptimizationModal({
           hidden={mobile && tab !== 'validation'}
           panelId={mobile ? `${titleId}-panel-validation` : undefined}
           tabId={mobile ? `${titleId}-tab-validation` : undefined}
-        />
-      )}
-      {phase && (
-        <RouteOptimizationProgressDialog
-          phase={phase}
-          progress={progress}
-          error={error}
-          places={day.places}
-          onCancel={() => {
-            setPhase('cancelling');
-            controllerRef.current?.abort();
-          }}
-          onClose={() => setPhase(null)}
-          onRetry={() => void run()}
         />
       )}
     </Dialog>

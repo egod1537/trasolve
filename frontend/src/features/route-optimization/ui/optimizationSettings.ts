@@ -1,9 +1,7 @@
-import type { TripDay, TrouteTravelMode } from '@trasolve/shared';
+import type { TrouteTravelMode } from '@trasolve/shared';
 import { L, type Localize } from '@/shared/i18n';
 import {
-  getRouteOptimizationTravelMode,
   type RouteOptimizationIssue,
-  type RouteOptimizationRequestOptions,
   type RouteOptimizationStartPolicy,
 } from '@/features/route-optimization/model/routeOptimization';
 
@@ -156,21 +154,4 @@ export function formatRouteOptimizationIssue(
         issue.values,
       );
   }
-}
-
-export function createDayOptimizationSettings(
-  day: TripDay,
-): RouteOptimizationRequestOptions {
-  const orderedPlaces = [...day.places].sort(
-    (left, right) => left.order - right.order,
-  );
-  return {
-    selectedStartPlaceId: orderedPlaces[0]?.id ?? '',
-    selectedEndPlaceId: orderedPlaces.at(-1)?.id ?? '',
-    startPolicy: 'earliest',
-    startTime: null,
-    travelMode: getRouteOptimizationTravelMode(day),
-    visitPolicy: 'all-required',
-    placePreferences: {},
-  };
 }

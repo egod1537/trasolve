@@ -1,9 +1,7 @@
 import { type CSSProperties } from 'react';
 
-export type TimeRangeTimelineRange = {
-  start: number;
-  end: number;
-};
+import type { TimeRangeTimelineRange, RangeEdge } from '../model/timeRange';
+export type { TimeRangeTimelineRange, RangeEdge } from '../model/timeRange';
 
 export type Props = {
   ranges: readonly TimeRangeTimelineRange[];
@@ -57,8 +55,6 @@ export type DayTick = {
   label: string;
   edge?: 'start' | 'end';
 };
-
-export type RangeEdge = 'start' | 'end';
 
 export type RangeEdit = {
   edge: RangeEdge;

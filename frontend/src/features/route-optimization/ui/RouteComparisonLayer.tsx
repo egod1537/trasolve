@@ -21,9 +21,13 @@ type Props = {
 
 export function RouteComparisonLayer({ data, mode, sidebarRef }: Props) {
   const { adapter, objects, canvasRef } = useGoogleMap();
-  const current = useMemo(() => getComparisonPlaces(data, 'current'), [data]);
+  const current = useMemo(
+    () => [...data.day.places].sort((a, b) => a.order - b.order),
+    [data.day],
+  );
   const result = useMemo(() => getComparisonPlaces(data, 'result'), [data]);
   const markerHandles = useRef(new Map<string, MapMarkerHandle>());
+  const previousStops = useRef(new Map<string, string>());
   const currentPath = useMemo(
     () => current.map((place) => place.location),
     [current],
@@ -93,10 +97,23 @@ export function RouteComparisonLayer({ data, mode, sidebarRef }: Props) {
         { index, visitTime: formatPlaceVisitTime(place) },
       ]),
     );
+    const changed: MapMarkerHandle[] = [];
+    const previous = previousStops.current;
+    const next = new Map<string, string>();
     for (const [id, marker] of markerHandles.current) {
       const entry = orderById.get(id);
       marker.setVisible(entry !== undefined);
       if (entry) {
+        const signature = `${entry.index}:${entry.visitTime ?? ''}`;
+        next.set(id, signature);
+        if (
+          (data.live?.hasResult || data.live?.illustrative) &&
+          previous.has(id) &&
+          previous.get(id) !== signature
+        ) {
+          marker.setSelected(true);
+          changed.push(marker);
+        }
         marker.setLabel(String(entry.index + 1));
         marker.setZIndex(50 + entry.index);
         marker.setColor(ROUTE_COMPARISON_COLORS[mode]);
@@ -108,7 +125,23 @@ export function RouteComparisonLayer({ data, mode, sidebarRef }: Props) {
         );
       }
     }
-  }, [current, mode, objects, result]);
+    previousStops.current = next;
+    const timer = setTimeout(
+      () => changed.forEach((marker) => marker.setSelected(false)),
+      1100,
+    );
+    return () => {
+      clearTimeout(timer);
+      changed.forEach((marker) => marker.setSelected(false));
+    };
+  }, [
+    current,
+    data.live?.hasResult,
+    data.live?.illustrative,
+    mode,
+    objects,
+    result,
+  ]);
 
   useEffect(() => {
     const camera = adapter.getCamera();

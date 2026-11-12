@@ -19,7 +19,7 @@ export function OptimizationSettingsFields({
   const L = useL();
   return (
     <>
-      <fieldset disabled={disabled}>
+      <fieldset className="route-settings-section" disabled={disabled}>
         <legend>
           {L(
             'routeOptimization:routeOptimizationModal.optimizationSettings.text.meansTransportation',
@@ -39,7 +39,7 @@ export function OptimizationSettingsFields({
           ))}
         </div>
       </fieldset>
-      <fieldset disabled={disabled}>
+      <fieldset className="route-settings-section" disabled={disabled}>
         <legend>
           {L(
             'routeOptimization:routeOptimizationModal.optimizationSettings.text.startTime',

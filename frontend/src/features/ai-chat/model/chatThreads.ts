@@ -1,47 +1,24 @@
 import { CHAT_LIMITS, type ChatMessage } from '@trasolve/shared';
-import { L, type Localize } from '@/shared/i18n';
+import { L } from '@/shared/i18n';
 
 import {
   type UiChatMessage,
-  type MapAiUnreadPreview,
   type ChatThread,
 } from '@/features/ai-chat/model/chatTypes';
-import { getThreadTitle } from '@/features/ai-chat/ui/chatPresentation';
 
-export function createThread(id: string): ChatThread {
+export function createThread(
+  id: string,
+  messages: UiChatMessage[] = [],
+): ChatThread {
   return {
     id,
     title: L('ai:mapAiPanel.createThread.title.newChat'),
     titleIsDefault: true,
-    messages: [],
+    messages,
     updatedAt: Date.now(),
     archived: false,
     error: null,
   };
-}
-
-export function getUnreadPreviews(
-  threads: ChatThread[],
-  localize: Localize,
-): MapAiUnreadPreview[] {
-  return threads
-    .flatMap((thread) =>
-      thread.messages.flatMap((message) =>
-        message.role === 'assistant' && message.unread
-          ? [
-              {
-                messageId: message.id,
-                threadId: thread.id,
-                threadTitle: getThreadTitle(thread, localize),
-                content: message.content,
-                createdAt: message.createdAt,
-              },
-            ]
-          : [],
-      ),
-    )
-    .sort((left, right) => right.createdAt - left.createdAt)
-    .slice(0, 3);
 }
 
 export function buildChatRequestMessages(
@@ -68,6 +45,21 @@ export function markAssistantMessagesRead(
     return { ...message, unread: false };
   });
   return changed ? next : messages;
+}
+
+export function replaceThreadMessages(
+  threads: ChatThread[],
+  threadId: string,
+  messages: UiChatMessage[],
+): ChatThread[] {
+  const next = threads.map((thread) =>
+    thread.id === threadId && thread.messages !== messages
+      ? { ...thread, messages }
+      : thread,
+  );
+  return next.some((thread, index) => thread !== threads[index])
+    ? next
+    : threads;
 }
 
 export function assertThreadMessageRefInvariant(

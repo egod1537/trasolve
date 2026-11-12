@@ -4,10 +4,23 @@ import { getRouteComparisonMetrics } from '../model/routeComparisonMetrics';
 import { getLanguage, useL } from '@/shared/i18n';
 import { formatDurationMinutes } from '@/shared/i18n/formatters';
 import { getRouteComparisonStyle } from './routeComparisonStyle';
+import {
+  getTitle,
+  getMessage,
+  formatStageMessage,
+} from './optimizationProgressPresentation';
 
-type Props = { data: RouteComparisonData; compact?: boolean };
+type Props = {
+  data: RouteComparisonData;
+  compact?: boolean;
+  headlineOnly?: boolean;
+};
 
-export function RouteComparisonSummary({ data, compact = false }: Props) {
+export function RouteComparisonSummary({
+  data,
+  compact = false,
+  headlineOnly = false,
+}: Props) {
   const L = useL();
   const metrics = useMemo(() => getRouteComparisonMetrics(data), [data]);
   const distance = (meters: number | null) =>
@@ -59,69 +72,99 @@ export function RouteComparisonSummary({ data, compact = false }: Props) {
   const Heading = compact ? 'h3' : 'h1';
   return (
     <section
-      className={`route-review-summary${compact ? ' is-compact' : ''}${saved !== null && saved < 0 ? ' is-increase' : ''}`}
+      className={`route-review-summary${compact ? ' is-compact' : ''}${headlineOnly ? ' is-headline-only' : ''}${saved !== null && saved < 0 ? ' is-increase' : ''}`}
       style={getRouteComparisonStyle('result')}
+      aria-label={L('routeOptimization:routeReviewSummary.title')}
     >
-      <Heading>{L('routeOptimization:routeReviewSummary.title')}</Heading>
-      <div className="route-review-summary-headline">
-        <strong>{headline}</strong>
-        {percent && (
-          <span>
-            {saved! > 0
-              ? L('routeOptimization:routeReviewSummary.percentDecrease', {
-                  percent,
-                })
-              : L('routeOptimization:routeReviewSummary.percentIncrease', {
-                  percent,
-                })}
-          </span>
-        )}
-      </div>
-      <dl className="route-review-summary-values">
-        <div>
-          <dt>{L('routeOptimization:routeReviewSummary.timeLabel')}</dt>
-          <dd>
-            <span
-              title={L(
-                'routeOptimization:routeSchedulePreview.beforeSchedule.text.currentSchedule',
-              )}
-            >
-              {duration(metrics.beforeMinutes)}
-            </span>
-            <i aria-hidden="true">→</i>
-            <strong
-              title={L(
-                'routeOptimization:routeSchedulePreview.afterSchedule.text.optimizationSchedule',
-              )}
-            >
-              {duration(metrics.afterMinutes)}
-            </strong>
-          </dd>
-        </div>
-        <div>
-          <dt>{L('routeOptimization:routeReviewSummary.distanceLabel')}</dt>
-          <dd>
-            <span
-              title={L(
-                'routeOptimization:routeSchedulePreview.beforeSchedule.text.currentSchedule',
-              )}
-            >
-              {distance(metrics.beforeMeters)}
-            </span>
-            <i aria-hidden="true">→</i>
-            <strong
-              title={L(
-                'routeOptimization:routeSchedulePreview.afterSchedule.text.optimizationSchedule',
-              )}
-            >
-              {distance(metrics.afterMeters)}
-            </strong>
-          </dd>
-        </div>
-      </dl>
-      <p className="route-review-summary-basis">
-        {L('routeOptimization:routeReviewSummary.basis')}
-      </p>
+      {!headlineOnly && (
+        <Heading>
+          {data.live
+            ? L(
+                'routeOptimization:routeOptimizationModal.title.routeOptimization',
+              )
+            : L('routeOptimization:routeReviewSummary.title')}
+        </Heading>
+      )}
+      {data.live?.hasResult === false ? (
+        <p role="status">
+          {data.live.status === 'failed'
+            ? getTitle('failed')
+            : data.live.status === 'cancelled' ||
+                data.live.status === 'cancelling'
+              ? getMessage(data.live.status, null)
+              : formatStageMessage(
+                  data.live.illustrative ? 'generating_candidates' : undefined,
+                )}
+        </p>
+      ) : (
+        <>
+          <div className="route-review-summary-headline">
+            <strong>{headline}</strong>
+            {percent && (
+              <span>
+                {saved! > 0
+                  ? L('routeOptimization:routeReviewSummary.percentDecrease', {
+                      percent,
+                    })
+                  : L('routeOptimization:routeReviewSummary.percentIncrease', {
+                      percent,
+                    })}
+              </span>
+            )}
+          </div>
+          {!headlineOnly && (
+            <>
+              <dl className="route-review-summary-values">
+                <div>
+                  <dt>{L('routeOptimization:routeReviewSummary.timeLabel')}</dt>
+                  <dd>
+                    <span
+                      title={L(
+                        'routeOptimization:routeSchedulePreview.beforeSchedule.text.currentSchedule',
+                      )}
+                    >
+                      {duration(metrics.beforeMinutes)}
+                    </span>
+                    <i aria-hidden="true">→</i>
+                    <strong
+                      title={L(
+                        'routeOptimization:routeSchedulePreview.afterSchedule.text.optimizationSchedule',
+                      )}
+                    >
+                      {duration(metrics.afterMinutes)}
+                    </strong>
+                  </dd>
+                </div>
+                <div>
+                  <dt>
+                    {L('routeOptimization:routeReviewSummary.distanceLabel')}
+                  </dt>
+                  <dd>
+                    <span
+                      title={L(
+                        'routeOptimization:routeSchedulePreview.beforeSchedule.text.currentSchedule',
+                      )}
+                    >
+                      {distance(metrics.beforeMeters)}
+                    </span>
+                    <i aria-hidden="true">→</i>
+                    <strong
+                      title={L(
+                        'routeOptimization:routeSchedulePreview.afterSchedule.text.optimizationSchedule',
+                      )}
+                    >
+                      {distance(metrics.afterMeters)}
+                    </strong>
+                  </dd>
+                </div>
+              </dl>
+              <p className="route-review-summary-basis">
+                {L('routeOptimization:routeReviewSummary.basis')}
+              </p>
+            </>
+          )}
+        </>
+      )}
     </section>
   );
 }

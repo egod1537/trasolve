@@ -13,7 +13,7 @@ import {
 } from '@/features/route-optimization';
 
 type Props = {
-  onCompare: (data: RouteComparisonData) => void;
+  onCompare: (data: RouteComparisonData | null) => void;
   activeDay: TripDay | null;
   days: readonly TripDay[];
   measurement: Measurement;

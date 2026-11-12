@@ -26,11 +26,18 @@ export function useRouteComparison(
   useLayoutEffect(() => {
     latestTrip.current = trip;
   }, [trip]);
-  const onCompare = useCallback((next: RouteComparisonData) => {
+  const onCompare = useCallback((next: RouteComparisonData | null) => {
     setData(next);
-    setMode('result');
+    setMode(
+      next?.live?.hasResult === false && !next.live.illustrative
+        ? 'current'
+        : 'result',
+    );
     setConfirming(false);
     setError(null);
+    if (!next || next.live) {
+      return;
+    }
     trackEvent({
       eventType: 'result_view',
       screen: ANALYTICS_SCREENS.routeResult,
@@ -38,14 +45,18 @@ export function useRouteComparison(
     });
   }, []);
   const onExit = useCallback(() => {
+    if (data?.live) {
+      (data.live.onClose ?? data.live.onCancel)();
+      return;
+    }
     if (!applyingRef.current) {
       setData(null);
       setConfirming(false);
       setError(null);
     }
-  }, []);
+  }, [data]);
   const onApply = useCallback(async () => {
-    if (!data || !confirming || applyingRef.current) {
+    if (!data || data.live || !confirming || applyingRef.current) {
       return;
     }
     const day = latestTrip.current.days.find((day) => day.id === data.day.id);
@@ -102,7 +113,7 @@ export function useRouteComparison(
         onModeChange: setMode,
         onExit,
         onApply: () => {
-          if (!applyingRef.current) {
+          if (!data.live && !applyingRef.current) {
             setConfirming(true);
           }
         },

@@ -104,7 +104,7 @@
 
 .route-settings-day-trigger svg,
 .route-settings-day-list svg,
-.route-settings-validation svg {
+.route-settings-validation > header > svg {
   width: 24px;
   height: 24px;
   flex: none;
@@ -219,22 +219,22 @@
   scrollbar-width: thin;
 }
 
-.route-settings-validation header {
+.route-settings-validation > header {
   flex: none;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.route-settings-validation header svg {
+.route-settings-validation > header > svg {
   color: var(--warning);
 }
 
-.route-settings-validation[data-severity='error'] header svg {
+.route-settings-validation[data-severity='error'] > header > svg {
   color: var(--danger);
 }
 
-.route-settings-validation[data-severity='success'] header svg {
+.route-settings-validation[data-severity='success'] > header > svg {
   color: var(--success);
 }
 
@@ -275,7 +275,7 @@
   color: var(--text-primary);
 }
 
-.route-settings-validation-item p {
+.route-settings-validation-item > p {
   margin: 0;
 }
 
@@ -347,7 +347,7 @@
   padding-bottom: 12px;
 }
 
-.route-settings-validation-tabs button {
+.route-settings-validation-tabs > button {
   display: flex;
   flex: 1;
   align-items: center;
@@ -376,7 +376,7 @@
   color: var(--danger);
 }
 
-.route-settings-validation-tabs button span {
+.route-settings-validation-tabs > button > span {
   font-variant-numeric: tabular-nums;
 }
 

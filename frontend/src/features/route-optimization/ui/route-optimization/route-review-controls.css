@@ -1,3 +1,21 @@
+.route-review-controls-positioner {
+  position: absolute;
+  z-index: 2700;
+  right: 24px;
+  bottom: 24px;
+  left: calc(var(--trip-panel-width) + 40px);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.route-review-controls,
+.route-apply-confirmation {
+  --accent: #7351e8;
+  --accent-hover: #6241d3;
+  --accent-active: #5131bd;
+}
+
 .route-review-controls {
   width: min(480px, 100%);
   padding: 12px;
@@ -272,6 +290,24 @@
 
 .route-review-summary.is-compact .route-review-summary-headline > strong {
   font-size: 23px;
+}
+
+.route-review-summary.is-headline-only {
+  margin-top: 12px;
+}
+
+.route-review-summary.is-headline-only .route-review-summary-headline {
+  justify-content: space-between;
+  min-height: 28px;
+  margin: 0;
+}
+
+.route-review-summary.is-headline-only .route-review-summary-headline > strong {
+  font-size: 18px;
+}
+
+.route-review-summary.is-increase .route-review-summary-headline > span {
+  background: color-mix(in srgb, var(--warning), transparent 90%);
 }
 
 @media (max-width: 760px) {

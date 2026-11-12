@@ -66,6 +66,12 @@ module.exports = {
       to: { path: '(?:^react(?:/|$)|node_modules/react(?:/|$))' },
     },
     {
+      name: 'model-does-not-import-ui',
+      severity: 'error',
+      from: { path: `^${source}/(?:features|entities)/[^/]+/model/` },
+      to: { path: `^${source}/(?:features|entities)/[^/]+/ui/` },
+    },
+    {
       name: 'google-implementations-are-private',
       severity: 'error',
       from: { path: `^${source}/`, pathNot: `^${source}/map/` },
