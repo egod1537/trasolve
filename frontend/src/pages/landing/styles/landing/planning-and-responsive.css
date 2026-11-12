@@ -281,3 +281,44 @@
     padding-inline-start: 24px;
   }
 }
+
+@media (max-width: 520px) {
+  .landing-page .header-inner,
+  .landing-page .hero,
+  .landing-page .features-inner,
+  .landing-page .planning-inner,
+  .landing-page .site-footer {
+    width: calc(100% - 32px);
+  }
+
+  .landing-page .header-inner,
+  .landing-page .header-actions {
+    gap: 8px;
+  }
+
+  .landing-page .brand {
+    font-size: 19px;
+  }
+
+  .landing-page .hero h1 {
+    font-size: clamp(32px, 9vw, 44px);
+  }
+
+  .landing-page .hero-description {
+    font-size: 16px;
+  }
+
+  .landing-page .planning-feature,
+  .landing-page .features-inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .landing-page .example-itinerary {
+    padding-inline-start: 0;
+    border-inline-start: 0;
+  }
+
+  .landing-page .planning h2 {
+    font-size: 28px;
+  }
+}

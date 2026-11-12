@@ -1,3 +1,4 @@
+import { withMobileLayout } from '@/shared/config/mobileLayout';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AuthUser, GoogleOAuthResult } from '@trasolve/shared';
 import { consumeGoogleOAuthResult } from '@/features/auth/api/googleOAuth';
@@ -8,6 +9,10 @@ import {
 } from '@/features/auth/api/auth';
 import { getExternalApiDisabledMessage } from '@/shared/api/externalApiDisabled';
 import { useLoginDialog } from './loginDialogContext';
+import {
+  readLastLoginProvider,
+  rememberLastLoginProvider,
+} from './lastLoginProvider';
 import { L } from '@/shared/i18n';
 import { AUTH_SESSION_EVENT } from '@/shared/api/authEvents';
 
@@ -60,6 +65,9 @@ export function useCurrentUser() {
   const refresh = useCallback(async () => {
     try {
       const user = await fetchCurrentUser();
+      if (user && !readLastLoginProvider()) {
+        rememberLastLoginProvider(user.loginProvider);
+      }
       setState(user ? { status: 'signed-in', user } : { status: 'signed-out' });
     } catch {
       setState({ status: 'signed-out' });
@@ -83,7 +91,11 @@ export function useCurrentUser() {
       if (justCompletedOAuth) {
         try {
           const result = await consumeGoogleOAuthResult();
-          if (result.status === 'error') {
+          if (result.status === 'success') {
+            rememberLastLoginProvider(
+              result.provider ?? result.user.loginProvider,
+            );
+          } else if (result.status === 'error') {
             setAuthNotice(
               result.provider === 'ssu' && result.error !== 'invalid_callback'
                 ? L('auth:useCurrentUser.text.failedLoadLoginResultsTryAgain')
@@ -134,31 +146,16 @@ export function useCurrentUser() {
   }, [refresh]);
 
   const login = useCallback(
-    async (returnTo = window.location.pathname) => {
+    (returnTo = window.location.pathname) => {
       setAuthNotice(null);
-      if (!import.meta.env.DEV) {
-        openLoginDialog(returnTo);
-        return;
-      }
-
-      try {
-        const user = await loginAsDebugGuest();
-        setState({ status: 'signed-in', user });
-        if (returnTo !== window.location.pathname) {
-          window.location.assign(returnTo);
-        }
-      } catch {
-        setState({ status: 'signed-out' });
-        setAuthNotice(
-          L('auth:useCurrentUser.text.failedLoadLoginResultsTryAgain'),
-        );
-      }
+      openLoginDialog(withMobileLayout(returnTo));
     },
     [openLoginDialog],
   );
 
   const loginAsGuest = useCallback(
     async (returnTo = window.location.pathname) => {
+      returnTo = withMobileLayout(returnTo);
       setAuthNotice(null);
       try {
         const user = await loginAsDebugGuest();

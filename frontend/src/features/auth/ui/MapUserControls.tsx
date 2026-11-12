@@ -168,6 +168,7 @@ export function MapUserControls({
           remaining={billing.summary.wallet.remaining}
           allowance={billing.summary.wallet.provided}
           mode={billing.summary.mode}
+          plan={billing.summary.wallet.plan}
           unlimited={billing.summary.unlimited}
           open={billing.plansOpen}
           dialogId={billing.dialogId}

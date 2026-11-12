@@ -1,4 +1,4 @@
-import type { TutorialProgress } from '@trasolve/shared';
+import type { AuthConsentRecord, TutorialProgress } from '@trasolve/shared';
 
 export interface AuthIdentityRecord {
   readonly id: string;
@@ -25,6 +25,7 @@ export interface CreateUserWithIdentityInput {
   readonly avatarUrl?: string;
   readonly email: string | null;
   readonly emailVerified: boolean;
+  readonly consent?: AuthConsentRecord;
 }
 
 export interface UpdateIdentityLoginInput {
@@ -49,6 +50,16 @@ export interface AuthRepository {
     input: UpdateIdentityLoginInput,
   ): Promise<void>;
   getUserById(userId: string): Promise<AuthUserRecord | undefined>;
+  getConsent(
+    userId: string,
+    termsVersion: string,
+    privacyVersion: string,
+  ): Promise<AuthConsentRecord | undefined>;
+  saveConsent(
+    userId: string,
+    consent: AuthConsentRecord,
+    clearOptionalProfile: boolean,
+  ): Promise<void>;
   getTutorialProgress(userId: string): Promise<TutorialProgress>;
   saveTutorialProgress(
     userId: string,

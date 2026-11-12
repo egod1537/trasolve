@@ -1,3 +1,5 @@
+import { PlanBadge } from './PlanBadge';
+import { DebugTokenToggle } from './DebugTokenToggle';
 import { useId, useState } from 'react';
 import type { PaymentProductId } from '@trasolve/shared';
 import { useBilling } from '../model/billingContext';
@@ -22,6 +24,12 @@ export function TokenPlansDialog() {
     maximumFractionDigits: 0,
   });
   const summary = billing.summary;
+  const recommendedPlan =
+    summary?.wallet.plan === 'free'
+      ? 'plus'
+      : summary?.wallet.plan === 'plus'
+        ? 'pro'
+        : null;
   const checkoutAvailable =
     tab === 'subscription'
       ? summary?.subscriptionAvailable
@@ -68,13 +76,14 @@ export function TokenPlansDialog() {
           <div>
             <div className="token-plans-title-row">
               <h2 id={titleId}>{L('auth:tokenPlans.title')}</h2>
-              {summary && summary.mode !== 'live' && (
+              {summary && <PlanBadge plan={summary.wallet.plan} showFree />}
+              {summary?.mode === 'debug' ? (
+                <DebugTokenToggle />
+              ) : summary?.mode === 'sandbox' ? (
                 <span className="token-plans-mode-badge">
-                  {summary.mode === 'debug'
-                    ? L('auth:billing.debugMode')
-                    : L('auth:billing.testMode')}
+                  {L('auth:billing.testMode')}
                 </span>
-              )}
+              ) : null}
             </div>
             <p id={descriptionId}>{L('auth:tokenPlans.description')}</p>
           </div>
@@ -105,7 +114,7 @@ export function TokenPlansDialog() {
         <Button
           aria-pressed={tab === 'subscription'}
           variant={tab === 'subscription' ? 'primary' : 'ghost'}
-          disabled={billing.busy || Boolean(billing.debugCheckout)}
+          disabled={billing.busy || Boolean(billing.pendingCheckout)}
           onClick={() => setTab('subscription')}
         >
           {L('auth:billing.monthlySubscription')}
@@ -113,7 +122,7 @@ export function TokenPlansDialog() {
         <Button
           aria-pressed={tab === 'topup'}
           variant={tab === 'topup' ? 'primary' : 'ghost'}
-          disabled={billing.busy || Boolean(billing.debugCheckout)}
+          disabled={billing.busy || Boolean(billing.pendingCheckout)}
           onClick={() => setTab('topup')}
         >
           {L('auth:billing.topup')}
@@ -135,47 +144,6 @@ export function TokenPlansDialog() {
           </Button>
         </div>
       )}
-      {billing.message && (
-        <p className="billing-message" role="status">
-          {billing.message}
-        </p>
-      )}
-      {billing.debugCheckout && (
-        <section
-          className="billing-debug-checkout"
-          aria-label={L('auth:billing.debugCheckout')}
-        >
-          <h3>{L('auth:billing.debugCheckout')}</h3>
-          <p>
-            {L('auth:billing.debugAmount', {
-              amount: money.format(billing.debugCheckout.product.amount),
-              tokens: number.format(billing.debugCheckout.product.tokens),
-            })}
-          </p>
-          <div className="billing-debug-actions">
-            <Button
-              variant="primary"
-              disabled={billing.busy}
-              onClick={() => void billing.finishDebug('success')}
-            >
-              {L('auth:billing.simulateSuccess')}
-            </Button>
-            <Button
-              variant="danger"
-              disabled={billing.busy}
-              onClick={() => void billing.finishDebug('failure')}
-            >
-              {L('auth:billing.simulateFailure')}
-            </Button>
-            <Button
-              disabled={billing.busy}
-              onClick={() => void billing.finishDebug('cancel')}
-            >
-              {L('common:action.cancel')}
-            </Button>
-          </div>
-        </section>
-      )}
       <div className="token-plans-grid" data-kind={tab}>
         {cards.map((plan) => {
           const planName =
@@ -186,7 +154,20 @@ export function TokenPlansDialog() {
                 });
           const current =
             tab === 'subscription' && plan.id === summary?.wallet.plan;
+          const recommended =
+            tab === 'subscription' && plan.id === recommendedPlan;
+          const higherPlan =
+            tab === 'subscription' &&
+            ((summary?.wallet.plan === 'free' &&
+              (plan.id === 'plus' || plan.id === 'pro')) ||
+              (summary?.wallet.plan === 'plus' && plan.id === 'pro'));
           const paidSubscriptionExists = summary?.wallet.renewsAt !== null;
+          const upgrade =
+            plan.id === 'pro' && Boolean(summary?.upgradeAvailable);
+          const debugCancel =
+            plan.id === 'free' &&
+            summary?.mode === 'debug' &&
+            paidSubscriptionExists;
           const featureGroup =
             plan.id === 'free' || plan.id === 'plus' || plan.id === 'pro'
               ? features[plan.id]
@@ -197,12 +178,18 @@ export function TokenPlansDialog() {
           return (
             <article
               key={plan.id}
-              className={`token-plan-card${plan.id === 'plus' ? ' token-shimmer' : ''}`}
-              data-recommended={plan.id === 'plus'}
+              className={`token-plan-card${recommended ? ' token-shimmer' : ''}`}
+              data-recommended={recommended}
+              data-selected={current}
             >
+              {current && (
+                <span className="token-plan-current-label">
+                  {L('auth:tokenPlans.currentPlan')}
+                </span>
+              )}
               <div className="token-plan-name-row">
                 <h3>{planName}</h3>
-                {plan.id === 'plus' && (
+                {recommended && (
                   <span className="token-plan-recommended">
                     {L('auth:tokenPlans.recommended')}
                   </span>
@@ -252,18 +239,25 @@ export function TokenPlansDialog() {
               </ul>
               <Button
                 className="token-plan-select"
-                variant={plan.id === 'plus' ? 'primary' : 'secondary'}
+                variant={higherPlan ? 'primary' : 'secondary'}
                 disabled={
                   current ||
-                  plan.id === 'free' ||
+                  (plan.id === 'free' && !debugCancel) ||
                   billing.busy ||
-                  Boolean(billing.debugCheckout) ||
-                  !checkoutAvailable ||
-                  (tab === 'subscription' && paidSubscriptionExists)
+                  Boolean(billing.pendingCheckout) ||
+                  (!checkoutAvailable && !debugCancel) ||
+                  (tab === 'subscription' &&
+                    paidSubscriptionExists &&
+                    !upgrade &&
+                    !debugCancel)
                 }
-                onClick={() =>
-                  void billing.purchase(plan.id as PaymentProductId)
-                }
+                onClick={() => {
+                  if (debugCancel) {
+                    void billing.cancelSubscription(true);
+                  } else {
+                    void billing.purchase(plan.id as PaymentProductId);
+                  }
+                }}
               >
                 {current
                   ? L('auth:tokenPlans.currentPlan')
@@ -297,6 +291,18 @@ export function TokenPlansDialog() {
             >
               {L('auth:billing.cancelSubscription')}
             </Button>
+            {summary.mode === 'debug' && (
+              <Button
+                variant="danger"
+                disabled={billing.busy || Boolean(billing.pendingCheckout)}
+                onClick={() => void billing.cancelSubscription(true)}
+              >
+                <span>{L('auth:billing.debugMode')}</span>
+                {L('auth:billing.cancelSubscription')}
+                <span aria-hidden="true">{NL('→')}</span>
+                {NL('Free')}
+              </Button>
+            )}
           </div>
         )}
         {summary && !checkoutAvailable && (

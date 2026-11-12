@@ -5,6 +5,7 @@ import {
   type RouteLocation,
 } from '@trasolve/shared';
 import { getLanguage, L, NL } from '@/shared/i18n';
+import { getTransitStyle } from './transitPresentation';
 
 const notAvailable = (): string =>
   L('testbed:routeResultModel.nOTAVAILABLE.text.notProvided');
@@ -73,6 +74,8 @@ export type RouteSummaryModel = {
 export type ItineraryStepModel = {
   key: string;
   modeLabel: string;
+  transitColor: string | null;
+  vehicleType: string | null;
   travelMode: string | null;
   title: string;
   details: string[];
@@ -266,7 +269,9 @@ export function buildRouteItinerary(
         ].filter((value): value is string => value !== null);
         return {
           key: `leg-${legIndex}-step-${stepIndex}`,
-          modeLabel,
+          modeLabel: transit?.busTypeName ?? modeLabel,
+          transitColor: transit ? getTransitStyle(step).color : null,
+          vehicleType: transit?.vehicleType ?? null,
           travelMode: step.travelMode ?? request.travelMode ?? null,
           title: lineNames.join(' · ') || modeLabel,
           details,

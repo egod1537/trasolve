@@ -6,6 +6,7 @@ import {
   type HealthResponse,
 } from '@trasolve/shared';
 import type { GoogleOAuthHttpFlow } from './googleOAuthHttp.js';
+import type { ConsentHttpFlow } from './auth/consentHttpFlow.js';
 import type { API } from './instances.js';
 import type { TripHttpService } from './trip/tripHttpService.js';
 import type { TripShareHttpService } from './trip-sharing/tripShareHttpService.js';
@@ -28,12 +29,20 @@ export function createBackendServer(
   adminHttp: AdminHttpService,
   billingHttp: BillingHttpService,
   tutorialHttp: TutorialHttpService,
+  consentHttp: ConsentHttpFlow,
 ): Server {
   const server = createServer((request, response) => {
     const dispatch = (): void => {
       const requestUrl = new URL(request.url ?? '/', 'http://localhost');
       const { pathname } = requestUrl;
       response.setHeader('Content-Type', 'application/json; charset=utf-8');
+      if (
+        pathname === API_ROUTES.authConsent ||
+        pathname === API_ROUTES.authConsentCancel
+      ) {
+        void consentHttp.handle(request, response, requestUrl);
+        return;
+      }
       if (pathname === API_ROUTES.tutorial) {
         void tutorialHttp.handle(request, response);
         return;

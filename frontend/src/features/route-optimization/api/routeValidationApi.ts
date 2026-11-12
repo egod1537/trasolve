@@ -30,7 +30,12 @@ export async function validateDayRoute(
     );
   }
   const parsed = routeValidationResponseSchema.safeParse(body.body);
-  if (!parsed.success) {
+  if (
+    !parsed.success ||
+    (request.check_feasibility &&
+      parsed.data.input_valid &&
+      !parsed.data.feasibility)
+  ) {
     throw new RouteOptimizationApiError(
       L(
         'routeOptimization:routeOptimizationApi.error.optimizationStatusResponseFormatIncorrect',

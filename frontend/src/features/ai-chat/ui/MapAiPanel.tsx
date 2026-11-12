@@ -1,3 +1,4 @@
+import { AiHeaderTokenBalance } from './AiHeaderTokenBalance';
 import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { forwardRef, type FormEvent, type KeyboardEvent } from 'react';
 import { CHAT_LIMITS } from '@trasolve/shared';
@@ -7,7 +8,6 @@ import { ChatMarkdown } from '@/features/ai-chat/ui/ChatMarkdown';
 import { AiPanelFrame } from '@/features/ai-chat/ui/AiPanelFrame';
 
 import { CloseIcon } from '@/shared/ui/icons';
-import { TokenCostSummary } from '@/features/billing';
 import '@/features/ai-chat/ui/chat-panel.css';
 
 import {
@@ -256,6 +256,7 @@ const LegacyMapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                   </button>
                 </div>
               )}
+              <AiHeaderTokenBalance />
             </header>
 
             {notice}
@@ -349,7 +350,6 @@ const LegacyMapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                   : L('ai:mapAiPanel.action.transfer')}
               </button>
             </form>
-            <TokenCostSummary action="chat" />
           </section>
         </div>
       </AiPanelFrame>

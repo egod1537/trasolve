@@ -29,6 +29,7 @@ export const openWebUIResponseSchema = z.object({
   model: z.string().trim().min(1),
   status: z.string().trim().min(1).optional(),
   output: z.array(openWebUIOutputItemSchema),
+  usage: z.unknown().optional(),
 });
 
 export type OpenWebUIOutputItem = z.infer<typeof openWebUIOutputItemSchema>;

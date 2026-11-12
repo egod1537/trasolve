@@ -1,3 +1,4 @@
+import { AiHeaderTokenBalance } from '../AiHeaderTokenBalance';
 import { useL } from '@/shared/i18n';
 import { isDebugMode } from '@/shared/config/debugMode';
 import { CloseIcon } from '@/shared/ui/icons';
@@ -69,6 +70,7 @@ export function ChatV2Header({
           </button>
         )}
       </div>
+      <AiHeaderTokenBalance />
     </header>
   );
 }

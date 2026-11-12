@@ -21,16 +21,19 @@ type TossFactory = (key: string) => {
 };
 
 export interface CheckoutProvider {
-  start(checkout: PaymentCheckout): Promise<'redirect' | 'debug'>;
+  start(checkout: PaymentCheckout): Promise<'redirect' | 'confirm'>;
 }
 
 class DebugCheckoutProvider implements CheckoutProvider {
-  public async start(): Promise<'debug'> {
-    return 'debug';
+  public async start(): Promise<'confirm'> {
+    return 'confirm';
   }
 }
 class TossCheckoutProvider implements CheckoutProvider {
-  public async start(order: PaymentCheckout): Promise<'redirect'> {
+  public async start(order: PaymentCheckout): Promise<'redirect' | 'confirm'> {
+    if (order.upgrade) {
+      return 'confirm';
+    }
     const factory = await loadToss();
     const instance = factory(order.clientKey).payment({
       customerKey: order.customerKey,

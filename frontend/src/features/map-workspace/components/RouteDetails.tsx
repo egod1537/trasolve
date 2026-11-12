@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+import { TransitVehicleIcon } from './TransitVehicleIcon';
 import type { MapRoute, TripPolylineMode } from '@trasolve/shared';
 import { TravelMode } from '@trasolve/shared';
 import { PolylineModeIcon } from '@/features/map-workspace/components/PolylineModeIcon';
@@ -66,16 +68,30 @@ export function RouteDetails({
       <ol className="route-settings-itinerary">
         {itinerary.flatMap((leg) =>
           leg.steps.map((step) => (
-            <li key={step.key}>
+            <li
+              key={step.key}
+              data-transit={Boolean(step.transitColor)}
+              style={
+                step.transitColor
+                  ? ({
+                      '--route-segment-color': step.transitColor,
+                    } as CSSProperties)
+                  : undefined
+              }
+            >
               <span className="route-settings-step-mode">
-                <PolylineModeIcon
-                  mode={
-                    step.travelMode === 'WALK' ||
-                    step.travelMode === TravelMode.WALKING
-                      ? 'walking'
-                      : mode
-                  }
-                />
+                {step.transitColor ? (
+                  <TransitVehicleIcon vehicleType={step.vehicleType} />
+                ) : (
+                  <PolylineModeIcon
+                    mode={
+                      step.travelMode === 'WALK' ||
+                      step.travelMode === TravelMode.WALKING
+                        ? 'walking'
+                        : mode
+                    }
+                  />
+                )}
                 <span>{step.modeLabel}</span>
               </span>
               <div className="route-settings-step-content">

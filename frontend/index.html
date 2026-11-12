@@ -9,6 +9,9 @@
     />
     <script>
       (() => {
+        if (new URLSearchParams(window.location.search).get('mobile') === '1') {
+          document.documentElement.dataset.mobileLayout = 'forced';
+        }
         const storageKey = 'trasolve.theme';
         let mode = 'system';
         try {

@@ -274,3 +274,24 @@
     animation: none;
   }
 }
+
+@media (max-width: 760px) {
+  .map-user-controls {
+    top: max(12px, env(safe-area-inset-top));
+  }
+
+  .map-profile-button {
+    width: 48px;
+    height: 48px;
+    border-width: 2px;
+  }
+
+  .map-profile-button svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .map-user-menu-item {
+    min-height: 44px;
+  }
+}

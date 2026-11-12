@@ -1,3 +1,4 @@
+import { LayerPanelShell } from './LayerPanelShell';
 import { ScrollArea } from '@/shared/ui/ScrollArea';
 import {
   memo,
@@ -131,11 +132,7 @@ export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
 
   return (
     <>
-      <aside
-        ref={sidebarRef}
-        className="layer-panel trip-sidebar"
-        aria-label={L('map:layerPanel.ariaLabel.travelItinerary')}
-      >
+      <LayerPanelShell sidebarRef={sidebarRef} title={trip.title}>
         <header className="trip-sidebar-header">
           <div className="trip-panel-header-body">
             <div className="trip-panel-header-copy">
@@ -287,7 +284,7 @@ export const ReadonlyLayerPanel = memo(function ReadonlyLayerPanel({
             </p>
           )}
         </ScrollArea>
-      </aside>
+      </LayerPanelShell>
       {detailPlaceContext && (
         <ReadonlyPlaceDetail
           key={detailPlaceContext.place.id}

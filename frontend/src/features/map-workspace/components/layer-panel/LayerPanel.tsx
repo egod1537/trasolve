@@ -1,3 +1,5 @@
+import { useMobileDetailSelection } from '../../model/MobileNavigation';
+import { LayerPanelShell } from './LayerPanelShell';
 import {
   memo,
   useCallback,
@@ -21,7 +23,6 @@ import { ShareTripModal } from '@/features/map-workspace/components/share/ShareT
 import { useTripError } from '@/features/map-workspace/hooks/useTrip';
 import { useEventCallback } from '@/shared/lib/useEventCallback';
 import { DayDeleteDialog } from './DayDeleteDialog';
-import { useL } from '@/shared/i18n';
 
 type DetailTarget =
   { type: 'place'; id: string } | { type: 'polyline'; id: string } | null;
@@ -95,10 +96,10 @@ export const LayerPanel = memo(function LayerPanel({
   visibleDayIds,
   ...contentProps
 }: Props) {
-  const L = useL();
   const mutationError = useTripError();
   const onFocusPlace = useEventCallback(focusPlace);
-  const [detailTarget, setDetailTarget] = useState<DetailTarget>(null);
+  const [detailTarget, setDetailTarget] =
+    useMobileDetailSelection<NonNullable<DetailTarget>>();
   const [deleteDay, setDeleteDay] = useState<{
     id: string;
     title: string;
@@ -117,7 +118,10 @@ export const LayerPanel = memo(function LayerPanel({
     [detailPolylineId, trip.days, visibleDayIds],
   );
   const detailOpen = !!detailPlaceContext || !!detailPolylineContext;
-  const closeDetails = useCallback(() => setDetailTarget(null), []);
+  const closeDetails = useCallback(
+    () => setDetailTarget(null),
+    [setDetailTarget],
+  );
   const openShareModal = useCallback(() => setShareModalOpen(true), []);
   const closeShareModal = useCallback(() => {
     setShareModalOpen(false);
@@ -194,12 +198,7 @@ export const LayerPanel = memo(function LayerPanel({
 
   return (
     <>
-      <aside
-        ref={sidebarRef}
-        className="layer-panel trip-sidebar"
-        inert={busy}
-        aria-label={L('map:layerPanel.ariaLabel.travelItinerary')}
-      >
+      <LayerPanelShell sidebarRef={sidebarRef} title={trip.title} busy={busy}>
         <LayerPanelHeader
           trip={trip}
           onAddLayer={onAddLayer}
@@ -231,7 +230,7 @@ export const LayerPanel = memo(function LayerPanel({
           onUpdatePlaceOrderLock={onUpdatePlaceOrderLock}
           {...contentProps}
         />
-      </aside>
+      </LayerPanelShell>
       {detailPlaceContext && (
         <LayerPlaceDetailCard
           key={detailPlaceContext.place.id}

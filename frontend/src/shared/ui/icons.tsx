@@ -12,9 +12,11 @@ function Icon({ children, ...props }: Props) {
 
 export function PinIcon(props: Props) {
   return (
-    <Icon {...props}>
-      <path d="m16 3 5 5-4 2-3 5-2 1-4-4 1-2 5-3 2-4Z" />
-      <path d="m10 14-7 7" />
+    <Icon fill="currentColor" stroke="none" {...props}>
+      <path
+        transform="rotate(45 12 12)"
+        d="M8 2h8a2 2 0 0 1 0 4h-.5v3.5l2.8 2.2A1.75 1.75 0 0 1 17.2 15H13.25v5.75a1.25 1.25 0 0 1-2.5 0V15H6.8a1.75 1.75 0 0 1-1.1-3.3l2.8-2.2V6H8a2 2 0 0 1 0-4Z"
+      />
     </Icon>
   );
 }

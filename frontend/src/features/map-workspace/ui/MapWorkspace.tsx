@@ -1,3 +1,4 @@
+import { MobileNavigationProvider } from '../model/MobileNavigation';
 import { CommandSession } from '../command-console/CommandSession';
 import { useTripData } from '@/features/map-workspace/hooks/useTrip';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -38,10 +39,12 @@ export function MapWorkspace(props: Props) {
   return props.mode === 'readonly' ? (
     <ReadonlyMapWorkspace />
   ) : (
-    <EditableMapWorkspace
-      onQueryRouteDetails={props.onQueryRouteDetails}
-      onOpenTripPicker={props.onOpenTripPicker}
-    />
+    <MobileNavigationProvider>
+      <EditableMapWorkspace
+        onQueryRouteDetails={props.onQueryRouteDetails}
+        onOpenTripPicker={props.onOpenTripPicker}
+      />
+    </MobileNavigationProvider>
   );
 }
 

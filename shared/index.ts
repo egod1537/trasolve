@@ -272,6 +272,17 @@ export { authMeResponseSchema, authUserSchema } from './schemas/auth.js';
 export type { AuthMeResponse, AuthUser } from './types/auth.js';
 
 export {
+  LEGAL_VERSIONS,
+  LEGAL_PATHS,
+  authConsentAcceptanceSchema,
+  authConsentRecordSchema,
+  authConsentStatusSchema,
+  type AuthConsentAcceptance,
+  type AuthConsentRecord,
+  type AuthConsentStatus,
+} from './schemas/legal.js';
+
+export {
   openWebUIModelSchema,
   openWebUIModelListResponseSchema,
 } from './schemas/openwebui.js';
@@ -438,3 +449,5 @@ export {
   type WorkspaceCommandRequest,
   type WorkspaceCommandDefinition,
 } from './schemas/workspaceCommand.js';
+
+export { quoteRouteTokens } from './domain/tokenCosts.js';

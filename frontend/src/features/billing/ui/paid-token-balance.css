@@ -1,0 +1,126 @@
+.paid-plan-badge {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  overflow: hidden;
+  border: 1px solid #c8e6ff;
+  border-radius: 999px;
+  background: linear-gradient(
+    160deg,
+    #d5eaff 0%,
+    #f5fbff 20%,
+    #9dbbd5 48%,
+    #daeefe 70%,
+    #92b2d0 100%
+  );
+  color: #19384e;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.paid-plan-badge[data-plan='pro'] {
+  border-color: #f5dca5;
+  background: linear-gradient(
+    160deg,
+    #d6b674 0%,
+    #fff2ca 23%,
+    #c7a461 48%,
+    #ffe8ab 72%,
+    #be9753 100%
+  );
+  color: #49320d;
+}
+
+.paid-plan-badge[data-plan='free'] {
+  border-color: var(--color-border);
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+}
+.paid-plan-badge[data-plan='free']::after {
+  display: none;
+}
+
+.paid-plan-badge svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.paid-plan-badge::after {
+  position: absolute;
+  inset: -25% auto -25% -60%;
+  width: 35%;
+  background: linear-gradient(100deg, transparent, #fff9, transparent);
+  content: '';
+  pointer-events: none;
+  transform: skewX(-20deg);
+  animation: paid-badge-sheen 7s ease-in-out infinite;
+}
+
+.map-token-balance[data-plan='plus'] {
+  border-color: #8aacc280;
+}
+
+.map-token-balance[data-plan='pro'] {
+  border-color: #cfb57990;
+}
+
+.map-token-balance[data-plan='pro'] .map-token-balance-progress {
+  --progress-color: #edc671;
+}
+
+.map-token-balance-label .debug-token-toggle.ui-button {
+  min-height: 14px;
+  min-width: 18px;
+  width: 18px;
+  height: 14px;
+  padding: 0 4px;
+  gap: 2px;
+  font-size: 9px;
+  line-height: 1;
+}
+
+.map-token-balance .map-token-balance-progress > span,
+.token-balance-gauge .map-token-balance-progress > span {
+  /* The shared RAF value animates the number and fill on the same timeline. */
+  transition: none;
+}
+
+@keyframes paid-badge-sheen {
+  0%,
+  72% {
+    left: -60%;
+  }
+  92%,
+  100% {
+    left: 145%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paid-plan-badge::after {
+    animation: none;
+    display: none;
+  }
+  .map-token-balance .map-token-balance-progress > span,
+  .token-balance-gauge .map-token-balance-progress > span {
+    transition: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .map-token-balance-label {
+    gap: 4px;
+  }
+  .map-token-balance .paid-plan-badge {
+    padding-inline: 5px;
+    font-size: 9px;
+  }
+}

@@ -66,6 +66,11 @@ export function useRouteValidation(
     error: current?.error ?? null,
     checking: Boolean(key && !current && !paused),
     unknownHours: prepared?.unknownHours ?? [],
+    unsupported: Boolean(
+      prepared?.unsupported ||
+      current?.result?.feasibility?.status === 'UNSUPPORTED',
+    ),
+    locationCount: day?.places.length ?? 0,
     blocksOptimization: Boolean(
       prepared?.issues.length || current?.result?.blocks_optimization,
     ),

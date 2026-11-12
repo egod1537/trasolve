@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
+import { mobileLayout } from './build/mobileLayout';
 import { localizationPreload } from './build/localizationPreload';
 
 const frontendDir = fileURLToPath(new URL('.', import.meta.url));
@@ -95,6 +96,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
 
   return {
     plugins: [react(), localizationPreload()],
+    css: { postcss: { plugins: [mobileLayout()] } },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),

@@ -380,26 +380,48 @@ uses the sidebar interactive-popover marker to preserve the parent detail card.
 ## Independent route validation
 
 `shared/schemas/routeValidation` defines the independent `/validate` wire contract.
-The current visit order and any requested service-start times are separate from
-optimization endpoint/order preferences. `TrouteClient.validateRoute` checks both
+The default API mode checks the current visit order and requested service-start
+times. The optional `check_feasibility` mode instead checks existence under the
+optimizer's constraints. `TrouteClient.validateRoute` checks both
 request and response schemas, preserves cancellation through its existing HTTP
 transport, and respects the external API policy. The backend gateway exposes
 `/api/troute/validate` without entering optimization billing, Job mirrors or SSE.
 
 `route-optimization/model/routeValidation` builds a detached read-only request from
-the current day. It collects local input issues before routing and retains missing
-opening-hours diagnostics. `useRouteValidation` debounces requests by 350 ms,
+the current day using the same optimization request builder, selected endpoints,
+start/visit policies and order locks. Displayed times are not pinned appointments.
+It collects local input issues and missing opening-hours diagnostics. Above 15
+places (including endpoints), the UI reports quick validation as unsupported and
+does not send a validation request. Optimization remains available. The server
+enforces the same cap before matrix/provider work. Supported inputs use a greedy
+witness first, then exact bitmask DP if greedy fails. The backend applies the same
+partial-visit capability switch as optimization before forwarding either request.
+`useRouteValidation` debounces requests by 350 ms,
 aborts on changes/close/submission and hides results whose fingerprint no longer
 matches. Failed checks remain explicitly unverified and have a retry action.
-Current clock times can use minute precision; optimizer-specific ten-minute
-restrictions still apply to optimization inputs where previously required.
+Optimizer-specific ten-minute input restrictions still apply where required;
+computed schedules retain minute precision.
 
 The right companion panel renders all reported issues, relevant facts and available
-suggestions. Input errors can disable optimization; current-order/time conflicts
-cannot. Validation does not enter the trip command path or save predicted times.
+suggestions, plus feasible/unsupported existence status. Only exhausted DP may
+report `NO_FEASIBLE_ROUTE`; a failed greedy attempt cannot. Input errors can disable
+optimization; feasibility warnings and unsupported checks do not. Validation does
+not enter the trip command path or save the witness/predicted times.
 The current app request uses local Euclidean travel-time estimates, matching its
 optimization request, and identifies that basis alongside warnings. Unknown
 opening-hours data remains a visible warning instead of being presented as known.
+
+An infeasible precheck can return bounded, single-change repair suggestions. The
+shared suggestion contract preserves the optional `feasibility_verified` boolean.
+`RouteOptimizationFailureDetails` shows current/suggested departure times and stay
+durations, or the place to exclude. When every proposal was verified against the
+complete itinerary, a localized notice explains that the proposals are independent
+alternatives under the current travel times. Older/local necessary-condition
+suggestions do not receive that claim. The exclusion label describes this itinerary
+and does not delete data automatically. There is no apply action or second write
+path; user edits still enter the existing commands and trigger fresh validation.
+The backend caps analysis and runs it on troute's dedicated validation worker/core,
+reusing the matrix instead of making additional routing calls.
 
 ## First performance pass
 
@@ -596,3 +618,135 @@ unmount a pending confirmation. Cancellation is the initial focus target.
 entire owning day, including its places, route segments and saved visibility.
 Deleting the final layer is permitted by the existing trip schema and empty view.
 Read-only layers keep their existing controls.
+
+## Forced mobile layout
+
+Add `?mobile=1` (or `&mobile=1` alongside existing parameters) to select the
+390px responsive width profile on any screen. The flag is URL-scoped, available
+in preview/production builds, and does not persist in storage. Removing it and
+reloading restores normal viewport detection; `mobile=0` does not force desktop.
+The HTML bootstrap sets `data-mobile-layout="forced"` before styles paint.
+
+`build/mobileLayout` expands source CSS pixel min/max-width media conditions into
+normal and forced branches in their original cascade positions. Zero-specificity
+selector guards keep normal styling unchanged, including root and pseudo-element
+rules. Forced conditions use the shared 390px constant; height, media type and
+accessibility preferences retain real-device behavior. Keep responsive width
+conditions in the supported `(min-width: Npx)` / `(max-width: Npx)` form.
+
+`shared/config/mobileLayout` also owns JS width decisions used by the map camera,
+comparison view, tutorial and admin menu. Landing-to-map and login return paths
+preserve the flag. This selects layout rules at the current browser size; it does
+not emulate touch, device pixel ratio, browser chrome, keyboard or viewport units.
+
+## Mobile workspace surfaces
+
+At 760px and below, `LayerPanelShell` supplies the editable and read-only layer
+lists with the same collapsed/half/full controls. CSS owns sheet size and the tool
+row position; the body remains mounted so expansion, scroll and edits survive
+folding. Inactive collapsed contents are inert. The shell is unchanged on desktop.
+Map and layer details share `shared/lib/mobilePanelGeometry` and replace the list
+with a bottom card on mobile, independent of the selected marker's projection.
+Closing details reveals the retained list. Side detail panels cover their parent
+card rather than extending outside the viewport. Desktop geographic anchoring
+and row-side placement remain in their original paths.
+
+`app/providers/VisualViewport` supplies CSS height/offset values from browser
+viewport resize/scroll events. Mobile dialogs and map surfaces consume these
+values to stay above the software keyboard; pinch zoom does not trigger layout
+updates. `shared/hooks/useLayoutMaxWidth` makes modal chat and list behavior
+respond to window resizing and the existing `?mobile=1` profile. Chat retains its
+transport/thread state while the presentation becomes a full-height dialog.
+Search, user controls and tool buttons have compact placement and touch targets;
+selecting a search result dismisses the mobile search keyboard. Optimization
+settings, validation and sticky actions share a vertically scrolling dialog.
+
+CSS import order keeps mobile overrides with their owning slices: map
+`mobile-sheet.css` follows `responsive.css`, shared map-card `mobile.css` follows
+existing card styles, and global mobile form/dialog rules follow the theme.
+
+`place-editor/ui/PlaceSearchResults` owns the search list's rendering and status
+presentation; search requests and cancellation remain in `MapSearchToolbar`.
+
+## Mobile navigation and compact views
+
+Editable workspaces own `MobileNavigationProvider`. The mobile bottom bar selects
+map, itinerary or AI; My Trips opens the existing picker without discarding the
+current view. Desktop chat state remains separate. Hidden itinerary sheets are
+inert; map camera padding ignores inactive sheets. Navigation clears transient
+map/layer details while keeping trip commands, edit state and chat transport in
+their existing owners. Onboarding selects the required pane when its step changes
+and targets the mobile AI navigation button instead of the hidden floating one.
+
+Chat is a page pane above the persistent mobile navigation rather than a modal
+that would trap focus away from the bar. Shared/read-only and standalone chat
+retain their existing modal behavior. Mobile map tools use intrinsic width and
+remain horizontally centered above the navigation or active itinerary sheet.
+
+`TokenBalanceControl` has a compact mobile presentation with plan badge, balance,
+debug toggle and top-up action in one row with a thin progress bar. It uses the
+existing animated balance; full-size labels and allowance remain on desktop.
+The mobile itinerary uses a single title, an icon action row and short time
+summaries; detailed timelines remain available in the existing detail cards.
+
+The mobile picker does not mount `TripMapPreview` and disables `TripPreviewPool`,
+so list-only presentation does not allocate Google Map preview instances. Desktop
+preview pooling and resize-driven presentation changes retain their lifecycle.
+
+## Mobile map and optimization refinements
+
+The mobile map toolbar hides the token control and quick-search trigger.
+Both AI chat headers use `AiHeaderTokenBalance` in a separate mobile
+header row. `TokenRemainingGauge` shows the current Free/Plus/Pro badge, animated
+balance and a top-up action that opens the shared billing dialog. Desktop chat
+remains unchanged.
+Header token meters use an 88px track and intrinsic-width controls rather than
+stretching across the available header space.
+
+The mobile optimization dialog stretches header/footer across its full width.
+`OptimizationMobileTabs` switches between settings and validation with keyboard
+navigation and linked tab panels. Both panels remain mounted, preserving input
+drafts and validation state. Only the selected panel scrolls; the header and
+execution actions remain visible. Desktop keeps the adjacent panels.
+`OptimizationSettingsFields` owns the presentational travel/departure fields.
+The header places the plan/balance/top-up control next to the estimated negative
+token delta. `TokenChargeInfo` shows the charge policy in a dismissible tooltip,
+portalled above dialog clipping with viewport collision handling. The shared
+billing dialog scrolls its product cards on mobile while retaining its header,
+purchase tabs and subscription terms.
+
+Mobile result review omits the itinerary sidebar and floating Day
+heading. A single bottom card contains the compact metric summary, comparison
+switch and existing apply/close actions. The result map observes that card's
+actual size when fitting bounds so its markers stay above the review surface.
+Desktop comparison lists and headings remain in their existing presentation.
+
+### Account consent and public legal documents
+
+`features/auth` owns the consent API, server-status gate, responsive onboarding
+form and account-settings receipt. `pages/legal` renders the public versioned
+terms and privacy documents; `shared/ui/LegalLinks` supplies their links without
+depending on auth. Static copy uses the generated `legal` locale namespace.
+Public documents remain accessible while consent is pending. Mobile media
+rules live with these surfaces and participate in the existing forced mobile
+preview transform. See `docs/account-consent.md` for the server contract.
+
+### Transit route presentation
+
+`shared/lib/transitPresentation` resolves stable journey colors for both the
+route preview and detailed itinerary. Bus service categories use fixed colors:
+trunk blue, branch/local green, rapid red, circulation yellow and airport purple.
+Rail and unclassified services use the provider's line color; missing metadata
+uses neutral gray rather than guessing a service type from a route number.
+Journey bars choose contrasting text, and bus/rail icons distinguish vehicles.
+
+The backend `routes/providers/transitDetails` normalizes both Kakao's raw
+vehicles and Google's nested transitLine/stopDetails. Service display names stay
+upstream data. Optional shared-schema fields preserve older saved responses.
+Google color/textColor fields are explicitly requested by Trasolve and tcache;
+tcache's Google adapter/cache identity must be updated with this feature so
+previous responses without colors do not mask the new metadata.
+
+Validation: workspace build/typecheck, lint (including localization), frontend
+architecture check and formatting. Live browser verification was unavailable in
+this workspace; no pixel-identical Naver layout or palette is claimed.

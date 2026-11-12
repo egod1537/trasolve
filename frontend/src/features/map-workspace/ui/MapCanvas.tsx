@@ -1,3 +1,4 @@
+import { matchesLayoutMaxWidth } from '@/shared/config/mobileLayout';
 import { memo, useEffect, type ReactNode, type RefObject } from 'react';
 import type { Trip } from '@trasolve/shared';
 import { GoogleMap, useGoogleMap } from '@/map/components/GoogleMap';
@@ -75,9 +76,22 @@ const TripObjects = memo(function TripObjects({
     const panel = sidebarRef.current;
     const padding = calculateMapPadding({
       canvasRect: canvas.getBoundingClientRect(),
-      sidebarRect: panel?.getBoundingClientRect(),
-      mobile: window.matchMedia('(max-width: 760px)').matches,
+      sidebarRect:
+        panel?.dataset.mobileActive === 'false'
+          ? undefined
+          : panel?.getBoundingClientRect(),
+      mobile: matchesLayoutMaxWidth(760),
     });
+
+    const navigation = panel
+      ?.closest('.trip-map-page')
+      ?.querySelector('.mobile-map-navigation');
+    if (matchesLayoutMaxWidth(760) && navigation) {
+      padding.bottom = Math.max(
+        padding.bottom,
+        navigation.getBoundingClientRect().height + 72,
+      );
+    }
 
     if (focusTarget.type === 'point') {
       if (focusTarget.point) {

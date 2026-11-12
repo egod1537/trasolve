@@ -22,21 +22,39 @@ export const tokenWalletSchema = z.object({
   renewsAt: z.iso.datetime().nullable(),
   cancelAtPeriodEnd: z.boolean(),
 });
+export const routeTokenPolicySchema = z.object({
+  baseCost: z.number().finite().positive(),
+  multiplier: z.number().finite().positive(),
+  referencePlaces: z.number().finite().positive(),
+  doublingPlaces: z.number().finite().positive(),
+  maxCost: z.number().int().positive(),
+});
+export type RouteTokenPolicy = z.infer<typeof routeTokenPolicySchema>;
 export const billingSummarySchema = z.object({
   mode: paymentModeSchema,
   /** Server-owned policy; missing on older servers means metered usage. */
   unlimited: z.boolean().optional(),
+  unlimitedAvailable: z.boolean().optional(),
   available: z.boolean(),
   subscriptionAvailable: z.boolean(),
+  upgradeAvailable: z.boolean().optional(),
   topupAvailable: z.boolean(),
   wallet: tokenWalletSchema,
   costs: z.object({
     chat: z.number().int().nonnegative(),
     optimize: z.number().int().nonnegative(),
   }),
+  routeTokenPolicy: routeTokenPolicySchema.optional(),
   products: z.array(paymentProductSchema),
 });
 export const checkoutSchema = z.object({
+  upgrade: z
+    .object({
+      from: z.literal('plus'),
+      nextProduct: paymentProductSchema,
+      renewsAt: z.iso.datetime(),
+    })
+    .optional(),
   orderId: z.string(),
   product: paymentProductSchema,
   customerKey: z.string(),

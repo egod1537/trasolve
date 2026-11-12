@@ -1,3 +1,4 @@
+import { useLayoutMaxWidth } from '@/shared/hooks/useLayoutMaxWidth';
 import {
   useCallback,
   useEffect,
@@ -15,6 +16,7 @@ import {
 import { MapAiUnreadPreviews } from '@/features/ai-chat/ui/MapAiUnreadPreviews';
 
 type Props = {
+  mobileScreen?: boolean;
   open: boolean;
   singleSession?: boolean;
   persistenceKey?: string;
@@ -27,6 +29,7 @@ type Props = {
 const noUnreadPreviews: MapAiUnreadPreview[] = [];
 
 export function MapAiRegion({
+  mobileScreen = false,
   open,
   singleSession,
   persistenceKey,
@@ -35,6 +38,7 @@ export function MapAiRegion({
   renderAssistantActions,
   notice,
 }: Props) {
+  const mobile = useLayoutMaxWidth();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<MapAiPanelHandle>(null);
   const wasOpenRef = useRef(false);
@@ -75,6 +79,7 @@ export function MapAiRegion({
       }}
     >
       <MapAiButton
+        tutorialTarget={!mobileScreen}
         ref={buttonRef}
         open={open}
         generating={generating}
@@ -85,6 +90,7 @@ export function MapAiRegion({
         onOpen={openPreview}
       />
       <MapAiPanel
+        modal={mobile && !mobileScreen}
         ref={panelRef}
         singleSession={singleSession}
         persistenceKey={persistenceKey}

@@ -99,7 +99,12 @@ export class TrouteClient {
       signal,
     });
     const result = routeValidationResponseSchema.safeParse(body);
-    if (!result.success) {
+    if (
+      !result.success ||
+      (parsed.data.check_feasibility &&
+        result.data.input_valid &&
+        !result.data.feasibility)
+    ) {
       throw this.invalidResponseError();
     }
     return result.data;

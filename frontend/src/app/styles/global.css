@@ -197,3 +197,27 @@ body {
   )::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-scrollbar-thumb-hover);
 }
+.legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 8px 20px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.legal-links a {
+  color: var(--color-text-secondary);
+  text-underline-offset: 3px;
+}
+.legal-links a:hover,
+.legal-links a:focus-visible {
+  color: var(--color-accent);
+}
+.site-footer .legal-links {
+  justify-content: center;
+}
+.login-dialog .login-legal-notice {
+  margin-top: 24px;
+  font-size: 12px;
+  line-height: 1.7;
+}

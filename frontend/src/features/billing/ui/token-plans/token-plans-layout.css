@@ -1,3 +1,16 @@
+.token-plans-dialog .billing-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.token-plans-dialog .billing-tabs > .ui-button {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+}
+
 .token-plans-dialog > * {
   flex: none;
 }
@@ -46,22 +59,12 @@
   font-size: 12px;
 }
 
-.token-plans-dialog .billing-error p,
-.token-plans-dialog .billing-message {
+.token-plans-dialog .billing-error p {
   margin: 6px 0;
 }
 
 .token-plans-dialog .billing-error .ui-button {
   flex: none;
-}
-
-.token-plans-dialog .billing-debug-checkout {
-  margin-bottom: 10px;
-  padding: 8px 12px;
-}
-
-.token-plans-dialog .billing-debug-checkout p {
-  margin: 4px 0 8px;
 }
 
 @media (max-height: 800px) {
@@ -212,5 +215,25 @@
     width: 12px;
     height: 12px;
     margin-top: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .token-plans-dialog {
+    height: var(--mobile-dialog-height);
+  }
+  .token-plans-dialog > .token-plans-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: max-content;
+    align-content: start;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .token-plans-dialog .token-plan-card {
+    padding: 14px;
+  }
+  .token-plans-dialog .token-plan-card[data-selected='true'] {
+    padding-top: 30px;
   }
 }

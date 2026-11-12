@@ -157,6 +157,9 @@ export const PlaceLayerItem = memo(function PlaceLayerItem({
           </span>
         )}
       </span>
+      {place.time && (
+        <span className="trip-layer-time-compact">{place.time}</span>
+      )}
       <PlaceTimeTimeline
         time={place.time}
         visitDurationMinutes={

@@ -1,3 +1,4 @@
+import { recordChatUsage } from '../billing/chatUsage.js';
 import { z } from 'zod';
 import {
   CHAT_LIMITS,
@@ -24,6 +25,7 @@ export async function readResponsesStream(
   response: Response,
   model: string,
   options: ChatStreamOptions,
+  messages: readonly { content: string }[],
 ): Promise<ChatResponse> {
   if (
     !response.body ||
@@ -65,6 +67,12 @@ export async function readResponsesStream(
         : result.output;
       const finalText = extractAssistantText(output);
       const webImages = extractWebImages(output);
+      recordChatUsage(
+        result.model,
+        messages,
+        finalText || content,
+        result.usage,
+      );
       return chatResponseSchema.parse({
         model: result.model ?? model,
         message: { role: 'assistant', content: finalText || content },

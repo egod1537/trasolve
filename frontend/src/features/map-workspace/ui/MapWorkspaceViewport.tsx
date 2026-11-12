@@ -385,6 +385,10 @@ export const MapWorkspaceViewport = memo(function MapWorkspaceViewport({
           selectedPlaceIds={bulkSelectedPlaceIds}
           onSelectPlace={onSelectSearchedGooglePlace}
           onOpenTripPicker={onOpenTripPicker}
+          onMobileNavigate={() => {
+            dispatchTransient({ type: 'detail-closed' });
+            onCloseGooglePlace();
+          }}
         />
       </div>
       {comparison && <RouteComparisonBar comparison={comparison} />}

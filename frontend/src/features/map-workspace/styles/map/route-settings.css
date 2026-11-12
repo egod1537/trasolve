@@ -262,3 +262,15 @@
   color: var(--color-muted);
   font-size: 13px;
 }
+
+.route-settings-itinerary li[data-transit='true'] .route-settings-step-mode,
+.route-settings-itinerary
+  li[data-transit='true']
+  .route-settings-step-content
+  strong {
+  color: color-mix(
+    in srgb,
+    var(--route-segment-color) 80%,
+    var(--color-text) 20%
+  );
+}

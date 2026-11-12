@@ -1,10 +1,9 @@
+import { matchesLayoutMaxWidth } from '@/shared/config/mobileLayout';
 import type { DriveStep } from 'driver.js';
 import type { Localize } from '@/shared/i18n';
 
 export function tutorialSteps(L: Localize): DriveStep[] {
-  const side = window.matchMedia('(max-width: 700px)').matches
-    ? 'bottom'
-    : 'right';
+  const side = matchesLayoutMaxWidth(700) ? 'bottom' : 'right';
   return [
     {
       element: '[data-tutorial="create-trip"]',

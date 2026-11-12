@@ -32,6 +32,7 @@ import { createTripCommandPlanSystemMessages } from '../ai-command/TripCommandPl
 import { parseTripCommandPlanText } from '../ai-command/TripCommandPlanParser';
 
 type Props = {
+  mobileScreen?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Current map selection (place IDs in selection order); never synthesized. */

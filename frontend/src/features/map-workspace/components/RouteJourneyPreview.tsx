@@ -5,9 +5,9 @@ import {
   getTravelModeLabel,
 } from '@/shared/lib/routePresentation';
 import { useL } from '@/shared/i18n';
+import { getTransitStyle } from '@/shared/lib/transitPresentation';
 import { PolylineModeIcon } from './PolylineModeIcon';
-
-const TRANSIT_COLORS = ['#c4a136', '#369c72', '#5965dc', '#a16bb5'];
+import { TransitVehicleIcon } from './TransitVehicleIcon';
 
 // The proportional journey bar describes transit rides, transfers and walks.
 // Walking/driving result cards render their own mode-specific summaries.
@@ -36,6 +36,7 @@ export function RouteJourneyPreview({ route }: { route: MapRoute }) {
               step.travelMode,
               step.transitDetails?.vehicleType,
             );
+            const style = getTransitStyle(step);
             return (
               <span
                 key={index}
@@ -43,17 +44,19 @@ export function RouteJourneyPreview({ route }: { route: MapRoute }) {
                 style={
                   {
                     flexGrow: step.durationMillis ?? 0,
-                    '--route-segment-color': walking
-                      ? '#a0aab9'
-                      : TRANSIT_COLORS[
-                          Math.max(0, transit.indexOf(step)) %
-                            TRANSIT_COLORS.length
-                        ],
+                    '--route-segment-color': style.color,
+                    '--route-segment-text-color': style.textColor,
                   } as CSSProperties
                 }
                 title={[label, formatDuration(step.durationMillis)].join(', ')}
               >
-                <PolylineModeIcon mode={walking ? 'walking' : 'transit'} />
+                {walking ? (
+                  <PolylineModeIcon mode="walking" />
+                ) : (
+                  <TransitVehicleIcon
+                    vehicleType={step.transitDetails?.vehicleType}
+                  />
+                )}
                 <span>{formatDuration(step.durationMillis)}</span>
               </span>
             );
@@ -69,16 +72,25 @@ export function RouteJourneyPreview({ route }: { route: MapRoute }) {
                 key={index}
                 style={
                   {
-                    '--route-segment-color':
-                      TRANSIT_COLORS[index % TRANSIT_COLORS.length],
+                    '--route-segment-color': getTransitStyle(step).color,
                   } as CSSProperties
                 }
               >
                 <strong className="route-journey-line">
-                  <PolylineModeIcon mode="transit" />
-                  {details.lineShortName ||
-                    details.lineName ||
-                    getTravelModeLabel(step.travelMode, details.vehicleType)}
+                  <TransitVehicleIcon vehicleType={details.vehicleType} />
+                  <span className="route-journey-line-label">
+                    {details.busTypeName && (
+                      <small>{details.busTypeName}</small>
+                    )}
+                    <span>
+                      {details.lineShortName ||
+                        details.lineName ||
+                        getTravelModeLabel(
+                          step.travelMode,
+                          details.vehicleType,
+                        )}
+                    </span>
+                  </span>
                 </strong>
                 <span>
                   {[details.departureStop, details.arrivalStop]

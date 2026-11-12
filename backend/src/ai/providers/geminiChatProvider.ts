@@ -1,3 +1,4 @@
+import { recordChatUsage } from '../../billing/chatUsage.js';
 import {
   CHAT_LIMITS,
   type ChatRequest,
@@ -27,6 +28,14 @@ const GEMINI_TOOLS_API_BASE_URL =
 const DEFAULT_TIMEOUT_MS = 120_000;
 
 const geminiResponseSchema = z.object({
+  usageMetadata: z
+    .object({
+      promptTokenCount: z.number().int().nonnegative(),
+      candidatesTokenCount: z.number().int().nonnegative().optional(),
+      thoughtsTokenCount: z.number().int().nonnegative().optional(),
+      cachedContentTokenCount: z.number().int().nonnegative().optional(),
+    })
+    .optional(),
   candidates: z.array(
     z.object({
       content: z.object({
@@ -279,6 +288,19 @@ export class GeminiChatProvider implements ChatProvider {
       );
     }
 
+    const metadata = parsed.data.usageMetadata;
+    const usage =
+      metadata && metadata.candidatesTokenCount !== undefined
+        ? {
+            input_tokens: metadata.promptTokenCount,
+            output_tokens:
+              metadata.candidatesTokenCount +
+              (metadata.thoughtsTokenCount ?? 0),
+            input_tokens_details: {
+              cached_tokens: metadata.cachedContentTokenCount ?? 0,
+            },
+          }
+        : undefined;
     const parts = parsed.data.candidates[0].content.parts;
     const calls = parts.flatMap((part) =>
       part.functionCall === undefined ? [] : [part.functionCall],
@@ -297,6 +319,7 @@ export class GeminiChatProvider implements ChatProvider {
           'The Gemini tool call was not accepted.',
         );
       }
+      recordChatUsage(this.model, request.messages, planText, usage);
       return {
         model: this.model,
         message: { role: 'assistant', content: planText },
@@ -315,6 +338,7 @@ export class GeminiChatProvider implements ChatProvider {
       );
     }
 
+    recordChatUsage(this.model, request.messages, content, usage);
     return { model: this.model, message: { role: 'assistant', content } };
   }
 

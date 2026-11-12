@@ -16,7 +16,6 @@ export function TutorialGuide() {
     current.current = tutorial;
   }, [tutorial]);
   const instance = useRef<Driver | null>(null);
-  const dismissed = useRef<{ run: number; step: string } | null>(null);
 
   useEffect(() => {
     let disposed = false;
@@ -56,7 +55,6 @@ export function TutorialGuide() {
       },
       onHighlighted: (_element, _step, { index }) => {
         if (!disposed && index !== undefined) {
-          dismissed.current = null;
           current.current.step(index);
         }
       },
@@ -80,28 +78,21 @@ export function TutorialGuide() {
           !disposed &&
           (reason === 'close' || reason === 'escape' || reason === 'overlay')
         ) {
-          // Closing a hint leaves account progress and success callbacks active.
-          dismissed.current = {
-            run: current.current.run,
-            step: current.current.progress.step,
-          };
+          // Stop the controller too, so the workspace bridge cannot reopen the
+          // picker when the user chooses an existing trip after dismissing us.
+          current.current.stop();
         }
       },
     });
     instance.current = guide;
-    if (
-      dismissed.current?.run !== tutorial.run ||
-      dismissed.current.step !== current.current.progress.step
-    ) {
-      guide.drive(
-        Math.max(
-          0,
-          TUTORIAL_STEPS.findIndex(
-            (step) => step === current.current.progress.step,
-          ),
+    guide.drive(
+      Math.max(
+        0,
+        TUTORIAL_STEPS.findIndex(
+          (step) => step === current.current.progress.step,
         ),
-      );
-    }
+      ),
+    );
     // Place details arrive asynchronously; move the spotlight to the real Add
     // button as soon as it is mounted, and retain search/retry while loading.
     let lastTarget = guide.getActiveElement();

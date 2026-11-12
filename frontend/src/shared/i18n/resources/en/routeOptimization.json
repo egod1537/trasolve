@@ -5,6 +5,16 @@
       "before": "Before"
     }
   },
+  "fastValidation": {
+    "feasible": "A schedule satisfying the constraints exists.",
+    "removePlace": "Exclude from this itinerary",
+    "unsupported": "Quick validation is unavailable for {{count}} places. It supports up to {{maximum}} places.",
+    "verifiedSuggestions": "Each suggestion was checked individually and produced a feasible itinerary using the current travel times."
+  },
+  "mobileTabs": {
+    "settings": "Settings",
+    "validation": "Validation"
+  },
   "routeComparisonMap": {
     "ariaLabel": {
       "enlargeRouteMap": "{{title}} Enlarge route map"

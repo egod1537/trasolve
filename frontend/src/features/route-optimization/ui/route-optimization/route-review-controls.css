@@ -300,3 +300,47 @@
     padding: 7px 0;
   }
 }
+
+@media (max-width: 760px) {
+  .route-review-controls-positioner .route-review-controls {
+    box-sizing: border-box;
+    width: 100%;
+    max-height: min(56dvh, calc(var(--app-viewport-height, 100dvh) - 96px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .route-review-controls > .route-review-summary {
+    margin: 0 0 12px;
+  }
+
+  .route-review-controls .route-review-summary-headline {
+    margin: 6px 0;
+  }
+
+  .route-review-controls
+    .route-review-summary.is-compact
+    .route-review-summary-headline
+    > strong {
+    font-size: 20px;
+  }
+
+  .route-review-controls .route-review-summary-values > div {
+    padding-block: 5px;
+  }
+
+  .route-review-controls .route-review-control-row {
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+
+  .route-review-controls .route-review-actions {
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .route-review-controls .route-review-actions .ui-button {
+    min-height: 44px;
+  }
+}

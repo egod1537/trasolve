@@ -3,6 +3,7 @@ import type { TokenMeter } from '../billing/billingHttpService.js';
 import { BillingError } from '../billing/paymentProvider.js';
 import {
   trouteOptimizeRequestSchema,
+  routeValidationRequestSchema,
   type ApiErrorResponse,
 } from '@trasolve/shared';
 import { TrouteClientError, TrouteHttpError } from './errors.js';
@@ -70,10 +71,21 @@ export class TrouteHttpService {
       if (!this.client) {
         throw this.notConfiguredError();
       }
+      const parsed = routeValidationRequestSchema.safeParse(
+        await this.readJson(request),
+      );
+      if (!parsed.success) {
+        throw new TrouteHttpError(
+          400,
+          'INVALID_TROUTE_REQUEST',
+          'troute 최적화 요청의 형식과 값을 확인해 주세요.',
+        );
+      }
       const result = await this.client.validateRoute(
-        (await this.readJson(request)) as Parameters<
-          TrouteClient['validateRoute']
-        >[0],
+        {
+          ...parsed.data,
+          route: this.prepareRequestForServer(parsed.data.route),
+        },
         controller.signal,
       );
       if (!response.destroyed) {
@@ -151,7 +163,12 @@ export class TrouteHttpService {
         return this.client!.submitJob(optimizeRequest!);
       };
       const acceptedJobId = this.tokenMeter
-        ? await this.tokenMeter.run(request, 'optimize', submit)
+        ? await this.tokenMeter.run(
+            request,
+            'optimize',
+            submit,
+            optimizeRequest.locations.length,
+          )
         : await submit();
       void this.subscriptions?.track(acceptedJobId).catch((cause) => {
         console.warn('제출한 troute Job SSE 추적을 시작하지 못했습니다.', {

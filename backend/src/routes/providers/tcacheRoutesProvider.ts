@@ -12,6 +12,10 @@ import {
   type TcacheUpstreamResponse,
 } from '../../internal/tcache/types.js';
 import { RouteError } from '../routeError.js';
+import {
+  normalizeTransitDetails,
+  upstreamTransitDetailsSchema,
+} from './transitDetails.js';
 import type { RouteProvider, RouteProviderResult } from '../routeProvider.js';
 
 const pointSchema = z.union([
@@ -27,33 +31,6 @@ const boundsSchema = z.object({
   west: z.number(),
 });
 
-const transitDetailsSchema = z
-  .object({
-    departureStop: z.string().nullish(),
-    arrivalStop: z.string().nullish(),
-    departureTime: z.string().nullish(),
-    arrivalTime: z.string().nullish(),
-    lineName: z.string().nullish(),
-    lineShortName: z.string().nullish(),
-    headsign: z.string().nullish(),
-    stopCount: z.number().int().nonnegative().nullish(),
-    vehicleType: z.string().nullish(),
-    stops: z
-      .array(z.object({ name: z.string().optional() }).passthrough())
-      .optional(),
-    vehicles: z
-      .array(
-        z
-          .object({
-            name: z.string().optional(),
-            type: z.string().optional(),
-          })
-          .passthrough(),
-      )
-      .optional(),
-  })
-  .passthrough();
-
 const stepSchema = z
   .object({
     distanceMeters: z.number().nonnegative().nullish(),
@@ -62,7 +39,7 @@ const stepSchema = z
     endLocation: pointSchema.nullish(),
     travelMode: z.string().nullish(),
     instruction: z.string().nullish(),
-    transitDetails: transitDetailsSchema.nullish(),
+    transitDetails: upstreamTransitDetailsSchema.nullish(),
   })
   .passthrough();
 
@@ -382,13 +359,6 @@ export class TcacheRoutesProvider implements RouteProvider {
   private normalizeStep(
     step: TcacheStep,
   ): MapRoute['legs'][number]['steps'][number] {
-    const details = step.transitDetails;
-    const stops = details?.stops?.flatMap((stop) =>
-      stop.name ? [stop.name] : [],
-    );
-    const vehicle = details?.vehicles?.[0];
-    const vehicleType =
-      details?.vehicleType ?? this.normalizeVehicleType(step.travelMode);
     return {
       travelMode: this.normalizeTravelMode(step.travelMode),
       distanceMeters: step.distanceMeters ?? null,
@@ -400,19 +370,10 @@ export class TcacheRoutesProvider implements RouteProvider {
       endLocation: step.endLocation
         ? this.normalizePoint(step.endLocation)
         : null,
-      transitDetails: details
-        ? {
-            departureStop: details.departureStop ?? stops?.at(0) ?? null,
-            arrivalStop: details.arrivalStop ?? stops?.at(-1) ?? null,
-            departureTime: details.departureTime ?? null,
-            arrivalTime: details.arrivalTime ?? null,
-            lineName: details.lineName ?? vehicle?.type ?? null,
-            lineShortName: details.lineShortName ?? vehicle?.name ?? null,
-            headsign: details.headsign ?? null,
-            stopCount: details.stopCount ?? stops?.length ?? null,
-            vehicleType,
-          }
-        : null,
+      transitDetails: normalizeTransitDetails(
+        step.transitDetails,
+        this.normalizeVehicleType(step.travelMode),
+      ),
     };
   }
 

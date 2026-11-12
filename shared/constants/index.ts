@@ -48,6 +48,8 @@ export const API_ROUTES = {
   googleOAuthResult: '/api/auth/google/result',
   authLocalLogin: '/api/auth/local',
   authMe: '/api/auth/me',
+  authConsent: '/api/auth/consent',
+  authConsentCancel: '/api/auth/consent/cancel',
   tutorial: '/api/auth/tutorial',
   authLogout: '/api/auth/logout',
   admin: '/api/admin',

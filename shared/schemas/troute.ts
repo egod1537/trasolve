@@ -94,6 +94,7 @@ const trouteRecoverySuggestionSchema = z
     type: nonEmptyStringSchema,
     reason: humanMessageSchema,
     confidence: nonEmptyStringSchema.optional(),
+    feasibility_verified: z.boolean().optional(),
   })
   .catchall(z.unknown());
 

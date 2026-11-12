@@ -5,6 +5,8 @@ import { z } from 'zod';
 import {
   initialTutorialProgress,
   tutorialProgressSchema,
+  authConsentRecordSchema,
+  type AuthConsentRecord,
   type TutorialProgress,
 } from '@trasolve/shared';
 import {
@@ -26,6 +28,7 @@ const localUserSchema = z.strictObject({
   displayName: z.string(),
   avatarUrl: z.string().nullable(),
   tutorial: z.unknown().optional(),
+  consents: z.array(authConsentRecordSchema).default([]),
 });
 const localIdentitySchema = z.strictObject({
   id: z.string().uuid(),
@@ -97,6 +100,7 @@ export class LocalAuthRepository implements AuthRepository, SessionRepository {
         id: userId,
         displayName: input.displayName ?? '',
         avatarUrl: input.avatarUrl ?? null,
+        consents: input.consent ? [input.consent] : [],
       });
       document.identities.push(identity);
       return this.toIdentityRecord(identity);
@@ -254,6 +258,47 @@ export class LocalAuthRepository implements AuthRepository, SessionRepository {
         throw new Error('User is unavailable.');
       }
       user.tutorial = tutorialProgressSchema.parse(progress);
+    });
+  }
+
+  public async getConsent(
+    userId: string,
+    termsVersion: string,
+    privacyVersion: string,
+  ): Promise<AuthConsentRecord | undefined> {
+    const document = await this.readSnapshot();
+    return document.users
+      .find((user) => user.id === userId)
+      ?.consents.find(
+        (consent) =>
+          consent.termsVersion === termsVersion &&
+          consent.privacyVersion === privacyVersion,
+      );
+  }
+
+  public saveConsent(
+    userId: string,
+    consent: AuthConsentRecord,
+    clearOptionalProfile: boolean,
+  ): Promise<void> {
+    return this.mutate((document) => {
+      const user = document.users.find((user) => user.id === userId);
+      if (!user) {
+        throw new Error('User is unavailable.');
+      }
+      if (
+        !user.consents.some(
+          (entry) =>
+            entry.termsVersion === consent.termsVersion &&
+            entry.privacyVersion === consent.privacyVersion,
+        )
+      ) {
+        user.consents.push(authConsentRecordSchema.parse(consent));
+        if (clearOptionalProfile) {
+          user.displayName = '';
+          user.avatarUrl = null;
+        }
+      }
     });
   }
 

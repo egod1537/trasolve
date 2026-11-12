@@ -139,6 +139,11 @@ export const PolylineLayerItem = memo(function PolylineLayerItem({
         <span className="trip-polyline-content">
           <span className="trip-polyline-name">{connectionName}</span>
           {scheduleRange && (
+            <span className="trip-layer-time-compact">
+              {formatClockTime(scheduleRange.range.start)}
+            </span>
+          )}
+          {scheduleRange && (
             <span className="trip-polyline-mode">
               {formatDurationMinutes(scheduleRange.durationMinutes, L)}
             </span>

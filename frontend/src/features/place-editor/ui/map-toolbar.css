@@ -225,3 +225,30 @@
     right: 12px;
   }
 }
+
+@media (max-width: 760px) {
+  .map-toolbar-positioner {
+    top: max(12px, env(safe-area-inset-top));
+    right: max(76px, calc(env(safe-area-inset-right) + 64px));
+    left: max(12px, env(safe-area-inset-left));
+  }
+
+  .map-toolbar-search,
+  .map-toolbar-quick-search-trigger {
+    height: 48px;
+  }
+
+  .map-toolbar-quick-search-trigger {
+    width: 44px;
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .map-toolbar-quick-search-trigger kbd {
+    display: none;
+  }
+
+  .map-place-search-results {
+    max-height: calc(var(--app-viewport-height, 100dvh) - 92px);
+  }
+}

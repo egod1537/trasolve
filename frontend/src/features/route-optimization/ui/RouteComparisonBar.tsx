@@ -1,3 +1,4 @@
+import { useLayoutMaxWidth } from '@/shared/hooks/useLayoutMaxWidth';
 import { useEffect, useId, useRef } from 'react';
 import type { RouteComparisonView } from '@/features/route-optimization/model/routeComparison';
 import { Button } from '@/shared/ui/Button';
@@ -12,6 +13,7 @@ type Props = { comparison: RouteComparisonView };
 
 export function RouteComparisonBar({ comparison }: Props) {
   const L = useL();
+  const mobile = useLayoutMaxWidth();
   useScreenView(ANALYTICS_SCREENS.routeResult);
   const barRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -42,30 +44,32 @@ export function RouteComparisonBar({ comparison }: Props) {
       : null);
   return (
     <>
-      <div className="route-review-layer-positioner">
-        <section
-          className="route-review-layer-heading"
-          style={getRouteComparisonStyle(comparison.mode)}
-          aria-label={comparison.data.day.title}
-        >
-          <svg
-            className="route-review-layer-icon"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
+      {!mobile && (
+        <div className="route-review-layer-positioner">
+          <section
+            className="route-review-layer-heading"
+            style={getRouteComparisonStyle(comparison.mode)}
+            aria-label={comparison.data.day.title}
           >
-            <path d="m12 3 10 6-10 6L2 9Zm-10 10 10 6 10-6M2 17l10 6 10-6" />
-          </svg>
-          <strong>{comparison.data.day.title}</strong>
-          <span>
-            {L('map:bottomContextPanel.text.locations', {
-              length:
-                comparison.mode === 'current'
-                  ? comparison.data.day.places.length
-                  : comparison.data.update.placeIds.length,
-            })}
-          </span>
-        </section>
-      </div>
+            <svg
+              className="route-review-layer-icon"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="m12 3 10 6-10 6L2 9Zm-10 10 10 6 10-6M2 17l10 6 10-6" />
+            </svg>
+            <strong>{comparison.data.day.title}</strong>
+            <span>
+              {L('map:bottomContextPanel.text.locations', {
+                length:
+                  comparison.mode === 'current'
+                    ? comparison.data.day.places.length
+                    : comparison.data.update.placeIds.length,
+              })}
+            </span>
+          </section>
+        </div>
+      )}
       <div className="route-review-controls-positioner">
         <section
           ref={barRef}
@@ -75,6 +79,7 @@ export function RouteComparisonBar({ comparison }: Props) {
             'routeOptimization:routeOptimizationModal.title.pathComparison',
           )}
         >
+          {mobile && <RouteComparisonSummary data={comparison.data} compact />}
           <div
             className="route-review-mode-switch"
             role="group"

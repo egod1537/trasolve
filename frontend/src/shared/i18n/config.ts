@@ -22,6 +22,21 @@ function isResourceObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function mergeResourceObjects(
+  production: Record<string, unknown>,
+  overrides: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged = { ...production };
+  for (const [key, value] of Object.entries(overrides)) {
+    const existing = merged[key];
+    merged[key] =
+      isResourceObject(existing) && isResourceObject(value)
+        ? mergeResourceObjects(existing, value)
+        : value;
+  }
+  return merged;
+}
+
 function readPersistedLanguage(): Language {
   if (typeof window === 'undefined') {
     return DEFAULT_LANGUAGE;
@@ -69,7 +84,11 @@ function collectResources(
       if (!isLanguage(language)) {
         throw new Error(`Unsupported localization resource language: ${path}`);
       }
-      resources[language]![namespace] = resource;
+      const existing = resources[language]![namespace];
+      resources[language]![namespace] = mergeResourceObjects(
+        isResourceObject(existing) ? existing : {},
+        resource,
+      );
     }
   }
   return resources;

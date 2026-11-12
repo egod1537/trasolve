@@ -1,5 +1,6 @@
 import { lazy, type ComponentType } from 'react';
 import { LandingPage } from '@/pages/landing/LandingPage';
+import { ConsentPage } from '@/features/auth';
 import { L } from '@/shared/i18n';
 
 const MapPage = lazy(() => import('@/pages/map/MapPage'));
@@ -21,6 +22,7 @@ const LocalizationTestPage = lazy(
   () => import('@/pages/testbed/LocalizationTestPage'),
 );
 const AdminPage = lazy(() => import('@/pages/admin/AdminPage'));
+const LegalPage = lazy(() => import('@/pages/legal/LegalPage'));
 
 type RouteDefinition = {
   Component: ComponentType;
@@ -28,6 +30,24 @@ type RouteDefinition = {
 };
 
 export const routes: Record<string, RouteDefinition> = {
+  '/auth/consent': {
+    Component: ConsentPage,
+    get loadingLabel() {
+      return L('common:routes.loadingLabel.pageLoading');
+    },
+  },
+  '/legal/terms': {
+    Component: LegalPage,
+    get loadingLabel() {
+      return L('common:routes.loadingLabel.pageLoading');
+    },
+  },
+  '/legal/privacy': {
+    Component: LegalPage,
+    get loadingLabel() {
+      return L('common:routes.loadingLabel.pageLoading');
+    },
+  },
   '/': {
     Component: LandingPage,
     get loadingLabel() {

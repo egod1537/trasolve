@@ -50,16 +50,21 @@ function PreviewSlot({ slot }: { slot: TripPreviewSlot }) {
   );
 }
 
-export function TripPreviewPool({ children }: { children: ReactNode }) {
+export function TripPreviewPool({
+  children,
+  enabled = true,
+}: {
+  children: ReactNode;
+  enabled?: boolean;
+}) {
   const [pool] = useState(createTripPreviewPool);
   const slots = useSyncExternalStore(pool.subscribe, pool.getSnapshot);
-  useEffect(() => pool.start(), [pool]);
+  useEffect(() => (enabled ? pool.start() : undefined), [enabled, pool]);
   return (
     <PoolContext.Provider value={pool}>
       {children}
-      {slots.map((slot) => (
-        <PreviewSlot key={slot.id} slot={slot} />
-      ))}
+      {enabled &&
+        slots.map((slot) => <PreviewSlot key={slot.id} slot={slot} />)}
     </PoolContext.Provider>
   );
 }

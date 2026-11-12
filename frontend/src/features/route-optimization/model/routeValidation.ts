@@ -1,11 +1,15 @@
-import type { TripDay, RouteValidationRequest } from '@trasolve/shared';
 import {
+  FAST_ROUTE_VALIDATION_MAX_LOCATIONS,
+  type TripDay,
+  type RouteValidationRequest,
+} from '@trasolve/shared';
+import {
+  createRouteOptimizationRequest,
   getRouteOptimizationIssue,
   type RouteOptimizationIssue,
   type RouteOptimizationRequestOptions,
 } from './routeOptimization';
 import { getLocationConstraint } from './optimizationConstraints';
-import { addClockMinutes, clockToMinutes } from './optimizationClock';
 
 export type LocalValidationIssue = {
   id: string;
@@ -19,6 +23,7 @@ export function prepareRouteValidation(
   issues: LocalValidationIssue[];
   request: RouteValidationRequest | null;
   unknownHours: string[];
+  unsupported: boolean;
 } {
   const places = [...day.places].sort((a, b) => a.order - b.order);
   const constraints = places.map((place) => getLocationConstraint(day, place));
@@ -39,48 +44,21 @@ export function prepareRouteValidation(
   const unknownHours = places
     .filter((_, index) => constraints[index]!.usedOpeningHoursFallback)
     .map((place) => place.name);
-  if (issues.length || places.length < 2) {
-    return { issues, request: null, unknownHours };
+  const unsupported = places.length > FAST_ROUTE_VALIDATION_MAX_LOCATIONS;
+  if (issues.length || places.length < 2 || unsupported) {
+    return { issues, request: null, unknownHours, unsupported };
   }
-  const first = places[0]!;
-  const start =
-    settings.startPolicy === 'fixed'
-      ? settings.startTime!
-      : (first.time ?? constraints[0]!.openTime);
-  // Solver-generated service times use minute precision. Keep the requested
-  // service time intact while the route's arrival/start uses the API's grid.
-  const arrivalStart = addClockMinutes(start, -(clockToMinutes(start) % 10))!;
-  const serviceTimes = Object.fromEntries(
-    places
-      .filter((place) => place.time !== null)
-      .map((place) => [place.id, place.time!]),
-  );
-  if (settings.startPolicy === 'fixed') {
-    serviceTimes[first.id] = start;
-  }
+  // Use exactly the optimizer's endpoints, windows, visit/start policies and
+  // locks. Existing displayed service times are predictions, not fixed visits.
+  const route = createRouteOptimizationRequest(day, settings);
   return {
     issues,
     unknownHours,
+    unsupported,
     request: {
-      route: {
-        job_id: `validate-${day.id.slice(0, 80)}`,
-        locations: places.map((place, index) => ({
-          id: place.id,
-          name: place.name,
-          place_id: place.placeId ?? '',
-          latitude: place.location.lat,
-          longitude: place.location.lng,
-          open_time: constraints[index]!.openTime,
-          close_time: constraints[index]!.closeTime,
-          stay_minutes: constraints[index]!.stayMinutes,
-          ...(place.orderLocked ? { order_locked: true } : {}),
-        })),
-        start_policy: 'FIXED',
-        start_time: arrivalStart,
-        travel_mode: settings.travelMode,
-        use_euclidean_matrix: true,
-      },
-      service_start_times: serviceTimes,
+      route: { ...route, job_id: `validate-${day.id.slice(0, 80)}` },
+      check_feasibility: true,
+      service_start_times: {},
     },
   };
 }

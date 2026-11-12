@@ -2,9 +2,11 @@ import type { QueryResultRow } from 'pg';
 import {
   initialTutorialProgress,
   tutorialProgressSchema,
+  type AuthConsentRecord,
   type TutorialProgress,
 } from '@trasolve/shared';
 import type { Database } from '../database/database.js';
+import { insertConsent } from './postgresConsent.js';
 import {
   AuthIdentityConflictError,
   type AuthIdentityRecord,
@@ -90,6 +92,9 @@ export class PostgresAuthRepository implements AuthRepository {
         const identity = identityResult.rows[0];
         if (!identity) {
           throw new Error('Identity insert did not return a row.');
+        }
+        if (input.consent) {
+          await insertConsent(executor, userId, input.consent);
         }
         return mapIdentity(identity);
       });
@@ -191,6 +196,53 @@ export class PostgresAuthRepository implements AuthRepository {
     return result.rows[0].tutorial == null
       ? initialTutorialProgress()
       : tutorialProgressSchema.parse(result.rows[0].tutorial);
+  }
+
+  public async getConsent(
+    userId: string,
+    termsVersion: string,
+    privacyVersion: string,
+  ): Promise<AuthConsentRecord | undefined> {
+    const result = await this.database.query<{
+      accepted_at: Date;
+      profile_accepted: boolean;
+    }>(
+      `SELECT consent.accepted_at, consent.profile_accepted
+       FROM trasolve.auth_consents AS consent
+       JOIN trasolve.users AS users ON users.id = consent.user_id
+       WHERE user_id = $1 AND terms_version = $2 AND privacy_version = $3
+         AND users.deleted_at IS NULL AND users.suspended_at IS NULL`,
+      [userId, termsVersion, privacyVersion],
+    );
+    const row = result.rows[0];
+    return row
+      ? {
+          termsVersion,
+          privacyVersion,
+          termsAccepted: true,
+          privacyAccepted: true,
+          ageConfirmed: true,
+          acceptedAt: row.accepted_at.toISOString(),
+          profileAccepted: row.profile_accepted,
+        }
+      : undefined;
+  }
+
+  public async saveConsent(
+    userId: string,
+    consent: AuthConsentRecord,
+    clearOptionalProfile: boolean,
+  ): Promise<void> {
+    await this.database.transaction(async (executor) => {
+      const inserted = await insertConsent(executor, userId, consent);
+      if (inserted && clearOptionalProfile) {
+        await executor.query(
+          `UPDATE trasolve.users SET display_name = '', avatar_url = NULL
+           WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NULL`,
+          [userId],
+        );
+      }
+    });
   }
 
   public async saveTutorialProgress(

@@ -1,3 +1,4 @@
+import { useLayoutMaxWidth } from '@/shared/hooks/useLayoutMaxWidth';
 import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { useId, useState } from 'react';
 import {
@@ -78,6 +79,7 @@ export function TripPickerPopup({
   onLogin,
 }: Props) {
   const L = useL();
+  const mobile = useLayoutMaxWidth();
   const tutorial = useTutorial();
   const titleId = useId();
   const [deletingTrip, setDeletingTrip] = useState<Trip | null>(null);
@@ -253,22 +255,24 @@ export function TripPickerPopup({
         )}
 
       {authenticationStatus === 'signed-in' && !!trips.length && (
-        <TripPreviewPool>
+        <TripPreviewPool enabled={!mobile}>
           <ScrollArea className="trip-map-picker-list-scroll" contentAsChild>
             <ul className="trip-map-picker-list">
               {trips.map((trip) => (
                 <li key={trip.id} className="trip-map-picker-item">
-                  <TripMapPreview
-                    trip={trip}
-                    disabled={busy}
-                    onOpen={() => {
-                      trackPickerButton(
-                        ANALYTICS_TARGETS.tripSelect,
-                        'saved_trip',
-                      );
-                      onOpen(trip.id);
-                    }}
-                  />
+                  {!mobile && (
+                    <TripMapPreview
+                      trip={trip}
+                      disabled={busy}
+                      onOpen={() => {
+                        trackPickerButton(
+                          ANALYTICS_TARGETS.tripSelect,
+                          'saved_trip',
+                        );
+                        onOpen(trip.id);
+                      }}
+                    />
+                  )}
                   <div className="trip-map-picker-item-body">
                     <div className="trip-map-picker-item-heading">
                       <button

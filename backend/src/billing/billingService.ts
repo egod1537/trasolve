@@ -1,4 +1,13 @@
 import {
+  releaseExpiredUpgrade,
+  canUpgrade,
+  assertCurrentUpgrade,
+  clearUpgrade,
+  applyUpgrade,
+  refundUpgrade,
+} from './subscriptionUpgrade.js';
+import { TokenPricing, type ModelTokenUsage } from './tokenPricing.js';
+import {
   createCipheriv,
   createDecipheriv,
   randomBytes,
@@ -43,8 +52,13 @@ export class BillingService {
     private readonly debug: PaymentProvider,
   ) {}
 
-  public owner(userId: string): BillingOwner {
-    return { userId, mode: this.normal.mode };
+  public readonly pricing = new TokenPricing();
+
+  public owner(userId: string, debugRequested = false): BillingOwner {
+    if (debugRequested && !this.debugEnabled) {
+      throw new BillingError('PAYMENT_DEBUG_DISABLED', 403);
+    }
+    return { userId, mode: debugRequested ? 'debug' : this.normal.mode };
   }
 
   public isUsageUnlimited(owner: BillingOwner, requested = false): boolean {
@@ -57,6 +71,7 @@ export class BillingService {
   ): Promise<BillingSummary> {
     const unlimited = this.isUsageUnlimited(owner, unlimitedRequested);
     return this.repository.transact(owner, (account) => {
+      releaseExpiredUpgrade(account);
       this.refreshFreeAllowance(account);
       const now = Date.now();
       for (const [key, usage] of Object.entries(account.usage)) {
@@ -77,6 +92,7 @@ export class BillingService {
       return {
         mode: owner.mode,
         unlimited,
+        unlimitedAvailable: this.isUsageUnlimited(owner, true),
         available: this.provider(owner.mode).available,
         subscriptionAvailable:
           this.provider(owner.mode).isAvailable('subscription') &&
@@ -85,9 +101,14 @@ export class BillingService {
               process.env.TRASOLVE_PAYMENT_ENCRYPTION_KEY ?? '',
               'base64',
             ).length === 32),
+        upgradeAvailable: canUpgrade(
+          account,
+          this.products.find((p) => p.id === 'pro')!,
+        ),
         topupAvailable: this.provider(owner.mode).isAvailable('topup'),
         wallet: account.wallet,
         costs: unlimited ? { chat: 0, optimize: 0 } : this.costs,
+        routeTokenPolicy: this.pricing.routePolicy,
         products: this.products,
       };
     });
@@ -101,22 +122,52 @@ export class BillingService {
     if (!provider.available) {
       throw new BillingError('PAYMENT_NOT_CONFIGURED', 503);
     }
-    const product = this.products.find((p) => p.id === productId);
-    if (!product) {
+    const catalogProduct = this.products.find((p) => p.id === productId);
+    if (!catalogProduct) {
       throw new BillingError('INVALID_PAYMENT');
     }
-    if (!provider.isAvailable(product.kind)) {
+    if (!provider.isAvailable(catalogProduct.kind)) {
       throw new BillingError('PAYMENT_NOT_CONFIGURED', 503);
     }
-    if (product.kind === 'subscription' && owner.mode !== 'debug') {
+    if (catalogProduct.kind === 'subscription' && owner.mode !== 'debug') {
       this.encryptionKey();
     }
     return this.repository.transact(owner, (account) => {
-      if (product.kind === 'subscription' && account.subscription) {
-        throw new BillingError('SUBSCRIPTION_EXISTS', 409);
+      releaseExpiredUpgrade(account);
+      let product = catalogProduct;
+      let upgrade: BillingOrder['upgrade'];
+      let billingSecret: string | undefined;
+      const sub = account.subscription;
+      if (catalogProduct.kind === 'subscription' && sub) {
+        const pending = sub.upgradeOrderId
+          ? account.orders[sub.upgradeOrderId]
+          : undefined;
+        if (
+          pending?.status === 'pending' &&
+          pending.upgrade?.targetProduct.id === catalogProduct.id
+        ) {
+          return this.checkout(owner, pending);
+        }
+        if (!canUpgrade(account, catalogProduct)) {
+          throw new BillingError('SUBSCRIPTION_EXISTS', 409);
+        }
+        sub.id ??= randomUUID();
+        upgrade = {
+          subscriptionId: sub.id,
+          previousProduct: sub.product,
+          targetProduct: catalogProduct,
+          periodEnd: sub.nextAt,
+          previousCancel: sub.cancel,
+        };
+        product = {
+          ...catalogProduct,
+          amount: catalogProduct.amount - sub.product.amount,
+          tokens: catalogProduct.tokens - sub.product.tokens,
+        };
+        billingSecret = sub.billingSecret;
       }
       if (
-        product.kind === 'subscription' &&
+        catalogProduct.kind === 'subscription' &&
         Object.values(account.orders).some(
           (o) =>
             o.product.kind === 'subscription' &&
@@ -134,18 +185,18 @@ export class BillingService {
       const order: BillingOrder = {
         id: randomUUID(),
         product,
+        ...(upgrade ? { upgrade, billingSecret } : {}),
         status: 'pending',
-        customerKey: `usr_${owner.userId}_${owner.mode}`,
+        customerKey: upgrade
+          ? sub!.customerKey
+          : `usr_${owner.userId}_${owner.mode}`,
         createdAt: new Date().toISOString(),
       };
       account.orders[order.id] = order;
-      return {
-        orderId: order.id,
-        product,
-        customerKey: order.customerKey,
-        clientKey: provider.clientKeyFor(product.kind),
-        mode: owner.mode,
-      };
+      if (upgrade) {
+        account.subscription!.upgradeOrderId = order.id;
+      }
+      return this.checkout(owner, order);
     });
   }
 
@@ -171,6 +222,9 @@ export class BillingService {
       if (current.status !== 'pending') {
         throw new BillingError('PAYMENT_CLOSED', 409);
       }
+      if (current.upgrade) {
+        assertCurrentUpgrade(a, current);
+      }
       current.processingUntil = new Date(Date.now() + 120_000).toISOString();
       current.processingKey = lease;
       return current;
@@ -188,8 +242,20 @@ export class BillingService {
       }
       if (
         !order.renewal &&
+        !order.attemptedAt &&
         Date.now() - Date.parse(order.createdAt) > 30 * 60_000
       ) {
+        throw new BillingError('PAYMENT_EXPIRED', 409);
+      }
+      if (
+        order.upgrade &&
+        order.upgrade.periodEnd <= new Date().toISOString()
+      ) {
+        const observed = await provider.lookup(order);
+        if (observed && observed.status !== 'pending') {
+          await this.applyVerified(owner, order.id, observed);
+          return this.summary(owner);
+        }
         throw new BillingError('PAYMENT_EXPIRED', 409);
       }
       if (order.product.kind === 'subscription' && !order.billingSecret) {
@@ -210,6 +276,14 @@ export class BillingService {
           return current;
         });
       }
+      if (order.upgrade) {
+        order = await this.repository.transact(owner, (account) => {
+          const current = account.orders[order.id]!;
+          assertCurrentUpgrade(account, current);
+          current.attemptedAt ??= new Date().toISOString();
+          return current;
+        });
+      }
       const verified = await provider.approve(
         order,
         input,
@@ -220,10 +294,31 @@ export class BillingService {
       await this.applyVerified(owner, order.id, verified);
       return this.summary(owner);
     } catch (cause) {
-      if (owner.mode === 'debug' && input.outcome === 'failure') {
+      if (
+        (owner.mode === 'debug' && input.outcome === 'failure') ||
+        (cause instanceof BillingError && cause.code === 'PAYMENT_DECLINED')
+      ) {
         await this.repository.transact(owner, (a) => {
           if (a.orders[order.id]?.status === 'pending') {
             a.orders[order.id]!.status = 'failed';
+            clearUpgrade(a, a.orders[order.id]!);
+            if (a.subscription?.pendingOrderId === order.id) {
+              delete a.subscription.pendingOrderId;
+            }
+          }
+        });
+      }
+      if (
+        order.upgrade &&
+        !order.attemptedAt &&
+        cause instanceof BillingError &&
+        cause.code === 'PAYMENT_EXPIRED'
+      ) {
+        await this.repository.transact(owner, (account) => {
+          const current = account.orders[order.id]!;
+          if (current.status === 'pending') {
+            current.status = 'cancelled';
+            clearUpgrade(account, current);
           }
         });
       }
@@ -253,12 +348,44 @@ export class BillingService {
 
   public async cancelSubscription(
     owner: BillingOwner,
+    immediate = false,
   ): Promise<BillingSummary> {
+    if (immediate && owner.mode !== 'debug') {
+      throw new BillingError('PAYMENT_FORBIDDEN', 403);
+    }
     await this.repository.transact(owner, (account) => {
       if (!account.subscription) {
         throw new BillingError('SUBSCRIPTION_MISSING', 404);
       }
-      if (account.subscription.pendingOrderId) {
+      releaseExpiredUpgrade(account);
+      if (immediate) {
+        const pending = Object.values(account.orders).filter(
+          (order) =>
+            order.product.kind === 'subscription' && order.status === 'pending',
+        );
+        if (
+          pending.some(
+            (order) =>
+              order.processingUntil &&
+              order.processingUntil > new Date().toISOString(),
+          )
+        ) {
+          throw new BillingError('PAYMENT_PENDING', 409);
+        }
+        for (const order of pending) {
+          order.status = 'cancelled';
+        }
+        account.freeGrantAt = account.subscription.nextAt;
+        account.subscription = null;
+        account.wallet.plan = 'free';
+        account.wallet.renewsAt = null;
+        account.wallet.cancelAtPeriodEnd = false;
+        return;
+      }
+      if (
+        account.subscription.pendingOrderId ||
+        account.subscription.upgradeOrderId
+      ) {
         throw new BillingError('PAYMENT_PENDING', 409);
       }
       account.subscription.cancel = true;
@@ -273,6 +400,13 @@ export class BillingService {
       return;
     }
     const payment = await this.provider(owner.mode).lookup(order);
+    if (
+      order.upgrade &&
+      order.attemptedAt &&
+      (!payment || payment.status === 'pending')
+    ) {
+      throw new BillingError('PAYMENT_PENDING', 409);
+    }
     if (payment && payment.status !== 'pending') {
       await this.applyVerified(owner, orderId, payment);
       return;
@@ -286,6 +420,7 @@ export class BillingService {
       }
       if (a.orders[orderId]?.status === 'pending') {
         a.orders[orderId]!.status = 'cancelled';
+        clearUpgrade(a, a.orders[orderId]!);
       }
     });
   }
@@ -294,13 +429,24 @@ export class BillingService {
     owner: BillingOwner,
     action: TokenAction,
     key: string,
+    quotedAmount: number,
   ): Promise<void> {
     await this.repository.transact(owner, (account) => {
+      releaseExpiredUpgrade(account);
       this.refreshFreeAllowance(account);
       if (Object.hasOwn(account.usage, key)) {
         throw new BillingError('TOKEN_REQUEST_REPLAY', 409);
       }
-      const amount = this.costs[action];
+      if (!Number.isSafeInteger(quotedAmount) || quotedAmount < 1) {
+        throw new BillingError('INVALID_TOKEN_COST');
+      }
+      const amount =
+        action === 'chat'
+          ? Math.min(quotedAmount, Math.max(0, account.wallet.remaining))
+          : quotedAmount;
+      if (amount < 1) {
+        throw new BillingError('TOKENS_INSUFFICIENT', 402);
+      }
       if (account.wallet.remaining < amount) {
         throw new BillingError('TOKENS_INSUFFICIENT', 402);
       }
@@ -319,16 +465,39 @@ export class BillingService {
     owner: BillingOwner,
     key: string,
     success: boolean,
+    actualAmount?: number,
+    calls?: readonly ModelTokenUsage[],
   ): Promise<void> {
     await this.repository.transact(owner, (account) => {
       const usage = account.usage[key];
       if (!usage || usage.state !== 'reserved') {
         return;
       }
+      if (
+        actualAmount !== undefined &&
+        (!Number.isSafeInteger(actualAmount) || actualAmount < 0)
+      ) {
+        throw new BillingError('INVALID_TOKEN_COST');
+      }
+      const charged = success
+        ? Math.min(usage.amount, actualAmount ?? usage.amount)
+        : 0;
+      const refund = usage.amount - charged;
       usage.state = success ? 'spent' : 'released';
-      if (!success) {
-        account.wallet.remaining += usage.amount;
-        this.ledger(account, `release:${key}`, usage.amount, 'request-failed');
+      if (refund > 0) {
+        account.wallet.remaining += refund;
+        this.ledger(
+          account,
+          `release:${key}`,
+          refund,
+          success ? 'usage-adjustment' : 'request-failed',
+        );
+      }
+      if (success) {
+        usage.amount = charged;
+      }
+      if (calls) {
+        usage.modelUsage = [...calls];
       }
     });
   }
@@ -342,7 +511,10 @@ export class BillingService {
       for (const owner of await this.repository.dueSubscriptions(
         new Date().toISOString(),
       )) {
-        if (owner.mode !== this.normal.mode) {
+        if (
+          owner.mode !== this.normal.mode &&
+          !(owner.mode === 'debug' && this.debugEnabled)
+        ) {
           continue;
         }
         try {
@@ -372,14 +544,34 @@ export class BillingService {
     }
   }
 
-  private readonly debugEnabled =
-    process.env.TRASOLVE_DEBUG_PAYMENTS === 'true' ||
-    (process.env.TRASOLVE_DEBUG_PAYMENTS !== 'false' &&
-      process.env.NODE_ENV !== 'production');
-  private readonly costs = {
-    chat: integerSetting('TRASOLVE_TOKEN_CHAT_COST', 10),
-    optimize: integerSetting('TRASOLVE_TOKEN_OPTIMIZE_COST', 50),
-  };
+  private checkout(owner: BillingOwner, order: BillingOrder): PaymentCheckout {
+    return {
+      orderId: order.id,
+      product: order.product,
+      customerKey: order.customerKey,
+      clientKey: this.provider(owner.mode).clientKeyFor(order.product.kind),
+      mode: owner.mode,
+      ...(order.upgrade
+        ? {
+            upgrade: {
+              from: 'plus' as const,
+              nextProduct: order.upgrade.targetProduct,
+              renewsAt: order.upgrade.periodEnd,
+            },
+          }
+        : {}),
+    };
+  }
+
+  private get debugEnabled(): boolean {
+    return (
+      process.env.TRASOLVE_DEBUG_PAYMENTS !== 'false' &&
+      this.normal.mode !== 'live'
+    );
+  }
+  private get costs() {
+    return { chat: 1, optimize: this.pricing.quoteRoute(10) };
+  }
   private readonly products: PaymentProduct[] = [
     {
       id: 'plus',
@@ -477,12 +669,18 @@ export class BillingService {
           order.refundedTokens = revokedTokens;
           order.status =
             revokedTokens === order.product.tokens ? 'refunded' : 'paid';
-          if (order.product.kind === 'subscription' && account.subscription) {
+          if (order.upgrade) {
+            refundUpgrade(account, order);
+          } else if (
+            order.product.kind === 'subscription' &&
+            account.subscription
+          ) {
             account.subscription.cancel = true;
             account.wallet.cancelAtPeriodEnd = true;
           }
         } else if (order.status === 'pending') {
           order.status = 'cancelled';
+          clearUpgrade(account, order);
           if (
             order.renewal &&
             account.subscription?.pendingOrderId === order.id
@@ -502,20 +700,27 @@ export class BillingService {
       if (
         order.product.kind === 'subscription' &&
         !order.renewal &&
+        !order.upgrade &&
         account.subscription
       ) {
         throw new BillingError('SUBSCRIPTION_EXISTS', 409);
       }
+      if (order.upgrade) {
+        assertCurrentUpgrade(account, order);
+      }
       order.status = 'paid';
       order.paymentKey = result.paymentKey;
       this.credit(account, order.product.tokens, `payment:${id}`, 'payment');
-      if (order.product.kind === 'subscription') {
+      if (order.upgrade) {
+        applyUpgrade(account, order);
+      } else if (order.product.kind === 'subscription') {
         if (!order.billingSecret) {
           throw new BillingError('INVALID_PAYMENT');
         }
         const nextAt = nextMonth(new Date());
         const cancel = account.subscription?.cancel ?? false;
         account.subscription = {
+          id: account.subscription?.id ?? randomUUID(),
           product: order.product,
           billingSecret: order.billingSecret,
           customerKey: order.customerKey,
@@ -531,7 +736,11 @@ export class BillingService {
   }
   private async renew(owner: BillingOwner): Promise<void> {
     const selected = await this.repository.transact(owner, (a) => {
+      releaseExpiredUpgrade(a);
       const sub = a.subscription;
+      if (sub?.upgradeOrderId) {
+        return { pendingUpgrade: sub.upgradeOrderId };
+      }
       const now = new Date().toISOString();
       if (!sub || sub.nextAt > now || (sub.retryAt && sub.retryAt > now)) {
         return null;
@@ -559,6 +768,14 @@ export class BillingService {
       return { order: a.orders[id]! };
     });
     if (!selected) {
+      return;
+    }
+    if ('pendingUpgrade' in selected && selected.pendingUpgrade) {
+      const order = await this.getOrder(owner, selected.pendingUpgrade);
+      const observed = await this.provider(owner.mode).lookup(order);
+      if (observed && observed.status !== 'pending') {
+        await this.applyVerified(owner, order.id, observed);
+      }
       return;
     }
     if ('cancelledKey' in selected && selected.cancelledKey) {

@@ -3,3 +3,7 @@
 
 @import './token-plans/token-gauge-and-shimmer.css';
 @import './token-plans/token-plans-layout.css';
+
+@import './billing-checkout-dialog.css';
+
+@import './paid-token-balance.css';

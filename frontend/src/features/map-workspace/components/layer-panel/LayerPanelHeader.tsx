@@ -192,6 +192,8 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
         <button
           type="button"
           className="trip-panel-header-action"
+          aria-label={L('map:tripFiles.exportAction')}
+          title={L('map:tripFiles.exportAction')}
           onClick={() => setExportOpen(true)}
         >
           <ActionIcon>

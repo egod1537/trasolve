@@ -147,7 +147,7 @@
   gap: 4px;
   overflow: hidden;
   background: var(--route-segment-color);
-  color: white;
+  color: var(--route-segment-text-color);
   font-size: 10px;
   white-space: nowrap;
 }
@@ -173,7 +173,7 @@
 }
 .route-journey-transit li {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 112px) minmax(0, 1fr);
   align-items: baseline;
   gap: 12px;
   font-size: 12px;
@@ -186,7 +186,22 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  color: var(--route-segment-color);
+  min-width: 0;
+  color: color-mix(
+    in srgb,
+    var(--route-segment-color) 80%,
+    var(--color-text) 20%
+  );
+}
+.route-journey-line-label {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  overflow-wrap: anywhere;
+}
+.route-journey-line-label small {
+  font-size: 10px;
+  font-weight: 500;
 }
 .route-journey-line svg {
   flex: none;

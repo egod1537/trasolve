@@ -8,19 +8,20 @@ import type {
 export type BillingContextValue = {
   summary: BillingSummary | null;
   loading: boolean;
+  changingTokenMode: boolean;
+  toggleDebugUnlimited: () => Promise<void>;
   busy: boolean;
   error: string | null;
-  message: string | null;
   authenticated: boolean;
-  debugCheckout: PaymentCheckout | null;
+  pendingCheckout: PaymentCheckout | null;
   plansOpen: boolean;
   dialogId: string;
   openPlans: () => void;
   closePlans: () => void;
   refresh: () => Promise<void>;
   purchase: (product: PaymentProductId) => Promise<void>;
-  finishDebug: (outcome: 'success' | 'failure' | 'cancel') => Promise<void>;
-  cancelSubscription: () => Promise<void>;
+  finishCheckout: (outcome: 'success' | 'failure' | 'cancel') => Promise<void>;
+  cancelSubscription: (immediate?: boolean) => Promise<void>;
   login: () => void;
 };
 export const BillingContext = createContext<BillingContextValue | null>(null);

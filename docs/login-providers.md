@@ -4,8 +4,22 @@ The landing and map login actions open a shared, keyboard-accessible provider
 choice dialog. Google retains its existing Authorization Code + PKCE flow.
 The Soongsil option navigates to the university's own SSO page; Trasolve does
 not collect a university ID/password. Debug guest behavior remains opt-in
-through the existing debug controls (the Vite development login fallback is
-also retained).
+through the existing debug controls. Normal login actions always open the
+provider choice dialog, including during Vite development.
+
+The landing hero shows a sign-in action while signed out and a trip-planning
+action while signed in. During session loading, the action remains disabled.
+The browser remembers only the last successfully used provider (`google` or
+`ssu`) in local storage and shows a recent-account speech bubble above that
+provider when the dialog opens. Existing authenticated sessions seed this hint
+if it is missing. Failed/cancelled login attempts and debug guest sessions do
+not replace it; logout retains it. The hint never starts authentication or
+selects a provider automatically, and account-linking dialogs omit it.
+The speech bubble floats to the left of its provider button and points right;
+it does not change the dialog height, button positions or provider spacing.
+The login surface allows the bubble to extend beyond its edge. On narrow
+viewports, the bubble moves above the whole dialog so it never covers either
+provider button or clips against the side of the viewport.
 
 ## Soongsil protocol and provenance
 
@@ -97,3 +111,11 @@ school account and are not represented as verified by these static checks.
 The school's acceptance of Trasolve's callback host/state path must be checked
 during that real sign-in. There are no fake provider responses or test-only
 application branches.
+
+# Terms and privacy onboarding
+
+Both providers require current account-consent receipts before completing real
+sign-in. New account creation waits until the consent form is submitted;
+existing accounts without receipts are asked once. See
+[account-consent.md](account-consent.md) for the API, storage, optional Google
+profile handling, document versions and operator configuration.

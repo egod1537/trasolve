@@ -1,22 +1,22 @@
-import type { TokenAction } from '@trasolve/shared';
+import { quoteRouteTokens } from '@trasolve/shared';
 import { useBilling } from '../model/billingContext';
-import { getLanguage, useL } from '@/shared/i18n';
+import { getLanguage, NL, useL } from '@/shared/i18n';
 import { Button } from '@/shared/ui/Button';
+import { TokenChargeInfo } from './TokenChargeInfo';
 import '@/features/billing/ui/token-plans.css';
 
 export function TokenCostSummary({
-  action,
+  placeCount,
   cached = false,
 }: {
-  action: TokenAction;
+  placeCount: number;
   cached?: boolean;
 }) {
   const L = useL();
   const billing = useBilling();
   if (!billing.authenticated) {
     return (
-      <div className="token-cost-summary">
-        <span>{L('auth:billing.signInRequired')}</span>
+      <div className="token-cost-inline">
         <Button size="sm" onClick={billing.login}>
           {L('common:landing.navigation.signIn')}
         </Button>
@@ -25,10 +25,11 @@ export function TokenCostSummary({
   }
   if (!billing.summary) {
     return (
-      <div className="token-cost-summary">
-        <span role="status">
-          {billing.error ?? L('common:routes.loadingLabel.pageLoading')}
-        </span>
+      <div className="token-cost-inline" role="status">
+        <TokenChargeInfo
+          label={L('auth:tokenPlans.remaining')}
+          message={billing.error ?? L('common:routes.loadingLabel.pageLoading')}
+        />
         {billing.error && (
           <Button size="sm" onClick={() => void billing.refresh()}>
             {L('common:action.retry')}
@@ -37,41 +38,34 @@ export function TokenCostSummary({
       </div>
     );
   }
-  if (billing.summary.unlimited) {
-    return null;
-  }
-  const cost = cached ? 0 : billing.summary.costs[action];
-  const remaining = billing.summary.wallet.remaining;
+  const cost =
+    billing.summary.unlimited || cached || placeCount < 2
+      ? 0
+      : billing.summary.routeTokenPolicy
+        ? quoteRouteTokens(placeCount, billing.summary.routeTokenPolicy)
+        : billing.summary.costs.optimize;
+  const remaining = billing.summary.unlimited
+    ? Infinity
+    : billing.summary.wallet.remaining;
   const number = new Intl.NumberFormat(getLanguage());
   const insufficient = remaining < cost;
   return (
-    <div className="token-cost-summary" data-insufficient={insufficient}>
-      <div className="token-cost-values">
-        <strong>
-          {L('auth:billing.usageCost', { cost: number.format(cost) })}
-        </strong>
-        <span>
-          {L('auth:billing.remainingBalance', {
-            balance: number.format(remaining),
-          })}
-        </span>
-      </div>
-      {insufficient ? (
-        <div className="token-cost-warning">
-          <span>{L('auth:billing.insufficient')}</span>
-          <Button size="sm" onClick={billing.openPlans}>
-            {L('auth:billing.topup')}
-          </Button>
-        </div>
-      ) : (
-        <p>
-          {cached
+    <div className="token-cost-inline" data-insufficient={insufficient}>
+      <strong
+        aria-label={L('auth:billing.usageCost', { cost: number.format(cost) })}
+      >
+        {NL('−')}
+        {number.format(cost)}
+      </strong>
+      <TokenChargeInfo
+        label={L('auth:billing.usageCost', { cost: number.format(cost) })}
+        message={
+          cached
             ? L('auth:billing.cachedFree')
-            : action === 'optimize'
-              ? L('auth:billing.optimizationChargeNotice')
-              : L('auth:billing.chatChargeNotice')}
-        </p>
-      )}
+            : L('auth:billing.optimizationChargeNotice')
+        }
+        warning={insufficient ? L('auth:billing.insufficient') : undefined}
+      />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { PostgresBillingRepository } from './billing/postgresBillingRepository.j
 import type { BillingRepository } from './billing/billingRepository.js';
 import { AuthenticationService } from './auth/authenticationService.js';
 import { TutorialHttpService } from './auth/tutorialHttpService.js';
+import { ConsentHttpFlow } from './auth/consentHttpFlow.js';
 import type { AuthRepository } from './auth/authRepository.js';
 import { CurrentUserResolver } from './auth/currentUserResolver.js';
 import { LocalAuthRepository } from './auth/localAuthRepository.js';
@@ -82,7 +83,12 @@ async function startBackend(): Promise<void> {
   try {
     const authentication = new AuthenticationService(persistence.auth);
     const sessions = new SessionService(persistence.sessions);
-    const currentUser = new CurrentUserResolver(sessions);
+    const currentUser = new CurrentUserResolver(sessions, authentication);
+    const consentHttp = new ConsentHttpFlow(
+      authentication,
+      sessions,
+      currentUser,
+    );
     const paymentProviders = createPaymentProviders();
     const billing = new BillingService(
       persistence.billing,
@@ -134,6 +140,7 @@ async function startBackend(): Promise<void> {
         authentication,
         sessions,
         currentUser,
+        consentHttp,
         debugGuestUser?.id,
         externalApiPolicy,
       ),
@@ -155,6 +162,7 @@ async function startBackend(): Promise<void> {
       adminHttp,
       new BillingHttpService(billing, currentUser),
       new TutorialHttpService(persistence.auth, currentUser),
+      consentHttp,
     );
     await listen(server, port, host);
     console.log(`Backend: http://${host}:${port}`);

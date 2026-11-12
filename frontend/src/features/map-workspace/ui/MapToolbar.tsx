@@ -1,5 +1,8 @@
+import { useLayoutMaxWidth } from '@/shared/hooks/useLayoutMaxWidth';
+import { useMobileNavigation } from '../model/MobileNavigation';
+import { MobileMapNavigation } from './MobileMapNavigation';
 import { AiCommands } from '../command-console/AiCommands';
-import { memo, useCallback, useState, type RefObject } from 'react';
+import { memo, useCallback, useEffect, useState, type RefObject } from 'react';
 import type { PlaceDetails } from '@trasolve/shared';
 import type { GoogleMapHandle } from '@/map/types/googleMapComponent';
 import { TripAiRegion } from './TripAiRegion';
@@ -19,6 +22,7 @@ type Props = {
   selectedPlaceIds: readonly string[];
   onSelectPlace: (place: PlaceDetails) => void;
   onOpenTripPicker: () => void;
+  onMobileNavigate: () => void;
 };
 
 export const MapToolbar = memo(function MapToolbar({
@@ -28,6 +32,7 @@ export const MapToolbar = memo(function MapToolbar({
   selectedPlaceIds,
   onSelectPlace,
   onOpenTripPicker,
+  onMobileNavigate,
 }: Props) {
   const tutorial = useTutorial();
   const guidedSearchActive = Boolean(
@@ -35,7 +40,25 @@ export const MapToolbar = memo(function MapToolbar({
     (tutorial.progress.step === 'search' ||
       tutorial.progress.step === 'add-place'),
   );
-  const [aiOpen, setAiOpen] = useState(false);
+  const mobile = useLayoutMaxWidth();
+  const navigation = useMobileNavigation();
+  const navigateMobile = navigation?.navigate;
+  const tutorialActive = tutorial?.active;
+  const tutorialStep = tutorial?.progress.step;
+  useEffect(() => {
+    if (mobile && tutorialActive && navigateMobile) {
+      navigateMobile(tutorialStep === 'days' ? 'layers' : 'map');
+    }
+  }, [mobile, navigateMobile, tutorialActive, tutorialStep]);
+  const [desktopAiOpen, setDesktopAiOpen] = useState(false);
+  const aiOpen = mobile && navigation ? navigation.tab === 'ai' : desktopAiOpen;
+  const setAiOpen = (open: boolean) => {
+    if (mobile && navigation) {
+      navigation.navigate(open ? 'ai' : 'map');
+    } else {
+      setDesktopAiOpen(open);
+    }
+  };
   const [quickSearchOpen, setQuickSearchOpen] = useState(false);
   const [quickSearchShortcutLabel] = useState(getQuickSearchShortcutLabel);
   const openQuickSearch = useCallback(() => {
@@ -69,6 +92,7 @@ export const MapToolbar = memo(function MapToolbar({
         <MapSearchToolbar
           key={dismissRevision}
           aiOpen={aiOpen}
+          showQuickSearch={!mobile}
           quickSearchShortcutLabel={quickSearchShortcutLabel}
           getSearchBias={getSearchBias}
           onOpenQuickSearch={openQuickSearch}
@@ -82,15 +106,25 @@ export const MapToolbar = memo(function MapToolbar({
               : undefined
           }
         />
-        <MapUserControls onOpenTripPicker={onOpenTripPicker} />
+        <MapUserControls
+          onOpenTripPicker={onOpenTripPicker}
+          showTokens={!mobile}
+        />
       </div>
       <RenderProfiler id="map-ai-panel">
         <TripAiRegion
           open={aiOpen}
+          mobileScreen={mobile && Boolean(navigation)}
           onOpenChange={setAiOpen}
           selectedPlaceIds={selectedPlaceIds}
         />
       </RenderProfiler>
+      {!suspended && (
+        <MobileMapNavigation
+          onOpenTrips={onOpenTripPicker}
+          onNavigate={onMobileNavigate}
+        />
+      )}
       {!suspended && (
         <QuickSearch
           open={quickSearchOpen}

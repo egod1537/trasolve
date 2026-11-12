@@ -1,3 +1,4 @@
+import { withMobileLayout } from '@/shared/config/mobileLayout';
 import { Component } from 'react';
 import {
   ANALYTICS_SCREENS,
@@ -12,6 +13,7 @@ import { PlanningSection } from '@/pages/landing/components/PlanningSection';
 import { isDebugGuestMode, useCurrentUser } from '@/features/auth';
 import { NL, useL, type Localize } from '@/shared/i18n';
 import { trackEvent, useScreenView } from '@/shared/analytics';
+import { LegalLinks } from '@/shared/ui/LegalLinks';
 
 type ApiHealth = 'checking' | 'available' | 'unavailable';
 
@@ -53,7 +55,7 @@ export function LandingPage() {
     if (state.status === 'loading') {
       return;
     }
-    const mapPath = debugGuestMode ? '/map?debug=1' : '/map';
+    const mapPath = withMobileLayout(debugGuestMode ? '/map?debug=1' : '/map');
     if (state.status === 'signed-in') {
       trackLandingButton(ANALYTICS_TARGETS.landingEnterMap);
       window.location.assign(mapPath);
@@ -65,7 +67,7 @@ export function LandingPage() {
       return;
     }
     trackLandingButton(ANALYTICS_TARGETS.landingLogin);
-    void login('/map');
+    void login(mapPath);
   };
 
   const handleHeaderAction = (): void => {
@@ -104,7 +106,9 @@ export function LandingPage() {
       heroPrimaryLabel={
         state.status === 'loading'
           ? L('auth:mapUserControls.tooltip.preparing')
-          : L('common:landing.action.planTrip')
+          : state.status === 'signed-out' && !debugGuestMode
+            ? L('auth:loginDialog.signIn')
+            : L('common:landing.action.planTrip')
       }
       heroPrimaryTarget={
         state.status === 'signed-in' || debugGuestMode
@@ -186,6 +190,7 @@ class LandingPageView extends Component<LandingPageProps, LandingPageState> {
           <PlanningSection />
         </main>
         <footer className="site-footer">
+          <LegalLinks />
           <p>
             {NL('©')} {new Date().getFullYear()} {NL('Trasolve')}
           </p>

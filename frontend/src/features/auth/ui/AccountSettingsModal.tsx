@@ -8,6 +8,7 @@ import { CloseIcon } from '@/shared/ui/icons';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import '@/features/auth/ui/account-settings.css';
 import { NL, useL } from '@/shared/i18n';
+import { AccountConsentDetails } from './AccountConsentDetails';
 
 type Props = {
   user: AuthUser;
@@ -127,6 +128,7 @@ export function AccountSettingsModal({
             : L('common:action.signOut')}
         </Button>
       </div>
+      <AccountConsentDetails userId={user.id} />
     </Dialog>
   );
 }

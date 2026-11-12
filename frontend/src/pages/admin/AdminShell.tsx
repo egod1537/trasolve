@@ -1,3 +1,4 @@
+import { matchesLayoutMaxWidth } from '@/shared/config/mobileLayout';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Icon, type IconName } from '@blueprintjs/core';
 import type { AdminMeResponse } from '@trasolve/shared';
@@ -48,13 +49,11 @@ export function AdminShell({
   const L = useL();
   const navigation = useAdminNavigation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mobile, setMobile] = useState(
-    () => window.matchMedia('(max-width: 767px)').matches,
-  );
+  const [mobile, setMobile] = useState(() => matchesLayoutMaxWidth(767));
   useEffect(() => {
     const media = window.matchMedia('(max-width: 767px)');
     const changed = () => {
-      setMobile(media.matches);
+      setMobile(matchesLayoutMaxWidth(767));
       setMenuOpen(false);
     };
     media.addEventListener('change', changed);

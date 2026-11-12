@@ -1,3 +1,4 @@
+import { recordChatUsage } from '../billing/chatUsage.js';
 import { z } from 'zod';
 import type { ChatWebImage, UpstreamApiErrorDetails } from '@trasolve/shared';
 import { OPENWEBUI_OPTIONS } from '../options.js';
@@ -225,6 +226,12 @@ export class OpenWebUIClient {
       throw this.malformedResponse('chat');
     }
 
+    recordChatUsage(
+      parsed.data.model,
+      request.data.messages,
+      content,
+      parsed.data.usage,
+    );
     return {
       model: parsed.data.model,
       message: { role: 'assistant', content },
@@ -271,7 +278,8 @@ export class OpenWebUIClient {
       this.chatTimeoutMs,
       'chat',
       options.signal,
-      (response) => readResponsesStream(response, request.model, options),
+      (response) =>
+        readResponsesStream(response, request.model, options, request.messages),
     );
   }
 

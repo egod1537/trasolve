@@ -234,6 +234,10 @@
   color: var(--danger);
 }
 
+.route-settings-validation[data-severity='success'] header svg {
+  color: var(--success);
+}
+
 .route-settings-validation-day {
   flex: none;
   margin: 8px 0 16px;
@@ -374,4 +378,93 @@
 
 .route-settings-validation-tabs button span {
   font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 760px) {
+  .ui-dialog.route-settings-dialog {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    box-sizing: border-box;
+    width: 100%;
+    height: var(--mobile-dialog-height);
+    max-height: var(--mobile-dialog-height);
+    overflow-y: auto;
+    scroll-padding-block: 76px 88px;
+    gap: 12px;
+    border: 1px solid var(--color-map-overlay-ring);
+    border-radius: var(--radius-overlay);
+    background: var(--color-map-overlay-surface);
+    box-shadow: var(--shadow-map-overlay);
+    pointer-events: auto;
+  }
+
+  .route-settings-dialog .route-settings-popup {
+    display: contents;
+  }
+
+  .route-settings-dialog .route-settings-popup-header {
+    position: sticky;
+    z-index: 3;
+    top: 0;
+    flex: none;
+    order: 0;
+    gap: 8px;
+    padding: 12px;
+    background: var(--color-surface-raised);
+  }
+
+  .route-settings-dialog .route-settings-popup-body {
+    flex: none;
+    order: 1;
+  }
+
+  .route-settings-dialog .route-settings-validation {
+    flex: none;
+    order: 2;
+    height: auto;
+    min-height: 200px;
+    margin: 0 12px 12px;
+    padding: 12px;
+  }
+
+  .route-settings-dialog .route-settings-validation-content {
+    flex: none;
+    height: min(240px, 32dvh);
+    max-height: 45dvh;
+  }
+
+  .route-settings-dialog .route-settings-popup-actions {
+    position: sticky;
+    z-index: 3;
+    bottom: 0;
+    order: 3;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 68px;
+    margin-top: auto;
+    padding: 12px;
+    background: var(--color-surface-raised);
+  }
+
+  .route-settings-dialog .route-settings-popup-body-content {
+    padding: 0 12px;
+    gap: 16px;
+  }
+
+  .route-settings-dialog .route-settings-travel-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .route-settings-dialog .route-settings-popup-header {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .route-settings-dialog .route-settings-popup-actions > .ui-button {
+    flex: 1;
+    min-width: 0;
+  }
 }

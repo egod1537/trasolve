@@ -74,6 +74,19 @@ const mapRouteTransitDetailsSchema = z.object({
   headsign: z.string().nullable(),
   stopCount: z.number().int().nonnegative().nullable(),
   vehicleType: z.string().nullable(),
+  // Optional for persisted route responses created before transit styling.
+  lineColor: z
+    .string()
+    .regex(/^#[\da-f]{6}$/i)
+    .nullish(),
+  lineTextColor: z
+    .string()
+    .regex(/^#[\da-f]{6}$/i)
+    .nullish(),
+  busType: z
+    .enum(['trunk', 'branch', 'local', 'rapid', 'circulation', 'airport'])
+    .nullish(),
+  busTypeName: z.string().nullish(),
 });
 
 const mapRouteStepSchema = z.object({

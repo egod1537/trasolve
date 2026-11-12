@@ -2,13 +2,17 @@ import { forwardRef, type MouseEventHandler } from 'react';
 import { useL } from '@/shared/i18n';
 
 type Props = {
+  tutorialTarget?: boolean;
   open: boolean;
   generating: boolean;
   onClick: MouseEventHandler<HTMLButtonElement>;
 };
 
 export const MapAiButton = forwardRef<HTMLButtonElement, Props>(
-  function MapAiButton({ open, generating, onClick }, ref) {
+  function MapAiButton(
+    { open, generating, onClick, tutorialTarget = true },
+    ref,
+  ) {
     const L = useL();
     const actionLabel = open
       ? L('ai:mapAiButton.actionLabel.text.closeAiPanel')
@@ -23,7 +27,7 @@ export const MapAiButton = forwardRef<HTMLButtonElement, Props>(
       <button
         ref={ref}
         type="button"
-        data-tutorial="ai"
+        data-tutorial={tutorialTarget ? 'ai' : undefined}
         className={`trip-map-ai-button${open ? ' is-panel-open' : ''}${generating ? ' is-generating' : ''}`}
         aria-label={label}
         title={label}

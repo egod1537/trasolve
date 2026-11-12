@@ -15,11 +15,24 @@ export const billingOrderSchema = z.object({
   paymentKey: z.string().optional(),
   billingSecret: z.string().optional(),
   renewal: z.boolean().optional(),
+  attemptedAt: z.iso.datetime().optional(),
+  upgrade: z
+    .object({
+      subscriptionId: z.string().uuid(),
+      previousProduct: paymentProductSchema,
+      targetProduct: paymentProductSchema,
+      periodEnd: z.iso.datetime(),
+      previousCancel: z.boolean(),
+    })
+    .optional(),
   processingUntil: z.iso.datetime().optional(),
   processingKey: z.string().optional(),
   refundedTokens: z.number().int().nonnegative().optional(),
 });
 const subscriptionSchema = z.object({
+  id: z.string().uuid().optional(),
+  upgradeOrderId: z.string().uuid().optional(),
+  lastUpgradeOrderId: z.string().uuid().optional(),
   product: paymentProductSchema,
   billingSecret: z.string(),
   customerKey: z.string(),
@@ -40,6 +53,17 @@ export const billingAccountSchema = z.object({
       action: z.enum(['chat', 'optimize']),
       state: z.enum(['reserved', 'spent', 'released']),
       at: z.iso.datetime(),
+      modelUsage: z
+        .array(
+          z.object({
+            model: z.string(),
+            input: z.number().int().nonnegative(),
+            output: z.number().int().nonnegative(),
+            cachedInput: z.number().int().nonnegative(),
+            estimated: z.boolean(),
+          }),
+        )
+        .optional(),
     }),
   ),
   ledger: z.array(

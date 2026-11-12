@@ -22,6 +22,6 @@ export function isTokenUsageUnlimited(
   }
   return (
     BILLING_OPTIONS.unlimitedTokensInDebug &&
-    isDebugGuestAuthenticationEnabled()
+    (mode === 'debug' || isDebugGuestAuthenticationEnabled())
   );
 }

@@ -13,6 +13,7 @@ import { RouteOptimizationFailureDetails } from './RouteOptimizationFailureDetai
 import { useL, type Localize } from '@/shared/i18n';
 import { Button } from '@/shared/ui/Button';
 import { LoadingSpinner } from '@/shared/ui/LoadingSpinner';
+import { RouteFeasibilitySummary } from './RouteFeasibilitySummary';
 import {
   ValidationSeverityTabs,
   type ValidationSeverity,
@@ -23,12 +24,18 @@ type Props = {
   day: TripDay;
   validation: RouteValidationState;
   error: RouteOptimizationFailure | null;
+  hidden?: boolean;
+  panelId?: string;
+  tabId?: string;
 };
 export function OptimizationValidationPanel({
   id,
   day,
   validation,
   error,
+  hidden,
+  panelId,
+  tabId,
 }: Props) {
   const L = useL();
   const { issues, result, checking, unknownHours } = validation;
@@ -36,7 +43,9 @@ export function OptimizationValidationPanel({
   const counts = {
     warning:
       (result?.issues.filter((issue) => issue.severity === 'warning').length ??
-        0) + Number(unknownHours.length > 0),
+        0) +
+      Number(unknownHours.length > 0) +
+      Number(validation.unsupported),
     error:
       issues.length +
       (result?.issues.filter((issue) => issue.severity === 'error').length ??
@@ -48,26 +57,46 @@ export function OptimizationValidationPanel({
   const serverIssues =
     result?.issues.filter((issue) => issue.severity === severity) ?? [];
   const empty = counts[severity] === 0;
+  const verified =
+    result?.feasibility?.status === 'FEASIBLE' &&
+    counts.error === 0 &&
+    counts.warning === 0 &&
+    !checking;
   if (
     !issues.length &&
     !result?.issues.length &&
     !checking &&
     !validation.error &&
     !error &&
-    !unknownHours.length
+    !unknownHours.length &&
+    !validation.unsupported &&
+    !result?.feasibility &&
+    !panelId
   ) {
     return null;
   }
   return (
     <aside
       className="route-settings-side-panel route-settings-validation"
-      aria-labelledby={`${id}-title`}
-      data-severity={severity}
+      id={panelId}
+      role={panelId ? 'tabpanel' : undefined}
+      hidden={hidden}
+      aria-labelledby={tabId ?? `${id}-title`}
+      data-severity={verified ? 'success' : severity}
     >
       <header>
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M10.3 4.3 2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z" />
-          <path d="M12 9v4m0 3v.1" />
+          {verified ? (
+            <>
+              <circle cx="12" cy="12" r="9" />
+              <path d="m7.5 12 3 3 6-6" />
+            </>
+          ) : (
+            <>
+              <path d="M10.3 4.3 2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z" />
+              <path d="M12 9v4m0 3v.1" />
+            </>
+          )}
         </svg>
         <h3 id={`${id}-title`}>
           {L(
@@ -76,6 +105,7 @@ export function OptimizationValidationPanel({
         </h3>
       </header>
       <p className="route-settings-validation-day">{day.title}</p>
+      <RouteFeasibilitySummary validation={validation} />
       <ValidationSeverityTabs
         id={id}
         selected={severity}
@@ -114,11 +144,13 @@ export function OptimizationValidationPanel({
             day={day}
           />
         ))}
-        {result?.matrix_source === 'euclidean' && serverIssues.length > 0 && (
-          <p className="route-settings-validation-resolution">
-            {L('routeOptimization:routeReviewSummary.basis')}
-          </p>
-        )}
+        {result?.matrix_source === 'euclidean' &&
+          (serverIssues.length > 0 ||
+            result.feasibility?.status === 'FEASIBLE') && (
+            <p className="route-settings-validation-resolution">
+              {L('routeOptimization:routeReviewSummary.basis')}
+            </p>
+          )}
         {severity === 'warning' && unknownHours.length > 0 && (
           <p className="route-settings-validation-resolution">
             {L(
@@ -144,7 +176,7 @@ export function OptimizationValidationPanel({
             />
           </div>
         )}
-        {empty && !checking && (
+        {empty && !checking && !verified && (
           <p className="route-settings-validation-resolution">
             {L('admin:common.empty')}
           </p>
@@ -189,17 +221,21 @@ function ServerIssue({
     suggestions: issue.suggestions,
   };
   const message =
-    issue.code === 'INVALID_REQUEST'
+    issue.code === 'NO_FEASIBLE_ROUTE'
       ? L(
-          'routeOptimization:routeOptimization.error.routeOptimizationRequestValueIncorrect',
+          'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.weCouldNotFindPossibleRoute',
         )
-      : issue.code === 'UNREACHABLE_ARC'
+      : issue.code === 'INVALID_REQUEST'
         ? L(
-            'map:polylineMetrics.formatPolylineDistance.text.noRouteInformation',
+            'routeOptimization:routeOptimization.error.routeOptimizationRequestValueIncorrect',
           )
-        : L(
-            'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.locationOpeningHoursVisitingHoursRange',
-          );
+        : issue.code === 'UNREACHABLE_ARC'
+          ? L(
+              'map:polylineMetrics.formatPolylineDistance.text.noRouteInformation',
+            )
+          : L(
+              'routeOptimization:routeOptimizationApi.formatOptimizationJobError.text.locationOpeningHoursVisitingHoursRange',
+            );
   return (
     <div
       className="route-settings-validation-item"

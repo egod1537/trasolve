@@ -1,3 +1,4 @@
+import { VisualViewport } from '@/app/providers/VisualViewport';
 import { Suspense } from 'react';
 import { AppProviders } from '@/app/providers/AppProviders';
 import { SmoothScrolling } from '@/app/providers/SmoothScrolling';
@@ -10,6 +11,7 @@ export function App() {
   return (
     <AppProviders>
       <SmoothScrolling />
+      <VisualViewport />
       <ExternalApiDisabledNotice />
       <Suspense fallback={<p role="status">{loadingLabel}</p>}>
         <Component />

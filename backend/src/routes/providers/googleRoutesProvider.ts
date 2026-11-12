@@ -10,6 +10,10 @@ import {
   type RouteLocation,
 } from '@trasolve/shared';
 import { RouteError } from '../routeError.js';
+import {
+  normalizeTransitDetails,
+  upstreamTransitDetailsSchema,
+} from './transitDetails.js';
 import type { RouteProvider, RouteProviderResult } from '../routeProvider.js';
 import {
   loadExternalApiPolicy,
@@ -64,33 +68,6 @@ export class GoogleRoutesProvider implements RouteProvider {
   private static readonly locationSchema = z.object({
     latLng: GoogleRoutesProvider.latLngSchema,
   });
-  private static readonly transitStopSchema = z.object({
-    name: z.string().optional(),
-    location: GoogleRoutesProvider.locationSchema.optional(),
-  });
-  private static readonly transitDetailsSchema = z.object({
-    stopDetails: z
-      .object({
-        departureStop: GoogleRoutesProvider.transitStopSchema.optional(),
-        arrivalStop: GoogleRoutesProvider.transitStopSchema.optional(),
-        departureTime: z.string().optional(),
-        arrivalTime: z.string().optional(),
-      })
-      .optional(),
-    headsign: z.string().optional(),
-    transitLine: z
-      .object({
-        name: z.string().optional(),
-        nameShort: z.string().optional(),
-        vehicle: z
-          .object({
-            type: z.string().optional(),
-          })
-          .optional(),
-      })
-      .optional(),
-    stopCount: z.number().int().nonnegative().optional(),
-  });
   private static readonly legStepSchema = z.object({
     distanceMeters: z.number().nonnegative().optional(),
     staticDuration: GoogleRoutesProvider.durationSchema.optional(),
@@ -102,7 +79,7 @@ export class GoogleRoutesProvider implements RouteProvider {
       })
       .optional(),
     travelMode: z.string().optional(),
-    transitDetails: GoogleRoutesProvider.transitDetailsSchema.optional(),
+    transitDetails: upstreamTransitDetailsSchema.optional(),
   });
   private static readonly legSchema = z.object({
     distanceMeters: z.number().nonnegative().optional(),
@@ -197,7 +174,7 @@ export class GoogleRoutesProvider implements RouteProvider {
               'Content-Type': 'application/json',
               'X-Goog-Api-Key': this.apiKey,
               'X-Goog-FieldMask':
-                'routes.description,routes.distanceMeters,routes.duration,routes.travelAdvisory.transitFare,routes.legs.distanceMeters,routes.legs.duration,routes.legs.startLocation,routes.legs.endLocation,routes.legs.steps.distanceMeters,routes.legs.steps.staticDuration,routes.legs.steps.startLocation,routes.legs.steps.endLocation,routes.legs.steps.navigationInstruction.instructions,routes.legs.steps.travelMode,routes.legs.steps.transitDetails.stopDetails,routes.legs.steps.transitDetails.headsign,routes.legs.steps.transitDetails.transitLine.name,routes.legs.steps.transitDetails.transitLine.nameShort,routes.legs.steps.transitDetails.transitLine.vehicle.type,routes.legs.steps.transitDetails.stopCount,routes.polyline.geoJsonLinestring,routes.viewport,routes.warnings',
+                'routes.description,routes.distanceMeters,routes.duration,routes.travelAdvisory.transitFare,routes.legs.distanceMeters,routes.legs.duration,routes.legs.startLocation,routes.legs.endLocation,routes.legs.steps.distanceMeters,routes.legs.steps.staticDuration,routes.legs.steps.startLocation,routes.legs.steps.endLocation,routes.legs.steps.navigationInstruction.instructions,routes.legs.steps.travelMode,routes.legs.steps.transitDetails.stopDetails,routes.legs.steps.transitDetails.headsign,routes.legs.steps.transitDetails.transitLine.name,routes.legs.steps.transitDetails.transitLine.nameShort,routes.legs.steps.transitDetails.transitLine.vehicle.type,routes.legs.steps.transitDetails.transitLine.color,routes.legs.steps.transitDetails.transitLine.textColor,routes.legs.steps.transitDetails.stopCount,routes.polyline.geoJsonLinestring,routes.viewport,routes.warnings',
             },
             signal,
             body: JSON.stringify(upstreamRequest),
@@ -506,25 +483,7 @@ export class GoogleRoutesProvider implements RouteProvider {
           instruction: step.navigationInstruction?.instructions ?? null,
           startLocation: this.normalizeLocation(step.startLocation),
           endLocation: this.normalizeLocation(step.endLocation),
-          transitDetails: step.transitDetails
-            ? {
-                departureStop:
-                  step.transitDetails.stopDetails?.departureStop?.name ?? null,
-                arrivalStop:
-                  step.transitDetails.stopDetails?.arrivalStop?.name ?? null,
-                departureTime:
-                  step.transitDetails.stopDetails?.departureTime ?? null,
-                arrivalTime:
-                  step.transitDetails.stopDetails?.arrivalTime ?? null,
-                lineName: step.transitDetails.transitLine?.name ?? null,
-                lineShortName:
-                  step.transitDetails.transitLine?.nameShort ?? null,
-                headsign: step.transitDetails.headsign ?? null,
-                stopCount: step.transitDetails.stopCount ?? null,
-                vehicleType:
-                  step.transitDetails.transitLine?.vehicle?.type ?? null,
-              }
-            : null,
+          transitDetails: normalizeTransitDetails(step.transitDetails),
         })),
       })),
       path: route.polyline.geoJsonLinestring.coordinates.map(([lng, lat]) => ({

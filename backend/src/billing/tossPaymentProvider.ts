@@ -7,6 +7,26 @@ import {
   type VerifiedPayment,
 } from './paymentProvider.js';
 
+// Definitive card/billing rejections only; duplicate IDs and outages stay uncertain.
+// Source: https://docs.tosspayments.com/reference/error-codes (card automatic approval).
+const declinedCodes = new Set([
+  'INVALID_STOPPED_CARD',
+  'INVALID_REJECT_CARD',
+  'INVALID_CARD_EXPIRATION',
+  'INVALID_CARD_NUMBER',
+  'INVALID_BILL_KEY_REQUEST',
+  'NOT_SUPPORTED_CARD_TYPE',
+  'NOT_MATCHES_CUSTOMER_KEY',
+  'NOT_REGISTERED_CARD_COMPANY',
+  'INVALID_CARD_LOST_OR_STOLEN',
+  'REJECT_CARD_PAYMENT',
+  'REJECT_ACCOUNT_PAYMENT',
+  'REJECT_CARD_COMPANY',
+  'EXCEED_MAX_AUTH_COUNT',
+  'KYC_BLOCKED',
+]);
+const providerErrorSchema = z.object({ code: z.string() });
+
 const responseSchema = z.object({
   orderId: z.string(),
   paymentKey: z.string(),
@@ -202,6 +222,19 @@ export class TossPaymentProvider implements PaymentProvider {
       return null;
     }
     if (!response.ok) {
+      if (
+        billing &&
+        method === 'POST' &&
+        response.status >= 400 &&
+        response.status < 500
+      ) {
+        const error = providerErrorSchema.safeParse(
+          await response.json().catch(() => null),
+        );
+        if (error.success && declinedCodes.has(error.data.code)) {
+          throw new BillingError('PAYMENT_DECLINED', 400);
+        }
+      }
       throw new BillingError('PAYMENT_PROVIDER_ERROR', 502);
     }
     if (response.status === 204) {

@@ -1,4 +1,4 @@
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { timingSafeEqual } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
   API_ROUTES,
@@ -6,7 +6,19 @@ import {
   type AuthMeResponse,
   type GoogleOAuthResult,
 } from '@trasolve/shared';
-import type { AuthenticationService } from './auth/authenticationService.js';
+import {
+  ConsentRequiredError,
+  type AuthenticationService,
+} from './auth/authenticationService.js';
+import type { ConsentHttpFlow } from './auth/consentHttpFlow.js';
+import { ExpiringStore } from './auth/expiringStore.js';
+import {
+  clearCookie,
+  createCookie,
+  sessionLifetimeMs,
+  usesSecureOAuthCookies,
+} from './auth/httpCookies.js';
+import { safeReturnTo } from './auth/safeReturnTo.js';
 import { readOpaqueCookie } from './auth/cookies.js';
 import type { CurrentUserResolver } from './auth/currentUserResolver.js';
 import { readSessionSecret, sessionCookieName } from './auth/sessionCookie.js';
@@ -30,9 +42,7 @@ const sessionCookiePath = '/';
 const defaultReturnTo = '/';
 const entryLifetimeMs = 10 * 60 * 1_000;
 const cookieMaxAgeSeconds = entryLifetimeMs / 1_000;
-const sessionLifetimeMs = 30 * 24 * 60 * 60 * 1_000;
 const sessionCookieMaxAgeSeconds = sessionLifetimeMs / 1_000;
-const maximumEntries = 500;
 
 interface OAuthTransaction {
   state: string;
@@ -41,65 +51,12 @@ interface OAuthTransaction {
   linkUserId?: string;
 }
 
-interface StoredEntry<T> {
-  expiresAt: number;
-  value: T;
-}
-
-class ExpiringStore<T> {
-  public create(value: T): string {
-    this.removeExpired();
-
-    while (this.entries.size >= maximumEntries) {
-      const oldestKey = this.entries.keys().next().value;
-      if (typeof oldestKey !== 'string') {
-        break;
-      }
-      this.entries.delete(oldestKey);
-    }
-
-    let id: string;
-    do {
-      id = randomBytes(32).toString('base64url');
-    } while (this.entries.has(id));
-
-    this.entries.set(id, {
-      expiresAt: Date.now() + entryLifetimeMs,
-      value,
-    });
-
-    return id;
-  }
-
-  public consume(id: string | undefined): T | undefined {
-    this.removeExpired();
-    if (!id) {
-      return undefined;
-    }
-
-    const entry = this.entries.get(id);
-    this.entries.delete(id);
-    return entry?.value;
-  }
-
-  private readonly entries = new Map<string, StoredEntry<T>>();
-
-  private removeExpired(): void {
-    const now = Date.now();
-
-    for (const [id, entry] of this.entries) {
-      if (entry.expiresAt <= now) {
-        this.entries.delete(id);
-      }
-    }
-  }
-}
-
 export class GoogleOAuthHttpFlow {
   public constructor(
     private readonly authentication: AuthenticationService,
     private readonly sessions: SessionService,
     private readonly currentUser: CurrentUserResolver,
+    private readonly consent: ConsentHttpFlow,
     private readonly debugGuestUserId?: string,
     private readonly externalApiPolicy: ExternalApiPolicy = loadExternalApiPolicy(),
   ) {}
@@ -305,8 +262,7 @@ export class GoogleOAuthHttpFlow {
           return;
         }
         const state = this.ssuTransactions.create({ returnTo, linkUserId });
-        response.setHeader(
-          'Set-Cookie',
+        response.setHeader('Set-Cookie', [
           createCookie(
             ssuTransactionCookieName,
             state,
@@ -314,7 +270,8 @@ export class GoogleOAuthHttpFlow {
             secure,
             cookieMaxAgeSeconds,
           ),
-        );
+          this.consent.clearPendingCookie(),
+        ]);
         response.setHeader('Location', ssuAuthorizationUrl(callback, state));
         response.writeHead(302);
         response.end();
@@ -358,6 +315,16 @@ export class GoogleOAuthHttpFlow {
         ),
       ]);
     } catch (cause) {
+      if (cause instanceof ConsentRequiredError) {
+        this.consent.redirectPending(response, cause.identity, returnTo, [
+          clearCookie(
+            ssuTransactionCookieName,
+            ssuTransactionCookiePath,
+            secure,
+          ),
+        ]);
+        return;
+      }
       // Provider credentials and raw portal HTML must never leave this boundary.
       finish(
         cause instanceof ExternalApiPolicyError
@@ -419,6 +386,7 @@ export class GoogleOAuthHttpFlow {
         cookieMaxAgeSeconds,
       ),
       clearCookie(resultCookieName, resultCookiePath, secure),
+      this.consent.clearPendingCookie(),
     ]);
     response.writeHead(302);
     response.end();
@@ -537,6 +505,12 @@ export class GoogleOAuthHttpFlow {
         ],
       );
     } catch (error) {
+      if (error instanceof ConsentRequiredError) {
+        this.consent.redirectPending(response, error.identity, returnTo, [
+          clearCookie(transactionCookieName, transactionCookiePath, secure),
+        ]);
+        return;
+      }
       this.redirectWithResult(response, mapOAuthError(error), secure, returnTo);
     }
   }
@@ -584,8 +558,7 @@ export class GoogleOAuthHttpFlow {
       user.id,
       sessionLifetimeMs,
     );
-    response.setHeader(
-      'Set-Cookie',
+    response.setHeader('Set-Cookie', [
       createCookie(
         sessionCookieName,
         sessionSecret,
@@ -593,7 +566,8 @@ export class GoogleOAuthHttpFlow {
         usesSecureOAuthCookies(),
         sessionCookieMaxAgeSeconds,
       ),
-    );
+      this.consent.clearPendingCookie(),
+    ]);
     const body: AuthMeResponse = { user };
     sendJson(response, 200, body);
   }
@@ -606,10 +580,10 @@ export class GoogleOAuthHttpFlow {
     const sessionSecret = readSessionSecret(request);
     await this.sessions.revoke(sessionSecret);
 
-    response.setHeader(
-      'Set-Cookie',
+    response.setHeader('Set-Cookie', [
       clearCookie(sessionCookieName, sessionCookiePath, secure),
-    );
+      this.consent.clearPendingCookie(),
+    ]);
     sendJson(response, 200, { success: true });
   }
 
@@ -626,6 +600,7 @@ export class GoogleOAuthHttpFlow {
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Location', location);
     response.setHeader('Set-Cookie', [
+      this.consent.clearPendingCookie(),
       ...(result.provider === 'ssu'
         ? []
         : [clearCookie(transactionCookieName, transactionCookiePath, secure)]),
@@ -660,18 +635,6 @@ function createGoogleOAuthClient(
   }
 }
 
-function usesSecureOAuthCookies(): boolean {
-  try {
-    return (
-      process.env.NODE_ENV === 'production' ||
-      ssuCallbackUrl()?.protocol === 'https:' ||
-      new URL(process.env.GOOGLE_OAUTH_REDIRECT_URI ?? '').protocol === 'https:'
-    );
-  } catch {
-    return false;
-  }
-}
-
 function securelyMatches(candidate: string | null, expected: string): boolean {
   if (!candidate) {
     return false;
@@ -691,51 +654,7 @@ function securelyMatches(candidate: string | null, expected: string): boolean {
  * use `returnTo` to bounce a completed login through an external site.
  */
 function readSafeReturnTo(requestUrl: URL): string {
-  const value = requestUrl.searchParams.get('returnTo');
-  if (
-    !value ||
-    !value.startsWith('/') ||
-    value.startsWith('//') ||
-    value.includes('\\') ||
-    /[\r\n]/.test(value)
-  ) {
-    return defaultReturnTo;
-  }
-
-  return value;
-}
-
-function createCookie(
-  name: string,
-  value: string,
-  path: string,
-  secure: boolean,
-  maxAgeSeconds: number,
-): string {
-  return [
-    `${name}=${value}`,
-    `Max-Age=${maxAgeSeconds}`,
-    `Path=${path}`,
-    'HttpOnly',
-    'SameSite=Lax',
-    secure ? 'Secure' : '',
-  ]
-    .filter(Boolean)
-    .join('; ');
-}
-
-function clearCookie(name: string, path: string, secure: boolean): string {
-  return [
-    `${name}=`,
-    'Max-Age=0',
-    'Expires=Thu, 01 Jan 1970 00:00:00 GMT',
-    `Path=${path}`,
-    'HttpOnly',
-    'SameSite=Lax',
-    secure ? 'Secure' : '',
-  ]
-    .filter(Boolean)
-    .join('; ');
+  return safeReturnTo(requestUrl.searchParams.get('returnTo'));
 }
 
 function mapOAuthError(error: unknown): GoogleOAuthResult {

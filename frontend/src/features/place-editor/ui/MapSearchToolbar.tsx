@@ -1,4 +1,4 @@
-import { ScrollArea } from '@/shared/ui/ScrollArea';
+import { matchesLayoutMaxWidth } from '@/shared/config/mobileLayout';
 import {
   memo,
   useCallback,
@@ -15,7 +15,7 @@ import {
   type PlaceDetails,
 } from '@trasolve/shared';
 import { getPlace, searchPlaces } from '@/shared/api/places';
-import { PlaceTypeIcon } from '@/features/place-editor/ui/PlaceTypeIcon';
+import { PlaceSearchResults, type SearchStatus } from './PlaceSearchResults';
 import '@/features/place-editor/ui/map-toolbar.css';
 import { useL } from '@/shared/i18n';
 import { screenView, trackEvent } from '@/shared/analytics';
@@ -24,7 +24,6 @@ import {
   type GuidedPlaceSearch,
 } from '../model/useGuidedPlaceSearch';
 
-type SearchStatus = 'idle' | 'loading' | 'ready' | 'selecting' | 'error';
 type SearchBias = PlaceAutocompleteRequest['locationBias'];
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -145,6 +144,9 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
         !searchRootRef.current?.contains(event.target)
       ) {
         closeResults();
+        if (matchesLayoutMaxWidth(760)) {
+          searchRootRef.current?.querySelector('input')?.blur();
+        }
       }
     };
     document.addEventListener('pointerdown', closeOnOutsidePointer);
@@ -232,6 +234,9 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
       detailsRequestRef.current = null;
       sessionTokenRef.current = null;
       onSelectPlace(place);
+      if (matchesLayoutMaxWidth(760)) {
+        searchRootRef.current?.querySelector('input')?.blur();
+      }
       if (place.name !== query) {
         skipNextQuerySearchRef.current = true;
         setQuery(place.name);
@@ -279,6 +284,9 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
               event.preventDefault();
               event.stopPropagation();
               closeResults();
+              if (matchesLayoutMaxWidth(760)) {
+                searchRootRef.current?.querySelector('input')?.blur();
+              }
             }}
           >
             <form
@@ -328,62 +336,12 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
               </button>
             </form>
             {dropdownOpen && (
-              <ScrollArea
-                id="map-place-search-results"
-                className="map-place-search-results"
-                role="listbox"
-                aria-label={L(
-                  'place:mapSearchToolbar.ariaLabel.placeSearchResults',
-                )}
-                contentClassName="map-place-search-results-content"
-              >
-                {searchStatus === 'loading' && (
-                  <p role="status">
-                    {L('place:mapSearchToolbar.description.searchingLocation')}
-                  </p>
-                )}
-                {searchStatus === 'selecting' && (
-                  <p role="status">
-                    {L(
-                      'place:googlePlaceCard.description.loadingLocationInformation',
-                    )}
-                  </p>
-                )}
-                {searchError && <p role="alert">{searchError}</p>}
-                {searchStatus === 'ready' && !suggestions.length && (
-                  <p role="status">
-                    {L('place:mapSearchToolbar.description.noSearchResults')}
-                  </p>
-                )}
-                {!!suggestions.length && (
-                  <ul>
-                    {suggestions.map((suggestion) => (
-                      <li key={suggestion.placeId}>
-                        <button
-                          type="button"
-                          data-analytics-id={ANALYTICS_TARGETS.placeSelect}
-                          data-analytics-screen={ANALYTICS_SCREENS.placeSearch}
-                          role="option"
-                          aria-selected="false"
-                          disabled={searchStatus === 'selecting'}
-                          onClick={() => void selectSuggestion(suggestion)}
-                        >
-                          <span className="map-place-search-result-title">
-                            <PlaceTypeIcon types={suggestion.types} />
-                            <strong>{suggestion.text}</strong>
-                          </span>
-                          <span className="map-place-search-result-address">
-                            {suggestion.secondaryText ||
-                              L(
-                                'place:mapSearchToolbar.text.noAddressInformation',
-                              )}
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </ScrollArea>
+              <PlaceSearchResults
+                status={searchStatus}
+                error={searchError}
+                suggestions={suggestions}
+                onSelect={selectSuggestion}
+              />
             )}
           </div>
           {showQuickSearch ? (

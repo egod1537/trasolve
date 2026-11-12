@@ -16,6 +16,7 @@ import type {
 } from '@trasolve/shared';
 import {
   abandonCheckout,
+  BillingRequestError,
   cancelSubscription,
   confirmCheckout,
   createCheckout,
@@ -23,8 +24,19 @@ import {
 } from '../api/billingApi';
 import { createCheckoutProvider } from '../api/checkoutProvider';
 import { BillingContext } from '../model/billingContext';
-import { BILLING_REFRESH_EVENT } from '@/shared/api/billingContext';
-import { useL } from '@/shared/i18n';
+import {
+  usePaymentCelebration,
+  type PaymentCelebration,
+} from '../model/usePaymentCelebration';
+import { CheckoutConfirmationDialog } from './CheckoutConfirmationDialog';
+import { CancelSubscriptionDialog } from './CancelSubscriptionDialog';
+import {
+  BILLING_REFRESH_EVENT,
+  DEBUG_TOKEN_MODE_KEY,
+  isDebugTokenUnlimited,
+  setDebugTokenUnlimited,
+} from '@/shared/api/billingContext';
+import { NL, useL } from '@/shared/i18n';
 import { Dialog } from '@/shared/ui/Dialog';
 import { Button } from '@/shared/ui/Button';
 
@@ -42,13 +54,19 @@ export function BillingProvider({ userId, login, children }: Props) {
   const [summary, setSummary] = useState<BillingSummary | null>(null);
   const [loading, setLoading] = useState(Boolean(userId));
   const [busy, setBusy] = useState(false);
+  const [changingTokenMode, setChangingTokenMode] = useState(false);
+  const tokenModeOperation = useRef(false);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [plansOpen, setPlansOpen] = useState(false);
-  const [debugCheckout, setDebugCheckout] = useState<PaymentCheckout | null>(
+  const [pendingCheckout, setPendingCheckout] =
+    useState<PaymentCheckout | null>(null);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [cancelImmediately, setCancelImmediately] = useState(false);
+  const [result, setResult] = useState<ReactNode>(null);
+  const [celebration, setCelebration] = useState<PaymentCelebration | null>(
     null,
   );
-  const [result, setResult] = useState<string | null>(null);
+  usePaymentCelebration(celebration);
   const operation = useRef(false);
   const callbackStarted = useRef(false);
   const revision = useRef(0);
@@ -84,11 +102,18 @@ export function BillingProvider({ userId, login, children }: Props) {
     queueMicrotask(reload);
     window.addEventListener(BILLING_REFRESH_EVENT, reload);
     window.addEventListener('focus', reload);
+    const storageChanged = (event: StorageEvent) => {
+      if (event.key === DEBUG_TOKEN_MODE_KEY || event.key === null) {
+        reload();
+      }
+    };
+    window.addEventListener('storage', storageChanged);
     const timer = window.setInterval(reload, 30_000);
     return () => {
       window.clearInterval(timer);
       window.removeEventListener(BILLING_REFRESH_EVENT, reload);
       window.removeEventListener('focus', reload);
+      window.removeEventListener('storage', storageChanged);
     };
   }, [refresh]);
 
@@ -145,6 +170,7 @@ export function BillingProvider({ userId, login, children }: Props) {
           revision.current++;
           setSummary(value);
           setResult(L('auth:billing.success'));
+          setCelebration({ orderId, plan: value.wallet.plan });
         }
       } catch (cause) {
         setResult(
@@ -157,25 +183,58 @@ export function BillingProvider({ userId, login, children }: Props) {
     })();
   }, [userId, L]);
 
+  const toggleDebugUnlimited = async () => {
+    if (
+      operation.current ||
+      tokenModeOperation.current ||
+      summary?.mode !== 'debug' ||
+      !summary.unlimitedAvailable
+    ) {
+      return;
+    }
+    tokenModeOperation.current = true;
+    setChangingTokenMode(true);
+    const previous = isDebugTokenUnlimited();
+    setDebugTokenUnlimited(!summary.unlimited);
+    const rev = ++revision.current;
+    try {
+      const value = await fetchBillingSummary();
+      if (rev === revision.current) {
+        setSummary(value);
+        setError(null);
+      }
+    } catch (cause) {
+      setDebugTokenUnlimited(previous);
+      setResult(
+        cause instanceof Error ? cause.message : L('auth:billing.error'),
+      );
+      void refresh();
+    } finally {
+      tokenModeOperation.current = false;
+      setChangingTokenMode(false);
+    }
+  };
+
   const purchase = async (product: PaymentProductId) => {
-    if (operation.current) {
+    if (operation.current || tokenModeOperation.current) {
       return;
     }
     operation.current = true;
     setBusy(true);
     setError(null);
-    setMessage(null);
     let order: PaymentCheckout | undefined;
     try {
       order = await createCheckout(product);
-      if ((await createCheckoutProvider(order.mode).start(order)) === 'debug') {
-        setDebugCheckout(order);
+      if (
+        (await createCheckoutProvider(order.mode).start(order)) === 'confirm'
+      ) {
+        setPendingCheckout(order);
       }
     } catch (cause) {
       if (order) {
         await abandonCheckout(order.orderId).catch(() => undefined);
       }
-      setError(
+      setResult(
         cause instanceof Error ? cause.message : L('auth:billing.error'),
       );
     } finally {
@@ -183,52 +242,90 @@ export function BillingProvider({ userId, login, children }: Props) {
       setBusy(false);
     }
   };
-  const finishDebug = async (outcome: 'success' | 'failure' | 'cancel') => {
-    if (!debugCheckout || operation.current) {
+  const finishCheckout = async (outcome: 'success' | 'failure' | 'cancel') => {
+    if (
+      !pendingCheckout ||
+      operation.current ||
+      tokenModeOperation.current ||
+      (pendingCheckout.mode !== 'debug' && outcome === 'failure')
+    ) {
       return;
     }
     operation.current = true;
     setBusy(true);
     setError(null);
+    let close = true;
     try {
-      const value = await confirmCheckout({
-        orderId: debugCheckout.orderId,
-        outcome,
-      });
+      const value =
+        outcome === 'cancel' && pendingCheckout.mode !== 'debug'
+          ? await abandonCheckout(pendingCheckout.orderId)
+          : await confirmCheckout({
+              orderId: pendingCheckout.orderId,
+              ...(pendingCheckout.mode === 'debug' ? { outcome } : {}),
+            });
       revision.current++;
       setSummary(value);
-      setMessage(
-        outcome === 'cancel'
-          ? L('auth:billing.cancelled')
-          : L('auth:billing.success'),
+      const cancelled =
+        outcome === 'cancel' &&
+        !(pendingCheckout.upgrade && value.wallet.plan === 'pro');
+      setResult(
+        cancelled ? L('auth:billing.cancelled') : L('auth:billing.success'),
       );
+      if (!cancelled && outcome === 'success') {
+        setCelebration({
+          orderId: pendingCheckout.orderId,
+          plan: value.wallet.plan,
+        });
+      }
     } catch (cause) {
-      setError(
+      // Preserve an uncertain stored-card order so retries reuse its idempotency key.
+      const terminal =
+        cause instanceof BillingRequestError &&
+        ['PAYMENT_DECLINED', 'PAYMENT_CLOSED', 'PAYMENT_EXPIRED'].includes(
+          cause.code,
+        );
+      close = !(
+        pendingCheckout.upgrade &&
+        pendingCheckout.mode !== 'debug' &&
+        !terminal
+      );
+      setResult(
         cause instanceof Error ? cause.message : L('auth:billing.error'),
       );
     } finally {
-      setDebugCheckout(null);
+      if (close) {
+        setPendingCheckout(null);
+      }
       operation.current = false;
       setBusy(false);
     }
   };
   const cancel = async () => {
-    if (operation.current) {
+    if (operation.current || tokenModeOperation.current) {
       return;
     }
     operation.current = true;
     setBusy(true);
     setError(null);
     try {
-      const value = await cancelSubscription();
+      const value = await cancelSubscription(cancelImmediately);
       revision.current++;
       setSummary(value);
-      setMessage(L('auth:billing.cancelScheduled'));
+      setResult(
+        cancelImmediately ? (
+          <>
+            {L('auth:tokenPlans.currentPlan')} <strong>{NL('Free')}</strong>
+          </>
+        ) : (
+          L('auth:billing.cancelScheduled')
+        ),
+      );
     } catch (cause) {
-      setError(
+      setResult(
         cause instanceof Error ? cause.message : L('auth:billing.error'),
       );
     } finally {
+      setCancelConfirmOpen(false);
       operation.current = false;
       setBusy(false);
     }
@@ -237,8 +334,8 @@ export function BillingProvider({ userId, login, children }: Props) {
     if (busy) {
       return;
     }
-    if (debugCheckout) {
-      void finishDebug('cancel').then(() => setPlansOpen(false));
+    if (pendingCheckout) {
+      void finishCheckout('cancel').then(() => setPlansOpen(false));
       return;
     }
     setPlansOpen(false);
@@ -249,23 +346,28 @@ export function BillingProvider({ userId, login, children }: Props) {
       value={{
         summary,
         loading,
+        changingTokenMode,
+        toggleDebugUnlimited,
         busy,
         error,
-        message,
         authenticated: Boolean(userId),
-        debugCheckout,
+        pendingCheckout,
         plansOpen,
         dialogId,
         openPlans: () => {
           setPlansOpen(true);
-          setMessage(null);
           void refresh();
         },
         closePlans,
         refresh,
         purchase,
-        finishDebug,
-        cancelSubscription: cancel,
+        finishCheckout,
+        cancelSubscription: async (immediate = false) => {
+          if (!operation.current && !tokenModeOperation.current) {
+            setCancelImmediately(immediate);
+            setCancelConfirmOpen(true);
+          }
+        },
         login,
       }}
     >
@@ -274,6 +376,21 @@ export function BillingProvider({ userId, login, children }: Props) {
         <Suspense fallback={null}>
           <TokenPlansDialog />
         </Suspense>
+      )}
+      {pendingCheckout && <CheckoutConfirmationDialog />}
+      {cancelConfirmOpen && (
+        <CancelSubscriptionDialog
+          busy={busy}
+          immediate={cancelImmediately}
+          remaining={summary?.wallet.remaining ?? 0}
+          endsAt={summary?.wallet.renewsAt ?? null}
+          onClose={() => {
+            if (!operation.current) {
+              setCancelConfirmOpen(false);
+            }
+          }}
+          onConfirm={() => void cancel()}
+        />
       )}
       {result && (
         <Dialog

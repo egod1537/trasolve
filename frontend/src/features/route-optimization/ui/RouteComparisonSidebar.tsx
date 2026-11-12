@@ -1,3 +1,4 @@
+import { useLayoutMaxWidth } from '@/shared/hooks/useLayoutMaxWidth';
 import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { useMemo, type RefObject } from 'react';
 import { PlaceTimeTimeline } from '@/features/place-editor';
@@ -17,10 +18,14 @@ type Props = {
 
 export function RouteComparisonSidebar({ comparison, sidebarRef }: Props) {
   const L = useL();
+  const mobile = useLayoutMaxWidth();
   const places = useMemo(
     () => getComparisonPlaces(comparison.data, comparison.mode),
     [comparison.data, comparison.mode],
   );
+  if (mobile) {
+    return null;
+  }
   return (
     <aside
       ref={sidebarRef}

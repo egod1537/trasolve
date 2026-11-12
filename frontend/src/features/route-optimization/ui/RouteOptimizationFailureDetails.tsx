@@ -34,6 +34,9 @@ export function RouteOptimizationFailureDetails({ error, places }: Props) {
   const closeTime = readString(detail, 'close_time');
   const stayMinutes = readNumber(detail, 'stay_minutes');
   const suggestions = error.suggestions ?? [];
+  const verified =
+    suggestions.length > 0 &&
+    suggestions.every((suggestion) => suggestion.feasibility_verified === true);
   const hasFactValues = Boolean(
     requestedServiceStart ||
     openTime ||
@@ -133,6 +136,11 @@ export function RouteOptimizationFailureDetails({ error, places }: Props) {
           ) : null}
         </ul>
       ) : null}
+      {verified && (
+        <p className="route-optimization-failure-resolution">
+          {L('routeOptimization:fastValidation.verifiedSuggestions')}
+        </p>
+      )}
       {suggestions.length > 0 ? (
         <ul
           className="route-optimization-failure-suggestions"
@@ -235,7 +243,11 @@ function FailureSuggestion({
     }
     return (
       <li>
-        <span>{L('common:action.delete')}</span>
+        <span>
+          {suggestion.feasibility_verified
+            ? L('routeOptimization:fastValidation.removePlace')
+            : L('common:action.delete')}
+        </span>
         <strong>{placeName}</strong>
       </li>
     );

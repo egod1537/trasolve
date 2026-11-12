@@ -4,6 +4,7 @@ import {
   fetchCurrentUser,
   useLoginDialog,
   LoginDialogProvider,
+  ConsentGate,
 } from '@/features/auth';
 import { AUTH_SESSION_EVENT } from '@/shared/api/authEvents';
 import { ThemeProvider } from '@/shared/theme/ThemeProvider';
@@ -12,6 +13,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <LoginDialogProvider>
+        <ConsentGate />
         <BillingSession>{children}</BillingSession>
       </LoginDialogProvider>
     </ThemeProvider>

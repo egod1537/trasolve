@@ -1,18 +1,21 @@
 import { useRef, useState } from 'react';
+import { useLayoutMaxWidth } from '@/shared/hooks/useLayoutMaxWidth';
 import { ScrollArea } from '@/shared/ui/ScrollArea';
 import { useOptimizationModal } from '@/features/route-optimization/model/useOptimizationModal';
 
 import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
 
-import { TRAVEL_MODE_OPTIONS } from '@/features/route-optimization/ui/optimizationSettings';
 import { RouteOptimizationProgressDialog } from '@/features/route-optimization/ui/RouteOptimizationProgressDialog';
 import { Button } from '@/shared/ui/Button';
 import { Dialog } from '@/shared/ui/Dialog';
 import { IconButton } from '@/shared/ui/IconButton';
 import { CloseIcon } from '@/shared/ui/icons';
-import { TravelModeIcon } from '@/shared/ui/TravelModeIcon';
-import { TokenRemainingGauge } from '@/features/billing';
-import { OptimizationDepartureOptions } from './OptimizationDepartureOptions';
+import { TokenCostSummary, TokenRemainingGauge } from '@/features/billing';
+import { OptimizationSettingsFields } from './OptimizationSettingsFields';
+import {
+  OptimizationMobileTabs,
+  type OptimizationMobileTab,
+} from './OptimizationMobileTabs';
 import { OptimizationDaySelector } from './OptimizationDaySelector';
 import { OptimizationValidationPanel } from './OptimizationValidationPanel';
 
@@ -27,6 +30,8 @@ export function RouteOptimizationModal({
   onClose,
   onCompare,
 }: Props) {
+  const mobile = useLayoutMaxWidth();
+  const [tab, setTab] = useState<OptimizationMobileTab>('settings');
   const settingsPopupRef = useRef<HTMLDivElement>(null);
   const [dayPopoverHost, setDayPopoverHost] = useState<HTMLDivElement | null>(
     null,
@@ -58,6 +63,7 @@ export function RouteOptimizationModal({
     issue,
     validation,
     canAfford,
+    cached,
     changeSettings,
     run,
   } = state;
@@ -80,7 +86,13 @@ export function RouteOptimizationModal({
             )}
           </h2>
           <div className="route-settings-popup-header-actions">
-            <TokenRemainingGauge />
+            <div className="route-settings-wallet">
+              <TokenRemainingGauge />
+              <TokenCostSummary
+                placeCount={day.places.length}
+                cached={cached}
+              />
+            </div>
             <IconButton
               aria-label={L(
                 'routeOptimization:routeOptimizationModal.ariaLabel.closeRouteOptimization',
@@ -93,9 +105,30 @@ export function RouteOptimizationModal({
             />
           </div>
         </header>
+        {mobile && (
+          <OptimizationMobileTabs
+            id={titleId}
+            selected={tab}
+            attention={
+              validation.blocksOptimization ||
+              Boolean(validation.error || error)
+            }
+            onSelect={setTab}
+          />
+        )}
         <ScrollArea
           className="route-settings-popup-body"
           contentClassName="route-settings-popup-body-content"
+          hidden={mobile && tab !== 'settings'}
+          viewportProps={
+            mobile
+              ? {
+                  id: `${titleId}-panel-settings`,
+                  role: 'tabpanel',
+                  'aria-labelledby': `${titleId}-tab-settings`,
+                }
+              : undefined
+          }
         >
           <OptimizationDaySelector
             popupContainer={dayPopoverHost}
@@ -108,42 +141,12 @@ export function RouteOptimizationModal({
               setError(null);
             }}
           />
-          <fieldset disabled={running}>
-            <legend>
-              {L(
-                'routeOptimization:routeOptimizationModal.optimizationSettings.text.meansTransportation',
-              )}
-            </legend>
-            <div className="route-settings-icon-options route-settings-travel-options">
-              {TRAVEL_MODE_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  aria-pressed={settings.travelMode === option.value}
-                  onClick={() => changeSettings({ travelMode: option.value })}
-                >
-                  <TravelModeIcon mode={option.value} />
-                  <span>{option.label}</span>
-                </button>
-              ))}
-            </div>
-          </fieldset>
-          <fieldset disabled={running}>
-            <legend>
-              {L(
-                'routeOptimization:routeOptimizationModal.optimizationSettings.text.startTime',
-              )}
-            </legend>
-            <OptimizationDepartureOptions
-              key={day.id}
-              settings={settings}
-              initialTime={
-                [...day.places].sort((a, b) => a.order - b.order)[0]?.time ??
-                '09:00'
-              }
-              onChange={changeSettings}
-            />
-          </fieldset>
+          <OptimizationSettingsFields
+            day={day}
+            settings={settings}
+            disabled={running}
+            onChange={changeSettings}
+          />
         </ScrollArea>
         <footer className="route-settings-popup-actions">
           <Button disabled={running} onClick={onClose}>
@@ -182,6 +185,9 @@ export function RouteOptimizationModal({
           day={day}
           validation={validation}
           error={error}
+          hidden={mobile && tab !== 'validation'}
+          panelId={mobile ? `${titleId}-panel-validation` : undefined}
+          tabId={mobile ? `${titleId}-tab-validation` : undefined}
         />
       )}
       {phase && (

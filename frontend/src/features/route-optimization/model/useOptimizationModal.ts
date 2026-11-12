@@ -1,6 +1,10 @@
 import { useRouteValidation } from './useRouteValidation';
 import { useEffect, useId, useRef, useState } from 'react';
-import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
+import {
+  ANALYTICS_SCREENS,
+  ANALYTICS_TARGETS,
+  quoteRouteTokens,
+} from '@trasolve/shared';
 import {
   optimizeDayRoute,
   RouteOptimizationApiError,
@@ -74,11 +78,15 @@ export function useOptimizationModal({ days, initialDayId, onCompare }: Props) {
       /* Validation details are displayed by the existing issue UI. */
     }
   }
+  const cost =
+    day && day.places.length >= 2 && billing.summary?.routeTokenPolicy
+      ? quoteRouteTokens(day.places.length, billing.summary.routeTokenPolicy)
+      : (billing.summary?.costs.optimize ?? 0);
   const canAfford =
     cached ||
     !billing.summary ||
     billing.summary.unlimited ||
-    billing.summary.wallet.remaining >= billing.summary.costs.optimize;
+    billing.summary.wallet.remaining >= cost;
   useEffect(() => () => controllerRef.current?.abort(), []);
   const changeSettings = (patch: Partial<RouteOptimizationRequestOptions>) => {
     if (!day || !settings || running) {

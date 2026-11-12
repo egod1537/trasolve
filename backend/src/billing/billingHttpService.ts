@@ -1,3 +1,5 @@
+import { collectChatUsage } from './chatUsage.js';
+import type { ModelTokenUsage } from './tokenPricing.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
   type BillingSummary,
@@ -16,8 +18,20 @@ import { BillingError } from './paymentProvider.js';
 
 const tokenDebugHeader = 'x-trasolve-token-debug';
 
+function isPaymentDebugRequested(request: IncomingMessage): boolean {
+  return (
+    new URL(request.url ?? '/', 'http://localhost').searchParams.get(
+      'debug',
+    ) === '1'
+  );
+}
+
 function isTokenDebugRequested(request: IncomingMessage): boolean {
-  return request.headers[tokenDebugHeader] === '1';
+  const marker = request.headers[tokenDebugHeader];
+  if (marker === '0' || marker === '1') {
+    return marker === '1';
+  }
+  return isPaymentDebugRequested(request);
 }
 
 export function validateBillingRequest(request: IncomingMessage): void {
@@ -48,6 +62,7 @@ export class TokenMeter {
     request: IncomingMessage,
     action: TokenAction,
     operation: () => Promise<T>,
+    locationCount?: number,
   ): Promise<T> {
     validateBillingRequest(request);
     const key = z.uuid().safeParse(request.headers['x-trasolve-request-id']);
@@ -58,20 +73,39 @@ export class TokenMeter {
     if (!userId) {
       throw new BillingError('AUTHENTICATION_REQUIRED', 401);
     }
-    const owner = this.billing.owner(userId);
+    const owner = this.billing.owner(userId, isPaymentDebugRequested(request));
     if (this.billing.isUsageUnlimited(owner, isTokenDebugRequested(request))) {
       return operation();
     }
-    await this.billing.reserve(owner, action, key.data);
+    const quote =
+      action === 'optimize'
+        ? this.billing.pricing.quoteRoute(locationCount ?? 0)
+        : this.billing.pricing.chatReservation;
+    await this.billing.reserve(owner, action, key.data, quote);
     let succeeded = false;
+    let actualAmount = quote;
+    let calls: ModelTokenUsage[] | undefined;
     try {
+      if (action === 'chat') {
+        const measured = await collectChatUsage(operation);
+        calls = measured.calls;
+        actualAmount = this.billing.pricing.chatCost(calls);
+        succeeded = true;
+        return measured.result;
+      }
       const result = await operation();
       succeeded = true;
       return result;
     } finally {
       // An unavailable ledger must fail closed. Unsettled reservations are
       // recovered after fifteen minutes by summary(), never double charged.
-      await this.billing.settle(owner, key.data, succeeded);
+      await this.billing.settle(
+        owner,
+        key.data,
+        succeeded,
+        actualAmount,
+        calls,
+      );
     }
   }
 }
@@ -100,7 +134,10 @@ export class BillingHttpService {
         return;
       }
       const userId = await this.currentUser.require(request);
-      const owner = this.billing.owner(userId);
+      const owner = this.billing.owner(
+        userId,
+        isPaymentDebugRequested(request),
+      );
       if (path === '/summary') {
         this.method(request, 'GET');
         send(response, 200, await this.summary(owner, request));
@@ -127,7 +164,13 @@ export class BillingHttpService {
         return;
       }
       if (path === '/subscription/cancel') {
-        const summary = await this.billing.cancelSubscription(owner);
+        const input = z
+          .strictObject({ immediate: z.boolean().optional() })
+          .parse(body);
+        const summary = await this.billing.cancelSubscription(
+          owner,
+          input.immediate,
+        );
         send(response, 200, this.withTokenDebug(owner, summary, request));
         return;
       }

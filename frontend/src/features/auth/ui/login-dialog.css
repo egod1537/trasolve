@@ -1,4 +1,6 @@
-.login-dialog {
+.ui-dialog.login-dialog {
+  position: relative;
+  overflow: visible;
   width: 420px;
   max-width: calc(100vw - 32px);
   padding: 28px;
@@ -32,6 +34,60 @@
 .login-dialog-providers {
   display: grid;
   gap: 12px;
+}
+.login-provider {
+  position: relative;
+  display: grid;
+  justify-items: stretch;
+}
+.login-provider-recent {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 50%;
+  inset-inline-end: calc(100% + 12px);
+  width: max-content;
+  max-width: 220px;
+  padding: 7px 11px;
+  border-radius: 8px;
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+.login-provider-recent::after {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: -4px;
+  width: 8px;
+  height: 8px;
+  background: inherit;
+  content: '';
+  transform: translateY(-50%) rotate(45deg);
+}
+
+@media (max-width: 920px) {
+  .login-provider {
+    position: static;
+  }
+  .login-provider-recent {
+    inset-block-start: auto;
+    inset-block-end: calc(100% + 12px);
+    inset-inline-start: 12px;
+    inset-inline-end: auto;
+    max-width: calc(100% - 24px);
+    transform: none;
+  }
+  .login-provider-recent::after {
+    inset-block-start: auto;
+    inset-block-end: -4px;
+    inset-inline-start: 20px;
+    inset-inline-end: auto;
+    transform: rotate(45deg);
+  }
 }
 .login-dialog-providers button {
   display: flex;

@@ -5,3 +5,6 @@ export { useCurrentUser, type CurrentUserState } from './model/useCurrentUser';
 export { MapUserControls } from './ui/MapUserControls';
 export { useLoginDialog } from './model/loginDialogContext';
 export { LoginDialogProvider } from './ui/LoginDialogProvider';
+export { ConsentGate } from './ui/ConsentGate';
+export { ConsentPage } from './ui/ConsentPage';
+export { fetchConsentStatus } from './api/consent';

@@ -1,3 +1,5 @@
+import { matchesLayoutMaxWidth } from '@/shared/config/mobileLayout';
+import { mobilePanelGeometry } from '@/shared/lib/mobilePanelGeometry';
 import {
   useCallback,
   useLayoutEffect,
@@ -186,6 +188,22 @@ export function AnchoredMapCard({
       const canvas = canvasRef.current;
       if (!card || !canvas) {
         return null;
+      }
+
+      if (matchesLayoutMaxWidth(760)) {
+        const canvasRect = canvas.getBoundingClientRect();
+        const hostRect = overlayHost.getElement().getBoundingClientRect();
+        const panel = mobilePanelGeometry(canvasRect);
+        return {
+          ...panel,
+          left: panel.left + canvasRect.left - hostRect.left,
+          top: panel.top + canvasRect.top - hostRect.top,
+          anchorKey,
+          ready: true,
+          pointerX: panel.width / 2,
+          placement: 'above',
+          visible: panel.width > 0 && panel.height > 0,
+        };
       }
 
       const point = overlayHost.project({ lat, lng });

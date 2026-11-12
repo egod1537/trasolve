@@ -1,3 +1,4 @@
+import { matchesLayoutMaxWidth } from '@/shared/config/mobileLayout';
 import { useEffect, useMemo, useRef, type RefObject } from 'react';
 import type { MapMarkerHandle } from '@/shared/map/MapMarkerHandle';
 import { useGoogleMap } from '@/map/components/GoogleMap';
@@ -117,7 +118,11 @@ export function RouteComparisonLayer({ data, mode, sidebarRef }: Props) {
       }
       const canvas = canvasRef.current?.getBoundingClientRect();
       const sidebar = sidebarRef.current?.getBoundingClientRect();
-      const mobile = window.matchMedia('(max-width: 760px)').matches;
+      const mobile = matchesLayoutMaxWidth(760);
+      const controls = canvasRef.current
+        ?.closest('.trip-map-page')
+        ?.querySelector('.route-review-controls')
+        ?.getBoundingClientRect();
       const latitudes = current.map((place) => place.location.lat);
       const longitudes = current.map((place) => place.location.lng);
       adapter.fitBounds(
@@ -135,12 +140,21 @@ export function RouteComparisonLayer({ data, mode, sidebarRef }: Props) {
               ? sidebar.right - canvas.left + 24
               : 24,
           right: 32,
-          bottom: 200,
+          bottom:
+            mobile && canvas && controls
+              ? Math.max(24, canvas.bottom - controls.top + 24)
+              : 200,
         },
       );
     };
     fit();
     const observer = new ResizeObserver(fit);
+    const controls = canvasRef.current
+      ?.closest('.trip-map-page')
+      ?.querySelector('.route-review-controls');
+    if (controls) {
+      observer.observe(controls);
+    }
     if (canvasRef.current) {
       observer.observe(canvasRef.current);
     }
