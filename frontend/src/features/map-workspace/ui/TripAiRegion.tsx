@@ -1,3 +1,5 @@
+import { TripPlanSnapshot } from './TripPlanSnapshot';
+import { readRequestUserText } from '../ai-command/TripCommandPlanDestination';
 import { commandFingerprint } from '../command-console/commandFingerprint';
 import {
   commandAiInstructions,
@@ -13,7 +15,7 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
-import { chatMessageSchema, type Trip } from '@trasolve/shared';
+import { chatMessageSchema } from '@trasolve/shared';
 import { MapAiRegion, type ChatRequestPreamble } from '@/features/ai-chat';
 import {
   useTripState,
@@ -53,7 +55,9 @@ function EditableTripAiRegion({ selectedPlaceIds = [], ...props }: Props) {
   const trip = useTripData();
   const runtime = useCommandRuntime();
   const L = useL();
-  const getRequestPreamble = async (): Promise<ChatRequestPreamble> => {
+  const getRequestPreamble = async (
+    userRequest: string,
+  ): Promise<ChatRequestPreamble> => {
     // Freeze the selection at send time, before any await, and return it with
     // the system message. It is stored on that request's answer, so the Plan in
     // the answer is only ever prepared against the selection the model saw.
@@ -74,6 +78,7 @@ function EditableTripAiRegion({ selectedPlaceIds = [], ...props }: Props) {
         message.success ? [message.data] : [],
       ),
       context: JSON.stringify({
+        userRequest,
         version: 1,
         selectedPlaceIds: selection,
         commandTrip: commandFingerprint(trip),
@@ -88,15 +93,23 @@ function EditableTripAiRegion({ selectedPlaceIds = [], ...props }: Props) {
       persistenceKey={`trasolve.trip-chat.v1:${trip.userId}:${trip.id}`}
       getRequestPreamble={getRequestPreamble}
       notice={<TripRecoveryNotice />}
-      renderAssistantActions={(content, context) =>
-        readCommandProposal(content) ? (
-          <WorkspaceCommandAction content={content} requestContext={context} />
-        ) : (
-          <TripPlanAction content={content} requestContext={context} />
-        )
-      }
+      renderAssistantActions={renderTripAssistantActions}
     />
   );
+}
+
+/** Only recognized structured responses replace the ordinary chat body. */
+export function renderTripAssistantActions(content: string, context?: string) {
+  if (readCommandProposal(content)) {
+    return (
+      <WorkspaceCommandAction content={content} requestContext={context} />
+    );
+  }
+  const parsed = parseTripCommandPlanText(content);
+  if (parsed.success || parsed.error.kind === 'schema_invalid') {
+    return <TripPlanAction content={content} requestContext={context} />;
+  }
+  return null;
 }
 
 const SELECTION_CONTEXT_VERSION = 1;
@@ -206,6 +219,7 @@ function TripPlanAction({
     () => readSelectionContext(requestContext),
     [requestContext],
   );
+  const userRequest = readRequestUserText(requestContext);
   const [busy, setBusy] = useState(false);
   const applyingRef = useRef(false);
   const [closed, setClosed] = useState(false);
@@ -242,6 +256,7 @@ function TripPlanAction({
     void prepareTripCommandPlan(parsed.plan, trip, {
       signal: abort.signal,
       selectedPlaceIds,
+      userRequest,
     })
       .then((result) => {
         if (abort.signal.aborted) {
@@ -267,9 +282,9 @@ function TripPlanAction({
         }
       });
     return () => abort.abort();
-  }, [L, busy, closed, parsed, selectedPlaceIds, trip]);
-  if (closed || (!prepared && !error && !busy)) {
-    return null;
+  }, [L, busy, closed, parsed, selectedPlaceIds, trip, userRequest]);
+  if (closed) {
+    return <TripPlanSnapshot trip={trip} />;
   }
   const stale =
     prepared && serializeTripCommandPlanState(trip) !== prepared.baseState;
@@ -307,7 +322,10 @@ function TripPlanAction({
     }
   };
   return (
-    <div className="trip-ai-plan" aria-busy={busy}>
+    <div className="trip-ai-plan" aria-busy={busy || (!prepared && !error)}>
+      {!prepared && !error && !busy && (
+        <p role="status">{L('common:routes.loadingLabel.pageLoading')}</p>
+      )}
       {prepared && (
         <div>
           <TripPlanSnapshot trip={prepared.preview.before} />
@@ -332,94 +350,5 @@ function TripPlanAction({
         {L('common:action.cancel')}
       </button>
     </div>
-  );
-}
-
-function TripPlanSnapshot({ trip }: { trip: Trip }) {
-  const L = useL();
-  return (
-    <section>
-      <h3>{trip.title}</h3>
-      <ol>
-        {trip.days.map((day) => (
-          <li key={day.id}>
-            <strong>{day.title}</strong>
-            <ol>
-              {day.places.map((place) => (
-                <li key={place.id}>
-                  <strong>{place.name}</strong>
-                  {place.address && <p>{place.address}</p>}
-                  <dl>
-                    <dt>{L('place:placeDetailContent.title.memo')}</dt>
-                    <dd>
-                      {place.memo ??
-                        L('place:placeDetailContent.description.noNotes')}
-                    </dd>
-                    <dt>
-                      {L('map:tripCommandPlanAdapter.error.visitStartTime')}
-                    </dt>
-                    <dd>
-                      {place.time ??
-                        L('place:placeDurationControl.text.notSet')}
-                    </dd>
-                    <dt>
-                      {L('map:tripCommandPlanAdapter.error.durationVisit')}
-                    </dt>
-                    <dd>
-                      {place.visitDurationMinutes === undefined
-                        ? L('place:placeDurationControl.text.notSet')
-                        : L(
-                            'place:placeDuration.formatDurationMinutes.text.minutes',
-                            { minutes: place.visitDurationMinutes },
-                          )}
-                    </dd>
-                    <dt>
-                      {L('place:placeDetailContent.title.desiredStayTime')}
-                    </dt>
-                    <dd>
-                      {place.preferredDurationMinutes === undefined
-                        ? L('place:placeDurationControl.text.notSet')
-                        : L(
-                            'place:placeDuration.formatDurationMinutes.text.minutes',
-                            { minutes: place.preferredDurationMinutes },
-                          )}
-                    </dd>
-                  </dl>
-                </li>
-              ))}
-            </ol>
-            <ol>
-              {day.polylines.map((polyline) => (
-                <li key={polyline.id}>
-                  {
-                    day.places.find(
-                      (place) => place.id === polyline.fromPlaceId,
-                    )?.name
-                  }{' '}
-                  →{' '}
-                  {
-                    day.places.find((place) => place.id === polyline.toPlaceId)
-                      ?.name
-                  }
-                  <p>
-                    {polyline.mode === 'straight'
-                      ? L(
-                          'map:polylineMode.pOLYLINEMODEOPTIONS.label.straightLine',
-                        )
-                      : polyline.mode === 'walking'
-                        ? L('map:polylineMode.pOLYLINEMODEOPTIONS.label.walk')
-                        : polyline.mode === 'transit'
-                          ? L(
-                              'map:polylineMode.pOLYLINEMODEOPTIONS.label.publicTransportation',
-                            )
-                          : L('map:polylineMode.pOLYLINEMODEOPTIONS.label.car')}
-                  </p>
-                </li>
-              ))}
-            </ol>
-          </li>
-        ))}
-      </ol>
-    </section>
   );
 }

@@ -1,3 +1,4 @@
+import { resolvePlanDestination } from './TripCommandPlanDestination';
 import {
   reconcileDayRouteSegments,
   tripCommandPlanSchema,
@@ -80,6 +81,7 @@ export type ExecutePreparedTripCommandPlanResult =
     };
 
 export type PrepareTripCommandPlanOptions = {
+  userRequest?: string;
   selectedPlaceIds?: readonly string[];
   signal?: AbortSignal;
 };
@@ -124,6 +126,11 @@ export async function prepareTripCommandPlan(
     const selectedPlaceIds = validateSelection(
       options.selectedPlaceIds ?? [],
       initialTrip,
+    );
+    const destination = await resolvePlanDestination(
+      plan,
+      options.userRequest,
+      options.signal,
     );
     const stepIndexes = createStepIndexes(plan);
     const stepResultKinds = new Map<
@@ -204,6 +211,7 @@ export async function prepareTripCommandPlan(
         operation,
         context,
         options.signal,
+        destination,
       );
       options.signal?.throwIfAborted();
       if (operation.op === 'add_place' && adapted.result?.kind === 'place') {

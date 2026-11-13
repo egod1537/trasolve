@@ -7,9 +7,12 @@ import {
 import {
   acceptConsent,
   cancelConsent,
-  ConsentRequestError,
   fetchConsentStatus,
 } from '../api/consent';
+import {
+  classifyConsentFailure,
+  type ConsentFailure,
+} from '../model/consentFailure';
 import { ConsentForm } from './ConsentForm';
 import { rememberLastLoginProvider } from '../model/lastLoginProvider';
 import { NL, useL } from '@/shared/i18n';
@@ -21,9 +24,8 @@ import './consent.css';
 export function ConsentPage() {
   const L = useL();
   const [status, setStatus] = useState<AuthConsentStatus | null>(null);
-  const [failureCode, setFailureCode] = useState<
-    'network' | 'expired' | 'version' | null
-  >(null);
+  const [failure, setFailure] = useState<ConsentFailure | null>(null);
+  const failureCode = failure?.kind;
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
   const statusRequest = useRef<AbortController | null>(null);
@@ -39,17 +41,17 @@ export function ConsentPage() {
         if (result.status === 'accepted') {
           window.location.replace(result.returnTo);
         } else if (result.status === 'signed-out') {
-          setFailureCode('expired');
+          setFailure({ kind: 'expired', status: null });
         } else if (
           result.versions.terms !== LEGAL_VERSIONS.terms ||
           result.versions.privacy !== LEGAL_VERSIONS.privacy
         ) {
-          setFailureCode('version');
+          setFailure({ kind: 'version', status: null });
         }
       })
-      .catch(() => {
+      .catch((cause: unknown) => {
         if (!controller.signal.aborted) {
-          setFailureCode('network');
+          setFailure(classifyConsentFailure(cause));
         }
       });
     return () => controller.abort();
@@ -60,19 +62,13 @@ export function ConsentPage() {
     }
     inFlight.current = true;
     setBusy(true);
-    setFailureCode(null);
+    setFailure(null);
     try {
       const result = await acceptConsent(acceptance, status.returnTo);
       rememberLastLoginProvider(result.user.loginProvider);
       window.location.replace(result.returnTo);
     } catch (cause) {
-      setFailureCode(
-        cause instanceof ConsentRequestError && cause.status === 409
-          ? 'version'
-          : cause instanceof ConsentRequestError && cause.status === 401
-            ? 'expired'
-            : 'network',
-      );
+      setFailure(classifyConsentFailure(cause));
       inFlight.current = false;
       setBusy(false);
     }
@@ -112,15 +108,7 @@ export function ConsentPage() {
         </button>
         <h1 id="consent-title">{L('legal:consent.title')}</h1>
         <p>{L('legal:consent.description')}</p>
-        {failureCode && (
-          <p className="consent-error" role="alert">
-            {failureCode === 'expired'
-              ? L('legal:consent.expired')
-              : failureCode === 'version'
-                ? L('legal:consent.versionChanged')
-                : L('legal:consent.error')}
-          </p>
-        )}
+        {failure && <ConsentFailureNotice failure={failure} />}
         {status?.status === 'required' &&
         failureCode !== 'expired' &&
         failureCode !== 'version' ? (
@@ -159,5 +147,29 @@ export function ConsentPage() {
         )}
       </section>
     </main>
+  );
+}
+
+/** Uses existing translations; HTTP status distinguishes server failures. */
+export function ConsentFailureNotice({ failure }: { failure: ConsentFailure }) {
+  const L = useL();
+  return (
+    <p className="consent-error" role="alert" data-error-kind={failure.kind}>
+      {failure.kind === 'expired'
+        ? L('legal:consent.expired')
+        : failure.kind === 'version'
+          ? L('legal:consent.versionChanged')
+          : failure.kind === 'network'
+            ? L('legal:consent.error')
+            : L('common:status.error')}
+      {failure.status !== null && (
+        <>
+          {' '}
+          <code>
+            {NL('HTTP')} {failure.status}
+          </code>
+        </>
+      )}
+    </p>
   );
 }

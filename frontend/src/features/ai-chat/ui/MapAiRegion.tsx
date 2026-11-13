@@ -20,7 +20,7 @@ type Props = {
   open: boolean;
   singleSession?: boolean;
   persistenceKey?: string;
-  getRequestPreamble?: () => Promise<ChatRequestPreamble>;
+  getRequestPreamble?: (userRequest: string) => Promise<ChatRequestPreamble>;
   renderAssistantActions?: (content: string, context?: string) => ReactNode;
   notice?: ReactNode;
   onOpenChange: (open: boolean) => void;

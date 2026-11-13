@@ -1,3 +1,4 @@
+import type { VerifiedDestination } from './TripCommandPlanPlaceMatch';
 import type {
   TripCommandPlanOperation,
   TripCommandPlanStepId,
@@ -47,6 +48,7 @@ export async function adaptTripCommandPlanOperation(
   operation: TripCommandPlanOperation,
   context: TripCommandPlanResolutionContext,
   signal?: AbortSignal,
+  destination?: VerifiedDestination,
 ): Promise<AdaptedTripCommandPlanOperation> {
   switch (operation.op) {
     case 'rename_trip':
@@ -94,6 +96,7 @@ export async function adaptTripCommandPlanOperation(
         operation.source,
         operation.stepId,
         signal,
+        destination,
       );
       const input: PlaceInput = {
         ...createTripPlaceFromGooglePlace(details),

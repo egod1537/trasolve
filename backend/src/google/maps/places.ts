@@ -108,7 +108,7 @@ export class Places {
       {
         method: 'GET',
         fieldMask:
-          'id,displayName,formattedAddress,location,rating,userRatingCount,websiteUri,nationalPhoneNumber,internationalPhoneNumber,googleMapsUri,primaryType,primaryTypeDisplayName,currentOpeningHours,regularOpeningHours,timeZone,utcOffsetMinutes',
+          'id,displayName,formattedAddress,addressComponents,location,rating,userRatingCount,websiteUri,nationalPhoneNumber,internationalPhoneNumber,googleMapsUri,primaryType,primaryTypeDisplayName,currentOpeningHours,regularOpeningHours,timeZone,utcOffsetMinutes',
       },
     );
     const place = this.validateResponse(Places.detailsSchema, raw);
@@ -116,6 +116,31 @@ export class Places {
       id: place.id,
       name: place.displayName?.text ?? place.formattedAddress ?? input.placeId,
       address: place.formattedAddress,
+      countryCode: place.addressComponents?.find((c) =>
+        c.types.includes('country'),
+      )?.shortText,
+      regions: place.addressComponents?.flatMap((c) => {
+        const kind =
+          c.types.includes('locality') || c.types.includes('postal_town')
+            ? 'city'
+            : c.types.includes('administrative_area_level_1')
+              ? 'region'
+              : c.types.includes('country')
+                ? 'country'
+                : null;
+        return kind
+          ? [
+              {
+                kind,
+                names: [
+                  ...new Set(
+                    [c.longText, c.shortText].filter((v): v is string => !!v),
+                  ),
+                ],
+              },
+            ]
+          : [];
+      }),
       location: {
         lat: place.location.latitude,
         lng: place.location.longitude,
@@ -220,9 +245,18 @@ export class Places {
     id: placeIdSchema,
     displayName: z.object({ text: z.string().min(1) }).optional(),
     formattedAddress: z.string().min(1).optional(),
+    addressComponents: z
+      .array(
+        z.object({
+          longText: z.string().min(1),
+          shortText: z.string().optional(),
+          types: z.array(z.string()),
+        }),
+      )
+      .optional(),
     location: z.object({
-      latitude: z.number().min(-90).max(90).default(0),
-      longitude: z.number().min(-180).max(180).default(0),
+      latitude: z.number().min(-90).max(90),
+      longitude: z.number().min(-180).max(180),
     }),
     rating: z.number().min(1).max(5).optional(),
     userRatingCount: z.number().int().nonnegative().optional(),
