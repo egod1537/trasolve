@@ -57,6 +57,27 @@ document links, cancellation and return to the original page.
 
 ## Cancellation and retry recovery
 
+Consent acceptance and cancellation validate the browser Origin scheme against
+`TRASOLVE_PUBLIC_ORIGIN` when configured, and its host and port against the
+incoming Host preserved by the trusted ingress. This keeps routed branch aliases
+working without trusting a client-supplied forwarded host. The public scheme is
+authoritative because Cloudflare terminates HTTPS before its HTTP tunnel hop to
+Caddy; Caddy can report that internal hop as `X-Forwarded-Proto: http`. Using it
+as the public scheme rejected valid HTTPS consent submissions with
+`403 INVALID_ORIGIN`. Without a configured public origin, local development
+retains the forwarded-protocol/TLS fallback. Invalid public-origin configuration
+fails closed. JSON content type and cross-site rejection remain required.
+
+The W10 deployment at `fe5ace5` reproduced this rejection with an anonymous
+empty JSON body: HTTPS Origin returned `403 INVALID_ORIGIN`, while an HTTP
+Origin reached body validation. The public-scheme correction passed workspace
+typecheck, production build, lint (zero errors, existing warnings), formatting
+and twelve direct HTTP checks against the actual backend with isolated local
+repositories. Those checks covered the HTTP tunnel hop, missing forwarded
+protocol, routed aliases, cancellation, unauthenticated acceptance, and rejection
+of wrong schemes, hosts, ports, cross-site requests and non-JSON content. No
+provider responses were mocked, and live Google account sign-in was not completed.
+
 Cancellation waits at most five seconds for server cleanup, then returns to the
 public landing page even if cleanup fails. The brand button and error-state
 back button follow the same path. Cancelling aborts the initial status request
