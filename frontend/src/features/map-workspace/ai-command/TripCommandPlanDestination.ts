@@ -4,6 +4,8 @@ import { L } from '@/shared/i18n';
 import { TripCommandPlanError } from './TripCommandPlanError';
 import {
   normalizePlaceLabel,
+  normalizeAdministrativeRegionLabel,
+  addressIncludesDestination,
   type VerifiedDestination,
 } from './TripCommandPlanPlaceMatch';
 
@@ -64,8 +66,11 @@ export async function resolvePlanDestination(
       (source.locality &&
         !destination.localityAliases.some(
           (alias) =>
-            normalizePlaceLabel(alias) ===
-            normalizePlaceLabel(source.locality!),
+            normalizeAdministrativeRegionLabel(alias, destination.kind) ===
+            normalizeAdministrativeRegionLabel(
+              source.locality!,
+              destination.kind,
+            ),
         ))
     ) {
       throw destinationError();
@@ -85,10 +90,30 @@ async function lookupDestination(
     ),
   );
   const unique = [...new Map(cities.map((p) => [p.placeId, p])).values()];
-  if (unique.length !== 1) {
+  // A city and its surrounding region are separate Places. Select only a
+  // unique label match to the frozen user request, never the first result.
+  // Details below must still independently prove the requested geography.
+  const exact = unique.filter(
+    (p) => normalizePlaceLabel(p.text) === normalizePlaceLabel(query),
+  );
+  const matching = exact.length
+    ? exact
+    : unique.filter((p) => {
+        const kind = p.types.some(
+          (t) => t === 'locality' || t === 'postal_town',
+        )
+          ? 'city'
+          : 'region';
+        return (
+          normalizeAdministrativeRegionLabel(p.text, kind) ===
+          normalizeAdministrativeRegionLabel(query, kind)
+        );
+      });
+  const selected = unique.length === 1 ? unique : matching;
+  if (selected.length !== 1) {
     throw destinationError();
   }
-  const candidate = unique[0];
+  const candidate = selected[0];
   const languageCode = /[가-힣]/u.test(query)
     ? 'ko'
     : /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(query)
@@ -102,8 +127,10 @@ async function lookupDestination(
     : 'region';
   // The frozen request text is the authority. Neither a search label nor an ID
   // is proof that the returned Details describe the user's destination.
+  const requestedRegion = normalizeAdministrativeRegionLabel(query, kind);
   const matchesRequest = (label: string): boolean =>
-    regionKey(label, kind) === regionKey(query, kind);
+    requestedRegion.length > 0 &&
+    normalizeAdministrativeRegionLabel(label, kind) === requestedRegion;
   const names =
     city.regions
       ?.filter((r) => r.kind === kind)
@@ -113,7 +140,7 @@ async function lookupDestination(
     city.id !== candidate.placeId ||
     !city.countryCode ||
     !city.address?.trim() ||
-    normalizePlaceLabel(city.name) !== normalizePlaceLabel(query) ||
+    !matchesRequest(city.name) ||
     !names.length
   ) {
     throw destinationError();
@@ -169,15 +196,7 @@ async function lookupDestination(
     japanese.name,
     ...names,
   ];
-  if (
-    !localityAliases.some((label) =>
-      city
-        .address!.normalize('NFKC')
-        .toLowerCase()
-        .replace(/\s/g, '')
-        .includes(label.normalize('NFKC').toLowerCase().replace(/\s/g, '')),
-    )
-  ) {
+  if (!addressIncludesDestination(city.address!, localityAliases, kind)) {
     throw destinationError();
   }
   return Object.freeze({
@@ -189,20 +208,6 @@ async function lookupDestination(
     aliases: Object.freeze(aliases),
     localityAliases: Object.freeze(localityAliases),
   });
-}
-
-/** Strip only a trailing administrative classifier, never infer a city alias. */
-function regionKey(label: string, kind: 'city' | 'region'): string {
-  const key = label
-    .normalize('NFKC')
-    .toLowerCase()
-    .replace(/[\p{P}\p{Z}\s]+/gu, ' ')
-    .trim();
-  return kind === 'city'
-    ? key.replace(/(?:\s+city|市|시)$/u, '').trim()
-    : key
-        .replace(/(?:\s+prefecture|\s+metropolis|都|府|県|도|부)$/u, '')
-        .trim();
 }
 
 /** Context stored by the UI, not a field returned by the model. */

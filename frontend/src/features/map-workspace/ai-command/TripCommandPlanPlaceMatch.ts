@@ -13,6 +13,23 @@ export const normalizePlaceLabel = (value: string): string =>
     .split(' ')
     .sort()
     .join(' ');
+/** Strip only a trailing administrative classifier, never infer a city alias. */
+export function normalizeAdministrativeRegionLabel(
+  label: string,
+  kind: 'city' | 'region',
+): string {
+  const key = label
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[\p{P}\p{Z}\s]+/gu, ' ')
+    .trim();
+  return kind === 'city'
+    ? key.replace(/(?:\s+city|市|시)$/u, '').trim()
+    : key
+        .replace(/(?:\s+prefecture|\s+metropolis|都|府|県|도|부)$/u, '')
+        .trim();
+}
+
 export type VerifiedDestination = {
   readonly requestedLabel: string;
   readonly languageCode: 'ko' | 'en' | 'ja';
@@ -29,12 +46,10 @@ export function matchesDestination(
   return (
     place.countryCode === destination.countryCode &&
     !!place.address?.trim() &&
-    destination.localityAliases.some((name) =>
-      place
-        .address!.normalize('NFKC')
-        .toLowerCase()
-        .replace(/\s/g, '')
-        .includes(name.normalize('NFKC').toLowerCase().replace(/\s/g, '')),
+    addressIncludesDestination(
+      place.address!,
+      destination.localityAliases,
+      destination.kind,
     ) &&
     place.regions?.some(
       (r) =>
@@ -42,12 +57,30 @@ export function matchesDestination(
         r.names.some((n) =>
           destination.names.some(
             (expected) =>
-              normalizePlaceLabel(n) === normalizePlaceLabel(expected),
+              normalizeAdministrativeRegionLabel(n, destination.kind) ===
+              normalizeAdministrativeRegionLabel(expected, destination.kind),
           ),
         ),
     ) === true
   );
 }
+/** Classifier variants come only from the already verified destination. */
+export function addressIncludesDestination(
+  address: string,
+  aliases: readonly string[],
+  kind: 'city' | 'region',
+): boolean {
+  const compact = (value: string) =>
+    value.normalize('NFKC').toLowerCase().replace(/\s/g, '');
+  const normalized = compact(address);
+  return aliases.some((alias) =>
+    [alias, normalizeAdministrativeRegionLabel(alias, kind)].some((label) => {
+      const needle = compact(label);
+      return needle.length > 0 && normalized.includes(needle);
+    }),
+  );
+}
+
 export function matchesPlaceName(
   names: string[],
   source: TripCommandPlanAddPlaceSource,
