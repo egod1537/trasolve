@@ -36,6 +36,7 @@ const chatInputSchema = z.strictObject({
   model: z.string().trim().min(1),
   messages: z.array(chatMessageSchema).min(1),
   webSearch: z.boolean().optional(),
+  maxOutputTokens: z.number().int().min(1).max(4096).optional(),
 });
 
 const modelsResponseSchema = z.object({
@@ -208,6 +209,7 @@ export class OpenWebUIClient {
             request.data.messages,
             false,
             request.data.webSearch !== false,
+            request.data.maxOutputTokens,
           ),
         ),
       },
@@ -272,6 +274,7 @@ export class OpenWebUIClient {
             request.messages,
             true,
             request.webSearch !== false,
+            request.maxOutputTokens,
           ),
         ),
       },

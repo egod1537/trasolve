@@ -44,6 +44,7 @@ export class OpenWebUIChatProvider implements ChatProvider {
           model,
           messages: request.messages,
           webSearch,
+          maxOutputTokens: request.maxOutputTokens,
         },
         signal,
       );
@@ -99,7 +100,12 @@ export class OpenWebUIChatProvider implements ChatProvider {
       );
     }
     return this.client.stream(
-      { model, messages: request.messages, webSearch },
+      {
+        model,
+        messages: request.messages,
+        webSearch,
+        maxOutputTokens: request.maxOutputTokens,
+      },
       options,
     );
   }

@@ -331,13 +331,25 @@ export class ConsentHttpFlow {
 
 function isSameOriginJson(request: IncomingMessage): boolean {
   try {
-    const protocol =
+    // TLS terminates before Caddy, which may report its HTTP tunnel hop.
+    // Provider callbacks also work with older deployments missing PUBLIC_ORIGIN.
+    // Keep Host binding so each routed branch or alias stays on its own origin.
+    const configuredOrigin =
+      process.env.GOOGLE_OAUTH_REDIRECT_URI?.trim() ||
+      process.env.SSU_SSO_REDIRECT_URI?.trim() ||
+      process.env.TRASOLVE_PUBLIC_ORIGIN?.trim();
+    const transportProtocol =
+      usesSecureOAuthCookies() ||
       request.headers['x-forwarded-proto'] === 'https' ||
       'encrypted' in request.socket
         ? 'https:'
         : 'http:';
+    const protocol = configuredOrigin
+      ? new URL(configuredOrigin).protocol
+      : transportProtocol;
     const origin = new URL(request.headers.origin ?? '');
     return (
+      (protocol === 'http:' || protocol === 'https:') &&
       origin.protocol === protocol &&
       origin.host === request.headers.host &&
       request.headers['sec-fetch-site'] !== 'cross-site' &&

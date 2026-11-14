@@ -29,6 +29,9 @@ export const chatRequestSchema = z.strictObject({
   messages: z.array(chatMessageSchema).min(1).max(CHAT_LIMITS.messages),
   model: z.string().trim().min(1).optional(),
   webSearch: z.boolean().optional(),
+  /** Optional execution controls; omission preserves normal product defaults. */
+  generateFollowUps: z.boolean().optional(),
+  maxOutputTokens: z.number().int().min(1).max(4096).optional(),
   /** Tools the model may call. Absent means a plain text chat. */
   tools: z.array(chatToolNameSchema).max(1).optional(),
 });

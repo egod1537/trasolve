@@ -132,21 +132,31 @@ export function createAddPlaceCommandWithPendingId(
   dayId: string,
   input: PlaceInput,
   pendingId: string,
+  options: { scheduleDefaults?: boolean } = {},
 ): TripCommand {
   const id = readPendingId(pendingId);
-  return createAddPlaceCommandWithIdFactory(dayId, input, () => id);
+  return createAddPlaceCommandWithIdFactory(
+    dayId,
+    input,
+    () => id,
+    options.scheduleDefaults ?? true,
+  );
 }
 
 function createAddPlaceCommandWithIdFactory(
   dayId: string,
   input: PlaceInput,
   createId: () => string,
+  scheduleDefaults = true,
 ): TripCommand {
   const placeInput = structuredClone(input);
   const durationMinutes =
     placeInput.preferredDurationMinutes ??
     placeInput.visitDurationMinutes ??
-    DEFAULT_PLACE_PREFERRED_DURATION_MINUTES;
+    (scheduleDefaults ? DEFAULT_PLACE_PREFERRED_DURATION_MINUTES : undefined);
+  const time =
+    placeInput.time ??
+    (scheduleDefaults ? DEFAULT_PLACE_START_TIME : undefined);
   return defineTripCommand((trip) => {
     const day = trip.days.find((candidate) => candidate.id === dayId);
     if (!day) {
@@ -154,9 +164,13 @@ function createAddPlaceCommandWithIdFactory(
     }
     const place: TripPlace = {
       ...placeInput,
-      time: placeInput.time ?? DEFAULT_PLACE_START_TIME,
-      visitDurationMinutes: durationMinutes,
-      preferredDurationMinutes: durationMinutes,
+      ...(time === undefined ? {} : { time }),
+      ...(durationMinutes === undefined
+        ? {}
+        : {
+            visitDurationMinutes: durationMinutes,
+            preferredDurationMinutes: durationMinutes,
+          }),
       id: createId(),
       order: day.places.length + 1,
     };

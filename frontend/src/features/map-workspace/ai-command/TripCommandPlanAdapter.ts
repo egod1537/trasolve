@@ -111,7 +111,10 @@ export async function adaptTripCommandPlanOperation(
       };
       const id = createPendingEntityId();
       const commands: TripCommand[] = [
-        createAddPlaceCommandWithPendingId(dayId, input, id),
+        // Missing AI schedule fields are unknown, not a noon/one-hour booking.
+        createAddPlaceCommandWithPendingId(dayId, input, id, {
+          scheduleDefaults: false,
+        }),
       ];
       if (operation.position) {
         commands.push(
