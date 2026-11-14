@@ -78,8 +78,8 @@ export async function getPlace(
 ): Promise<PlaceDetails> {
   const request = placeDetailsRequestSchema.parse({
     placeId,
-    ...options,
     ...getGoogleMapsLocale(getLanguage()),
+    ...options,
   });
   return placeDetailsRequests(
     JSON.stringify(request),

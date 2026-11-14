@@ -83,6 +83,12 @@ export const tripCommandPlanAddPlaceSourceSchema = z.discriminatedUnion(
     z.strictObject({
       kind: z.literal('search'),
       query: placeAutocompleteRequestSchema.shape.input,
+      name: z.string().trim().min(1).max(256).optional(),
+      countryCode: z
+        .string()
+        .regex(/^[A-Z]{2}$/)
+        .optional(),
+      locality: z.string().trim().min(1).max(256).optional(),
     }),
     z.strictObject({
       kind: z.literal('external_place_id'),

@@ -23,6 +23,9 @@ export async function runChatStream(
       : await provider.chat(request, options.signal),
   );
   options.signal.throwIfAborted();
+  if (request.generateFollowUps === false) {
+    return result;
+  }
   const followUps = await generateFollowUps(
     provider,
     request,

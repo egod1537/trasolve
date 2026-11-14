@@ -15,7 +15,7 @@ export type ChatRequestPreamble = {
 export type ChatSessionOptions = {
   open: boolean;
   persistenceKey?: string;
-  getRequestPreamble?: () => Promise<ChatRequestPreamble>;
+  getRequestPreamble?: (userRequest: string) => Promise<ChatRequestPreamble>;
   model?: string;
   onGeneratingChange?: (generating: boolean) => void;
   onUnreadPreviewsChange?: (previews: MapAiUnreadPreview[]) => void;

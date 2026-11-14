@@ -29,7 +29,10 @@ export async function sendChatSubmission(
     }
   }
   log('SEND_CHAT_STARTED', { messageCount: messages.length });
-  const preamble = await options.getRequestPreamble?.();
+  const preamble = await options.getRequestPreamble?.(
+    [...messages].reverse().find((message) => message.role === 'user')
+      ?.content ?? '',
+  );
   const systemMessages = preamble?.systemMessages ?? [];
   signal.throwIfAborted();
   const result = await (options.sendRequest ?? sendChat)(

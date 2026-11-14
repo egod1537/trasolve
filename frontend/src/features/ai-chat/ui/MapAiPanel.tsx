@@ -5,7 +5,7 @@ import { forwardRef, type FormEvent, type KeyboardEvent } from 'react';
 import { CHAT_LIMITS } from '@trasolve/shared';
 
 import { downloadChatMarkdown } from '@/features/ai-chat/lib/chatMarkdown';
-import { ChatMarkdown } from '@/features/ai-chat/ui/ChatMarkdown';
+import { ChatAssistantBody } from './ChatAssistantBody';
 import { AiPanelFrame } from '@/features/ai-chat/ui/AiPanelFrame';
 
 import { CloseIcon } from '@/shared/ui/icons';
@@ -282,11 +282,11 @@ const LegacyMapAiPanel = forwardRef<MapAiPanelHandle, Props>(
                     key={message.id}
                     className="trip-map-ai-message is-assistant"
                   >
-                    <ChatMarkdown content={message.content} />
-                    {renderAssistantActions?.(
-                      message.content,
-                      message.requestContext,
-                    )}
+                    <ChatAssistantBody
+                      content={message.content}
+                      context={message.requestContext}
+                      renderActions={renderAssistantActions}
+                    />
                   </div>
                 ) : (
                   <p key={message.id} className="trip-map-ai-message is-user">

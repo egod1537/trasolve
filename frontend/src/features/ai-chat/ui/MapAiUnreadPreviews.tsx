@@ -1,3 +1,4 @@
+import { tripCommandPlanSchema } from '@trasolve/shared';
 import {
   useEffect,
   useRef,
@@ -18,6 +19,27 @@ type PreviewStyle = CSSProperties & {
 };
 
 function toPreviewText(content: string): string {
+  // Summarize only strict Plans. Invalid JSON and ordinary Markdown retain
+  // their existing text treatment; parsing does not authorize Apply.
+  try {
+    const document = content
+      .trim()
+      .replace(/^```json\s*\n?([\s\S]*?)\n?```$/i, '$1');
+    const parsed = tripCommandPlanSchema.safeParse(JSON.parse(document));
+    if (parsed.success) {
+      const dayCount = parsed.data.operations.filter(
+        (operation) => operation.op === 'add_day',
+      ).length;
+      const placeCount = parsed.data.operations.filter(
+        (operation) => operation.op === 'add_place',
+      ).length;
+      return dayCount > 0
+        ? L('trip:tripPickerPopup.text.daysLocations', { dayCount, placeCount })
+        : L('common:featureSection.features.title.travelItinerary');
+    }
+  } catch {
+    // A conversational answer need not be JSON.
+  }
   return content
     .replace(
       /```[\s\S]*?```/g,

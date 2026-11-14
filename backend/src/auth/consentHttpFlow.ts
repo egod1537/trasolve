@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
 import {
@@ -79,6 +80,7 @@ export class ConsentHttpFlow {
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Referrer-Policy', 'no-referrer');
     response.setHeader('Vary', 'Cookie');
+    response.setHeader('X-Request-ID', randomUUID());
     try {
       if (request.method === 'GET' && url.pathname === API_ROUTES.authConsent) {
         this.send(response, 200, await this.status(request, response, url));
@@ -93,6 +95,7 @@ export class ConsentHttpFlow {
         return;
       }
       if (!isSameOriginJson(request)) {
+        this.failures.set(response, 'origin');
         this.send(response, 403, { error: { code: 'INVALID_ORIGIN' } });
         return;
       }
@@ -116,6 +119,13 @@ export class ConsentHttpFlow {
         cause instanceof z.ZodError ||
         cause instanceof SyntaxError ||
         cause instanceof RangeError;
+      const code =
+        cause && typeof cause === 'object' && 'code' in cause
+          ? cause.code
+          : null;
+      if (typeof code === 'string' && /^[A-Z0-9]{5}$/.test(code)) {
+        this.failures.set(response, code);
+      }
       this.send(response, invalid ? 400 : 503, {
         error: { code: invalid ? 'INVALID_CONSENT' : 'CONSENT_UNAVAILABLE' },
       });
@@ -133,8 +143,10 @@ export class ConsentHttpFlow {
   private readonly pending = new ExpiringStore<{
     identity: PendingIdentity;
     returnTo: string;
+    acceptance?: AuthConsentAcceptance;
   }>();
   private readonly accepting = new Set<string>();
+  private readonly failures = new WeakMap<ServerResponse, string>();
 
   private async accept(
     request: IncomingMessage,
@@ -143,13 +155,15 @@ export class ConsentHttpFlow {
     returnTo: string | undefined,
   ): Promise<void> {
     const pendingTicket = readOpaqueCookie(request, pendingCookie);
-    if (pendingTicket && this.accepting.has(pendingTicket)) {
+    const lockKey = pendingTicket ?? readSessionSecret(request);
+    if (lockKey && this.accepting.has(lockKey)) {
       this.send(response, 429, { error: { code: 'CONSENT_IN_PROGRESS' } });
       return;
     }
-    if (pendingTicket) {
-      this.accepting.add(pendingTicket);
+    if (lockKey) {
+      this.accepting.add(lockKey);
     }
+    let unissuedSecret: string | undefined;
     try {
       // Keep the original ticket and expiry until all persistence succeeds.
       const staged = this.pending.get(pendingTicket);
@@ -166,6 +180,16 @@ export class ConsentHttpFlow {
         });
         return;
       }
+      if (
+        staged?.acceptance &&
+        JSON.stringify(staged.acceptance) !== JSON.stringify(acceptance)
+      ) {
+        this.send(response, 409, { error: { code: 'CONSENT_RETRY_CHANGED' } });
+        return;
+      }
+      if (staged) {
+        staged.acceptance ??= acceptance;
+      }
       const user = staged
         ? await this.authentication.completeConsent(staged.identity, acceptance)
         : await this.authentication.acceptForUser(
@@ -173,15 +197,25 @@ export class ConsentHttpFlow {
             createConsentReceipt(acceptance),
           );
       const secret = await this.sessions.create(user.id, sessionLifetimeMs);
-      // Rotate even a pre-existing session when admitting it through the consent gate.
-      await this.sessions.revoke(readSessionSecret(request));
-      // Another tab may have cancelled, or the handoff may have expired, during I/O.
+      unissuedSecret = secret;
       if (staged && this.pending.get(pendingTicket) !== staged) {
-        await this.sessions.revoke(secret);
         response.setHeader('Set-Cookie', this.clearPendingCookie());
         this.send(response, 401, {
           error: { code: 'CONSENT_SESSION_EXPIRED' },
         });
+        return;
+      }
+      // Rotate even a pre-existing session when admitting it through the consent gate.
+      await this.sessions.revoke(readSessionSecret(request));
+      // Another tab may have cancelled, or the handoff may have expired, during I/O.
+      if (staged && this.pending.get(pendingTicket) !== staged) {
+        response.setHeader('Set-Cookie', this.clearPendingCookie());
+        this.send(response, 401, {
+          error: { code: 'CONSENT_SESSION_EXPIRED' },
+        });
+        return;
+      }
+      if (response.destroyed) {
         return;
       }
       this.pending.consume(pendingTicket);
@@ -199,9 +233,13 @@ export class ConsentHttpFlow {
         user,
         returnTo: staged?.returnTo ?? safeReturnTo(returnTo),
       });
+      unissuedSecret = undefined;
     } finally {
-      if (pendingTicket) {
-        this.accepting.delete(pendingTicket);
+      if (unissuedSecret) {
+        await this.sessions.revoke(unissuedSecret).catch(() => {});
+      }
+      if (lockKey) {
+        this.accepting.delete(lockKey);
       }
     }
   }
@@ -270,6 +308,18 @@ export class ConsentHttpFlow {
   }
 
   private send(response: ServerResponse, status: number, body: unknown): void {
+    if (status >= 400) {
+      const error = body as { error?: { code?: string } };
+      console.warn(
+        JSON.stringify({
+          event: 'auth_consent_failure',
+          requestId: response.getHeader('X-Request-ID'),
+          status,
+          code: error.error?.code,
+          detail: this.failures.get(response),
+        }),
+      );
+    }
     if (!response.destroyed && !response.headersSent) {
       response.writeHead(status, {
         'Content-Type': 'application/json; charset=utf-8',

@@ -41,6 +41,7 @@ export function buildOpenWebUIResponseBody(
   messages: ChatMessage[],
   stream: boolean,
   webSearch: boolean,
+  maxOutputTokens?: number,
 ): Record<string, unknown> {
   return {
     model,
@@ -67,6 +68,9 @@ export function buildOpenWebUIResponseBody(
       : [],
     tool_choice: webSearch ? 'auto' : 'none',
     ...(webSearch ? { include: ['web_search_call.results'] } : {}),
+    ...(maxOutputTokens === undefined
+      ? {}
+      : { max_output_tokens: maxOutputTokens }),
     store: false,
     stream,
   };

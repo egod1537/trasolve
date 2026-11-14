@@ -84,6 +84,18 @@ export const placeOpeningHoursSchema = z.object({
 });
 
 export const placeDetailsSchema = z.object({
+  countryCode: z
+    .string()
+    .regex(/^[A-Z]{2}$/)
+    .optional(),
+  regions: z
+    .array(
+      z.object({
+        kind: z.enum(['city', 'region', 'country']),
+        names: z.array(z.string().min(1)).min(1),
+      }),
+    )
+    .optional(),
   id: placeIdSchema,
   name: z.string().min(1),
   address: z.string().optional(),

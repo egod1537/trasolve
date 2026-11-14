@@ -9,6 +9,7 @@ import {
 import { useL } from '@/shared/i18n';
 import type { ChatThread, UiChatMessage } from '../../model/chatTypes';
 import type { PendingChatResponse } from '../../model/useChatV2Transport';
+import { ChatAssistantBody } from '../ChatAssistantBody';
 import { ChatMarkdown } from '../ChatMarkdown';
 import { ChatV2Progress } from './ChatV2Progress';
 import { ChatWebImages } from './ChatWebImages';
@@ -200,9 +201,12 @@ const ChatV2Message = memo(function ChatV2Message({
   return (
     <article className="chat-v2-message is-assistant">
       <ChatV2Progress summary={message.summary} />
-      <ChatMarkdown content={message.content} />
+      <ChatAssistantBody
+        content={message.content}
+        context={message.requestContext}
+        renderActions={renderAssistantActions}
+      />
       <ChatWebImages images={message.webImages} />
-      {renderAssistantActions?.(message.content, message.requestContext)}
       <div className="chat-v2-message-actions">
         <button
           type="button"
