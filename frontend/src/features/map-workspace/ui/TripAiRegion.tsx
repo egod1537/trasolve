@@ -1,3 +1,5 @@
+import { isDebugMode } from '@/shared/config/debugMode';
+import type { TripPlanDiagnostic } from '../ai-command/TripCommandPlanDiagnostics';
 import { TripPlanSnapshot } from './TripPlanSnapshot';
 import { readRequestUserText } from '../ai-command/TripCommandPlanDestination';
 import { commandFingerprint } from '../command-console/commandFingerprint';
@@ -253,10 +255,22 @@ function TripPlanAction({
       return;
     }
     const abort = new AbortController();
+    const debugDiagnostics =
+      import.meta.env.DEV && isDebugMode(window.location.search);
+    const attemptId = debugDiagnostics ? crypto.randomUUID() : undefined;
+    let diagnosticCount = 0;
+    const onDiagnostic = debugDiagnostics
+      ? (event: TripPlanDiagnostic) => {
+          if (!abort.signal.aborted && diagnosticCount++ < 64) {
+            console.debug('trip_plan_prepare', { attemptId, ...event });
+          }
+        }
+      : undefined;
     void prepareTripCommandPlan(parsed.plan, trip, {
       signal: abort.signal,
       selectedPlaceIds,
       userRequest,
+      onDiagnostic,
     })
       .then((result) => {
         if (abort.signal.aborted) {

@@ -1,3 +1,7 @@
+import {
+  reportTripPlanDiagnostic,
+  type TripPlanDiagnosticSink,
+} from './TripCommandPlanDiagnostics';
 import type { TripCommandPlan } from '@trasolve/shared';
 import { getPlace, searchPlaces } from '@/shared/api/places';
 import { L } from '@/shared/i18n';
@@ -40,6 +44,7 @@ export async function resolvePlanDestination(
   plan: TripCommandPlan,
   userRequest?: string,
   signal?: AbortSignal,
+  onDiagnostic?: TripPlanDiagnosticSink,
 ): Promise<VerifiedDestination | undefined> {
   if (!plan.operations.some((op) => op.op === 'add_place')) {
     return undefined;
@@ -48,15 +53,35 @@ export async function resolvePlanDestination(
   const newDays = plan.operations.filter((op) => op.op === 'add_day').length;
   if (!explicit) {
     if (newDays) {
+      reportTripPlanDiagnostic(onDiagnostic, {
+        stage: 'destination',
+        outcome: 'rejected',
+        reason: 'destination_context',
+      });
       throw destinationError();
     }
     return undefined;
   }
-  if (newDays && newDays !== explicit.days) {
-    throw destinationError();
+  // Total duration is validated against existing + added days by the executor
+  // before any lookup. This resolver checks destination identity only.
+  let destination: VerifiedDestination;
+  try {
+    destination = await lookupDestination(
+      explicit.destination,
+      signal,
+      onDiagnostic,
+    );
+  } catch (cause) {
+    if (!(cause instanceof TripCommandPlanError)) {
+      reportTripPlanDiagnostic(onDiagnostic, {
+        stage: 'destination',
+        outcome: 'rejected',
+        reason: 'lookup_request_failed',
+      });
+    }
+    throw cause;
   }
-  const destination = await lookupDestination(explicit.destination, signal);
-  for (const op of plan.operations) {
+  for (const [index, op] of plan.operations.entries()) {
     if (op.op !== 'add_place' || op.source.kind !== 'search') {
       continue;
     }
@@ -73,6 +98,15 @@ export async function resolvePlanDestination(
             ),
         ))
     ) {
+      reportTripPlanDiagnostic(onDiagnostic, {
+        stage: 'destination',
+        outcome: 'rejected',
+        reason: 'plan_destination_conflict',
+        operationOrdinal: index + 1,
+        hasName: !!source.name,
+        hasLocality: !!source.locality,
+        hasCountryCode: !!source.countryCode,
+      });
       throw destinationError();
     }
   }
@@ -81,6 +115,7 @@ export async function resolvePlanDestination(
 async function lookupDestination(
   query: string,
   signal?: AbortSignal,
+  onDiagnostic?: TripPlanDiagnosticSink,
 ): Promise<VerifiedDestination> {
   // The expectation comes from the user's request, never Plan.locality.
   const response = await searchPlaces(query, { signal });
@@ -111,6 +146,14 @@ async function lookupDestination(
       });
   const selected = unique.length === 1 ? unique : matching;
   if (selected.length !== 1) {
+    reportTripPlanDiagnostic(onDiagnostic, {
+      stage: 'destination',
+      outcome: 'rejected',
+      reason: 'destination_candidates',
+      autocompleteCount: response.suggestions.length,
+      candidateCount: unique.length,
+      matchCount: selected.length,
+    });
     throw destinationError();
   }
   const candidate = selected[0];
@@ -143,6 +186,18 @@ async function lookupDestination(
     !matchesRequest(city.name) ||
     !names.length
   ) {
+    reportTripPlanDiagnostic(onDiagnostic, {
+      stage: 'destination',
+      outcome: 'rejected',
+      reason: 'destination_details',
+      candidateCount: unique.length,
+      matchCount: 0,
+      identityMatch: city.id === candidate.placeId,
+      countryPresent: !!city.countryCode,
+      addressPresent: !!city.address?.trim(),
+      labelMatch: matchesRequest(city.name),
+      typedRegionMatch: names.length > 0,
+    });
     throw destinationError();
   }
   const english = await getPlace(candidate.placeId, {
@@ -158,6 +213,11 @@ async function lookupDestination(
     city.location.lat !== english.location.lat ||
     city.location.lng !== english.location.lng
   ) {
+    reportTripPlanDiagnostic(onDiagnostic, {
+      stage: 'destination',
+      outcome: 'rejected',
+      reason: 'destination_translations',
+    });
     throw destinationError();
   }
   const japanese = await getPlace(candidate.placeId, {
@@ -170,6 +230,11 @@ async function lookupDestination(
     japanese.location.lat !== city.location.lat ||
     japanese.location.lng !== city.location.lng
   ) {
+    reportTripPlanDiagnostic(onDiagnostic, {
+      stage: 'destination',
+      outcome: 'rejected',
+      reason: 'destination_translations',
+    });
     throw destinationError();
   }
   const aliases = [
@@ -197,8 +262,20 @@ async function lookupDestination(
     ...names,
   ];
   if (!addressIncludesDestination(city.address!, localityAliases, kind)) {
+    reportTripPlanDiagnostic(onDiagnostic, {
+      stage: 'destination',
+      outcome: 'rejected',
+      reason: 'destination_address',
+    });
     throw destinationError();
   }
+  reportTripPlanDiagnostic(onDiagnostic, {
+    stage: 'destination',
+    outcome: 'resolved',
+    reason: 'destination_details',
+    candidateCount: unique.length,
+    matchCount: 1,
+  });
   return Object.freeze({
     requestedLabel: query,
     languageCode,

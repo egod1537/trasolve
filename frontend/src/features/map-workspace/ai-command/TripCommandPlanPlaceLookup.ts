@@ -1,3 +1,7 @@
+import {
+  reportTripPlanDiagnostic,
+  type TripPlanDiagnosticSink,
+} from './TripCommandPlanDiagnostics';
 import type {
   PlaceDetails,
   TripCommandPlanAddPlaceSource,
@@ -18,7 +22,18 @@ export async function lookupTripCommandPlanPlace(
   stepId: TripCommandPlanStepId,
   signal?: AbortSignal,
   destination?: VerifiedDestination,
+  onDiagnostic?: TripPlanDiagnosticSink,
 ): Promise<PlaceDetails> {
+  let failureReported = false;
+  const report = (event: Parameters<typeof reportTripPlanDiagnostic>[1]) => {
+    failureReported ||= event.outcome === 'rejected';
+    reportTripPlanDiagnostic(onDiagnostic, {
+      ...event,
+      hasName: source.kind === 'search' && !!source.name,
+      hasLocality: source.kind === 'search' && !!source.locality,
+      hasCountryCode: source.kind === 'search' && !!source.countryCode,
+    });
+  };
   try {
     if (source.kind === 'external_place_id') {
       const place = await getPlace(source.placeId, {
@@ -29,12 +44,34 @@ export async function lookupTripCommandPlanPlace(
         place.id !== source.placeId ||
         (destination && !matchesDestination(place, destination))
       ) {
+        report({
+          stage: 'place',
+          outcome: 'rejected',
+          reason: 'place_region',
+          candidateCount: 1,
+          matchCount: 0,
+        });
         throw Error('PLACE_REGION_MISMATCH');
       }
+      report({
+        stage: 'place',
+        outcome: 'resolved',
+        reason: 'place_matches',
+        candidateCount: 1,
+        matchCount: 1,
+      });
       return place;
     }
     const response = await searchPlaces(source.query, { signal });
     if (!response.suggestions.length) {
+      report({
+        stage: 'place',
+        outcome: 'rejected',
+        reason: 'place_autocomplete_empty',
+        autocompleteCount: 0,
+        candidateCount: 0,
+        matchCount: 0,
+      });
       throw new TripCommandPlanError(
         'unresolved_target',
         L('map:tripCommandPlanPlaceLookup.error.iCanTFindPlaceAdd'),
@@ -45,9 +82,17 @@ export async function lookupTripCommandPlanPlace(
       ...new Map(response.suggestions.map((p) => [p.placeId, p])).values(),
     ];
     if (candidates.length > 5) {
+      report({
+        stage: 'place',
+        outcome: 'rejected',
+        reason: 'place_candidate_limit',
+        candidateCount: candidates.length,
+      });
       throw Error('TOO_MANY_CANDIDATES');
     }
     const matches: PlaceDetails[] = [];
+    let regionMatchCount = 0;
+    let nameMatchCount = 0;
     for (const candidate of candidates) {
       signal?.throwIfAborted();
       const place = await getPlace(candidate.placeId, {
@@ -55,6 +100,12 @@ export async function lookupTripCommandPlanPlace(
         ...(destination ? { languageCode: destination.languageCode } : {}),
       });
       if (place.id !== candidate.placeId) {
+        report({
+          stage: 'place',
+          outcome: 'rejected',
+          reason: 'place_details_identity',
+          candidateCount: candidates.length,
+        });
         throw Error('PLACE_ID_MISMATCH');
       }
       if (
@@ -80,6 +131,7 @@ export async function lookupTripCommandPlanPlace(
       if (destination && !matchesDestination(place, destination)) {
         continue;
       }
+      regionMatchCount += 1;
       let nameMatches = matchesPlaceName(
         destination ? [place.name] : [candidate.text, place.name],
         source,
@@ -97,6 +149,12 @@ export async function lookupTripCommandPlanPlace(
             alternate.location.lat !== place.location.lat ||
             alternate.location.lng !== place.location.lng
           ) {
+            report({
+              stage: 'place',
+              outcome: 'rejected',
+              reason: 'place_translation_identity',
+              candidateCount: candidates.length,
+            });
             throw Error('PLACE_DETAILS_MISMATCH');
           }
           nameMatches = matchesPlaceName([alternate.name], source, destination);
@@ -105,6 +163,9 @@ export async function lookupTripCommandPlanPlace(
           }
         }
       }
+      if (nameMatches) {
+        nameMatchCount += 1;
+      }
       if (
         nameMatches ||
         (!destination && !source.name && candidates.length === 1)
@@ -112,6 +173,16 @@ export async function lookupTripCommandPlanPlace(
         matches.push(place);
       }
     }
+    report({
+      stage: 'place',
+      outcome: matches.length === 1 ? 'resolved' : 'rejected',
+      reason: 'place_matches',
+      autocompleteCount: response.suggestions.length,
+      candidateCount: candidates.length,
+      regionMatchCount,
+      nameMatchCount,
+      matchCount: matches.length,
+    });
     if (matches.length !== 1) {
       throw new TripCommandPlanError(
         'ambiguous_target',
@@ -121,6 +192,13 @@ export async function lookupTripCommandPlanPlace(
     }
     return matches[0];
   } catch (cause) {
+    if (!failureReported) {
+      report({
+        stage: 'place',
+        outcome: 'rejected',
+        reason: 'lookup_request_failed',
+      });
+    }
     if (cause instanceof TripCommandPlanError) {
       throw cause;
     }
