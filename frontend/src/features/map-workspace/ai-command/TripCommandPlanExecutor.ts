@@ -1,4 +1,9 @@
+import {
+  reportTripPlanDiagnostic,
+  type TripPlanDiagnosticSink,
+} from './TripCommandPlanDiagnostics';
 import { resolvePlanDestination } from './TripCommandPlanDestination';
+import { validateRequestedTripDayTotal } from './TripCommandPlanDayCount';
 import {
   reconcileDayRouteSegments,
   tripCommandPlanSchema,
@@ -84,6 +89,7 @@ export type PrepareTripCommandPlanOptions = {
   userRequest?: string;
   selectedPlaceIds?: readonly string[];
   signal?: AbortSignal;
+  onDiagnostic?: TripPlanDiagnosticSink;
 };
 
 export async function prepareTripCommandPlan(
@@ -127,10 +133,17 @@ export async function prepareTripCommandPlan(
       options.selectedPlaceIds ?? [],
       initialTrip,
     );
+    validateRequestedTripDayTotal(
+      plan,
+      initialTrip,
+      options.userRequest,
+      options.onDiagnostic,
+    );
     const destination = await resolvePlanDestination(
       plan,
       options.userRequest,
       options.signal,
+      options.onDiagnostic,
     );
     const stepIndexes = createStepIndexes(plan);
     const stepResultKinds = new Map<
@@ -212,6 +225,11 @@ export async function prepareTripCommandPlan(
         context,
         options.signal,
         destination,
+        (event) =>
+          reportTripPlanDiagnostic(options.onDiagnostic, {
+            ...event,
+            operationOrdinal: stepIndex + 1,
+          }),
       );
       options.signal?.throwIfAborted();
       if (operation.op === 'add_place' && adapted.result?.kind === 'place') {
@@ -233,6 +251,11 @@ export async function prepareTripCommandPlan(
     const baseState = serializeTripCommandPlanState(initialTrip);
     const diff = computeTripCommandPlanDiff(initialTrip, workingTrip);
     const risk = computeTripCommandPlanRisk(plan);
+    reportTripPlanDiagnostic(options.onDiagnostic, {
+      stage: 'plan',
+      outcome: 'resolved',
+      reason: 'preview_ready',
+    });
     return {
       success: true,
       prepared: Object.freeze({
