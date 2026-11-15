@@ -1,9 +1,12 @@
+@import './popup-motion.css';
+
 :root {
   font-size: var(--font-size-root, 15px);
   font-family: var(
     --font-family-sans,
-    Inter,
+    'Pretendard Variable',
     Pretendard,
+    Inter,
     -apple-system,
     BlinkMacSystemFont,
     'Segoe UI',
@@ -16,6 +19,23 @@
 
 * {
   box-sizing: border-box;
+}
+
+:root:lang(ja) {
+  --font-family-sans:
+    'Noto Sans JP', 'Hiragino Kaku Gothic ProN', Meiryo, Inter, Pretendard,
+    sans-serif;
+}
+
+:root:lang(mn) {
+  --font-family-sans:
+    'Noto Sans', Inter, 'Segoe UI', 'Noto Sans JP', Pretendard, sans-serif;
+}
+
+:root:lang(en) {
+  --font-family-sans:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, Inter,
+    'Noto Sans', 'Segoe UI', 'Noto Sans JP', sans-serif;
 }
 
 html {
@@ -120,6 +140,25 @@ body {
   white-space: pre-wrap;
 }
 
+.external-api-disabled-notice {
+  position: fixed;
+  z-index: var(--z-tooltip);
+  top: 16px;
+  left: 50%;
+  width: max-content;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 10px 14px;
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-soft);
+  box-shadow: var(--shadow-map-overlay);
+  color: var(--color-danger);
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -132,4 +171,53 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Fallback for document scrolling, form controls and third-party/native surfaces.
+   Radix viewports keep their own hidden native scrollbar. */
+:where(*):not([data-radix-scroll-area-viewport]) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
+}
+:where(*):not([data-radix-scroll-area-viewport])::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+:where(*):not([data-radix-scroll-area-viewport])::-webkit-scrollbar-track {
+  background: var(--color-scrollbar-track);
+}
+:where(*):not([data-radix-scroll-area-viewport])::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--color-scrollbar-thumb);
+  background-clip: padding-box;
+}
+:where(*):not(
+    [data-radix-scroll-area-viewport]
+  )::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-scrollbar-thumb-hover);
+}
+.legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 8px 20px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.legal-links a {
+  color: var(--color-text-secondary);
+  text-underline-offset: 3px;
+}
+.legal-links a:hover,
+.legal-links a:focus-visible {
+  color: var(--color-accent);
+}
+.site-footer .legal-links {
+  justify-content: center;
+}
+.login-dialog .login-legal-notice {
+  margin-top: 24px;
+  font-size: 12px;
+  line-height: 1.7;
 }

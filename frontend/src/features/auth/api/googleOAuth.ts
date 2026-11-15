@@ -3,6 +3,7 @@ import {
   googleOAuthResultSchema,
   type GoogleOAuthResult,
 } from '@trasolve/shared';
+import { notifyExternalApiDisabled } from '@/shared/api/externalApiDisabled';
 
 let resultRequest: Promise<GoogleOAuthResult> | undefined;
 
@@ -28,5 +29,9 @@ async function requestGoogleOAuthResult(): Promise<GoogleOAuthResult> {
     throw new Error('Google OAuth result request failed');
   }
 
-  return googleOAuthResultSchema.parse(await response.json());
+  const result = googleOAuthResultSchema.parse(await response.json());
+  if (result.status === 'disabled') {
+    notifyExternalApiDisabled('google-oauth');
+  }
+  return result;
 }

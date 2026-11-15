@@ -1,0 +1,78 @@
+.billing-checkout-dialog {
+  display: grid;
+  gap: 18px;
+  width: min(440px, 100%);
+  padding: 24px;
+}
+
+.billing-checkout-dialog h2,
+.billing-checkout-dialog p {
+  margin: 0;
+}
+
+.billing-checkout-dialog h2 {
+  font-size: 24px;
+}
+
+.billing-checkout-amount {
+  color: var(--color-text);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+
+.billing-checkout-terms {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.billing-checkout-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.billing-checkout-actions .ui-button {
+  flex: none;
+}
+
+.billing-checkout-tools {
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.billing-checkout-tools summary {
+  width: fit-content;
+  cursor: pointer;
+}
+
+.billing-checkout-tools .ui-button {
+  margin-top: 12px;
+}
+
+.billing-result-dialog {
+  width: min(420px, 100%);
+  padding: 24px;
+}
+
+.billing-result-dialog h2 {
+  margin-top: 0;
+}
+
+.billing-result-dialog > .ui-button {
+  display: flex;
+  width: fit-content;
+  margin-left: auto;
+}
+
+.debug-token-toggle.ui-button {
+  flex: none;
+  gap: 5px;
+  min-height: 28px;
+  padding: 3px 8px;
+  font-size: 11px;
+}

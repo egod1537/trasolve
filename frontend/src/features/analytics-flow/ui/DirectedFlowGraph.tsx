@@ -109,6 +109,7 @@ export function DirectedFlowGraph({
     <div
       ref={containerRef}
       className="analytics-flow-graph"
+      data-lenis-prevent
       role="img"
       aria-label={accessibleLabel}
     />

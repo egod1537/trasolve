@@ -12,7 +12,7 @@ export const FALLBACK_LANGUAGE: Language = 'en';
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
 const RESOURCE_PATH_PATTERN =
-  /^\.\/(?:resources|generated-local)\/([^/]+)\/([^/]+)\.json$/u;
+  /^\.\.?\/(?:resources|generated-local)\/([^/]+)\/([^/]+)\.json$/u;
 
 function isLanguage(value: string | undefined): value is Language {
   return SUPPORTED_LANGUAGES.some((language) => language === value);
@@ -20,6 +20,21 @@ function isLanguage(value: string | undefined): value is Language {
 
 function isResourceObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function mergeResourceObjects(
+  production: Record<string, unknown>,
+  overrides: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged = { ...production };
+  for (const [key, value] of Object.entries(overrides)) {
+    const existing = merged[key];
+    merged[key] =
+      isResourceObject(existing) && isResourceObject(value)
+        ? mergeResourceObjects(existing, value)
+        : value;
+  }
+  return merged;
 }
 
 function readPersistedLanguage(): Language {
@@ -69,28 +84,50 @@ function collectResources(
       if (!isLanguage(language)) {
         throw new Error(`Unsupported localization resource language: ${path}`);
       }
-      resources[language]![namespace] = resource;
+      const existing = resources[language]![namespace];
+      resources[language]![namespace] = mergeResourceObjects(
+        isResourceObject(existing) ? existing : {},
+        resource,
+      );
     }
   }
   return resources;
 }
 
-const productionResourceModules = import.meta.glob('./resources/*/*.json', {
-  eager: true,
-  import: 'default',
-}) as Record<string, unknown>;
-
-const localResourceModules = import.meta.env.DEV
-  ? (import.meta.glob('./generated-local/*/*.json', {
-      eager: true,
-      import: 'default',
-    }) as Record<string, unknown>)
-  : {};
-
-const resources = collectResources(
-  productionResourceModules,
-  localResourceModules,
+const languageLoaders = {
+  ko: () => import('./languages/ko'),
+  en: () => import('./languages/en'),
+  ja: () => import('./languages/ja'),
+  mn: () => import('./languages/mn'),
+};
+const initialLanguage = readPersistedLanguage();
+const resourceLoads = new Map<Language, Promise<Resource>>();
+function loadResources(language: Language): Promise<Resource> {
+  const existing = resourceLoads.get(language);
+  if (existing) {
+    return existing;
+  }
+  const request = languageLoaders[language]().then((modules) =>
+    collectResources(modules.production, modules.local),
+  );
+  resourceLoads.set(language, request);
+  void request.catch(() => {
+    if (resourceLoads.get(language) === request) {
+      resourceLoads.delete(language);
+    }
+  });
+  return request;
+}
+// Module evaluation waits for translations, including module-level L() callers.
+const initialResources = await Promise.all(
+  [...new Set([initialLanguage, FALLBACK_LANGUAGE])].map(loadResources),
 );
+const resources: Resource = {};
+for (const group of initialResources) {
+  for (const [language, namespaces] of Object.entries(group)) {
+    resources[language] = { ...resources[language], ...namespaces };
+  }
+}
 const namespaces = Array.from(
   new Set(
     SUPPORTED_LANGUAGES.flatMap((language) =>
@@ -106,7 +143,7 @@ void localizationInstance.use(initReactI18next).init({
   resources,
   ns: namespaces,
   defaultNS: namespaces[0] ?? 'translation',
-  lng: readPersistedLanguage(),
+  lng: initialLanguage,
   fallbackLng: FALLBACK_LANGUAGE,
   supportedLngs: SUPPORTED_LANGUAGES,
   load: 'currentOnly',
@@ -128,9 +165,18 @@ export function getLanguage(): Language {
   return isLanguage(normalized) ? normalized : DEFAULT_LANGUAGE;
 }
 
+let languageChangeRevision = 0;
 export async function setLanguage(language: Language): Promise<void> {
   if (!isLanguage(language)) {
     throw new Error(`Unsupported localization language: ${String(language)}`);
+  }
+  const revision = ++languageChangeRevision;
+  const loaded = await loadResources(language);
+  if (revision !== languageChangeRevision) {
+    return;
+  }
+  for (const [namespace, value] of Object.entries(loaded[language] ?? {})) {
+    localizationInstance.addResourceBundle(language, namespace, value);
   }
   await localizationInstance.changeLanguage(language);
   persistLanguage(language);

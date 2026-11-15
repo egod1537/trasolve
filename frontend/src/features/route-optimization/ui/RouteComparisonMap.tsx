@@ -23,6 +23,7 @@ type Props = {
   ariaLabel: string;
   layer: string;
   places: readonly TripPlace[];
+  routePath?: readonly { lat: number; lng: number }[];
   viewportPlaces?: readonly TripPlace[];
   heading?: string;
   onExpand?: () => void;
@@ -39,6 +40,7 @@ export function RouteComparisonMap({
   ariaLabel,
   layer,
   places,
+  routePath = places.map((place) => place.location),
   viewportPlaces = places,
   heading = L('routeOptimization:routeComparisonMap.text.map'),
   onExpand,
@@ -104,10 +106,7 @@ export function RouteComparisonMap({
           }}
         >
           <ComparisonViewport places={viewportPlaces} />
-          <ComparisonLine
-            layer={layer}
-            path={places.map((place) => place.location)}
-          />
+          <ComparisonLine layer={layer} path={routePath} />
           <ComparisonMarkers
             layer={layer}
             places={places}

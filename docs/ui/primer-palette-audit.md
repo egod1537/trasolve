@@ -1,5 +1,11 @@
 # Primer palette audit
 
+The migration below records the original Primer baseline. As of 2026-11-11,
+`app/styles/theme/refined-surfaces.css` follows the light/dark adapter imports
+and customizes semantic surface, interaction and foreground tokens. The base
+Primer tokens remain available; this historical audit does not claim that the
+current neutral palette is an unmodified Primer or Apple system palette.
+
 ## Scope and start snapshot
 
 This audit covers a color-only migration from the existing TRIP-derived

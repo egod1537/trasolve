@@ -21,6 +21,7 @@ export type TripPlace = Coordinates & {
   visitDurationMinutes?: number;
   preferredDurationMinutes?: number;
   time?: string;
+  orderLocked?: boolean;
   order: number;
 };
 
@@ -53,6 +54,7 @@ export type LayerValidationByItemKey = Readonly<
 export type TripDay = {
   id: string;
   title: string;
+  hidden?: boolean;
   date?: string;
   color: string;
   places: TripPlace[];

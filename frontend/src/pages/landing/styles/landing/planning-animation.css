@@ -1,0 +1,156 @@
+/* Each seven-second story holds its finished view before fading and restarting. */
+.landing-page .planning-preview {
+  --preview-cycle: 7s;
+}
+
+.landing-page .planning-preview .preview-route-soft {
+  --preview-path-opacity: 0.08;
+}
+
+.landing-page .preview-schedule-row {
+  animation: preview-card-arrive var(--preview-cycle) ease both infinite;
+}
+
+.landing-page .preview-timeline {
+  stroke-dasharray: 1;
+  animation: preview-connect var(--preview-cycle) ease both infinite;
+}
+
+.landing-page .planning-preview-route .preview-route,
+.landing-page .planning-preview-route .preview-route-soft {
+  stroke-dasharray: 1;
+  animation: preview-connect var(--preview-cycle) ease both infinite;
+}
+
+.landing-page .preview-node {
+  animation: preview-node-arrive var(--preview-cycle) ease both infinite;
+}
+
+.landing-page .planning-preview-optimization .preview-old-route {
+  animation: preview-before var(--preview-cycle) ease both infinite;
+}
+
+.landing-page .planning-preview-optimization .preview-route,
+.landing-page .planning-preview-optimization .preview-route-soft {
+  stroke-dasharray: 1;
+  animation: preview-optimize var(--preview-cycle) ease both infinite;
+}
+
+.landing-page .preview-step-1 {
+  animation-delay: 450ms;
+}
+
+.landing-page .preview-step-2 {
+  animation-delay: 900ms;
+}
+
+.landing-page .preview-step-3 {
+  animation-delay: 1350ms;
+}
+
+.landing-page .planning-preview [class*='preview-'] {
+  animation-play-state: paused;
+}
+
+.landing-page .planning-preview[data-playing='true'] [class*='preview-'] {
+  animation-play-state: running;
+}
+
+@keyframes preview-card-arrive {
+  0%,
+  5% {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  16%,
+  72% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  88%,
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+}
+
+@keyframes preview-connect {
+  0%,
+  12% {
+    stroke-dashoffset: 1;
+  }
+  48%,
+  78% {
+    stroke-dashoffset: 0;
+    opacity: var(--preview-path-opacity, 1);
+  }
+  94%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes preview-node-arrive {
+  0%,
+  4% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  14%,
+  76% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  94%,
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes preview-before {
+  0%,
+  8% {
+    opacity: 0;
+  }
+  18%,
+  35% {
+    opacity: 0.7;
+  }
+  54%,
+  78% {
+    opacity: 0.12;
+  }
+  94%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes preview-optimize {
+  0%,
+  35% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  40% {
+    opacity: var(--preview-path-opacity, 1);
+  }
+  64%,
+  78% {
+    stroke-dashoffset: 0;
+    opacity: var(--preview-path-opacity, 1);
+  }
+  94%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .planning-preview [class*='preview-'] {
+    animation: none;
+  }
+}

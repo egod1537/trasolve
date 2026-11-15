@@ -15,6 +15,7 @@ import { basename, join, resolve } from 'node:path';
 import {
   trouteErrorPayloadSchema,
   trouteJobStatusSchema,
+  trouteJobStateSchema,
   trouteOptimizeRequestSchema,
   trouteOptimizeResponseSchema,
   trouteProgressStageSchema,
@@ -35,6 +36,7 @@ const persistedStateSchema = z.strictObject({
   stage: trouteProgressStageSchema.nullable(),
   progress: z.number().int().min(0).max(100),
   last_message: z.string().nullable(),
+  preview: trouteJobStateSchema.shape.preview,
   created_at: z.number().int().nonnegative(),
   updated_at: z.number().int().nonnegative(),
   completed_at: z.number().int().nonnegative().nullable(),
@@ -190,6 +192,12 @@ export class FileTrouteJobRepository extends TrouteJobRepository {
       last_message: persisted.last_message,
       error: recoveredStatus === 'failed' ? error : null,
       result: recoveredStatus === 'completed' ? result : null,
+      ...((recoveredStatus === 'pending' ||
+        recoveredStatus === 'running' ||
+        recoveredStatus === 'completed') &&
+      persisted.preview
+        ? { preview: persisted.preview }
+        : {}),
     };
 
     return {
@@ -230,6 +238,7 @@ export class FileTrouteJobRepository extends TrouteJobRepository {
       stage: job.state.stage,
       progress: job.state.progress,
       last_message: job.state.last_message,
+      ...(job.state.preview ? { preview: job.state.preview } : {}),
       created_at: job.createdAt,
       updated_at: job.updatedAt,
       completed_at: job.completedAt,

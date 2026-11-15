@@ -1,4 +1,5 @@
 export { formatClockTime } from './model/clockFormat';
+export { formatPlaceVisitTime } from './model/visitTimeLabel';
 export {
   createTripPlaceFromGooglePlace,
   type GoogleTripPlaceInput,

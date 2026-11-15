@@ -66,11 +66,13 @@
 }
 
 .share-trip-modal-content {
-  display: grid;
+  overscroll-behavior: contain;
+}
+
+.share-trip-modal-content-content {
+  --scroll-content-display: grid;
   gap: 20px;
   padding: 20px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 
 .share-trip-modal-status {

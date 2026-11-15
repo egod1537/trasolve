@@ -5,6 +5,7 @@ import { MapAiPanel } from '@/features/ai-chat';
 import '@/pages/testbed/styles/testbed.css';
 import '@/pages/testbed/styles/ai-chat-test.css';
 import { NL, useL } from '@/shared/i18n';
+import { opts } from '@/shared/config/opts';
 
 function AiChatTestContent() {
   const L = useL();
@@ -61,7 +62,8 @@ function AiChatTestContent() {
       </header>
       <div className="ai-chat-test-toolbar">
         <code>
-          {NL('POST')} {API_ROUTES.chat}
+          {NL('POST')}{' '}
+          {opts.useChatV2 ? API_ROUTES.chatStream : API_ROUTES.chat}
         </code>
         <button
           type="button"

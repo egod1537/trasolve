@@ -1,0 +1,160 @@
+{
+  "flow": {
+    "details": "상세",
+    "filters": "그래프 필터",
+    "graph": "사용자 흐름 그래프",
+    "minimumCount": "최소 이동 수",
+    "mode": {
+      "domainEvent": "도메인 이벤트",
+      "mixed": "화면 + 주요 이벤트",
+      "screen": "화면"
+    },
+    "nodeMode": "노드 모드",
+    "status": {
+      "noData": "선택 기간에 흐름 데이터가 없습니다."
+    }
+  },
+  "funnels": {
+    "funnel": {
+      "addPlace": "장소 추가",
+      "routeOptimization": "경로 최적화",
+      "routeReoptimization": "재수정 / 반복 최적화",
+      "tripEntry": "Trip 생성 / 진입",
+      "tripShare": "Trip 공유"
+    },
+    "kpi": {
+      "averageCompletionTime": "평균 완료 시간",
+      "completedSessions": "완료 세션",
+      "largestDropOff": "가장 큰 이탈",
+      "overallConversion": "전체 전환율",
+      "startedSessions": "시작 세션"
+    },
+    "metric": {
+      "averageTime": "평균 소요시간",
+      "dropOff": "이탈",
+      "enteredSessions": "진입 세션",
+      "medianTime": "중앙값 소요시간",
+      "overallConversion": "전체 전환율",
+      "previousConversion": "이전 단계 전환율"
+    },
+    "selector": {
+      "label": "분석할 퍼널"
+    },
+    "status": {
+      "noData": "선택 기간에 퍼널 데이터가 없습니다."
+    },
+    "step": {
+      "addPlaceClicked": "장소 추가 확정",
+      "initialResultViewed": "최초 결과 확인",
+      "landingAction": "로그인 또는 시작",
+      "landingViewed": "랜딩 진입",
+      "mapWorkspaceViewed": "지도 작업공간 진입",
+      "optimizationApplied": "최적화 결과 적용",
+      "optimizationCompleted": "최적화 완료",
+      "optimizationStarted": "최적화 시작",
+      "placeAdded": "장소 추가 완료",
+      "placeSearchViewed": "장소 검색 진입",
+      "placeSelected": "장소 선택",
+      "reoptimizationCompleted": "재최적화 완료",
+      "reoptimizationStarted": "재최적화 시작",
+      "resultViewed": "결과 확인",
+      "routeModified": "경로 수정",
+      "shareEnabled": "공유 활성화",
+      "shareLinkCopied": "공유 링크 복사",
+      "shareModalOpened": "공유 열기",
+      "tripOpened": "Trip 생성 또는 선택",
+      "tripPickerViewed": "Trip 선택 화면 진입",
+      "updatedResultViewed": "수정 결과 확인"
+    }
+  },
+  "metric": {
+    "averagePathLength": "평균 경로 길이",
+    "backtrack": "되돌아감",
+    "conversion": "전환율",
+    "count": "횟수",
+    "dropOff": "이탈률",
+    "events": "이벤트",
+    "notApplicable": "해당 없음",
+    "pathLength": "경로 길이",
+    "ratio": "비율",
+    "sessions": "세션",
+    "source": "출발 노드",
+    "target": "대상",
+    "visits": "방문 수"
+  },
+  "overview": {
+    "status": {
+      "noData": "선택 기간에 분석 데이터가 없습니다."
+    }
+  },
+  "page": {
+    "description": {
+      "userFlowAnalysis": "사용자 흐름과 전환을 확인합니다."
+    },
+    "eyebrow": {
+      "internalTool": "내부 분석 도구"
+    },
+    "navigation": {
+      "analyticsSections": "분석 섹션"
+    },
+    "tab": {
+      "flowGraph": "흐름 그래프",
+      "funnels": "퍼널",
+      "overview": "개요",
+      "sessions": "세션"
+    },
+    "title": {
+      "analytics": "분석"
+    }
+  },
+  "period": {
+    "apply": "기간 적용",
+    "from": "시작",
+    "timezone": "시간대",
+    "to": "종료"
+  },
+  "routes": {
+    "loadingLabel": {
+      "analytics": "분석 화면을 불러오고 있습니다."
+    }
+  },
+  "sessions": {
+    "action": {
+      "loadMore": "더 보기"
+    },
+    "filters": "세션 필터",
+    "identity": {
+      "anonymous": "익명",
+      "authenticated": "로그인",
+      "mixed": "익명 → 로그인"
+    },
+    "metadata": {
+      "details": "메타데이터 상세"
+    },
+    "metric": {
+      "endedAt": "마지막 시간",
+      "eventCount": "이벤트 수",
+      "eventType": "이벤트 유형",
+      "metadata": "메타데이터",
+      "screen": "화면",
+      "sessionId": "세션 ID",
+      "startedAt": "시작 시간",
+      "timestamp": "시간",
+      "user": "사용자"
+    },
+    "status": {
+      "loadingMore": "추가 데이터를 불러오는 중입니다.",
+      "noData": "선택 기간에 세션이 없습니다.",
+      "selectSession": "타임라인을 볼 세션을 선택하세요."
+    },
+    "timeline": "이벤트 타임라인",
+    "value": {
+      "noMetadata": "메타데이터 없음",
+      "noTarget": "대상 없음"
+    }
+  },
+  "status": {
+    "loadError": "분석 데이터를 불러오지 못했습니다.",
+    "loading": "분석 데이터를 불러오는 중입니다."
+  }
+}

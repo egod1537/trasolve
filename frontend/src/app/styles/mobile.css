@@ -1,0 +1,44 @@
+@media (max-width: 760px) {
+  body {
+    --mobile-dialog-height: calc(
+      var(--app-viewport-height, 100dvh) - max(12px, env(safe-area-inset-top)) -
+        max(12px, env(safe-area-inset-bottom))
+    );
+  }
+
+  /* A 16px input font prevents automatic zoom on focus in iOS Safari. */
+  body
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='range'],
+      [type='color']
+    ),
+  body textarea,
+  body select {
+    font-size: 16px;
+  }
+
+  body .ui-dialog-backdrop {
+    box-sizing: border-box;
+    top: var(--app-viewport-top, 0px);
+    bottom: auto;
+    height: var(--app-viewport-height, 100dvh);
+    padding: max(12px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  body .ui-dialog {
+    min-width: 0;
+    max-height: var(--mobile-dialog-height);
+  }
+
+  .ui-dialog .ui-button,
+  .ui-dialog .ui-icon-button {
+    min-height: 44px;
+  }
+}

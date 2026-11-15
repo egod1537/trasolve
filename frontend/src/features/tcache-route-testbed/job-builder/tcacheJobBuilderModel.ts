@@ -20,6 +20,7 @@ export interface TcacheJobBuilderState {
   computeAlternativeRoutes: boolean;
   languageCode: string;
   regionCode: string;
+  countryCode: string;
 }
 
 export interface TcacheJobBuilderValidation {
@@ -38,6 +39,7 @@ export function createTcacheJobBuilderDraft(): TcacheJobBuilderState {
     computeAlternativeRoutes: false,
     languageCode: 'ko',
     regionCode: 'KR',
+    countryCode: 'KR',
   };
 }
 
@@ -185,6 +187,9 @@ export function tcacheJobBuilderToRequest(
     computeAlternativeRoutes: state.computeAlternativeRoutes,
     languageCode: state.languageCode.trim(),
     ...(state.regionCode.trim() ? { regionCode: state.regionCode.trim() } : {}),
+    ...(state.countryCode.trim()
+      ? { countryCode: state.countryCode.trim().toUpperCase() }
+      : {}),
   };
 }
 

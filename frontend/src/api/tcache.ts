@@ -1,4 +1,5 @@
 import { API_ROUTES } from '@trasolve/shared';
+import { reportExternalApiDisabled } from '@/shared/api/externalApiDisabled';
 import { L } from '@/shared/i18n';
 import { captureUnexpectedApiException } from '@/shared/observability/sentry';
 
@@ -25,6 +26,8 @@ export interface TcacheRouteCreateRequest {
   computeAlternativeRoutes?: boolean;
   languageCode?: string;
   regionCode?: string;
+  countryCode?: string;
+  provider?: string;
   routingPreference?: string;
   units?: string;
 }
@@ -267,6 +270,13 @@ function parseError(body: unknown): {
   message: string;
   upstreamStatus?: number;
 } {
+  const disabledError = reportExternalApiDisabled(body);
+  if (disabledError) {
+    return {
+      code: 'EXTERNAL_API_DISABLED',
+      message: disabledError.message,
+    };
+  }
   if (
     typeof body === 'object' &&
     body !== null &&

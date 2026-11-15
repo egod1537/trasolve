@@ -54,6 +54,7 @@ const placeFields = {
     .max(TRIP_PLACE_MAX_DURATION_MINUTES)
     .optional(),
   time: tripClockTimeSchema.optional(),
+  orderLocked: z.boolean().optional(),
 };
 export const tripPlaceSchema = z.strictObject({
   id: tripIdSchema,
@@ -219,6 +220,7 @@ function migrateDay(value: unknown): unknown {
 const tripDayObjectSchema = z.strictObject({
   id: tripIdSchema,
   title: tripTitleSchema,
+  hidden: z.boolean().optional(),
   date: z.iso.date().optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   places: z.array(tripPlaceSchema).max(TRIP_DAY_MAX_PLACES),
@@ -232,6 +234,7 @@ const tripInputDaySchema = z.preprocess(
   z.strictObject({
     id: tripIdSchema.optional(),
     title: tripTitleSchema,
+    hidden: z.boolean().optional(),
     date: z.iso.date().optional(),
     color: z
       .string()

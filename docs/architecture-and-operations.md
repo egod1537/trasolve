@@ -67,10 +67,15 @@ production runtime은 사용하거나 dual-write하지 않습니다. 기존 `loc
 명시적으로 선택하면 해당 provider의 필수 설정이 잘못된 경우 서버 시작이 실패합니다.
 `AI_PROVIDER`를 비우면 기존 로컬 동작을 유지해 `OPENWEBUI_API_KEY`가 있을 때 OpenWebUI를,
 없을 때 개발용 Random provider를 사용합니다. Gemini는 `GEMINI_API_KEY`와 `GEMINI_MODEL`,
-OpenWebUI는 `OPENWEBUI_API_KEY`와 `OPENWEBUI_MODEL`이 필요합니다. 키는 backend에만 둡니다.
+OpenWebUI는 `OPENWEBUI_API_KEY`가 필요하며 키는 backend에만 둡니다. 기본 모델은
+`backend/src/options.ts`의 `OPENWEBUI_OPTIONS.defaultModel`에서 관리합니다.
 OpenWebUI 연동은 `/openai/models`에서 접근 가능한 모델을 조회하고 `/openai/responses`로
-GPT를 호출합니다. 단순 채팅 계약을 유지하기 위해 server default tool은 명시적으로 끄며,
-응답 저장과 streaming도 사용하지 않습니다. 모델 ID는 고정하지 않고 model API 결과를 사용합니다.
+GPT를 호출합니다. 프로젝트 기본 모델 채팅에는 Responses `web_search`를 `auto`로 등록하고
+image/text 검색 결과를 요청해, 검색이 실행되면 이미지 URL·썸네일·caption·원본 출처를
+응답에 포함합니다.
+이미지 생성 도구와 이미지 입력은 등록하지 않으며 응답 저장도 사용하지 않습니다. 일반 채팅은
+프로젝트 기본 모델을 사용하고, 테스트베드에서 선택한 모델 ID는 model API 결과 중 하나로
+요청별 override할 수 있습니다. 내부 follow-up 생성 요청에서는 web search를 끕니다.
 `OPENWEBUI_BASE_URL`이 Cloudflare Access로 보호되면
 `CLOUDFLARE_ACCESS_CLIENT_ID`와 `CLOUDFLARE_ACCESS_CLIENT_SECRET`을 함께 설정합니다.
 두 값은 각각 `CF-Access-Client-Id`, `CF-Access-Client-Secret` 헤더로 전달되며,

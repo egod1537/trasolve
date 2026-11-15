@@ -1,4 +1,6 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { cruise } from 'dependency-cruiser';
+import { parseSync } from '@babel/core';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,9 +11,6 @@ const repositoryRoot = resolve(
 );
 const sourceRoot = join(repositoryRoot, 'frontend', 'src');
 const sourceExtensions = ['.ts', '.tsx'];
-const importPattern =
-  /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)(['"])([^'"]+)\1/g;
-const rawFetchPattern = /\bfetch\s*\(/;
 const publicApiLayers = new Set(['features', 'entities']);
 const legacySourceRoots = [
   'pages/map/api/',
@@ -42,78 +41,6 @@ function toSourcePath(filePath) {
   return relative(sourceRoot, filePath).replaceAll('\\', '/');
 }
 
-function resolveSourceImport(sourceFile, specifier) {
-  let targetBase;
-  if (specifier.startsWith('@/')) {
-    targetBase = join(sourceRoot, specifier.slice(2));
-  } else if (specifier.startsWith('.')) {
-    targetBase = resolve(dirname(sourceFile), specifier);
-  } else {
-    return null;
-  }
-
-  const candidates = [
-    targetBase,
-    ...sourceExtensions.map((extension) => `${targetBase}${extension}`),
-    ...sourceExtensions.map((extension) =>
-      join(targetBase, `index${extension}`),
-    ),
-  ];
-  return (
-    candidates.find(
-      (candidate) => existsSync(candidate) && statSync(candidate).isFile(),
-    ) ?? null
-  );
-}
-
-function getSlice(sourcePath) {
-  const [layer, slice] = sourcePath.split('/');
-  return { layer, slice };
-}
-
-function validateBoundary(sourcePath, targetPath) {
-  const source = getSlice(sourcePath);
-  const target = getSlice(targetPath);
-  const allowedTargets = {
-    app: new Set([
-      'app',
-      'pages',
-      'features',
-      'entities',
-      'shared',
-      'map',
-      'api',
-    ]),
-    pages: new Set(['pages', 'features', 'entities', 'shared', 'map', 'api']),
-    features: new Set(['features', 'entities', 'shared', 'map', 'api']),
-    entities: new Set(['entities', 'shared']),
-    shared: new Set(['shared']),
-    map: new Set(['map', 'shared']),
-    api: new Set(['api', 'shared']),
-  };
-  const allowed = allowedTargets[source.layer];
-  if (allowed && !allowed.has(target.layer)) {
-    return `${source.layer} 레이어에서 ${target.layer} 레이어를 import할 수 없습니다.`;
-  }
-  if (
-    source.layer === 'entities' &&
-    target.layer === 'entities' &&
-    source.slice !== target.slice
-  ) {
-    return 'entity 간 직접 import는 허용하지 않습니다.';
-  }
-  if (
-    (target.layer === 'features' || target.layer === 'entities') &&
-    (source.layer !== target.layer || source.slice !== target.slice)
-  ) {
-    const publicEntry = `${target.layer}/${target.slice}/index.ts`;
-    if (targetPath !== publicEntry) {
-      return `${target.layer}/${target.slice}의 public index.ts를 통해 import해야 합니다.`;
-    }
-  }
-  return null;
-}
-
 function isNetworkBoundary(sourcePath) {
   return (
     sourcePath.startsWith('api/') ||
@@ -122,51 +49,36 @@ function isNetworkBoundary(sourcePath) {
   );
 }
 
-function findCycles(graph) {
-  const state = new Map();
-  const stack = [];
-  const cycles = new Map();
-
-  function visit(source) {
-    state.set(source, 'visiting');
-    stack.push(source);
-    for (const target of graph.get(source) ?? []) {
-      if (state.get(target) === 'visiting') {
-        const cycle = stack.slice(stack.indexOf(target)).concat(target);
-        const body = cycle.slice(0, -1);
-        const rotations = body.map((_, index) => [
-          ...body.slice(index),
-          ...body.slice(0, index),
-        ]);
-        rotations.sort((left, right) =>
-          left.join('\0').localeCompare(right.join('\0')),
-        );
-        const canonical = rotations[0];
-        cycles.set(canonical.join('\0'), [...canonical, canonical[0]]);
-        continue;
-      }
-      if (!state.has(target)) {
-        visit(target);
-      }
-    }
-    stack.pop();
-    state.set(source, 'visited');
-  }
-
-  for (const source of graph.keys()) {
-    if (!state.has(source)) {
-      visit(source);
-    }
-  }
-  return [...cycles.values()];
-}
-
 const sourceFiles = collectSourceFiles(sourceRoot);
-const graph = new Map(
-  sourceFiles.map((file) => [toSourcePath(file), new Set()]),
-);
 const violations = [];
-let dependencyCount = 0;
+
+process.chdir(repositoryRoot);
+const { default: dependencyRules } =
+  await import('../../.dependency-cruiser.cjs');
+const { output } = await cruise(['frontend/src'], {
+  ...dependencyRules.options,
+  ruleSet: dependencyRules,
+  validate: true,
+  outputType: 'json',
+});
+const graph = typeof output === 'string' ? JSON.parse(output) : output;
+const scanned = new Set(graph.modules.map((module) => module.source));
+for (const file of sourceFiles) {
+  const source = relative(repositoryRoot, file).replaceAll('\\', '/');
+  if (!file.endsWith('.d.ts') && !scanned.has(source)) {
+    violations.push(
+      `${source}: dependency-cruiser가 소스 파일을 분석하지 못했습니다.`,
+    );
+  }
+}
+for (const violation of graph.summary.violations) {
+  violations.push(
+    `${violation.from} -> ${violation.to}: ${violation.rule.name}`,
+  );
+}
+for (const issue of graph.summary.environment?.issues ?? []) {
+  violations.push(`분석 환경: ${issue.name}`);
+}
 
 for (const sourceFile of sourceFiles) {
   const sourcePath = toSourcePath(sourceFile);
@@ -198,7 +110,7 @@ for (const layer of publicApiLayers) {
   );
   for (const slice of slices) {
     const publicEntry = `${layer}/${slice}/index.ts`;
-    if (!graph.has(publicEntry)) {
+    if (!sourceFiles.some((file) => toSourcePath(file) === publicEntry)) {
       violations.push(
         `${layer}/${slice}: slice root public index.ts가 필요합니다.`,
       );
@@ -209,13 +121,85 @@ for (const layer of publicApiLayers) {
 for (const sourceFile of sourceFiles) {
   const sourcePath = toSourcePath(sourceFile);
   const contents = readFileSync(sourceFile, 'utf8');
-  if (rawFetchPattern.test(contents) && !isNetworkBoundary(sourcePath)) {
+  const ast = parseSync(contents, {
+    filename: sourceFile,
+    babelrc: false,
+    configFile: false,
+    parserOpts: { plugins: ['typescript', 'jsx'] },
+  });
+  const imports = new Set();
+  const flags = { network: false, google: false };
+  function visit(node) {
+    if (!node || typeof node !== 'object') {
+      return;
+    }
+    if (
+      [
+        'ImportDeclaration',
+        'ExportNamedDeclaration',
+        'ExportAllDeclaration',
+      ].includes(node.type) &&
+      node.source
+    ) {
+      imports.add(node.source.value);
+    }
+    if (
+      node.type === 'ImportExpression' &&
+      node.source?.type === 'StringLiteral'
+    ) {
+      imports.add(node.source.value);
+    }
+    if (node.type === 'CallExpression') {
+      const callee = node.callee;
+      if (
+        callee?.type === 'Import' &&
+        node.arguments[0]?.type === 'StringLiteral'
+      ) {
+        imports.add(node.arguments[0].value);
+      }
+      if (
+        callee?.name === 'fetch' ||
+        (callee?.type === 'MemberExpression' &&
+          ['window', 'globalThis'].includes(callee.object?.name) &&
+          (callee.property?.name === 'fetch' ||
+            callee.property?.value === 'fetch'))
+      ) {
+        flags.network = true;
+      }
+    }
+    if (
+      (node.type === 'MemberExpression' &&
+        node.object?.name === 'google' &&
+        node.property?.name === 'maps') ||
+      (node.type === 'TSQualifiedName' &&
+        node.left?.name === 'google' &&
+        node.right?.name === 'maps')
+    ) {
+      flags.google = true;
+    }
+    for (const [key, value] of Object.entries(node)) {
+      if (['loc', 'start', 'end', 'comments', 'tokens'].includes(key)) {
+        continue;
+      }
+      if (Array.isArray(value)) {
+        value.forEach(visit);
+      } else if (value && typeof value === 'object') {
+        visit(value);
+      }
+    }
+  }
+  visit(ast);
+  if (flags.network && !isNetworkBoundary(sourcePath)) {
     violations.push(
-      `${sourcePath}: raw fetch는 shared/api 또는 feature api에서만 사용할 수 있습니다.`,
+      `${sourcePath}: HTTP 요청은 API 모듈에서만 실행해야 합니다.`,
     );
   }
-  for (const match of contents.matchAll(importPattern)) {
-    const specifier = match[2];
+  if (flags.google && !/^map\/(runtime|adapters)\//.test(sourcePath)) {
+    violations.push(
+      `${sourcePath}: Google SDK 객체와 타입은 runtime/adapters 내부에서만 사용해야 합니다.`,
+    );
+  }
+  for (const specifier of imports) {
     const legacyImport = legacyImportRoots.find(
       (root) => specifier === root || specifier.startsWith(`${root}/`),
     );
@@ -229,25 +213,7 @@ for (const sourceFile of sourceFiles) {
         `${sourcePath}: deep relative import를 사용할 수 없습니다: ${specifier}`,
       );
     }
-    const targetFile = resolveSourceImport(sourceFile, specifier);
-    if (!targetFile) {
-      continue;
-    }
-    const targetPath = toSourcePath(targetFile);
-    const boundaryError = validateBoundary(sourcePath, targetPath);
-    if (boundaryError) {
-      violations.push(`${sourcePath} -> ${targetPath}: ${boundaryError}`);
-    }
-    if (!sourceExtensions.includes(extname(targetFile))) {
-      continue;
-    }
-    graph.get(sourcePath).add(targetPath);
-    dependencyCount += 1;
   }
-}
-
-for (const cycle of findCycles(graph)) {
-  violations.push(`순환 의존: ${cycle.join(' -> ')}`);
 }
 
 if (violations.length > 0) {
@@ -258,6 +224,6 @@ if (violations.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `Frontend architecture check passed (${sourceFiles.length} modules, ${dependencyCount} dependencies, 0 cycles).`,
+    `Frontend architecture check passed (${sourceFiles.length} source modules, ${graph.summary.totalDependenciesCruised} dependencies, including type imports).`,
   );
 }

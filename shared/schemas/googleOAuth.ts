@@ -12,10 +12,12 @@ export const googleOAuthProfileSchema = z.object({
 export const googleOAuthResultSchema = z.discriminatedUnion('status', [
   z.object({
     status: z.literal('success'),
+    provider: z.enum(['google', 'ssu']).optional(),
     user: authUserSchema,
   }),
   z.object({
     status: z.literal('error'),
+    provider: z.enum(['google', 'ssu']).optional(),
     error: z.enum([
       'access_denied',
       'provider_error',
@@ -24,6 +26,16 @@ export const googleOAuthResultSchema = z.discriminatedUnion('status', [
       'userinfo_request_failed',
     ]),
   }),
-  z.object({ status: z.literal('missing') }),
-  z.object({ status: z.literal('unavailable') }),
+  z.object({
+    provider: z.enum(['google', 'ssu']).optional(),
+    status: z.literal('missing'),
+  }),
+  z.object({
+    provider: z.enum(['google', 'ssu']).optional(),
+    status: z.literal('disabled'),
+  }),
+  z.object({
+    provider: z.enum(['google', 'ssu']).optional(),
+    status: z.literal('unavailable'),
+  }),
 ]);

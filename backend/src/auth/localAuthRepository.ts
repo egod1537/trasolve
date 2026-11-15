@@ -3,6 +3,13 @@ import { mkdir, open, readFile, rename, unlink } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { z } from 'zod';
 import {
+  initialTutorialProgress,
+  tutorialProgressSchema,
+  authConsentRecordSchema,
+  type AuthConsentRecord,
+  type TutorialProgress,
+} from '@trasolve/shared';
+import {
   AuthIdentityConflictError,
   type AuthIdentityRecord,
   type AuthRepository,
@@ -20,6 +27,8 @@ const localUserSchema = z.strictObject({
   id: z.string().uuid(),
   displayName: z.string(),
   avatarUrl: z.string().nullable(),
+  tutorial: z.unknown().optional(),
+  consents: z.array(authConsentRecordSchema).default([]),
 });
 const localIdentitySchema = z.strictObject({
   id: z.string().uuid(),
@@ -91,7 +100,39 @@ export class LocalAuthRepository implements AuthRepository, SessionRepository {
         id: userId,
         displayName: input.displayName ?? '',
         avatarUrl: input.avatarUrl ?? null,
+        consents: input.consent ? [input.consent] : [],
       });
+      document.identities.push(identity);
+      return this.toIdentityRecord(identity);
+    });
+  }
+
+  public attachIdentity(
+    userId: string,
+    input: CreateUserWithIdentityInput,
+  ): Promise<AuthIdentityRecord> {
+    return this.mutate((document) => {
+      if (!document.users.some((user) => user.id === userId)) {
+        throw new Error('User is unavailable.');
+      }
+      if (
+        document.identities.some(
+          (identity) =>
+            identity.issuer === input.issuer &&
+            identity.subject === input.subject,
+        )
+      ) {
+        throw new AuthIdentityConflictError();
+      }
+      const identity: LocalIdentity = {
+        id: randomUUID(),
+        userId,
+        issuer: input.issuer,
+        subject: input.subject,
+        email: input.email,
+        emailVerified: input.emailVerified,
+        lastLoginAt: new Date().toISOString(),
+      };
       document.identities.push(identity);
       return this.toIdentityRecord(identity);
     });
@@ -123,15 +164,16 @@ export class LocalAuthRepository implements AuthRepository, SessionRepository {
       return undefined;
     }
     const identity = document.identities
-      .filter((candidate) => candidate.userId === userId && candidate.email)
+      .filter((candidate) => candidate.userId === userId)
       .sort((left, right) =>
         right.lastLoginAt.localeCompare(left.lastLoginAt),
       )[0];
-    if (!identity?.email) {
+    if (!identity) {
       return undefined;
     }
     return {
       id: user.id,
+      issuer: identity.issuer,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
       email: identity.email,
@@ -191,6 +233,71 @@ export class LocalAuthRepository implements AuthRepository, SessionRepository {
       );
       if (session && session.revokedAt === null) {
         session.revokedAt = new Date().toISOString();
+      }
+    });
+  }
+
+  public async getTutorialProgress(userId: string): Promise<TutorialProgress> {
+    const document = await this.readSnapshot();
+    const user = document.users.find((candidate) => candidate.id === userId);
+    if (!user) {
+      throw new Error('User is unavailable.');
+    }
+    return user.tutorial === undefined
+      ? initialTutorialProgress()
+      : tutorialProgressSchema.parse(user.tutorial);
+  }
+
+  public saveTutorialProgress(
+    userId: string,
+    progress: TutorialProgress,
+  ): Promise<void> {
+    return this.mutate((document) => {
+      const user = document.users.find((candidate) => candidate.id === userId);
+      if (!user) {
+        throw new Error('User is unavailable.');
+      }
+      user.tutorial = tutorialProgressSchema.parse(progress);
+    });
+  }
+
+  public async getConsent(
+    userId: string,
+    termsVersion: string,
+    privacyVersion: string,
+  ): Promise<AuthConsentRecord | undefined> {
+    const document = await this.readSnapshot();
+    return document.users
+      .find((user) => user.id === userId)
+      ?.consents.find(
+        (consent) =>
+          consent.termsVersion === termsVersion &&
+          consent.privacyVersion === privacyVersion,
+      );
+  }
+
+  public saveConsent(
+    userId: string,
+    consent: AuthConsentRecord,
+    clearOptionalProfile: boolean,
+  ): Promise<void> {
+    return this.mutate((document) => {
+      const user = document.users.find((user) => user.id === userId);
+      if (!user) {
+        throw new Error('User is unavailable.');
+      }
+      if (
+        !user.consents.some(
+          (entry) =>
+            entry.termsVersion === consent.termsVersion &&
+            entry.privacyVersion === consent.privacyVersion,
+        )
+      ) {
+        user.consents.push(authConsentRecordSchema.parse(consent));
+        if (clearOptionalProfile) {
+          user.displayName = '';
+          user.avatarUrl = null;
+        }
       }
     });
   }

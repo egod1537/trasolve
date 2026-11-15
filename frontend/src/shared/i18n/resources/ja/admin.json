@@ -1,0 +1,200 @@
+{
+  "access": {
+    "description": {
+      "forbidden": "許可された管理者アカウントで再度ログインしてください。",
+      "signIn": "Google アカウントでログインしてください。",
+      "unavailable": "しばらくしてからもう一度お試しください。"
+    },
+    "title": {
+      "forbidden": "アクセスできません",
+      "signIn": "管理者ログイン",
+      "unavailable": "管理者サービスを利用できません"
+    }
+  },
+  "audit": {
+    "column": {
+      "target": "対象",
+      "time": "時刻"
+    },
+    "description": "管理者によるアカウント操作の履歴を確認します。",
+    "filter": {
+      "action": "操作",
+      "actor": "管理者"
+    }
+  },
+  "common": {
+    "accessExpired": "管理者セッションまたは権限を確認してください。",
+    "action": {
+      "confirm": "確認",
+      "next": "次へ",
+      "previous": "前へ"
+    },
+    "all": "すべて",
+    "details": "詳細",
+    "empty": "表示するデータがありません。",
+    "from": "開始日",
+    "generatedAt": "集計日時、{{date}}",
+    "loadFailed": "データを読み込めませんでした。",
+    "no": "いいえ",
+    "notFound": "ページが見つかりません。",
+    "page": "{{page}}ページ",
+    "pageTotal": "全{{total}}件、{{page}}ページ",
+    "processing": "処理中",
+    "requiresPostgres": "管理データの参照には PostgreSQL 接続が必要です。サーバーの保存モードとデータベース設定を確認してください。",
+    "reset": "リセット",
+    "search": "検索",
+    "skipToContent": "本文へ移動",
+    "to": "終了日",
+    "viewAll": "すべて表示",
+    "yes": "はい"
+  },
+  "dashboard": {
+    "activeNote": "停止されていないアカウントです。",
+    "activeUsers": "有効なアカウント",
+    "apiLastWeek": "過去7日間の API 状況",
+    "description": "ユーザー、旅行と外部サービスの運用状況を確認します。",
+    "loginNote": "過去7日間にログインしたユーザー数です。",
+    "recentLoginUsers": "過去7日間のログイン",
+    "totalTrips": "総旅行数",
+    "totalUsers": "総登録者数"
+  },
+  "navigation": {
+    "apiUsage": "API 使用量",
+    "audit": "監査ログ",
+    "dashboard": "ダッシュボード",
+    "operations": "運用状況",
+    "trips": "旅行",
+    "users": "ユーザー"
+  },
+  "operations": {
+    "available": "参照可能",
+    "configured": "設定済み",
+    "description": "過去24時間のサービス呼び出しとジョブの状況を確認します。",
+    "failedJobs": "失敗",
+    "jobs": "最近のジョブ状況",
+    "jobsNote": "ジョブ数は最近の troute ミラーの最大1,000件に基づきます。tcache ジョブミラーは提供されません。",
+    "lastObservedAt": "最終観測",
+    "lastUpdated": "最終更新",
+    "noData": "データなし",
+    "noObservedErrors": "観測されたエラーなし",
+    "notConfigured": "未設定",
+    "observation": "観測状態",
+    "observationNote": "設定状態と最近の呼び出し記録を表示します。リアルタイムの接続検査結果ではありません。",
+    "observed": "観測記録あり",
+    "observedJobs": "観測されたジョブ",
+    "recentErrors": "最近のエラーコード",
+    "runningJobs": "実行中",
+    "unavailable": "参照未対応",
+    "unknown": "不明",
+    "window": "観測期間、{{from}} ～ {{to}}"
+  },
+  "routes": {
+    "loading": "管理者ページを読み込んでいます。"
+  },
+  "shell": {
+    "management": "管理",
+    "timeZoneNote": "日時は韓国標準時で表示されます。",
+    "workspace": "管理コンソール"
+  },
+  "trips": {
+    "column": {
+      "createdAt": "作成日",
+      "dayCount": "日数",
+      "placeCount": "場所数",
+      "title": "タイトル",
+      "updatedAt": "最終更新日"
+    },
+    "dateRange": "旅行期間",
+    "description": "旅行の所有者、構成と共有状態を確認します。",
+    "detailTitle": "旅行の詳細情報",
+    "filter": {
+      "owner": "所有者",
+      "shared": "共有状態"
+    },
+    "id": "旅行 ID",
+    "metadataNote": "旅行の基本情報のみを表示します。メモ、座標、詳細経路は含まれません。",
+    "revision": "文書バージョン",
+    "schemaVersion": "スキーマバージョン",
+    "search": {
+      "placeholder": "旅行タイトルを検索"
+    },
+    "searchable": "検索で公開",
+    "share": {
+      "disabled": "共有なし",
+      "enabled": "共有中"
+    }
+  },
+  "usage": {
+    "actualCalls": "実呼び出し",
+    "avgLatency": "平均応答時間",
+    "blockedCalls": "ブロックされた呼び出し",
+    "bucketSummary": "{{date}}、呼び出し{{calls}}件、失敗{{failed}}件",
+    "byService": "サービス別使用量",
+    "byUser": "ユーザー別使用量",
+    "coverage": "サーバーの outbound 呼び出しのみを集計し、ブラウザの Google Maps SDK 呼び出しは含みません。",
+    "description": "期間とサービスごとに外部 API の呼び出し状況を確認します。",
+    "failedCalls": "失敗した呼び出し",
+    "failureCount": "失敗{{count}}件",
+    "failureRate": "失敗率",
+    "invalidFilters": "条件を確認してください。期間は最大90日で、有効なサービスとユーザー UUID が必要です。",
+    "invalidRange": "終了日は開始日以降、期間は最大90日です。",
+    "mockCalls": "モック呼び出し",
+    "noCost": "この数値は請求金額ではありません。",
+    "p95Latency": "P95 レイテンシ",
+    "service": "サービス",
+    "topUsersNote": "選択条件で実呼び出しが多い上位20人です。ユーザーを識別できない呼び出しは除きます。",
+    "trend": "呼び出し推移",
+    "trendDescription": "選択期間の実呼び出しと失敗した呼び出しです。",
+    "trendSummary": "実呼び出し{{calls}}件、失敗{{failed}}件",
+    "userId": "ユーザー ID",
+    "userIdPlaceholder": "内部ユーザー UUID で絞り込み",
+    "viewChartData": "表で表示"
+  },
+  "users": {
+    "action": {
+      "restore": "アカウントを復元",
+      "revokeSessions": "すべてのセッションを終了",
+      "suspend": "アカウントを停止"
+    },
+    "actionSuccess": "処理が完了しました。終了したセッションは{{count}}件です。",
+    "actionsTitle": "アカウント管理",
+    "column": {
+      "createdAt": "登録日",
+      "email": "メール",
+      "lastLoginAt": "最終ログイン",
+      "name": "名前",
+      "tripCount": "旅行数"
+    },
+    "confirm": {
+      "restore": "このアカウントの停止を解除しますか？",
+      "revokeSessions": "このアカウントのすべてのセッションを終了しますか？",
+      "suspend": "このアカウントを停止し、すべてのセッションを終了しますか？"
+    },
+    "description": "登録アカウントとログイン情報を確認し、利用状態を管理します。",
+    "detailTitle": "ユーザー詳細",
+    "emailVerified": "メール認証",
+    "filter": {
+      "role": "ロール",
+      "state": "状態"
+    },
+    "identities": "連携ログイン情報",
+    "identityIssuer": "認証プロバイダー",
+    "reason": "停止理由",
+    "reasonAbuse": "サービスの不正利用",
+    "reasonOther": "その他",
+    "reasonRequest": "ユーザーからの依頼",
+    "role": {
+      "admin": "管理者",
+      "user": "ユーザー"
+    },
+    "search": {
+      "placeholder": "名前またはメールを検索"
+    },
+    "selfActionNote": "現在ログイン中の管理者にはこの操作を適用できません。",
+    "state": {
+      "active": "有効",
+      "suspended": "停止中"
+    },
+    "unnamed": "名前なし"
+  }
+}

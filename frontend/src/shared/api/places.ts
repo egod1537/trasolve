@@ -10,7 +10,11 @@ import {
   type PlaceDetails,
   type PlaceDetailsRequest,
 } from '@trasolve/shared';
+import { throwIfExternalApiDisabled } from '@/shared/api/externalApiDisabled';
 import { getLanguage, L } from '@/shared/i18n';
+import { createRequestCoalescer } from './inflightRequests';
+
+const placeDetailsRequests = createRequestCoalescer<PlaceDetails>();
 
 type SearchOptions = Omit<PlaceAutocompleteRequest, 'input'> & {
   signal?: AbortSignal;
@@ -31,6 +35,7 @@ async function requestPlaces(
   });
   const body: unknown = await response.json();
   if (!response.ok) {
+    throwIfExternalApiDisabled(body);
     throw new Error(
       L('errors:places.error.placeLookupFailedHttp', {
         status: response.status,
@@ -73,9 +78,20 @@ export async function getPlace(
 ): Promise<PlaceDetails> {
   const request = placeDetailsRequestSchema.parse({
     placeId,
-    ...options,
     ...getGoogleMapsLocale(getLanguage()),
+    ...options,
   });
+  return placeDetailsRequests(
+    JSON.stringify(request),
+    (sharedSignal) => fetchPlaceDetails(request, sharedSignal),
+    signal,
+  );
+}
+
+async function fetchPlaceDetails(
+  request: PlaceDetailsRequest,
+  signal: AbortSignal,
+): Promise<PlaceDetails> {
   const query = new URLSearchParams();
   if (request.languageCode) {
     query.set('languageCode', request.languageCode);

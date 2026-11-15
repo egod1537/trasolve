@@ -5,7 +5,14 @@ import {
   type ChatRequest,
   type ChatResponse,
 } from '@trasolve/shared';
+import { throwIfExternalApiDisabled } from '@/shared/api/externalApiDisabled';
 import { L } from '@/shared/i18n';
+import {
+  billingHeaders,
+  notifyBillingChanged,
+  withBillingMode,
+} from '@/shared/api/billingContext';
+import { readBillingError } from '@/shared/api/billingErrors';
 
 export async function sendChat(
   request: ChatRequest,
@@ -15,12 +22,13 @@ export async function sendChat(
   const timeout = AbortSignal.timeout(130000);
   let response: Response;
   try {
-    response = await fetch(API_ROUTES.chat, {
+    response = await fetch(withBillingMode(API_ROUTES.chat), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...billingHeaders() },
       body: JSON.stringify(payload),
       signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
     });
+    notifyBillingChanged();
   } catch (cause) {
     if (signal?.aborted) {
       throw cause;
@@ -47,7 +55,11 @@ export async function sendChat(
     body = null;
   }
   if (!response.ok) {
-    throw new Error(L('errors:chat.error.answerCouldNotBeRetrievedTry'));
+    throwIfExternalApiDisabled(body);
+    throw new Error(
+      readBillingError(body) ??
+        L('errors:chat.error.answerCouldNotBeRetrievedTry'),
+    );
   }
   const parsed = chatResponseSchema.safeParse(body);
   if (!parsed.success) {

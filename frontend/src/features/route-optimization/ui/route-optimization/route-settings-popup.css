@@ -1,0 +1,205 @@
+.route-settings-popup {
+  width: min(520px, 100%);
+}
+
+.route-settings-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: var(--space-4) var(--panel-padding);
+  border-bottom: 1px solid var(--panel-divider);
+  background: var(--panel-header-bg);
+}
+
+.route-settings-popup-header > h2 {
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  font-size: var(--panel-title-size);
+  font-weight: var(--panel-title-weight);
+  letter-spacing: -0.025em;
+  line-height: 1.35;
+}
+
+.route-settings-popup-header-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+}
+
+.route-settings-popup-header-actions .token-remaining-gauge {
+  width: clamp(72px, 16vw, 140px);
+}
+
+.route-settings-popup-body-content {
+  --scroll-content-display: grid;
+  gap: var(--space-5);
+  padding: var(--panel-padding);
+}
+
+.route-settings-section {
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  border: 0;
+}
+
+.route-settings-section > legend,
+.route-settings-field > span {
+  display: block;
+  margin-bottom: 10px;
+  font-size: var(--panel-body-size);
+  font-weight: 600;
+}
+
+.route-settings-field {
+  display: grid;
+}
+
+.route-settings-icon-options {
+  display: grid;
+  gap: 8px;
+}
+
+.route-settings-travel-options {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.route-settings-start-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.route-settings-icon-options > button {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 72px;
+  padding: 10px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.4;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast),
+    border-color var(--motion-fast),
+    color var(--motion-fast);
+}
+
+.route-settings-icon-options > button[aria-pressed='true'] {
+  border-color: var(--color-info-border);
+  background: var(--accent-soft);
+  color: var(--color-accent-foreground);
+}
+
+.route-settings-icon-options > button:disabled {
+  cursor: default;
+  opacity: var(--opacity-disabled);
+}
+
+.route-settings-icon-options > button:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+.route-settings-icon-options > button > svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route-settings-departure:has(input) {
+  margin-top: 10px;
+}
+
+.route-settings-departure {
+  display: flex;
+  gap: 12px;
+}
+
+.route-settings-departure > * {
+  width: 0;
+  min-width: 0;
+  flex: 1;
+}
+
+.route-settings-error,
+.route-review-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.route-settings-error > p {
+  margin: 0;
+}
+
+.route-settings-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: var(--space-4) var(--panel-padding);
+  border-top: 1px solid var(--panel-divider);
+}
+
+.route-settings-departure-options {
+  display: grid;
+  gap: 8px;
+}
+.route-settings-fixed-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+}
+.route-settings-fixed-option[data-selected='true'] {
+  border-color: var(--color-info-border);
+  background: var(--accent-soft);
+}
+.route-settings-fixed-option > button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  text-align: left;
+  cursor: pointer;
+}
+.route-settings-fixed-option > button > svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+.route-settings-fixed-option > .ui-field {
+  width: 128px;
+  min-width: 0;
+  flex: 0 1 128px;
+}
+.route-settings-fixed-option > .ui-field:disabled {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  opacity: 0.65;
+}

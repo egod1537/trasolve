@@ -3,6 +3,7 @@ import type { GoogleOAuthResult } from '@trasolve/shared';
 import { consumeGoogleOAuthResult, startGoogleOAuth } from '@/features/auth';
 import '@/pages/testbed/styles/testbed.css';
 import '@/pages/testbed/styles/google-oauth-test.css';
+import { getExternalApiDisabledMessage } from '@/shared/api/externalApiDisabled';
 import { useL, type Localize } from '@/shared/i18n';
 
 type OAuthErrorCode = Extract<GoogleOAuthResult, { status: 'error' }>['error'];
@@ -205,6 +206,19 @@ function OAuthResultView({ pageState }: { pageState: PageState }) {
         <p>
           <code>{result.error}</code>
         </p>
+      </section>
+    );
+  }
+
+  if (result.status === 'disabled') {
+    return (
+      <section className="google-oauth-test-result" data-status="disabled">
+        <h2>
+          {L(
+            'testbed:googleOAuthTestPage.oAuthResultView.title.oauthUnavailable',
+          )}
+        </h2>
+        <p>{getExternalApiDisabledMessage('google-oauth')}</p>
       </section>
     );
   }

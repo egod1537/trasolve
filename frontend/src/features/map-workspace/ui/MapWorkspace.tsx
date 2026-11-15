@@ -1,13 +1,16 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { MobileNavigationProvider } from '../model/MobileNavigation';
+import { CommandSession } from '../command-console/CommandSession';
+import { useTripData } from '@/features/map-workspace/hooks/useTrip';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useTutorial } from '@/features/onboarding';
+import { RouteComparisonSidebar } from '@/features/route-optimization';
+import { useRouteComparison } from '@/features/map-workspace/model/useRouteComparison';
 import { selectTripPlace, selectTripPolyline } from '@/entities/trip';
-import type { QueryRouteDuration } from '@/features/map-workspace/domain/routeDuration';
-import { tripToView } from '@/entities/trip';
+import type { QueryRouteDetails } from '@/features/map-workspace/domain/routeDetails';
+import { createTripViewMapper } from '@/entities/trip';
 import { useMapWorkspace } from '@/features/map-workspace/model/useMapWorkspace';
 import { useSelectedGooglePlace } from '@/features/place-editor';
-import {
-  useTripEditController,
-  useTripState,
-} from '@/features/map-workspace/hooks/useTrip';
+import { useTripEditController } from '@/features/map-workspace/hooks/useTrip';
 import { useTripHistoryShortcuts } from '@/features/map-workspace/hooks/useTripHistoryShortcuts';
 import { useTripHistoryState } from '@/features/map-workspace/hooks/useTripHistoryState';
 import { LayerPanel } from '@/features/map-workspace/components/layer-panel/LayerPanel';
@@ -22,13 +25,13 @@ import { useL } from '@/shared/i18n';
 type Props =
   | {
       mode: 'edit';
-      onQueryRouteDuration: QueryRouteDuration;
+      onQueryRouteDetails: QueryRouteDetails;
       onOpenTripPicker: () => void;
       debugMode: boolean;
     }
   | {
       mode: 'readonly';
-      onQueryRouteDuration?: never;
+      onQueryRouteDetails?: never;
       onOpenTripPicker?: never;
     };
 
@@ -36,35 +39,56 @@ export function MapWorkspace(props: Props) {
   return props.mode === 'readonly' ? (
     <ReadonlyMapWorkspace />
   ) : (
-    <EditableMapWorkspace
-      onQueryRouteDuration={props.onQueryRouteDuration}
-      onOpenTripPicker={props.onOpenTripPicker}
-      debugMode={props.debugMode}
-    />
+    <MobileNavigationProvider>
+      <EditableMapWorkspace
+        onQueryRouteDetails={props.onQueryRouteDetails}
+        onOpenTripPicker={props.onOpenTripPicker}
+      />
+    </MobileNavigationProvider>
   );
 }
 
 function EditableMapWorkspace({
-  onQueryRouteDuration,
+  onQueryRouteDetails,
   onOpenTripPicker,
-  debugMode,
 }: {
-  onQueryRouteDuration: QueryRouteDuration;
+  onQueryRouteDetails: QueryRouteDetails;
   onOpenTripPicker: () => void;
-  debugMode: boolean;
 }) {
   const L = useL();
-  const { trip, status, error } = useTripState();
+  const trip = useTripData();
+  const tutorial = useTutorial();
+  const tutorialDayCount = useRef(trip.days.length);
+  useEffect(() => {
+    if (
+      tutorial?.active &&
+      ['search', 'add-place'].includes(tutorial.progress.step) &&
+      !trip.days.some((day) => !day.hidden)
+    ) {
+      tutorial.step(1);
+    }
+    if (
+      tutorial?.active &&
+      tutorial.progress.step === 'days' &&
+      trip.days.length > tutorialDayCount.current
+    ) {
+      tutorial.completeStep('days');
+    }
+    tutorialDayCount.current = trip.days.length;
+  }, [tutorial, trip.days]);
   const controller = useTripEditController();
   const { canUndo, canRedo } = useTripHistoryState(controller);
-  useTripHistoryShortcuts(controller);
-  const ui = useMapWorkspace(trip);
+  const ui = useMapWorkspace(trip, controller);
+  const comparison = useRouteComparison(trip, controller, ui.selectDay);
+  useTripHistoryShortcuts(controller, comparison.view === null);
   const googlePlace = useSelectedGooglePlace();
   const sidebarRef = useRef<HTMLElement>(null);
+  const comparisonSidebarRef = useRef<HTMLElement>(null);
+  const tripToView = useMemo(() => createTripViewMapper(), []);
   const tripView = useMemo(
     () =>
       tripToView(trip, L('trip:tripMapping.tripToView.text.dateBeDetermined')),
-    [L, trip],
+    [L, trip, tripToView],
   );
   const selectedTripPlace = useMemo(
     () => selectTripPlace(trip, ui.selectedPlaceId),
@@ -91,71 +115,84 @@ function EditableMapWorkspace({
   );
 
   return (
-    <div className="trip-map-workspace">
-      <main className="trip-map-page">
-        <RenderProfiler id="map-layer-panel">
-          <LayerPanel
-            tripId={trip.id}
-            trip={tripView}
-            busy={mutationBusy}
-            saveStatus={status}
-            savedAt={trip.updatedAt}
-            mutationError={error}
-            debugMode={debugMode}
-            onQueryRouteDuration={onQueryRouteDuration}
-            sidebarRef={sidebarRef}
-            selectionRevision={ui.selectionRevision}
-            selectedPlaceId={ui.selectedPlaceId}
-            selectedPlaceIds={ui.selectedPlaceIds}
-            selectedPolylineId={ui.selectedPolylineId}
-            selectedPolylineIds={ui.selectedPolylineIds}
-            selectedDayId={ui.selectedDayId}
-            visibleDayIds={ui.visibleDayIds}
-            onFocusPlace={ui.focusPlace}
-            {...actions.layerPanel}
-          />
-        </RenderProfiler>
-        <RenderProfiler id="map-viewport">
-          <MapWorkspaceViewport
-            trip={trip}
-            selectionRevision={ui.selectionRevision}
-            focusTarget={ui.focusTarget}
-            selectedPlaceId={ui.selectedPlaceId}
-            selectedPolylineId={ui.selectedPolylineId}
-            selectedDayId={ui.selectedDayId}
-            visibleDayIds={ui.visibleDayIds}
-            sidebarRef={sidebarRef}
-            selectedGooglePlace={googlePlace.selection}
-            selectedTripPlace={selectedTripPlace}
-            selectedTripPolyline={selectedTripPolyline}
-            selectedPlaceIds={ui.selectedPlaceIds}
-            selectedPolylineIds={ui.selectedPolylineIds}
-            selectedItemCount={ui.selectedItemCount}
-            tripMutationBusy={mutationBusy}
-            tripMutationError={error}
-            canUndo={canUndo}
-            canRedo={canRedo}
-            onUndo={undo}
-            onRedo={redo}
-            onOpenTripPicker={onOpenTripPicker}
-            onFocusPlace={ui.focusPlace}
-            {...actions.mapViewport}
-          />
-        </RenderProfiler>
-      </main>
-    </div>
+    <CommandSession trip={trip} controller={controller} ui={ui}>
+      <div className="trip-map-workspace">
+        <main className="trip-map-page">
+          <div
+            hidden={comparison.view !== null}
+            inert={comparison.view !== null}
+          >
+            <RenderProfiler id="map-layer-panel">
+              <LayerPanel
+                tripId={trip.id}
+                trip={tripView}
+                busy={mutationBusy}
+                onQueryRouteDetails={onQueryRouteDetails}
+                sidebarRef={sidebarRef}
+                selectionRevision={ui.selectionRevision}
+                selectedPlaceId={ui.selectedPlaceId}
+                selectedPlaceIds={ui.selectedPlaceIds}
+                selectedPolylineId={ui.selectedPolylineId}
+                selectedPolylineIds={ui.selectedPolylineIds}
+                selectedDayId={ui.selectedDayId}
+                visibleDayIds={ui.visibleDayIds}
+                onToggleAllDayVisibility={ui.toggleAllDayVisibility}
+                onFocusPlace={ui.focusPlace}
+                {...actions.layerPanel}
+              />
+            </RenderProfiler>
+          </div>
+          {comparison.view && (
+            <RouteComparisonSidebar
+              comparison={comparison.view}
+              sidebarRef={comparisonSidebarRef}
+            />
+          )}
+          <RenderProfiler id="map-viewport">
+            <MapWorkspaceViewport
+              comparison={comparison.view}
+              onCompare={comparison.onCompare}
+              trip={trip}
+              selectionRevision={ui.selectionRevision}
+              focusTarget={ui.focusTarget}
+              selectedPlaceId={ui.selectedPlaceId}
+              selectedPolylineId={ui.selectedPolylineId}
+              selectedDayId={ui.selectedDayId}
+              visibleDayIds={ui.visibleDayIds}
+              sidebarRef={sidebarRef}
+              comparisonSidebarRef={comparisonSidebarRef}
+              selectedGooglePlace={googlePlace.selection}
+              selectedTripPlace={selectedTripPlace}
+              selectedTripPolyline={selectedTripPolyline}
+              selectedPlaceIds={ui.selectedPlaceIds}
+              selectedPolylineIds={ui.selectedPolylineIds}
+              selectedItemCount={ui.selectedItemCount}
+              tripMutationBusy={mutationBusy}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onUndo={undo}
+              onRedo={redo}
+              onOpenTripPicker={onOpenTripPicker}
+              onFocusPlace={ui.focusPlace}
+              {...actions.mapViewport}
+            />
+          </RenderProfiler>
+        </main>
+      </div>
+    </CommandSession>
   );
 }
 
 function ReadonlyMapWorkspace() {
   const L = useL();
-  const { trip } = useTripState();
+  const trip = useTripData();
   const ui = useMapWorkspace(trip);
   const sidebarRef = useRef<HTMLElement>(null);
+  const tripToView = useMemo(() => createTripViewMapper(), []);
   const tripView = useMemo(
     () =>
       tripToView(trip, L('trip:tripMapping.tripToView.text.dateBeDetermined')),
-    [L, trip],
+    [L, trip, tripToView],
   );
   const selectedTripPlace = useMemo(
     () => selectTripPlace(trip, ui.selectedPlaceId),
@@ -178,6 +215,8 @@ function ReadonlyMapWorkspace() {
         <RenderProfiler id="map-layer-panel-readonly">
           <ReadonlyLayerPanel
             trip={tripView}
+            visibleDayIds={ui.visibleDayIds}
+            onToggleAllDayVisibility={ui.toggleAllDayVisibility}
             sidebarRef={sidebarRef}
             selectionRevision={ui.selectionRevision}
             selectedPlaceId={ui.selectedPlaceId}

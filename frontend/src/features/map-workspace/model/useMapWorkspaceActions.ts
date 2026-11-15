@@ -3,7 +3,6 @@ import type {
   PlaceDetails,
   PlaceStyle,
   TripPolylineMode,
-  TripScheduleUpdate,
 } from '@trasolve/shared';
 import type { GeoPoint, MapClickEvent } from '@/shared/types/mapTypes';
 import type { TripEditController } from '@/features/map-workspace/controller/TripEditController';
@@ -27,6 +26,7 @@ export function useMapWorkspaceActions(
     close: closeGooglePlace,
     select: selectGooglePlace,
     show: showGooglePlace,
+    retry: retryGooglePlace,
   } = googlePlace;
   const {
     selectPlace,
@@ -140,6 +140,10 @@ export function useMapWorkspaceActions(
       void controller.moveDay(dayId, targetIndex),
     [controller],
   );
+  const removeDay = useCallback(
+    (dayId: string) => controller.removeDay(dayId),
+    [controller],
+  );
   const renameTrip = useCallback(
     (title: string) => void controller.renameTrip(title),
     [controller],
@@ -165,6 +169,11 @@ export function useMapWorkspaceActions(
   const renamePlace = useCallback(
     (placeId: string, name: string) =>
       controller.updatePlace(placeId, { name }),
+    [controller],
+  );
+  const updatePlaceOrderLock = useCallback(
+    (placeId: string, orderLocked: boolean) =>
+      void controller.updatePlace(placeId, { orderLocked }),
     [controller],
   );
   const updatePlaceStyle = useCallback(
@@ -200,11 +209,6 @@ export function useMapWorkspaceActions(
     (placeIds: readonly string[]) => controller.removePlaces(placeIds),
     [controller],
   );
-  const applyOptimizedSchedule = useCallback(
-    (dayId: string, schedule: TripScheduleUpdate) =>
-      controller.applyOptimizedSchedule(dayId, schedule),
-    [controller],
-  );
 
   return useMemo(
     () => ({
@@ -219,12 +223,14 @@ export function useMapWorkspaceActions(
         onToggleDayVisibility: toggleDayVisibility,
         onRenameTrip: renameTrip,
         onMoveDay: moveDay,
+        onRemoveDay: removeDay,
         onRenameDay: renameDay,
         onUpdateDayColor: updateDayColor,
         onMovePlace: movePlace,
         onShuffleDayPlaces: shuffleDayPlaces,
         onRenamePlace: renamePlace,
         onUpdatePlaceStyle: updatePlaceStyle,
+        onUpdatePlaceOrderLock: updatePlaceOrderLock,
         onUpdatePlaceVisitTimeRange: updateTripPlaceVisitTimeRange,
         onUpdatePlacePreferredDuration: updateTripPlacePreferredDuration,
         onUpdatePlaceMemo: updateTripPlaceMemo,
@@ -237,6 +243,7 @@ export function useMapWorkspaceActions(
         onMapClick: handleMapClick,
         onSelectSearchedGooglePlace: selectSearchedGooglePlace,
         onCloseGooglePlace: closeGooglePlace,
+        onRetryGooglePlace: retryGooglePlace,
         onAddGooglePlace: addGooglePlace,
         onCloseTripPlace: clearPlaceSelection,
         onUpdateTripPlaceVisitTimeRange: updateTripPlaceVisitTimeRange,
@@ -250,18 +257,18 @@ export function useMapWorkspaceActions(
         onUpdateSelectedPolylineModes: updateSelectedPolylineModes,
         onRemoveSelectedPlaces: removeSelectedPlaces,
         onClearSelection: clearMapSelection,
-        onApplyOptimizedSchedule: applyOptimizedSchedule,
       },
     }),
     [
       addLayer,
       addGooglePlace,
-      applyOptimizedSchedule,
       clearMapSelection,
       clearPlaceSelection,
       closeGooglePlace,
+      retryGooglePlace,
       handleMapClick,
       moveDay,
+      removeDay,
       movePlace,
       shuffleDayPlaces,
       removeTripPlace,
@@ -281,6 +288,7 @@ export function useMapWorkspaceActions(
       selectDay,
       toggleDayVisibility,
       updatePlaceStyle,
+      updatePlaceOrderLock,
       updateTripPlacePreferredDuration,
       updateTripPlaceVisitTimeRange,
       updateTripPlaceMemo,

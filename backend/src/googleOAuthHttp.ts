@@ -1,4 +1,4 @@
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { timingSafeEqual } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
   API_ROUTES,
@@ -6,18 +6,34 @@ import {
   type AuthMeResponse,
   type GoogleOAuthResult,
 } from '@trasolve/shared';
-import type { AuthenticationService } from './auth/authenticationService.js';
+import {
+  ConsentRequiredError,
+  type AuthenticationService,
+} from './auth/authenticationService.js';
+import type { ConsentHttpFlow } from './auth/consentHttpFlow.js';
+import { ExpiringStore } from './auth/expiringStore.js';
+import {
+  clearCookie,
+  createCookie,
+  sessionLifetimeMs,
+  usesSecureOAuthCookies,
+} from './auth/httpCookies.js';
+import { safeReturnTo } from './auth/safeReturnTo.js';
 import { readOpaqueCookie } from './auth/cookies.js';
 import type { CurrentUserResolver } from './auth/currentUserResolver.js';
 import { readSessionSecret, sessionCookieName } from './auth/sessionCookie.js';
 import type { SessionService } from './auth/sessionService.js';
 import { GoogleOAuthClient, GoogleOAuthError } from './googleOAuth.js';
+import { SsuSsoClient, ssuAuthorizationUrl, ssuCallbackUrl } from './ssuSso.js';
 import {
   ExternalApiPolicyError,
   loadExternalApiPolicy,
   type ExternalApiPolicy,
 } from './configuration/externalApiPolicy.js';
+import { resolveInstrumentedExternalApiMode } from './observability/externalApiUsage/externalApiUsage.js';
 
+const ssuTransactionCookieName = 'trasolve_ssu_sso_transaction';
+const ssuTransactionCookiePath = API_ROUTES.ssuSsoCallback;
 const transactionCookieName = 'trasolve_google_oauth_transaction';
 const resultCookieName = 'trasolve_google_oauth_result';
 const transactionCookiePath = API_ROUTES.googleOAuthCallback;
@@ -26,68 +42,13 @@ const sessionCookiePath = '/';
 const defaultReturnTo = '/';
 const entryLifetimeMs = 10 * 60 * 1_000;
 const cookieMaxAgeSeconds = entryLifetimeMs / 1_000;
-const sessionLifetimeMs = 30 * 24 * 60 * 60 * 1_000;
 const sessionCookieMaxAgeSeconds = sessionLifetimeMs / 1_000;
-const maximumEntries = 500;
 
 interface OAuthTransaction {
   state: string;
   codeVerifier: string;
   returnTo: string;
-}
-
-interface StoredEntry<T> {
-  expiresAt: number;
-  value: T;
-}
-
-class ExpiringStore<T> {
-  public create(value: T): string {
-    this.removeExpired();
-
-    while (this.entries.size >= maximumEntries) {
-      const oldestKey = this.entries.keys().next().value;
-      if (typeof oldestKey !== 'string') {
-        break;
-      }
-      this.entries.delete(oldestKey);
-    }
-
-    let id: string;
-    do {
-      id = randomBytes(32).toString('base64url');
-    } while (this.entries.has(id));
-
-    this.entries.set(id, {
-      expiresAt: Date.now() + entryLifetimeMs,
-      value,
-    });
-
-    return id;
-  }
-
-  public consume(id: string | undefined): T | undefined {
-    this.removeExpired();
-    if (!id) {
-      return undefined;
-    }
-
-    const entry = this.entries.get(id);
-    this.entries.delete(id);
-    return entry?.value;
-  }
-
-  private readonly entries = new Map<string, StoredEntry<T>>();
-
-  private removeExpired(): void {
-    const now = Date.now();
-
-    for (const [id, entry] of this.entries) {
-      if (entry.expiresAt <= now) {
-        this.entries.delete(id);
-      }
-    }
-  }
+  linkUserId?: string;
 }
 
 export class GoogleOAuthHttpFlow {
@@ -95,6 +56,7 @@ export class GoogleOAuthHttpFlow {
     private readonly authentication: AuthenticationService,
     private readonly sessions: SessionService,
     private readonly currentUser: CurrentUserResolver,
+    private readonly consent: ConsentHttpFlow,
     private readonly debugGuestUserId?: string,
     private readonly externalApiPolicy: ExternalApiPolicy = loadExternalApiPolicy(),
   ) {}
@@ -105,6 +67,14 @@ export class GoogleOAuthHttpFlow {
     requestUrl: URL,
   ): Promise<boolean> {
     const { pathname } = requestUrl;
+    const isSsuRoute =
+      pathname === API_ROUTES.ssuSsoStart ||
+      pathname === API_ROUTES.ssuSsoCallback ||
+      pathname.startsWith(`${API_ROUTES.ssuSsoCallback}/`);
+    if (isSsuRoute) {
+      await this.handleSsu(request, response, requestUrl);
+      return true;
+    }
     const isOAuthRoute =
       pathname === API_ROUTES.googleOAuthStart ||
       pathname === API_ROUTES.googleOAuthCallback ||
@@ -122,22 +92,35 @@ export class GoogleOAuthHttpFlow {
       return false;
     }
 
+    response.setHeader('Referrer-Policy', 'no-referrer');
     if (
       pathname === API_ROUTES.googleOAuthStart ||
       pathname === API_ROUTES.googleOAuthCallback
     ) {
       try {
-        this.externalApiPolicy.resolve('google-oauth', pathname);
+        resolveInstrumentedExternalApiMode(
+          this.externalApiPolicy,
+          'google-oauth',
+          pathname === API_ROUTES.googleOAuthStart
+            ? 'authorization-redirect'
+            : 'complete-authorization',
+          false,
+        );
       } catch (cause) {
         if (cause instanceof ExternalApiPolicyError) {
-          const body: ApiErrorResponse = {
-            error: {
-              code: cause.code,
-              message: cause.message,
-              service: cause.service,
-            },
-          };
-          sendJson(response, 503, body);
+          const secure = usesSecureOAuthCookies();
+          const returnTo =
+            pathname === API_ROUTES.googleOAuthStart
+              ? readSafeReturnTo(requestUrl)
+              : (this.transactions.consume(
+                  readOpaqueCookie(request, transactionCookieName),
+                )?.returnTo ?? defaultReturnTo);
+          this.redirectWithResult(
+            response,
+            { status: 'disabled' },
+            secure,
+            returnTo,
+          );
           return true;
         }
         throw cause;
@@ -178,7 +161,7 @@ export class GoogleOAuthHttpFlow {
     }
 
     if (pathname === API_ROUTES.googleOAuthStart) {
-      this.handleStart(response, requestUrl);
+      await this.handleStart(request, response, requestUrl);
     } else if (pathname === API_ROUTES.googleOAuthCallback) {
       await this.handleCallback(request, response, requestUrl);
     } else if (pathname === API_ROUTES.googleOAuthResult) {
@@ -192,10 +175,170 @@ export class GoogleOAuthHttpFlow {
 
   // OAuth transactions/results are short-lived, one-time handoff records, not
   // login sessions. TODO: move these to shared storage before multi-instance use.
+  private readonly ssuTransactions = new ExpiringStore<{
+    returnTo: string;
+    linkUserId?: string;
+  }>();
   private readonly transactions = new ExpiringStore<OAuthTransaction>();
   private readonly results = new ExpiringStore<GoogleOAuthResult>();
 
-  private handleStart(response: ServerResponse, requestUrl: URL): void {
+  private async handleSsu(
+    request: IncomingMessage,
+    response: ServerResponse,
+    requestUrl: URL,
+  ): Promise<void> {
+    response.setHeader('Cache-Control', 'no-store');
+    response.setHeader('Referrer-Policy', 'no-referrer');
+    if (request.method !== 'GET') {
+      response.setHeader('Allow', 'GET');
+      response.writeHead(405);
+      response.end();
+      return;
+    }
+    const secure = usesSecureOAuthCookies();
+    const isStart = requestUrl.pathname === API_ROUTES.ssuSsoStart;
+    const cookie = readOpaqueCookie(request, ssuTransactionCookieName);
+    const state = requestUrl.pathname.slice(
+      API_ROUTES.ssuSsoCallback.length + 1,
+    );
+    const transaction =
+      !isStart && cookie && securelyMatches(state, cookie)
+        ? this.ssuTransactions.consume(cookie)
+        : undefined;
+    const returnTo = isStart
+      ? readSafeReturnTo(requestUrl)
+      : (transaction?.returnTo ?? defaultReturnTo);
+    const finish = (result: GoogleOAuthResult, cookies: string[] = []) =>
+      this.redirectWithResult(
+        response,
+        { ...result, provider: 'ssu' },
+        secure,
+        returnTo,
+        [
+          clearCookie(
+            ssuTransactionCookieName,
+            ssuTransactionCookiePath,
+            secure,
+          ),
+          ...cookies,
+        ],
+      );
+    try {
+      if (!isStart && !transaction) {
+        finish({ status: 'error', error: 'invalid_callback' });
+        return;
+      }
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'ssu-sso',
+        isStart ? 'authorization-redirect' : 'complete-authorization',
+        false,
+      );
+      const callback = ssuCallbackUrl(process.env, request.headers.host);
+      if (!callback) {
+        finish({ status: 'unavailable' });
+        return;
+      }
+      if (isStart) {
+        if (
+          process.env.SSU_SSO_REDIRECT_URI &&
+          request.headers.host?.toLowerCase() !== callback.host
+        ) {
+          const canonicalStart = new URL(
+            requestUrl.pathname + requestUrl.search,
+            callback.origin,
+          );
+          response.setHeader('Location', canonicalStart.toString());
+          response.writeHead(302);
+          response.end();
+          return;
+        }
+        const linkUserId =
+          requestUrl.searchParams.get('intent') === 'link'
+            ? await this.currentUser.resolve(request)
+            : undefined;
+        if (requestUrl.searchParams.get('intent') === 'link' && !linkUserId) {
+          finish({ status: 'error', error: 'invalid_callback' });
+          return;
+        }
+        const state = this.ssuTransactions.create({ returnTo, linkUserId });
+        response.setHeader('Set-Cookie', [
+          createCookie(
+            ssuTransactionCookieName,
+            state,
+            ssuTransactionCookiePath,
+            secure,
+            cookieMaxAgeSeconds,
+          ),
+          this.consent.clearPendingCookie(),
+        ]);
+        response.setHeader('Location', ssuAuthorizationUrl(callback, state));
+        response.writeHead(302);
+        response.end();
+        return;
+      }
+      if (
+        transaction?.linkUserId &&
+        (await this.currentUser.resolve(request)) !== transaction.linkUserId
+      ) {
+        finish({ status: 'error', error: 'invalid_callback' });
+        return;
+      }
+      const tokens = requestUrl.searchParams.getAll('sToken');
+      const ids = requestUrl.searchParams.getAll('sIdno');
+      if (tokens.length !== 1 || ids.length !== 1) {
+        finish({ status: 'error', error: 'invalid_callback' });
+        return;
+      }
+      const profile = await new SsuSsoClient(
+        this.externalApiPolicy,
+      ).authenticate(tokens[0], ids[0]);
+      if (
+        transaction?.linkUserId &&
+        (await this.currentUser.resolve(request)) !== transaction.linkUserId
+      ) {
+        finish({ status: 'error', error: 'invalid_callback' });
+        return;
+      }
+      const user = await this.authentication.loginWithSsu(
+        profile,
+        transaction?.linkUserId,
+      );
+      const secret = await this.sessions.create(user.id, sessionLifetimeMs);
+      finish({ status: 'success', user }, [
+        createCookie(
+          sessionCookieName,
+          secret,
+          sessionCookiePath,
+          secure,
+          sessionCookieMaxAgeSeconds,
+        ),
+      ]);
+    } catch (cause) {
+      if (cause instanceof ConsentRequiredError) {
+        this.consent.redirectPending(response, cause.identity, returnTo, [
+          clearCookie(
+            ssuTransactionCookieName,
+            ssuTransactionCookiePath,
+            secure,
+          ),
+        ]);
+        return;
+      }
+      // Provider credentials and raw portal HTML must never leave this boundary.
+      finish(
+        cause instanceof ExternalApiPolicyError
+          ? { status: 'disabled' }
+          : { status: 'error', error: 'provider_error' },
+      );
+    }
+  }
+
+  private async handleStart(
+    request: IncomingMessage,
+    response: ServerResponse,
+    requestUrl: URL,
+  ): Promise<void> {
     const client = createGoogleOAuthClient(this.externalApiPolicy);
     const secure = usesSecureOAuthCookies();
     const returnTo = readSafeReturnTo(requestUrl);
@@ -210,12 +353,26 @@ export class GoogleOAuthHttpFlow {
       return;
     }
 
+    const linkUserId =
+      requestUrl.searchParams.get('intent') === 'link'
+        ? await this.currentUser.resolve(request)
+        : undefined;
+    if (requestUrl.searchParams.get('intent') === 'link' && !linkUserId) {
+      this.redirectWithResult(
+        response,
+        { status: 'error', error: 'invalid_callback' },
+        secure,
+        returnTo,
+      );
+      return;
+    }
     const { authorizationUrl, state, codeVerifier } =
       client.createAuthorizationRequest();
     const transactionId = this.transactions.create({
       state,
       codeVerifier,
       returnTo,
+      linkUserId,
     });
 
     response.setHeader('Cache-Control', 'no-store');
@@ -229,6 +386,7 @@ export class GoogleOAuthHttpFlow {
         cookieMaxAgeSeconds,
       ),
       clearCookie(resultCookieName, resultCookiePath, secure),
+      this.consent.clearPendingCookie(),
     ]);
     response.writeHead(302);
     response.end();
@@ -295,11 +453,38 @@ export class GoogleOAuthHttpFlow {
     }
 
     try {
+      if (
+        transaction.linkUserId &&
+        (await this.currentUser.resolve(request)) !== transaction.linkUserId
+      ) {
+        this.redirectWithResult(
+          response,
+          { status: 'error', error: 'invalid_callback' },
+          secure,
+          returnTo,
+        );
+        return;
+      }
       const googleProfile = await client.completeAuthorization(
         authorizationCode,
         transaction.codeVerifier,
       );
-      const user = await this.authentication.loginWithGoogle(googleProfile);
+      if (
+        transaction.linkUserId &&
+        (await this.currentUser.resolve(request)) !== transaction.linkUserId
+      ) {
+        this.redirectWithResult(
+          response,
+          { status: 'error', error: 'invalid_callback' },
+          secure,
+          returnTo,
+        );
+        return;
+      }
+      const user = await this.authentication.loginWithGoogle(
+        googleProfile,
+        transaction.linkUserId,
+      );
       const sessionSecret = await this.sessions.create(
         user.id,
         sessionLifetimeMs,
@@ -320,6 +505,12 @@ export class GoogleOAuthHttpFlow {
         ],
       );
     } catch (error) {
+      if (error instanceof ConsentRequiredError) {
+        this.consent.redirectPending(response, error.identity, returnTo, [
+          clearCookie(transactionCookieName, transactionCookiePath, secure),
+        ]);
+        return;
+      }
       this.redirectWithResult(response, mapOAuthError(error), secure, returnTo);
     }
   }
@@ -367,8 +558,7 @@ export class GoogleOAuthHttpFlow {
       user.id,
       sessionLifetimeMs,
     );
-    response.setHeader(
-      'Set-Cookie',
+    response.setHeader('Set-Cookie', [
       createCookie(
         sessionCookieName,
         sessionSecret,
@@ -376,7 +566,8 @@ export class GoogleOAuthHttpFlow {
         usesSecureOAuthCookies(),
         sessionCookieMaxAgeSeconds,
       ),
-    );
+      this.consent.clearPendingCookie(),
+    ]);
     const body: AuthMeResponse = { user };
     sendJson(response, 200, body);
   }
@@ -389,10 +580,10 @@ export class GoogleOAuthHttpFlow {
     const sessionSecret = readSessionSecret(request);
     await this.sessions.revoke(sessionSecret);
 
-    response.setHeader(
-      'Set-Cookie',
+    response.setHeader('Set-Cookie', [
       clearCookie(sessionCookieName, sessionCookiePath, secure),
-    );
+      this.consent.clearPendingCookie(),
+    ]);
     sendJson(response, 200, { success: true });
   }
 
@@ -409,7 +600,10 @@ export class GoogleOAuthHttpFlow {
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Location', location);
     response.setHeader('Set-Cookie', [
-      clearCookie(transactionCookieName, transactionCookiePath, secure),
+      this.consent.clearPendingCookie(),
+      ...(result.provider === 'ssu'
+        ? []
+        : [clearCookie(transactionCookieName, transactionCookiePath, secure)]),
       createCookie(
         resultCookieName,
         resultTicket,
@@ -441,16 +635,6 @@ function createGoogleOAuthClient(
   }
 }
 
-function usesSecureOAuthCookies(): boolean {
-  try {
-    return (
-      new URL(process.env.GOOGLE_OAUTH_REDIRECT_URI ?? '').protocol === 'https:'
-    );
-  } catch {
-    return false;
-  }
-}
-
 function securelyMatches(candidate: string | null, expected: string): boolean {
   if (!candidate) {
     return false;
@@ -470,51 +654,7 @@ function securelyMatches(candidate: string | null, expected: string): boolean {
  * use `returnTo` to bounce a completed login through an external site.
  */
 function readSafeReturnTo(requestUrl: URL): string {
-  const value = requestUrl.searchParams.get('returnTo');
-  if (
-    !value ||
-    !value.startsWith('/') ||
-    value.startsWith('//') ||
-    value.includes('\\') ||
-    /[\r\n]/.test(value)
-  ) {
-    return defaultReturnTo;
-  }
-
-  return value;
-}
-
-function createCookie(
-  name: string,
-  value: string,
-  path: string,
-  secure: boolean,
-  maxAgeSeconds: number,
-): string {
-  return [
-    `${name}=${value}`,
-    `Max-Age=${maxAgeSeconds}`,
-    `Path=${path}`,
-    'HttpOnly',
-    'SameSite=Lax',
-    secure ? 'Secure' : '',
-  ]
-    .filter(Boolean)
-    .join('; ');
-}
-
-function clearCookie(name: string, path: string, secure: boolean): string {
-  return [
-    `${name}=`,
-    'Max-Age=0',
-    'Expires=Thu, 01 Jan 1970 00:00:00 GMT',
-    `Path=${path}`,
-    'HttpOnly',
-    'SameSite=Lax',
-    secure ? 'Secure' : '',
-  ]
-    .filter(Boolean)
-    .join('; ');
+  return safeReturnTo(requestUrl.searchParams.get('returnTo'));
 }
 
 function mapOAuthError(error: unknown): GoogleOAuthResult {

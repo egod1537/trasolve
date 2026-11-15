@@ -1,0 +1,324 @@
+import type { TripPlace, TrouteErrorPayload } from '@trasolve/shared';
+import { useL } from '@/shared/i18n';
+import { LocationIcon } from '@/shared/ui/icons';
+
+type Props = {
+  error: TrouteErrorPayload | null;
+  places: readonly TripPlace[];
+};
+
+type Suggestion = NonNullable<TrouteErrorPayload['suggestions']>[number];
+
+export function RouteOptimizationFailureDetails({ error, places }: Props) {
+  const L = useL();
+
+  if (!error) {
+    return null;
+  }
+
+  const detail = error?.failure_detail;
+  const locationId = readString(detail, 'location_id');
+  const placeName = findPlaceName(places, locationId);
+  const fromPlaceName = findPlaceName(
+    places,
+    readString(detail, 'from_location_id'),
+  );
+  const toPlaceName = findPlaceName(
+    places,
+    readString(detail, 'to_location_id'),
+  );
+  const requestedServiceStart = readString(detail, 'requested_service_start');
+  const openTime = readString(detail, 'open_time');
+  const earliestServiceStart = readString(detail, 'earliest_service_start');
+  const arrivalTime = readString(detail, 'arrival_time');
+  const requiredDeparture = readString(detail, 'required_departure');
+  const closeTime = readString(detail, 'close_time');
+  const stayMinutes = readNumber(detail, 'stay_minutes');
+  const closingConflict = Boolean(
+    requiredDeparture && closeTime && requiredDeparture > closeTime,
+  );
+  const suggestions = error.suggestions ?? [];
+  const verified =
+    suggestions.length > 0 &&
+    suggestions.every((suggestion) => suggestion.feasibility_verified === true);
+  const hasFactValues = Boolean(
+    requestedServiceStart ||
+    earliestServiceStart ||
+    openTime ||
+    fromPlaceName ||
+    toPlaceName ||
+    arrivalTime ||
+    requiredDeparture ||
+    closeTime ||
+    stayMinutes !== null,
+  );
+  const resolution =
+    isScheduleFailure(error) || error.code === 'FIXED_VISIT_CONFLICT'
+      ? L(
+          'routeOptimization:routeOptimizationModal.getValidationResolution.text.checkLocationSBusinessHoursStay',
+        )
+      : L(
+          'routeOptimization:routeOptimizationProgressDialog.getMessage.text.youCanRetryRequestClosePop',
+        );
+
+  return (
+    <div className="route-optimization-failure-details">
+      {placeName ? (
+        <p className="route-optimization-failure-place">
+          <LocationIcon />
+          {placeName}
+        </p>
+      ) : null}
+      {hasFactValues ? (
+        <ul className="route-optimization-failure-facts">
+          {fromPlaceName ? (
+            <li>
+              <span>
+                {L('routeOptimization:routeComparisonMap.text.startingPoint')}
+              </span>
+              <strong>{fromPlaceName}</strong>
+            </li>
+          ) : null}
+          {toPlaceName ? (
+            <li>
+              <span>
+                {L('routeOptimization:routeComparisonMap.text.destination')}
+              </span>
+              <strong>{toPlaceName}</strong>
+            </li>
+          ) : null}
+          {requestedServiceStart ? (
+            <li>
+              <span>
+                {L(
+                  'routeOptimization:routeOptimizationApi.formatStartPolicy.text.designatedTime',
+                )}
+              </span>
+              <strong>{requestedServiceStart}</strong>
+            </li>
+          ) : null}
+          {earliestServiceStart ? (
+            <li>
+              <span>
+                {L(
+                  'routeOptimization:routeOptimizationApi.formatStartPolicy.text.asSoonAsPossible',
+                )}
+              </span>
+              <strong>{earliestServiceStart}</strong>
+            </li>
+          ) : null}
+          {openTime ? (
+            <li>
+              {L(
+                'routeOptimization:routeSchedulePreview.schedulePlace.text.message',
+                { time: openTime, departureTime: closeTime ?? openTime },
+              )}
+            </li>
+          ) : null}
+          {arrivalTime ? (
+            <li>
+              {L('routeOptimization:routeSchedulePreview.text.arrival', {
+                arrivalTime,
+              })}
+            </li>
+          ) : null}
+          {stayMinutes !== null ? (
+            <li>
+              {L('routeOptimization:routeSchedulePreview.text.minutesStay', {
+                stayMinutes,
+              })}
+            </li>
+          ) : null}
+          {requiredDeparture ? (
+            <li className={closingConflict ? 'is-conflict' : undefined}>
+              {L('routeOptimization:routeSchedulePreview.text.departure', {
+                departureTime: requiredDeparture,
+              })}
+            </li>
+          ) : null}
+          {closeTime ? (
+            <li className={closingConflict ? 'is-conflict' : undefined}>
+              <span>{L('place:placeOpeningHours.text.closed')}</span>
+              <strong>{closeTime}</strong>
+            </li>
+          ) : null}
+        </ul>
+      ) : null}
+      {verified && (
+        <p className="route-optimization-failure-resolution is-verified">
+          {L('routeOptimization:fastValidation.verifiedSuggestions')}
+        </p>
+      )}
+      {suggestions.length > 0 ? (
+        <ul
+          className="route-optimization-failure-suggestions"
+          aria-label={L(
+            'routeOptimization:routeOptimizationModal.getValidationResolution.text.checkLocationSBusinessHoursStay',
+          )}
+        >
+          {suggestions.map((suggestion, index) => (
+            <FailureSuggestion
+              key={`${suggestion.type}-${index}`}
+              suggestion={suggestion}
+              places={places}
+            />
+          ))}
+        </ul>
+      ) : null}
+      <p className="route-optimization-failure-resolution">{resolution}</p>
+    </div>
+  );
+}
+
+function isScheduleFailure(error: TrouteErrorPayload): boolean {
+  const failureType = readString(error.failure_detail, 'type');
+  return [error.code, failureType].some(
+    (code) =>
+      code === 'NO_FEASIBLE_ROUTE' ||
+      code === 'NO_FEASIBLE_SCHEDULE' ||
+      code === 'TIME_WINDOW_VIOLATION' ||
+      code === 'INVALID_TIME_WINDOW' ||
+      code === 'TIME_WINDOW_INVALID' ||
+      code === 'INVALID_SCHEDULE_WINDOW',
+  );
+}
+
+function FailureSuggestion({
+  suggestion,
+  places,
+}: {
+  suggestion: Suggestion;
+  places: readonly TripPlace[];
+}) {
+  const L = useL();
+  if (suggestion.type === 'START_EARLIER') {
+    const current = readString(suggestion, 'current_value');
+    const suggested =
+      readString(suggestion, 'suggested_value') ??
+      readString(suggestion, 'suggested_latest_start');
+    if (!suggested) {
+      return null;
+    }
+    return (
+      <li>
+        <span>
+          {L(
+            'routeOptimization:routeOptimizationModal.optimizationSettings.text.startTime',
+          )}
+        </span>
+        <div className="route-optimization-failure-change">
+          {current ? <del>{current}</del> : null}
+          {current && <ChangeArrow />}
+          <strong>{suggested}</strong>
+        </div>
+      </li>
+    );
+  }
+
+  if (suggestion.type === 'REDUCE_STAY_TIME') {
+    const locationId = readString(suggestion, 'location_id');
+    const placeName = findPlaceName(places, locationId);
+    const current =
+      readNumber(suggestion, 'current_minutes') ??
+      readNumber(suggestion, 'current_value');
+    const suggested =
+      readNumber(suggestion, 'suggested_max_minutes') ??
+      readNumber(suggestion, 'suggested_value');
+    if (suggested === null) {
+      return null;
+    }
+    return (
+      <li>
+        {placeName ? <span>{placeName}</span> : null}
+        <div className="route-optimization-failure-change">
+          {current !== null ? (
+            <del>
+              {L('routeOptimization:routeSchedulePreview.text.minutesStay', {
+                stayMinutes: current,
+              })}
+            </del>
+          ) : null}
+          {current !== null && <ChangeArrow />}
+          <strong>
+            {L('routeOptimization:routeSchedulePreview.text.minutesStay', {
+              stayMinutes: suggested,
+            })}
+          </strong>
+        </div>
+      </li>
+    );
+  }
+
+  if (suggestion.type === 'REMOVE_LOCATION') {
+    const locationId = readString(suggestion, 'location_id');
+    const placeName = findPlaceName(places, locationId);
+    if (!placeName) {
+      return null;
+    }
+    return (
+      <li>
+        <span>
+          {suggestion.feasibility_verified
+            ? L('routeOptimization:fastValidation.removePlace')
+            : L('common:action.delete')}
+        </span>
+        <strong>{placeName}</strong>
+      </li>
+    );
+  }
+
+  if (suggestion.type === 'RETRY_ROUTING') {
+    return (
+      <li>
+        <strong>{L('common:action.retry')}</strong>
+      </li>
+    );
+  }
+
+  return null;
+}
+
+function ChangeArrow() {
+  return (
+    <svg
+      className="route-optimization-failure-arrow"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14m-5-5 5 5-5 5" />
+    </svg>
+  );
+}
+
+function findPlaceName(
+  places: readonly TripPlace[],
+  locationId: string | null,
+): string | null {
+  if (!locationId) {
+    return null;
+  }
+  return places.find((place) => place.id === locationId)?.name ?? locationId;
+}
+
+function readString(
+  value: Record<string, unknown> | undefined,
+  key: string,
+): string | null {
+  const candidate = value?.[key];
+  return typeof candidate === 'string' && candidate ? candidate : null;
+}
+
+function readNumber(
+  value: Record<string, unknown> | undefined,
+  key: string,
+): number | null {
+  const candidate = value?.[key];
+  return typeof candidate === 'number' && Number.isFinite(candidate)
+    ? candidate
+    : null;
+}

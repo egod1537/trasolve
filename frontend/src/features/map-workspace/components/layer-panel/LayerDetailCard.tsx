@@ -1,3 +1,5 @@
+import { matchesLayoutMaxWidth } from '@/shared/config/mobileLayout';
+import { mobilePanelGeometry } from '@/shared/lib/mobilePanelGeometry';
 import {
   useId,
   useLayoutEffect,
@@ -65,6 +67,10 @@ export function useLayerDetailCardPlacement({
     const updatePosition = () => {
       positionFrame = 0;
       const hostRect = host.getBoundingClientRect();
+      if (matchesLayoutMaxWidth(760)) {
+        setStyle({ visibility: 'visible', ...mobilePanelGeometry(hostRect) });
+        return;
+      }
       const sidebarRect = sidebar.getBoundingClientRect();
       const anchorRect = anchor.getBoundingClientRect();
       const scrollRect = scrollContainer.getBoundingClientRect();

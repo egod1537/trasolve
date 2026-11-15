@@ -65,11 +65,12 @@ run_once() {
     deployed="$(read_state "$unit_dir" commit 2>/dev/null || true)"
     status="$(read_state "$unit_dir" status 2>/dev/null || true)"
     if [[ "$deployed" == "$sha" && "$status" == success ]]; then
-      if deployment_containers_healthy "$slug" "$sha"; then
+      if deployment_containers_healthy "$slug" "$sha" \
+        && backend_oauth_redirect_matches "$slug" "$hostname"; then
         continue
       fi
       LOG_BRANCH="$branch"
-      log "event=health-check scope=containers result=failed action=recover"
+      log "event=health-check scope=deployment result=failed action=recover"
     fi
 
     attempted="$(read_state "$unit_dir" auto-attempted-commit 2>/dev/null || true)"

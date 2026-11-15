@@ -86,9 +86,9 @@ export function Header({
             href="#top"
             aria-label={L('common:header.ariaLabel.trasolveHome')}
           >
-            <svg className="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
-              <path d="M8 12.5 20 5l12 7.5v15L20 35 8 27.5z" />
-              <path d="m13.5 21 4 4 9-10" />
+            <svg className="brand-mark" viewBox="0 0 48 40" aria-hidden="true">
+              <path d="M10 28c8-15 18 8 27-14" />
+              <path d="M10 19a6 6 0 0 0-6 6c0 4 6 10 6 10s6-6 6-10a6 6 0 0 0-6-6ZM37 3a6 6 0 0 0-6 6c0 4 6 10 6 10s6-6 6-10a6 6 0 0 0-6-6Z" />
             </svg>
             <span>{NL('Trasolve')}</span>
           </a>

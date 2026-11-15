@@ -1,0 +1,113 @@
+.route-settings-wallet {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.route-settings-popup-header-actions .token-remaining-gauge {
+  width: auto;
+}
+.route-settings-dialog .route-settings-popup-body[hidden],
+.route-settings-dialog .route-settings-validation[hidden] {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .ui-dialog.route-settings-dialog {
+    overflow: hidden;
+  }
+  .route-settings-dialog .route-settings-popup-header {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 12px;
+  }
+  .route-settings-dialog .route-settings-popup-header h2 {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .route-settings-popup-header-actions {
+    display: contents;
+  }
+  .route-settings-popup-header-actions > .ui-icon-button {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .route-settings-wallet {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-end;
+    width: 100%;
+    gap: 8px;
+  }
+  .route-settings-wallet .token-remaining-gauge {
+    flex: 0 1 auto;
+    margin: 0;
+  }
+  .route-settings-mobile-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex: none;
+    order: 1;
+    gap: 4px;
+    margin: 0 12px;
+    padding: 4px;
+    border-radius: 12px;
+    background: var(--bg-subtle);
+  }
+  .route-settings-mobile-tabs button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 8px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .route-settings-mobile-tabs [aria-selected='true'] {
+    border-color: var(--color-info-border);
+    background: var(--color-accent-soft);
+    color: var(--color-accent-foreground);
+    font-weight: 700;
+  }
+  .route-settings-mobile-tabs button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  .route-settings-tab-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--danger);
+  }
+  .route-settings-dialog .route-settings-popup-body {
+    flex: 1;
+    order: 2;
+    min-height: 0;
+  }
+  .route-settings-dialog .route-settings-validation {
+    flex: 1;
+    order: 2;
+    contain: none;
+    min-height: 0;
+    margin: 0 12px;
+  }
+  .route-settings-dialog .route-settings-validation-content {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+  .route-settings-dialog .route-settings-popup-actions {
+    position: static;
+    flex: none;
+    order: 3;
+    margin-top: 0;
+  }
+}

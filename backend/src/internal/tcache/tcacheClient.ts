@@ -3,6 +3,11 @@ import {
   loadExternalApiPolicy,
   type ExternalApiPolicy,
 } from '../../configuration/externalApiPolicy.js';
+import {
+  assertInstrumentedNetworkAllowed,
+  instrumentExternalApiFetch,
+  resolveInstrumentedExternalApiMode,
+} from '../../observability/externalApiUsage/externalApiUsage.js';
 
 const HEALTH_TIMEOUT_MS = 5_000;
 const REQUEST_TIMEOUT_MS = 10_000;
@@ -122,7 +127,13 @@ export class TcacheClient {
     jobId: string,
     options: OpenTcacheEventStreamOptions,
   ): Promise<Response> {
-    if (this.externalApiPolicy.resolve('tcache', 'job-events') === 'mock') {
+    if (
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'tcache',
+        'job-events',
+      ) === 'mock'
+    ) {
       const body = [
         'id: mock-1',
         'event: completed',
@@ -142,13 +153,20 @@ export class TcacheClient {
 
     let response: Response;
     try {
-      this.externalApiPolicy.assertNetworkAllowed('tcache', 'job-events');
-      response = await fetch(
-        new URL(`${this.jobPath(jobId)}/events`, this.baseUrl),
-        {
-          headers,
-          signal: options.signal,
-        },
+      assertInstrumentedNetworkAllowed(
+        this.externalApiPolicy,
+        'tcache',
+        'job-events',
+      );
+      response = await instrumentExternalApiFetch(
+        'tcache',
+        'job-events',
+        () =>
+          fetch(new URL(`${this.jobPath(jobId)}/events`, this.baseUrl), {
+            headers,
+            signal: options.signal,
+          }),
+        'gateway',
       );
     } catch {
       if (options.signal.aborted) {
@@ -191,7 +209,13 @@ export class TcacheClient {
     callerSignal?: AbortSignal,
   ): Promise<TcacheUpstreamResponse> {
     const operation = this.operationName(path, init.method);
-    if (this.externalApiPolicy.resolve('tcache', operation) === 'mock') {
+    if (
+      resolveInstrumentedExternalApiMode(
+        this.externalApiPolicy,
+        'tcache',
+        operation,
+      ) === 'mock'
+    ) {
       return this.mockResponse(path, init);
     }
     const timeoutSignal = AbortSignal.timeout(timeoutMs);
@@ -199,11 +223,21 @@ export class TcacheClient {
       ? AbortSignal.any([callerSignal, timeoutSignal])
       : timeoutSignal;
     try {
-      this.externalApiPolicy.assertNetworkAllowed('tcache', operation);
-      const response = await fetch(new URL(path, this.baseUrl), {
-        ...init,
-        signal,
-      });
+      assertInstrumentedNetworkAllowed(
+        this.externalApiPolicy,
+        'tcache',
+        operation,
+      );
+      const response = await instrumentExternalApiFetch(
+        'tcache',
+        operation,
+        () =>
+          fetch(new URL(path, this.baseUrl), {
+            ...init,
+            signal,
+          }),
+        'gateway',
+      );
       if (!response.ok) {
         throw await this.upstreamHttpError(response);
       }
@@ -315,7 +349,37 @@ export class TcacheClient {
         return this.mockJson(200, {
           jobId,
           status: 'completed',
-          result: { fixture: 'trasolve-external-api-mock-v1' },
+          result: {
+            provider: 'mock',
+            routes: [
+              {
+                description: 'trasolve-external-api-mock-v1',
+                distanceMeters: 1_000,
+                durationSeconds: 600,
+                encodedPolyline: '',
+                path: [
+                  { lat: 37.5665, lng: 126.978 },
+                  { lat: 37.554, lng: 126.9708 },
+                ],
+                bounds: {
+                  north: 37.5665,
+                  south: 37.554,
+                  east: 126.978,
+                  west: 126.9708,
+                },
+                legs: [
+                  {
+                    distanceMeters: 1_000,
+                    durationSeconds: 600,
+                    startLocation: { lat: 37.5665, lng: 126.978 },
+                    endLocation: { lat: 37.554, lng: 126.9708 },
+                    steps: [],
+                  },
+                ],
+                warnings: [],
+              },
+            ],
+          },
         });
       }
       if (match[2] === 'cancel') {
@@ -323,7 +387,8 @@ export class TcacheClient {
       }
       return this.mockJson(200, { jobId, status: 'completed' });
     }
-    this.externalApiPolicy.assertNetworkAllowed(
+    assertInstrumentedNetworkAllowed(
+      this.externalApiPolicy,
       'tcache',
       'unclassified-request',
     );

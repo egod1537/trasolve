@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { ChatRequest, ChatResponse } from '@trasolve/shared';
-import type { ChatProvider } from '../chatProvider.js';
+import type { ChatProvider, ChatStreamOptions } from '../chatProvider.js';
 import { OpenWebUIClient, OpenWebUIClientError } from '../openWebUIClient.js';
 
 export class OpenWebUIChatProvider implements ChatProvider {
@@ -9,8 +9,12 @@ export class OpenWebUIChatProvider implements ChatProvider {
     this.defaultModel = defaultModel.trim();
   }
 
-  public async chat(request: ChatRequest): Promise<ChatResponse> {
+  public async chat(
+    request: ChatRequest,
+    signal?: AbortSignal,
+  ): Promise<ChatResponse> {
     const model = request.model ?? this.defaultModel;
+    const webSearch = request.webSearch ?? model === this.defaultModel;
     const requestId = randomUUID();
     const startedAt = performance.now();
     if (!model) {
@@ -26,15 +30,24 @@ export class OpenWebUIChatProvider implements ChatProvider {
         result: 'error',
         errorKind: error.kind,
         upstreamStatus: error.upstreamStatus ?? null,
+        upstreamCode: error.upstream?.code ?? null,
+        upstreamType: error.upstream?.type ?? null,
+        upstreamRequestId: error.upstream?.requestId ?? null,
+        retryAfterMs: error.upstream?.retryAfterMs ?? null,
         localAbortSignalTimeout: false,
       });
       throw error;
     }
     try {
-      const result = await this.client.chat({
-        model,
-        messages: request.messages,
-      });
+      const result = await this.client.chat(
+        {
+          model,
+          messages: request.messages,
+          webSearch,
+          maxOutputTokens: request.maxOutputTokens,
+        },
+        signal,
+      );
       this.logRequest({
         requestId,
         requestedModel: model,
@@ -43,9 +56,17 @@ export class OpenWebUIChatProvider implements ChatProvider {
         result: 'success',
         errorKind: null,
         upstreamStatus: null,
+        upstreamCode: null,
+        upstreamType: null,
+        upstreamRequestId: null,
+        retryAfterMs: null,
         localAbortSignalTimeout: false,
       });
-      return { message: result.message };
+      return {
+        model: result.model,
+        message: result.message,
+        ...(result.webImages ? { webImages: result.webImages } : {}),
+      };
     } catch (cause) {
       const error = cause instanceof OpenWebUIClientError ? cause : undefined;
       this.logRequest({
@@ -56,10 +77,37 @@ export class OpenWebUIChatProvider implements ChatProvider {
         result: 'error',
         errorKind: error?.kind ?? 'unexpected',
         upstreamStatus: error?.upstreamStatus ?? null,
+        upstreamCode: error?.upstream?.code ?? null,
+        upstreamType: error?.upstream?.type ?? null,
+        upstreamRequestId: error?.upstream?.requestId ?? null,
+        retryAfterMs: error?.upstream?.retryAfterMs ?? null,
         localAbortSignalTimeout: error?.kind === 'timeout',
       });
       throw cause;
     }
+  }
+
+  public async stream(
+    request: ChatRequest,
+    options: ChatStreamOptions,
+  ): Promise<ChatResponse> {
+    const model = request.model ?? this.defaultModel;
+    const webSearch = request.webSearch ?? model === this.defaultModel;
+    if (!model) {
+      throw new OpenWebUIClientError(
+        'configuration',
+        'The OpenWebUI chat model is not configured.',
+      );
+    }
+    return this.client.stream(
+      {
+        model,
+        messages: request.messages,
+        webSearch,
+        maxOutputTokens: request.maxOutputTokens,
+      },
+      options,
+    );
   }
 
   private logRequest(fields: {
@@ -70,6 +118,10 @@ export class OpenWebUIChatProvider implements ChatProvider {
     result: 'success' | 'error';
     errorKind: string | null;
     upstreamStatus: number | null;
+    upstreamCode: string | null;
+    upstreamType: string | null;
+    upstreamRequestId: string | null;
+    retryAfterMs: number | null;
     localAbortSignalTimeout: boolean;
   }): void {
     console.info(JSON.stringify({ event: 'openwebui_chat', ...fields }));

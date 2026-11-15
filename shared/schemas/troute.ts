@@ -94,6 +94,7 @@ const trouteRecoverySuggestionSchema = z
     type: nonEmptyStringSchema,
     reason: humanMessageSchema,
     confidence: nonEmptyStringSchema.optional(),
+    feasibility_verified: z.boolean().optional(),
   })
   .catchall(z.unknown());
 
@@ -127,6 +128,7 @@ export const trouteLocationSchema = z.strictObject({
   close_time: timeOfDaySchema,
   stay_minutes: z.number().int().min(0).max(MAX_U32),
   required: z.boolean().optional(),
+  order_locked: z.boolean().optional(),
   priority: z.number().int().min(1).max(100).optional(),
 });
 
@@ -155,7 +157,10 @@ export const trouteOptimizeRequestSchema = z
     visit_policy: trouteVisitPolicySchema.optional(),
     start_policy: trouteStartPolicySchema.optional(),
     start_time: timeOfDaySchema.optional(),
-    travel_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    travel_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
     time_zone: nonEmptyStringSchema.optional(),
     travel_mode: trouteTravelModeSchema.optional(),
     country_code: z.string().max(512).optional(),
@@ -214,13 +219,21 @@ export const trouteOptimizeRequestSchema = z
         });
       }
       for (const field of ['open_time', 'close_time'] as const) {
-        if (clockMinutes(location[field]) % 10 !== 0) {
+        const endOfDay = field === 'close_time' && location[field] === '23:59';
+        if (!endOfDay && clockMinutes(location[field]) % 10 !== 0) {
           context.addIssue({
             code: 'custom',
             message: 'Location times must use a 10-minute increment.',
             path: ['locations', index, field],
           });
         }
+      }
+      if (location.order_locked && location.required === false) {
+        context.addIssue({
+          code: 'custom',
+          message: 'An order-locked location cannot be optional.',
+          path: ['locations', index, 'required'],
+        });
       }
       if (location.stay_minutes % 10 !== 0) {
         context.addIssue({
@@ -353,6 +366,8 @@ export const trouteRouteStopSchema = z.strictObject({
 });
 
 export const trouteSolverObjectiveScoreSchema = z.strictObject({
+  visited_optional_count: z.number().int().nonnegative().optional(),
+  visited_optional_priority: z.number().int().nonnegative().optional(),
   latest_start: timeOfDaySchema,
   start_time: timeOfDaySchema.optional(),
   finish_time: timeOfDaySchema,
@@ -439,6 +454,9 @@ const trouteSolverCandidateMetadataSchema = z.strictObject({
   swap_move_count: optionalCountSchema,
   relocate_move_count: optionalCountSchema,
   two_opt_move_count: optionalCountSchema,
+  insert_optional_move_count: optionalCountSchema,
+  remove_optional_move_count: optionalCountSchema,
+  replace_optional_move_count: optionalCountSchema,
   accepted_worse_moves: optionalCountSchema,
   infeasible_candidates: optionalCountSchema,
   accepted_infeasible_moves: optionalCountSchema,
@@ -446,7 +464,15 @@ const trouteSolverCandidateMetadataSchema = z.strictObject({
   iteration_count: optionalCountSchema,
   accepted_moves: optionalCountSchema,
   improved_moves: optionalCountSchema,
-  seed: optionalCountSchema,
+  // troute emits diagnostic u64 seeds as JSON numbers. Large seeds are already
+  // rounded by JSON.parse; accept that existing wire format for display only.
+  // Never use this diagnostic value to reconstruct a solver run.
+  seed: z
+    .number()
+    .nonnegative()
+    .max(2 ** 64)
+    .refine(Number.isInteger)
+    .optional(),
   improved_global_best: z.boolean().optional(),
   job_queued_at_ms: optionalCountSchema,
   job_started_at_ms: optionalCountSchema,
@@ -519,6 +545,21 @@ export const trouteOptimizeResponseSchema = z.strictObject({
     .optional(),
 });
 
+export const TROUTE_MAX_PREVIEW_FRAMES = 10;
+
+const trouteOptimizationPreviewFrameSchema = z.strictObject({
+  revision: z.number().int().positive(),
+  result: trouteOptimizeResponseSchema,
+});
+
+const trouteOptimizationPreviewSchema =
+  trouteOptimizationPreviewFrameSchema.extend({
+    frames: z
+      .array(trouteOptimizationPreviewFrameSchema)
+      .max(TROUTE_MAX_PREVIEW_FRAMES)
+      .optional(),
+  });
+
 export const trouteJobStateSchema = z.strictObject({
   job_id: trouteJobIdSchema,
   status: trouteJobStatusSchema,
@@ -527,6 +568,7 @@ export const trouteJobStateSchema = z.strictObject({
   last_message: humanMessageSchema.nullable(),
   error: trouteErrorPayloadSchema.nullable(),
   result: trouteOptimizeResponseSchema.nullable(),
+  preview: trouteOptimizationPreviewSchema.optional(),
 });
 
 const trouteJobEventEnvelopeBaseSchema = z.strictObject({
@@ -593,6 +635,7 @@ export const trouteLegacyFlatJobEventSchema = z.strictObject({
   updated_at: z.number().int().nonnegative().optional(),
   completed_at: z.number().int().nonnegative().nullable().optional(),
   result: trouteOptimizeResponseSchema.nullable().optional(),
+  preview: trouteOptimizationPreviewSchema.optional(),
   error: trouteErrorPayloadSchema.nullable().optional(),
 });
 
@@ -626,6 +669,7 @@ export const trouteRemoteJobSchema = z
     updated_at: z.number().int().nonnegative(),
     completed_at: z.number().int().nonnegative().nullable(),
     result: trouteOptimizeResponseSchema.nullable(),
+    preview: trouteOptimizationPreviewSchema.optional(),
     error: trouteErrorPayloadSchema.nullable(),
   })
   .superRefine((job, context) => {

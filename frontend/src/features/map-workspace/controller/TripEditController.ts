@@ -1,85 +1,41 @@
+import { runTripSave, type PendingSave } from './tripAutosave';
 import {
-  tripSchema,
-  type PlaceStyle,
-  type Trip,
-  type TripInput,
-  type TripPolylineMode,
-  type TripScheduleUpdate,
-} from '@trasolve/shared';
+  executeTripCommandInput,
+  type CommandExecutionResult,
+} from './tripCommandExecution';
+export type { CommandExecutionResult } from './tripCommandExecution';
+import { TripEditCommands } from './TripEditCommands';
 import {
-  defineTripCommand,
-  type TripCommand,
-} from '@/features/map-workspace/command/TripCommand';
+  runPersistedTripBatch,
+  type PersistedBatchOutcome,
+} from './persistedTripBatch';
+import { createTripInput } from './tripPersistenceMapping';
+export type { PersistedBatchOutcome } from './persistedTripBatch';
+import { tripSchema, type TripInput } from '@trasolve/shared';
+import { type TripCommand } from '@/features/map-workspace/command/TripCommand';
 import {
   TripCommandDispatcher,
   type TripHistorySnapshot,
 } from '@/features/map-workspace/command/TripCommandDispatcher';
-import { parseTripCommandString } from '@/features/map-workspace/command/TripCommandParser';
-import type { RegisteredTripCommand } from '@/features/map-workspace/command/TripCommandRegistry';
-import {
-  createAddDayCommand,
-  createAddPlaceCommand,
-  createApplyOptimizedScheduleCommand,
-  createMoveDayCommand,
-  createMovePlaceCommand,
-  createRemovePlaceCommand,
-  createRemovePlacesCommand,
-  createReorderDayPlacesCommand,
-  createShuffleDayPlacesCommand,
-  createRenameDayCommand,
-  createRenameTripCommand,
-  createUpdateDayColorCommand,
-  createUpdateMemoCommand,
-  createUpdatePlaceCommand,
-  createUpdatePlaceStyleCommand,
-  createUpdatePreferredDurationCommand,
-  createUpdatePolylineModeCommand,
-  createUpdatePolylineModesCommand,
-  createUpdateVisitTimeRangeCommand,
-  type PlaceInput,
-} from '@/features/map-workspace/command/tripCommands';
-import {
-  TripRevisionConflictError,
-  type TripRepository,
-} from '@/entities/trip';
+
+import { type TripRepository } from '@/entities/trip';
 import type { TripStore } from '@/features/map-workspace/store/TripStore';
-import { L } from '@/shared/i18n';
 
 export type { PlaceInput } from '@/features/map-workspace/command/tripCommands';
-
-export type PersistedBatchOutcome =
-  | 'committed'
-  | 'rejected'
-  | 'busy'
-  | 'destroyed'
-  | 'aborted'
-  | 'conflict'
-  | 'not_committed'
-  | 'unknown_commit';
-
-export type CommandExecutionResult = {
-  success: boolean;
-  commandName: string | null;
-  error: string | null;
-};
 
 export type TripEditControllerOptions = {
   debouncedAutosave: boolean;
 };
 
-type PendingSave = {
-  controller: AbortController;
-  revision: number;
-};
-
 const AUTOSAVE_DELAY_MS = 700;
 
-export class TripEditController {
+export class TripEditController extends TripEditCommands {
   public constructor(
     private readonly store: TripStore,
     private readonly repository: TripRepository,
     options: TripEditControllerOptions,
   ) {
+    super();
     this.tripId = tripSchema.parse(store.getState().trip).id;
     this.debouncedAutosave = options.debouncedAutosave;
     this.commandDispatcher = new TripCommandDispatcher(store);
@@ -293,164 +249,18 @@ export class TripEditController {
     }
   }
 
-  public async executeTripCommandString(
+  public executeTripCommandString(
     input: string,
   ): Promise<CommandExecutionResult> {
-    if (this.destroyed) {
-      return {
-        success: false,
-        commandName: null,
-        error: L(
-          'map:tripEditController.executeTripCommandString.error.youCannotRunCommandsClosedTrip',
-        ),
-      };
-    }
-
-    const parsed = parseTripCommandString(input);
-    if (!parsed.success) {
-      return parsed;
-    }
-
-    const { commandName, operation } = parsed.parsed;
-    const success = await this.executeRegisteredCommand(operation);
-    return {
-      success,
-      commandName,
-      error: success ? null : this.getCommandExecutionError(commandName),
-    };
-  }
-
-  public renameTrip(title: string): Promise<boolean> {
-    const normalizedTitle = title.trim();
-    if (!normalizedTitle) {
-      return Promise.resolve(false);
-    }
-
-    return this.dispatch(createRenameTripCommand(normalizedTitle));
-  }
-
-  public addDay(title: string): Promise<boolean> {
-    return this.dispatch(createAddDayCommand(title));
-  }
-
-  public renameDay(dayId: string, title: string): Promise<boolean> {
-    const normalizedTitle = title.trim();
-    if (!normalizedTitle) {
-      return Promise.resolve(false);
-    }
-
-    return this.dispatch(createRenameDayCommand(dayId, normalizedTitle));
-  }
-
-  public updateDayColor(dayId: string, color: string): Promise<boolean> {
-    return this.dispatch(createUpdateDayColorCommand(dayId, color));
-  }
-
-  public addPlace(dayId: string, input: PlaceInput): Promise<boolean> {
-    return this.dispatch(createAddPlaceCommand(dayId, input));
-  }
-
-  public removePlace(placeId: string): Promise<boolean> {
-    return this.dispatch(createRemovePlaceCommand(placeId));
-  }
-
-  public removePlaces(placeIds: readonly string[]): Promise<boolean> {
-    const uniquePlaceIds = new Set(placeIds);
-    if (uniquePlaceIds.size === 0) {
-      return Promise.resolve(false);
-    }
-    return this.dispatch(createRemovePlacesCommand([...uniquePlaceIds]));
-  }
-
-  /** targetIndex is zero-based, matching the sidebar drag/drop contract. */
-  public moveDay(dayId: string, targetIndex: number): Promise<boolean> {
-    return this.dispatch(createMoveDayCommand(dayId, targetIndex));
-  }
-
-  /** targetIndex is zero-based in the target Day's Place order. */
-  public movePlace(
-    placeId: string,
-    targetDayId: string,
-    targetIndex: number,
-  ): Promise<boolean> {
-    return this.dispatch(
-      createMovePlaceCommand(placeId, targetDayId, targetIndex),
-    );
-  }
-
-  public reorderDayPlaces(
-    dayId: string,
-    placeIds: readonly string[],
-  ): Promise<boolean> {
-    return this.dispatch(createReorderDayPlacesCommand(dayId, placeIds));
-  }
-
-  public shuffleDayPlaces(dayId: string): Promise<boolean> {
-    return this.dispatch(createShuffleDayPlacesCommand(dayId));
-  }
-
-  public applyOptimizedSchedule(
-    dayId: string,
-    schedule: TripScheduleUpdate,
-  ): Promise<boolean> {
-    return this.dispatch(createApplyOptimizedScheduleCommand(dayId, schedule));
-  }
-
-  public updatePlace(
-    placeId: string,
-    patch: Partial<PlaceInput>,
-  ): Promise<boolean> {
-    return this.dispatch(createUpdatePlaceCommand(placeId, patch));
-  }
-
-  public updateMemo(placeId: string, memo: string): Promise<boolean> {
-    return this.dispatch(createUpdateMemoCommand(placeId, memo));
-  }
-
-  public updateVisitTimeRange(
-    placeId: string,
-    time: string,
-    visitDurationMinutes: number,
-  ): Promise<boolean> {
-    return this.dispatch(
-      createUpdateVisitTimeRangeCommand(placeId, time, visitDurationMinutes),
-    );
-  }
-
-  public updatePreferredDuration(
-    placeId: string,
-    preferredDurationMinutes: number,
-  ): Promise<boolean> {
-    return this.dispatch(
-      createUpdatePreferredDurationCommand(placeId, preferredDurationMinutes),
-    );
-  }
-
-  public updatePlaceStyle(
-    placeId: string,
-    placeStyle: PlaceStyle,
-  ): Promise<boolean> {
-    return this.dispatch(createUpdatePlaceStyleCommand(placeId, placeStyle));
-  }
-
-  public updatePolylineMode(
-    polylineId: string,
-    mode: TripPolylineMode,
-  ): Promise<boolean> {
-    return this.dispatch(createUpdatePolylineModeCommand(polylineId, mode));
-  }
-
-  public updatePolylineModes(
-    polylineIds: readonly string[],
-    mode: TripPolylineMode,
-  ): Promise<boolean> {
-    const uniquePolylineIds = new Set(polylineIds);
-    if (uniquePolylineIds.size === 0) {
-      return Promise.resolve(false);
-    }
-    return this.dispatch(
-      createUpdatePolylineModesCommand([...uniquePolylineIds], mode),
-    );
+    return executeTripCommandInput(input, {
+      destroyed: this.destroyed,
+      canUndo: () => this.canUndo,
+      canRedo: () => this.canRedo,
+      dispatch: (command) => this.dispatch(command),
+      undo: () => this.undo(),
+      redo: () => this.redo(),
+      getError: () => this.store.getState().error,
+    });
   }
 
   public destroy(): void {
@@ -505,205 +315,37 @@ export class TripEditController {
     }
   }
 
-  /**
-   * Compare Trips ignoring ids the server assigned to entities that did not
-   * exist before the batch (pending-* ids are replaced on save). Existing ids
-   * are kept verbatim; new ones are labelled by structural position so day,
-   * place, polyline and layer-item references stay consistent.
-   */
-  private semanticKey(trip: Trip, knownIds: ReadonlySet<string>): string {
-    const labels = new Map<string, string>();
-    trip.days.forEach((day, dayIndex) => {
-      if (!knownIds.has(day.id)) {
-        labels.set(day.id, `new:day:${dayIndex}`);
-      }
-      day.places.forEach((place, index) => {
-        if (!knownIds.has(place.id)) {
-          labels.set(place.id, `new:place:${dayIndex}:${index}`);
-        }
-      });
-      day.polylines.forEach((polyline, index) => {
-        if (!knownIds.has(polyline.id)) {
-          labels.set(polyline.id, `new:polyline:${dayIndex}:${index}`);
-        }
-      });
-    });
-    return JSON.stringify(this.createTripInput(trip)).replace(
-      /"((?:[^"\\]|\\.)*)"/g,
-      (token, value: string) =>
-        labels.has(value) ? JSON.stringify(labels.get(value)) : token,
-    );
-  }
-
-  private async runPersistedBatch(
+  private runPersistedBatch(
     commands: readonly TripCommand[],
     controller: AbortController,
   ): Promise<PersistedBatchOutcome> {
-    const before = this.store.getState();
-    let staged = before;
-    const dispatcher = new TripCommandDispatcher({
-      getState: () => staged,
-      setState: (state) => {
-        staged = state;
+    return runPersistedTripBatch(commands, controller, {
+      store: this.store,
+      repository: this.repository,
+      tripId: this.tripId,
+      dispatcher: this.commandDispatcher,
+      isDestroyed: () => this.destroyed,
+      clearAutosaveTimer: () => this.clearAutosaveTimer(),
+      publish: (canonical) => {
+        this.revision += 1;
+        this.lastSavedRevision = this.revision;
+        this.store.setState({ trip: canonical, status: 'ready', error: null });
       },
-      subscribe: () => () => {},
+      markUnknown: () => this.setUnknownCommit(true),
+      release: () => {
+        if (this.persistedController === controller) {
+          this.persistedController = null;
+          this.persistedCompletion = null;
+        }
+      },
     });
-    this.clearAutosaveTimer();
-    this.store.setState({ ...before, status: 'saving', error: null });
-    let saveAttempted = false;
-    try {
-      if (!(await dispatcher.executeBatch(commands))) {
-        // Nothing was sent to the server; restore the untouched snapshot.
-        if (!this.destroyed && !controller.signal.aborted) {
-          this.store.setState({ ...before, status: 'ready', error: null });
-        }
-        if (controller.signal.aborted) {
-          return this.destroyed ? 'destroyed' : 'aborted';
-        }
-        return 'rejected';
-      }
-      if (controller.signal.aborted) {
-        return this.destroyed ? 'destroyed' : 'aborted';
-      }
-      saveAttempted = true;
-      const saved = await this.repository.saveTrip(
-        this.tripId,
-        this.createTripInput(staged.trip),
-        controller.signal,
-      );
-      const canonical = await this.repository.getTrip(
-        this.tripId,
-        controller.signal,
-      );
-      if (this.destroyed || controller.signal.aborted) {
-        return this.destroyed ? 'destroyed' : 'aborted';
-      }
-      if (saved.id !== this.tripId || canonical.id !== this.tripId) {
-        throw new Error(
-          L(
-            'map:tripEditController.error.savedTripDifferentFromCurrentSession',
-          ),
-        );
-      }
-      if (
-        JSON.stringify(this.createTripInput(saved)) !==
-        JSON.stringify(this.createTripInput(canonical))
-      ) {
-        throw new TripRevisionConflictError(canonical);
-      }
-      const published = await this.commandDispatcher.execute(
-        defineTripCommand(() => canonical),
-      );
-      if (!published) {
-        throw new Error(
-          L('map:tripEditController.runSave.error.failedSaveTrip'),
-        );
-      }
-      this.revision += 1;
-      this.lastSavedRevision = this.revision;
-      this.store.setState({ trip: canonical, status: 'ready', error: null });
-      return 'committed';
-    } catch (cause) {
-      if (this.destroyed || controller.signal.aborted) {
-        return this.destroyed ? 'destroyed' : 'aborted';
-      }
-      if (!saveAttempted) {
-        this.store.setState({ ...before, status: 'ready', error: null });
-        return 'rejected';
-      }
-      // A failed response may follow a committed write. Decide only from the
-      // canonical Trip: never assume success or failure without reading it.
-      let canonical: Trip | null = null;
-      if (cause instanceof TripRevisionConflictError) {
-        canonical = cause.latestTrip;
-      } else {
-        try {
-          const reloaded = await this.repository.getTrip(
-            this.tripId,
-            controller.signal,
-          );
-          canonical = reloaded.id === this.tripId ? reloaded : null;
-        } catch {
-          canonical = null;
-        }
-      }
-      if (this.destroyed || controller.signal.aborted) {
-        return this.destroyed ? 'destroyed' : 'aborted';
-      }
-      this.commandDispatcher.resetHistory();
-      if (!canonical) {
-        // UNKNOWN_COMMIT: keep the last confirmed snapshot, block blind retry.
-        this.setUnknownCommit(true);
-        this.store.setState({
-          trip: before.trip,
-          status: 'error',
-          error: L('map:tripEditController.runSave.error.failedSaveTrip'),
-        });
-        return 'unknown_commit';
-      }
-      // Entities that existed before the batch keep their ids; entities the
-      // batch created are matched by position, so a committed add_day/add_place
-      // is not mistaken for an external change.
-      const knownIds = new Set<string>(
-        before.trip.days.flatMap((day) => [
-          day.id,
-          ...day.places.map((place) => place.id),
-          ...day.polylines.map((polyline) => polyline.id),
-        ]),
-      );
-      const canonicalKey = this.semanticKey(canonical, knownIds);
-      this.revision += 1;
-      this.lastSavedRevision = this.revision;
-      this.store.setState({ trip: canonical, status: 'ready', error: null });
-      // "committed" means the canonical Trip equals the intended result; it does
-      // not prove that this particular PUT produced it.
-      if (canonicalKey === this.semanticKey(staged.trip, knownIds)) {
-        return 'committed';
-      }
-      return canonicalKey === this.semanticKey(before.trip, knownIds)
-        ? 'not_committed'
-        : 'conflict';
-    } finally {
-      if (this.persistedController === controller) {
-        this.persistedController = null;
-        this.persistedCompletion = null;
-      }
-    }
   }
 
-  private dispatch(command: TripCommand): Promise<boolean> {
+  protected dispatch(command: TripCommand): Promise<boolean> {
     if (this.destroyed || this.persistedController || this.unknownCommit) {
       return Promise.resolve(false);
     }
     return this.completeLocalChange(this.commandDispatcher.execute(command));
-  }
-
-  private executeRegisteredCommand(
-    operation: RegisteredTripCommand,
-  ): Promise<boolean> {
-    if (operation.type === 'command') {
-      return this.dispatch(operation.command);
-    }
-    return operation.type === 'undo' ? this.undo() : this.redo();
-  }
-
-  private getCommandExecutionError(commandName: string): string {
-    if (commandName === 'undo' && !this.commandDispatcher.canUndo) {
-      return L(
-        'map:tripEditController.getCommandExecutionError.text.thereNoChangeHistoryRevert',
-      );
-    }
-    if (commandName === 'redo' && !this.commandDispatcher.canRedo) {
-      return L(
-        'map:tripEditController.getCommandExecutionError.text.thereNoChangeHistoryRedo',
-      );
-    }
-    return (
-      this.store.getState().error ??
-      L(
-        'map:tripEditController.getCommandExecutionError.text.commandExecutionFailed',
-      )
-    );
   }
 
   private completeLocalChange(execution: Promise<boolean>): Promise<boolean> {
@@ -725,20 +367,6 @@ export class TripEditController {
     }
     clearTimeout(this.autosaveTimer);
     this.autosaveTimer = null;
-  }
-
-  private createTripInput(trip: Trip): TripInput {
-    return {
-      title: trip.title,
-      startDate: trip.startDate,
-      endDate: trip.endDate,
-      days: trip.days.map((day) => ({
-        ...day,
-        places: day.places.map((place) => ({ ...place })),
-        polylines: day.polylines.map((polyline) => ({ ...polyline })),
-        layerItems: day.layerItems.map((layerItem) => ({ ...layerItem })),
-      })),
-    };
   }
 
   private queueAutosave(): void {
@@ -791,92 +419,42 @@ export class TripEditController {
     };
     this.pending = pending;
     this.store.setState({ ...current, status: 'saving', error: null });
-    const promise = this.runSave(pending, this.createTripInput(current.trip));
+    const promise = this.runSave(pending, createTripInput(current.trip));
     this.pendingPromise = promise;
     return promise;
   }
 
-  private async runSave(
-    pending: PendingSave,
-    input: TripInput,
-  ): Promise<boolean> {
-    try {
-      const saved = await this.repository.saveTrip(
-        this.tripId,
-        input,
-        pending.controller.signal,
-      );
-      if (
-        this.destroyed ||
-        this.pending !== pending ||
-        pending.controller.signal.aborted
-      ) {
-        return false;
-      }
-      if (saved.id !== this.tripId) {
-        throw new Error(
-          L(
-            'map:tripEditController.error.savedTripDifferentFromCurrentSession',
-          ),
-        );
-      }
-      this.lastSavedRevision = Math.max(
-        this.lastSavedRevision,
-        pending.revision,
-      );
-      const current = this.store.getState();
-      if (this.revision === pending.revision) {
-        this.store.setState({ trip: saved, status: 'ready', error: null });
-      } else {
-        this.store.setState({
-          trip: { ...current.trip, updatedAt: saved.updatedAt },
-          status: 'dirty',
-          error: null,
-        });
-      }
-      return true;
-    } catch (cause) {
-      if (
-        this.destroyed ||
-        this.pending !== pending ||
-        pending.controller.signal.aborted
-      ) {
-        return false;
-      }
-      if (cause instanceof TripRevisionConflictError) {
+  private runSave(pending: PendingSave, input: TripInput): Promise<boolean> {
+    return runTripSave(pending, input, {
+      repository: this.repository,
+      store: this.store,
+      tripId: this.tripId,
+      isCurrent: () =>
+        !this.destroyed &&
+        this.pending === pending &&
+        !pending.controller.signal.aborted,
+      getRevision: () => this.revision,
+      markSaved: (revision) => {
+        this.lastSavedRevision = Math.max(this.lastSavedRevision, revision);
+      },
+      stopFlushing: () => {
         this.flushAfterPending = false;
-        this.lastSavedRevision = this.revision;
-        this.store.setState({
-          trip: cause.latestTrip,
-          status: 'error',
-          error: cause.message,
-        });
-        this.commandDispatcher.resetHistory();
-        return false;
-      }
-      const current = this.store.getState();
-      this.store.setState({
-        ...current,
-        status: 'error',
-        error:
-          cause instanceof Error
-            ? cause.message
-            : L('map:tripEditController.runSave.error.failedSaveTrip'),
-      });
-      return false;
-    } finally {
-      if (this.pending === pending) {
-        this.pending = null;
-        this.pendingPromise = null;
-        const shouldFlush =
-          this.flushAfterPending &&
-          this.revision > this.lastSavedRevision &&
-          !this.destroyed;
-        this.flushAfterPending = false;
-        if (shouldFlush) {
-          void this.startSave();
+      },
+      resetHistory: () => this.commandDispatcher.resetHistory(),
+      release: () => {
+        if (this.pending === pending) {
+          this.pending = null;
+          this.pendingPromise = null;
+          const shouldFlush =
+            this.flushAfterPending &&
+            this.revision > this.lastSavedRevision &&
+            !this.destroyed;
+          this.flushAfterPending = false;
+          if (shouldFlush) {
+            void this.startSave();
+          }
         }
-      }
-    }
+      },
+    });
   }
 }

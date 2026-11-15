@@ -1,3 +1,5 @@
+import type { TripPlanDiagnosticSink } from './TripCommandPlanDiagnostics';
+import type { VerifiedDestination } from './TripCommandPlanPlaceMatch';
 import type {
   TripCommandPlanOperation,
   TripCommandPlanStepId,
@@ -47,6 +49,8 @@ export async function adaptTripCommandPlanOperation(
   operation: TripCommandPlanOperation,
   context: TripCommandPlanResolutionContext,
   signal?: AbortSignal,
+  destination?: VerifiedDestination,
+  onDiagnostic?: TripPlanDiagnosticSink,
 ): Promise<AdaptedTripCommandPlanOperation> {
   switch (operation.op) {
     case 'rename_trip':
@@ -94,6 +98,8 @@ export async function adaptTripCommandPlanOperation(
         operation.source,
         operation.stepId,
         signal,
+        destination,
+        onDiagnostic,
       );
       const input: PlaceInput = {
         ...createTripPlaceFromGooglePlace(details),
@@ -108,7 +114,10 @@ export async function adaptTripCommandPlanOperation(
       };
       const id = createPendingEntityId();
       const commands: TripCommand[] = [
-        createAddPlaceCommandWithPendingId(dayId, input, id),
+        // Missing AI schedule fields are unknown, not a noon/one-hour booking.
+        createAddPlaceCommandWithPendingId(dayId, input, id, {
+          scheduleDefaults: false,
+        }),
       ];
       if (operation.position) {
         commands.push(

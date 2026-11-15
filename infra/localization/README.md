@@ -76,6 +76,10 @@ frontend/src/shared/i18n/generated-local/
 `generated-local/` is ignored by Git. Do not import it as a production build
 dependency or commit its contents.
 
+During development, local resources override matching production keys recursively.
+Production keys missing from an older local snapshot remain available, so newly
+added UI strings do not appear as raw localization keys until the next local sync.
+
 Use production mode when updating the version-controlled resource snapshot:
 
 ```sh

@@ -32,3 +32,7 @@
   border-left: 1px solid var(--color-map-overlay-ring);
   transform: translateX(-50%) rotate(45deg);
 }
+
+.anchored-map-card:empty::after {
+  display: none;
+}

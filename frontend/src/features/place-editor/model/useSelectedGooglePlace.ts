@@ -54,6 +54,12 @@ export function useSelectedGooglePlace() {
     });
   }, []);
 
+  const retry = useCallback(() => {
+    if (selection?.status === 'error') {
+      select(selection.placeId, selection.clickedLocation);
+    }
+  }, [select, selection]);
+
   useEffect(
     () => () => {
       activeRequest.current?.abort();
@@ -63,7 +69,7 @@ export function useSelectedGooglePlace() {
   );
 
   return useMemo(
-    () => ({ selection, select, show, close }),
-    [close, select, selection, show],
+    () => ({ selection, select, show, close, retry }),
+    [close, retry, select, selection, show],
   );
 }

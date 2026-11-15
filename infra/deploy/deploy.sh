@@ -139,11 +139,12 @@ previous_status="$(read_state "$unit_dir" status 2>/dev/null || true)"
 log "event=commit-resolved commit=$commit"
 
 if [[ "$previous_commit" == "$commit" && "$previous_status" == success ]]; then
-  if deployment_containers_healthy "$slug" "$commit"; then
+  if deployment_containers_healthy "$slug" "$commit" \
+    && backend_oauth_redirect_matches "$slug" "$hostname"; then
     log "event=deployment state=unchanged commit=$commit"
     exit 0
   fi
-  log "event=deployment state=recovering commit=$commit reason=containers-unhealthy"
+  log "event=deployment state=recovering commit=$commit reason=container-or-config-drift"
 fi
 
 write_state "$unit_dir" target-commit "$commit"

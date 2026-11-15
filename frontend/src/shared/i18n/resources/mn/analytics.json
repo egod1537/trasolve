@@ -1,0 +1,160 @@
+{
+  "flow": {
+    "details": "Дэлгэрэнгүй",
+    "filters": "Графикийн шүүлтүүр",
+    "graph": "Хэрэглэгчийн урсгалын график",
+    "minimumCount": "Шилжилтийн доод тоо",
+    "mode": {
+      "domainEvent": "Домэйн эвент",
+      "mixed": "Дэлгэц + гол эвент",
+      "screen": "Дэлгэц"
+    },
+    "nodeMode": "Зангилааны горим",
+    "status": {
+      "noData": "Энэ хугацаанд урсгалын өгөгдөл алга."
+    }
+  },
+  "funnels": {
+    "funnel": {
+      "addPlace": "Газар нэмэх",
+      "routeOptimization": "Маршрут оновчлох",
+      "routeReoptimization": "Засварлах ба дахин оновчлох",
+      "tripEntry": "Trip үүсгэх эсвэл нэвтрэх",
+      "tripShare": "Trip хуваалцах"
+    },
+    "kpi": {
+      "averageCompletionTime": "Дуусгах дундаж хугацаа",
+      "completedSessions": "Дуусгасан сешн",
+      "largestDropOff": "Хамгийн их хасагдал",
+      "overallConversion": "Нийт хөрвөлт",
+      "startedSessions": "Эхэлсэн сешн"
+    },
+    "metric": {
+      "averageTime": "Дундаж хугацаа",
+      "dropOff": "Хасагдал",
+      "enteredSessions": "Нэвтэрсэн сешн",
+      "medianTime": "Медиан хугацаа",
+      "overallConversion": "Нийт хөрвөлт",
+      "previousConversion": "Өмнөх шатны хөрвөлт"
+    },
+    "selector": {
+      "label": "Шинжлэх шатлал"
+    },
+    "status": {
+      "noData": "Энэ хугацаанд шатлалын өгөгдөл алга."
+    },
+    "step": {
+      "addPlaceClicked": "Газар нэмэхийг батлах",
+      "initialResultViewed": "Эхний үр дүнг харах",
+      "landingAction": "Нэвтрэх эсвэл эхлэх",
+      "landingViewed": "Нүүр хуудсыг харах",
+      "mapWorkspaceViewed": "Газрын зургийн ажлын талбарт орох",
+      "optimizationApplied": "Оновчилсон маршрутыг хэрэглэх",
+      "optimizationCompleted": "Оновчлол дуусах",
+      "optimizationStarted": "Оновчлол эхлэх",
+      "placeAdded": "Газар нэмэгдсэн",
+      "placeSearchViewed": "Газар хайлтыг нээх",
+      "placeSelected": "Газар сонгох",
+      "reoptimizationCompleted": "Дахин оновчлол дуусах",
+      "reoptimizationStarted": "Дахин оновчлол эхлэх",
+      "resultViewed": "Үр дүнг харах",
+      "routeModified": "Маршрутыг засах",
+      "shareEnabled": "Хуваалцахыг идэвхжүүлэх",
+      "shareLinkCopied": "Хуваалцах холбоосыг хуулах",
+      "shareModalOpened": "Хуваалцах хэсгийг нээх",
+      "tripOpened": "Trip үүсгэх эсвэл сонгох",
+      "tripPickerViewed": "Trip сонголтыг нээх",
+      "updatedResultViewed": "Шинэчилсэн үр дүнг харах"
+    }
+  },
+  "metric": {
+    "averagePathLength": "Замын дундаж урт",
+    "backtrack": "Буцсан хөдөлгөөн",
+    "conversion": "Хөрвөлт",
+    "count": "Тоо",
+    "dropOff": "Хасагдал",
+    "events": "Эвент",
+    "notApplicable": "Хамаарахгүй",
+    "pathLength": "Замын урт",
+    "ratio": "Харьцаа",
+    "sessions": "Сешн",
+    "source": "Эхлэл",
+    "target": "Зорилтот",
+    "visits": "Зочлол"
+  },
+  "overview": {
+    "status": {
+      "noData": "Энэ хугацаанд аналитикийн өгөгдөл алга."
+    }
+  },
+  "page": {
+    "description": {
+      "userFlowAnalysis": "Хэрэглэгчийн урсгал ба хөрвөлтийг шинжилнэ."
+    },
+    "eyebrow": {
+      "internalTool": "Дотоод аналитик"
+    },
+    "navigation": {
+      "analyticsSections": "Аналитикийн хэсгүүд"
+    },
+    "tab": {
+      "flowGraph": "Урсгалын график",
+      "funnels": "Хөрвөлтийн шатлал",
+      "overview": "Тойм",
+      "sessions": "Сешн"
+    },
+    "title": {
+      "analytics": "Аналитик"
+    }
+  },
+  "period": {
+    "apply": "Хугацааг хэрэглэх",
+    "from": "Эхлэх",
+    "timezone": "Цагийн бүс",
+    "to": "Дуусах"
+  },
+  "routes": {
+    "loadingLabel": {
+      "analytics": "Аналитикийг ачаалж байна."
+    }
+  },
+  "sessions": {
+    "action": {
+      "loadMore": "Цааш үзэх"
+    },
+    "filters": "Сешний шүүлтүүр",
+    "identity": {
+      "anonymous": "Нэргүй",
+      "authenticated": "Нэвтэрсэн",
+      "mixed": "Нэргүй → нэвтэрсэн"
+    },
+    "metadata": {
+      "details": "Метадатагийн дэлгэрэнгүй"
+    },
+    "metric": {
+      "endedAt": "Сүүлийн цаг",
+      "eventCount": "Эвентийн тоо",
+      "eventType": "Эвентийн төрөл",
+      "metadata": "Метадата",
+      "screen": "Дэлгэц",
+      "sessionId": "Сешний ID",
+      "startedAt": "Эхэлсэн цаг",
+      "timestamp": "Цаг",
+      "user": "Хэрэглэгч"
+    },
+    "status": {
+      "loadingMore": "Нэмэлт өгөгдөл ачаалж байна.",
+      "noData": "Энэ хугацаанд сешн алга.",
+      "selectSession": "Цагийн шугам харахын тулд сешн сонгоно уу."
+    },
+    "timeline": "Эвентийн цагийн шугам",
+    "value": {
+      "noMetadata": "Метадата алга",
+      "noTarget": "Зорилтот утга алга"
+    }
+  },
+  "status": {
+    "loadError": "Аналитикийн өгөгдлийг ачаалж чадсангүй.",
+    "loading": "Аналитикийн өгөгдлийг ачаалж байна."
+  }
+}

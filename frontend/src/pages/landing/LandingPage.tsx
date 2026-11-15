@@ -1,3 +1,4 @@
+import { withMobileLayout } from '@/shared/config/mobileLayout';
 import { Component } from 'react';
 import {
   ANALYTICS_SCREENS,
@@ -8,9 +9,11 @@ import { checkApiHealth } from '@/shared/api/health';
 import { FeatureSection } from '@/pages/landing/components/FeatureSection';
 import { Header } from '@/pages/landing/components/Header';
 import { Hero } from '@/pages/landing/components/Hero';
+import { PlanningSection } from '@/pages/landing/components/PlanningSection';
 import { isDebugGuestMode, useCurrentUser } from '@/features/auth';
 import { NL, useL, type Localize } from '@/shared/i18n';
 import { trackEvent, useScreenView } from '@/shared/analytics';
+import { LegalLinks } from '@/shared/ui/LegalLinks';
 
 type ApiHealth = 'checking' | 'available' | 'unavailable';
 
@@ -52,7 +55,7 @@ export function LandingPage() {
     if (state.status === 'loading') {
       return;
     }
-    const mapPath = debugGuestMode ? '/map?debug=1' : '/map';
+    const mapPath = withMobileLayout(debugGuestMode ? '/map?debug=1' : '/map');
     if (state.status === 'signed-in') {
       trackLandingButton(ANALYTICS_TARGETS.landingEnterMap);
       window.location.assign(mapPath);
@@ -64,7 +67,7 @@ export function LandingPage() {
       return;
     }
     trackLandingButton(ANALYTICS_TARGETS.landingLogin);
-    void login('/map');
+    void login(mapPath);
   };
 
   const handleHeaderAction = (): void => {
@@ -87,7 +90,7 @@ export function LandingPage() {
       headerProfile={
         state.status === 'signed-in'
           ? {
-              displayName: state.user.name ?? state.user.email,
+              displayName: state.user.name ?? state.user.email ?? state.user.id,
               pictureUrl: state.user.pictureUrl,
             }
           : null
@@ -95,19 +98,17 @@ export function LandingPage() {
       headerActionLabel={
         state.status === 'signed-out'
           ? debugGuestMode
-            ? L('common:hero.text.gettingStarted')
-            : L('auth:mapUserControls.text.signGoogle')
+            ? L('common:landing.action.startTrip')
+            : L('common:landing.navigation.signIn')
           : L('common:header.text.goServices')
       }
       authLoading={state.status === 'loading'}
       heroPrimaryLabel={
         state.status === 'loading'
           ? L('auth:mapUserControls.tooltip.preparing')
-          : state.status === 'signed-out'
-            ? debugGuestMode
-              ? L('common:hero.text.gettingStarted')
-              : L('auth:mapUserControls.text.signGoogle')
-            : L('common:hero.text.gettingStarted')
+          : state.status === 'signed-out' && !debugGuestMode
+            ? L('auth:loginDialog.signIn')
+            : L('common:landing.action.planTrip')
       }
       heroPrimaryTarget={
         state.status === 'signed-in' || debugGuestMode
@@ -186,8 +187,10 @@ class LandingPageView extends Component<LandingPageProps, LandingPageState> {
             onPrimaryAction={onHeroPrimaryAction}
           />
           <FeatureSection />
+          <PlanningSection />
         </main>
         <footer className="site-footer">
+          <LegalLinks />
           <p>
             {NL('©')} {new Date().getFullYear()} {NL('Trasolve')}
           </p>

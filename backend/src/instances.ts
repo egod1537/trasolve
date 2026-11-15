@@ -2,7 +2,7 @@ import { loadBackendEnvironment } from './configuration/environment.js';
 import { loadExternalApiPolicy } from './configuration/externalApiPolicy.js';
 import { resolveBackendDataRoot } from './configuration/persistence.js';
 import { Places } from './google/maps/places.js';
-import { GoogleRoutesProvider } from './routes/providers/googleRoutesProvider.js';
+import { TcacheRoutesProvider } from './routes/providers/tcacheRoutesProvider.js';
 import { RouteHttpService } from './routes/routeHttpService.js';
 import { RouteService } from './routes/routeService.js';
 import { ChatService } from './ai/chatService.js';
@@ -30,6 +30,7 @@ import type { TripShareRepository } from './share/tripShareRepository.js';
 import { LocalFileTripShareRepository } from './trip-sharing/localFileTripShareRepository.js';
 import { LocalNdjsonAnalyticsEventRepository } from './analytics/localNdjsonAnalyticsEventRepository.js';
 import type { AnalyticsRepository } from './analytics/analyticsEventRepository.js';
+import { OPENWEBUI_OPTIONS } from './options.js';
 
 // Preserve direct module use while the normal bootstrap loads configuration
 // before running database migrations and importing these instances.
@@ -38,12 +39,6 @@ const externalApiPolicy = loadExternalApiPolicy();
 
 // Construct shared services and providers only here. Implementation modules must
 // not import this module, which would create a circular dependency.
-const routeProvider = new GoogleRoutesProvider(
-  process.env.GOOGLE_ROUTES_API_KEY ?? '',
-  15000,
-  externalApiPolicy,
-);
-const routes = new RouteHttpService(new RouteService(routeProvider));
 const places = new Places(
   process.env.GOOGLE_PLACES_API_KEY ?? '',
   15000,
@@ -71,7 +66,7 @@ const chatProvider = createChatProvider(
   {
     provider: process.env.AI_PROVIDER,
     openWebUIApiKey,
-    openWebUIModel: process.env.OPENWEBUI_MODEL ?? '',
+    openWebUIModel: OPENWEBUI_OPTIONS.defaultModel,
     geminiApiKey: process.env.GEMINI_API_KEY ?? '',
     geminiModel: process.env.GEMINI_MODEL ?? '',
     geminiNativeTools: process.env.GEMINI_NATIVE_TOOLS === '1',
@@ -129,6 +124,8 @@ try {
   }
 }
 const tcacheJobHttp = new TcacheJobHttpService(tcache);
+const routeProvider = new TcacheRoutesProvider(tcache);
+const routes = new RouteHttpService(new RouteService(routeProvider));
 
 export interface LocalTripPersistence {
   readonly analytics: AnalyticsRepository;
@@ -155,6 +152,7 @@ export const API = {
   Troute: troute,
   TrouteHttp: trouteHttp,
   TrouteJobHttp: trouteJobHttp,
+  TrouteJobs: trouteJobs,
   Tcache: tcache,
   TcacheJobHttp: tcacheJobHttp,
 };

@@ -1,24 +1,26 @@
+<!-- Current source ownership is maintained in docs/frontend-source-layout.md. -->
+
 # Travel map
 
 Source ownership and the complete move inventory are documented in
 [Frontend source layout](../docs/frontend-source-layout.md).
 
-Route entries use class page roots for dependency ownership and lifecycle; reusable
-UI remains function components. See [Page root ownership](../docs/page-roots.md).
+Route entries compose feature roots with explicit dependency ownership and lifecycle;
+reusable UI remains function components. See [Page root ownership](../docs/page-roots.md).
 The map is composed from LayerPanel, MapViewport and MapAiRegion; see
 [Map visual regions](../docs/map-regions.md) for ownership and layout boundaries.
 
 The landing page links to `/map`, a backend-backed trip list and Google Maps itinerary
 editor. Create an empty trip or explicitly create the Tokyo example from
-`src/pages/map/data/demoTrip.ts`. MapPage owns the frontend TripRepository and
+`src/features/map-workspace/data/demoTrip.ts`. MapWorkspacePage owns the frontend TripRepository and
 catalog selection, and directly renders TripPickerPopup and TripSession. Selecting
 a Trip mounts TripSession, creating a non-null TripStore
 and TripEditController and providing their stable value through TripProvider.
-Session unmount cancels edits; workspace cleanup separately cancels catalog requests.
+Session final unmount destroys the edit controller; workspace cleanup separately cancels catalog requests.
 Sidebar and TripLayer consume the
 same immutable snapshot through useSyncExternalStore. Commands optimistically
-update it, save through TripRepository → HttpTripRepository → `src/pages/map/api/trips.ts`, then apply the canonical response or
-roll back on failure. Selection/camera focus live separately in `useMapUi`.
+update it, save through TripRepository → HttpTripRepository → `src/shared/api/trips.ts`, then reconcile the canonical response. Ordinary save failures retain local edits
+and expose an error; confirmed batches require canonical readback before publication. Selection/camera focus live separately in `useMapUi`.
 See [Frontend state/binding](../docs/frontend-trip-map.md) and
 [Trip persistence](../docs/trip-maps.md).
 Provider-neutral camera operations are defined by
@@ -72,7 +74,10 @@ marker.remove();
 
 const preview = runtime.objects.addPolyline({
   layer: 'ai-preview',
-  path: [{ lat: 35.6586, lng: 139.7454 }, { lat: 35.6812, lng: 139.7671 }],
+  path: [
+    { lat: 35.6586, lng: 139.7454 },
+    { lat: 35.6812, lng: 139.7671 },
+  ],
   style: { color: '#2563eb', width: 5, opacity: 0.85 },
 });
 preview.setStyle({ opacity: 0.5 });
@@ -96,7 +101,7 @@ the frontend image build.
 
 Without a key or if Google Maps fails to load, the page keeps the itinerary usable
 and shows a map connection message; it does not substitute a fake map.
-MapSearchToolbar search is a local UI placeholder without API calls. Derived route
+MapSearchToolbar queries Places through the backend API. Derived route
 segments connect each Day's adjacent places by order and are not road routes or
 travel-time estimates. `TripRoute.path`
 accepts coordinate arrays so a future Routes API adapter can supply the geometry
@@ -109,10 +114,10 @@ through `src/map/runtime/createGoogleMapRuntime.ts`. It works without itinerary 
 has a default height of 400px. Override `style` or `className` for page layout.
 The existing `/map` view uses this component and retains its itinerary objects,
 camera padding, and loading/error UI. Camera calculations remain in
-`src/pages/map/domain/cameraPolicy.ts`.
+`src/features/map-workspace/domain/cameraPolicy.ts`.
 
 `src/map/adapters/MapRuntime.ts` defines the provider-neutral runtime contract;
-`src/map/types/mapTypes.ts` owns coordinates, bounds, places, events, options,
+`src/shared/types/mapTypes.ts` owns coordinates, bounds, places, events, options,
 and polylines. Component types re-export the existing public names for compatibility.
 The runtime imports these contracts directly and does not depend on React components.
 The `GoogleMap` component is the composition point for the runtime factory and loader
@@ -122,7 +127,7 @@ owned by the object controller; the former runtime `setPolylines` method is remo
 The public `GoogleMap.polylines` prop remains compatible and uses controller-backed
 children, updating native paths/styles in place by array position.
 
-HTTP clients live in `src/api/health.ts`, `routes.ts`, and `places.ts`. They call
+HTTP clients live in `src/shared/api/health.ts`, `routes.ts`, and `places.ts`. They call
 Trasolve endpoints, accept cancellation signals, and validate shared schemas.
 `map/runtime/` contains only rendering infrastructure and SDK loading. The legacy
 `googleDirections.ts` client has moved to `api/routes.ts`; import route types and
@@ -187,7 +192,7 @@ not affect API payloads or backend behavior.
 
 `src/shared/theme/` owns preference parsing, persistence, system synchronization,
 the document theme contract, and the shared theme control. Semantic light/dark CSS
-tokens live in `src/shared/styles/theme.css`. Product pages consume these tokens
+tokens live in `src/app/styles/theme.css`. Product pages consume these tokens
 without maintaining page-local theme state. The Google Maps color-scheme adapter is
 isolated in `src/map/runtime/googleMapTheme.ts`; changing theme rebuilds only the SDK
 runtime because the Maps API accepts `colorScheme` only at initialization, while the
@@ -258,15 +263,16 @@ autocomplete/detail responses. Arrow keys navigate, Enter selects, and Escape
 closes the list. Korean/Japanese IME composition waits until committed. Clicking
 a suggestion fetches its details before calling `onSelect`. Each autocomplete
 session shares a token with its details request and then discards the token.
-`src/api/places.ts` calls only Trasolve endpoints and validates normalized
+`src/shared/api/places.ts` calls only Trasolve endpoints and validates normalized
 responses with `@trasolve/shared`; it does not load a Google SDK.
-`src/api/routes.ts` calls
+`src/shared/api/routes.ts` calls
 `POST /api/routes`; request/response schemas and types live in `@trasolve/shared`.
 Route backend code lives in `backend/src/routes/`. `RouteHttpService` handles HTTP
 validation, `RouteService` assembles the backward-compatible response, and
-`GoogleRoutesProvider` calls Google REST and normalizes routes behind the
-provider-neutral `RouteProvider` contract. `backend/src/instances.ts` loads the
-environment and wires these objects once per Node.js process. `API.Route` exposes
+`TcacheRoutesProvider` submits and polls tcache route jobs, then normalizes the
+selected upstream provider response behind the provider-neutral `RouteProvider`
+contract. `backend/src/instances.ts` loads the environment and wires these
+objects once per Node.js process. `API.Route` exposes
 `handle(request, response)` for HTTP input validation and responses.
 `DirectionsRequestBuilder` from `@trasolve/shared` can build requests for either
 the frontend `getDirections` function or a backend route service/provider. Its fluent
@@ -380,3 +386,11 @@ Mac mini deployments read `JJS_SENTRY_DSN` from the host-owned `deploy.env` and 
 it into the frontend image as a build argument. The DSN is embedded at build time,
 not read from the running Caddy container. Source map upload is intentionally outside
 this integration and requires a separate server-side token and pipeline design.
+
+## Refactoring rules
+
+Architecture and file-size policies are enforced in CI. Run `npm run architecture:check`,
+`npm run typecheck`, `npm run lint`, `npm run build` and `npm run format:check` from the
+repository root. See [Frontend architecture](../docs/frontend-source-layout.md) for
+state ownership, dependency directions, component contracts and size budgets, and
+[Frontend verification](../docs/frontend-verification.md) for browser scenarios.

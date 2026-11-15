@@ -1,14 +1,8 @@
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ComponentProps,
-} from 'react';
-import type { TripDay, TripPlace, TripPolyline } from '@trasolve/shared';
-import type { GeoPoint } from '@/shared/types/mapTypes';
+import { memo, useRef } from 'react';
 import type { GoogleMapHandle } from '@/map/types/googleMapComponent';
+import type { MapDetailSelection } from '../model/mapViewportTypes';
+import { useMapViewportInteractions } from '../model/useMapViewportInteractions';
+import type { MapCanvasProps } from './mapViewportProps';
 import { AnchoredMapCard } from '@/map/components/AnchoredMapCard';
 import { PlaceDetailContent } from '@/features/place-editor';
 import { BottomContextPanel } from '@/features/map-workspace/components/bottom-panel/BottomContextPanel';
@@ -16,21 +10,10 @@ import { TripPolylineCard } from '@/features/map-workspace/components/viewport/T
 import { selectActiveDay } from '@/features/map-workspace/model/selectors';
 import { MapCanvas } from '@/features/map-workspace/ui/MapCanvas';
 
-type MapDetailTarget =
-  { type: 'place'; id: string } | { type: 'polyline'; id: string } | null;
-
-type Props = Omit<ComponentProps<typeof MapCanvas>, 'mapRef' | 'overlay'> & {
-  selectionRevision: number;
-  selectedTripPlace: { day: TripDay; place: TripPlace } | null;
-  selectedTripPolyline: {
-    day: TripDay;
-    polyline: TripPolyline;
-    fromPlace: TripPlace;
-    toPlace: TripPlace;
-    anchor: GeoPoint;
-  } | null;
-  onClearSelection: () => void;
-};
+type Props = Omit<MapCanvasProps, 'mapRef' | 'overlay'> &
+  MapDetailSelection & {
+    onClearSelection: () => void;
+  };
 
 export const ReadonlyMapWorkspaceViewport = memo(
   function ReadonlyMapWorkspaceViewport({
@@ -46,49 +29,22 @@ export const ReadonlyMapWorkspaceViewport = memo(
   }: Props) {
     const mapRef = useRef<GoogleMapHandle>(null);
     const selectedCardRef = useRef<HTMLElement>(null);
-    const preserveNextSelectionRef = useRef(false);
-    const previousSelectionRevisionRef = useRef(selectionRevision);
-    const [detailTarget, setDetailTarget] = useState<MapDetailTarget>(null);
-
-    const selectMapPlace = useCallback(
-      (placeId: string) => {
-        preserveNextSelectionRef.current = true;
-        setDetailTarget({ type: 'place', id: placeId });
-        onSelectPlace(placeId);
-      },
-      [onSelectPlace],
-    );
-    const selectMapPolyline = useCallback(
-      (polylineId: string, anchor: GeoPoint) => {
-        preserveNextSelectionRef.current = true;
-        setDetailTarget({ type: 'polyline', id: polylineId });
-        onSelectPolyline(polylineId, anchor);
-      },
-      [onSelectPolyline],
-    );
-    const clearDetails = useCallback(() => {
-      setDetailTarget(null);
-      onClearSelection();
-    }, [onClearSelection]);
-    const handleMapClick = useCallback(
-      (event: Parameters<typeof onMapClick>[0]) => {
-        setDetailTarget(null);
-        onMapClick(event);
-      },
-      [onMapClick],
-    );
-
-    useEffect(() => {
-      if (previousSelectionRevisionRef.current === selectionRevision) {
-        return;
-      }
-      previousSelectionRevisionRef.current = selectionRevision;
-      if (preserveNextSelectionRef.current) {
-        preserveNextSelectionRef.current = false;
-        return;
-      }
-      setDetailTarget(null);
-    }, [selectionRevision]);
+    const interactions = useMapViewportInteractions({
+      trip: mapProps.trip,
+      selectionRevision,
+      onSelectPlace,
+      onSelectPolyline,
+      onMapClick,
+      onCloseTripPlace: onClearSelection,
+      onCloseTripPolyline: onClearSelection,
+    });
+    const {
+      selectMapPlace,
+      selectMapPolyline,
+      handleMapClick,
+      closeTripPlace: clearDetails,
+    } = interactions;
+    const detailTarget = interactions.transient.mapDetailTarget;
 
     const detailPlace =
       detailTarget?.type === 'place' &&

@@ -1,3 +1,5 @@
+import { matchesLayoutMaxWidth } from '@/shared/config/mobileLayout';
+import { mobilePanelGeometry } from '@/shared/lib/mobilePanelGeometry';
 import {
   useCallback,
   useLayoutEffect,
@@ -188,6 +190,22 @@ export function AnchoredMapCard({
         return null;
       }
 
+      if (matchesLayoutMaxWidth(760)) {
+        const canvasRect = canvas.getBoundingClientRect();
+        const hostRect = overlayHost.getElement().getBoundingClientRect();
+        const panel = mobilePanelGeometry(canvasRect);
+        return {
+          ...panel,
+          left: panel.left + canvasRect.left - hostRect.left,
+          top: panel.top + canvasRect.top - hostRect.top,
+          anchorKey,
+          ready: true,
+          pointerX: panel.width / 2,
+          placement: 'above',
+          visible: panel.width > 0 && panel.height > 0,
+        };
+      }
+
       const point = overlayHost.project({ lat, lng });
       if (!point) {
         return null;
@@ -217,13 +235,13 @@ export function AnchoredMapCard({
       const availableAbove = Math.max(0, point.y - ANCHOR_GAP - viewportTop);
       const availableBelow = Math.max(0, viewportBottom - point.y - ANCHOR_GAP);
       const content = card.firstElementChild;
-      const desiredHeight =
-        content instanceof HTMLElement
-          ? Math.max(
-              content.scrollHeight,
-              content.getBoundingClientRect().height,
-            )
-          : card.getBoundingClientRect().height;
+      if (!(content instanceof HTMLElement)) {
+        return null;
+      }
+      const desiredHeight = Math.max(
+        content.scrollHeight,
+        content.getBoundingClientRect().height,
+      );
       const placement = choosePlacement(
         desiredHeight,
         availableAbove,

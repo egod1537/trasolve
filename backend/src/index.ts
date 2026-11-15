@@ -1,5 +1,16 @@
 import type { Server } from 'node:http';
+import { BillingService } from './billing/billingService.js';
+import { createPaymentProviders } from './billing/paymentProviderFactory.js';
+import {
+  BillingHttpService,
+  TokenMeter,
+} from './billing/billingHttpService.js';
+import { LocalBillingRepository } from './billing/localBillingRepository.js';
+import { PostgresBillingRepository } from './billing/postgresBillingRepository.js';
+import type { BillingRepository } from './billing/billingRepository.js';
 import { AuthenticationService } from './auth/authenticationService.js';
+import { TutorialHttpService } from './auth/tutorialHttpService.js';
+import { ConsentHttpFlow } from './auth/consentHttpFlow.js';
 import type { AuthRepository } from './auth/authRepository.js';
 import { CurrentUserResolver } from './auth/currentUserResolver.js';
 import { LocalAuthRepository } from './auth/localAuthRepository.js';
@@ -9,6 +20,10 @@ import type { SessionRepository } from './auth/sessionRepository.js';
 import { SessionService } from './auth/sessionService.js';
 import { loadBackendEnvironment } from './configuration/environment.js';
 import { loadExternalApiPolicy } from './configuration/externalApiPolicy.js';
+import {
+  isDebugGuestAuthenticationEnabled,
+  resolveDebugGuestSubject,
+} from './configuration/debugGuest.js';
 import {
   resolveBackendDataRoot,
   resolveBackendPersistenceMode,
@@ -29,6 +44,22 @@ import type { AnalyticsRepository } from './analytics/analyticsEventRepository.j
 import { PostgresAnalyticsRepository } from './analytics/postgresAnalyticsRepository.js';
 import { AnalyticsEventHttpService } from './analytics/analyticsEventHttpService.js';
 import { AnalyticsQueryHttpService } from './analytics/analyticsQueryHttpService.js';
+import type {
+  AdminAuthorizationRecord,
+  AdminRepository,
+} from './admin/adminRepository.js';
+import { PostgresAdminRepository } from './admin/postgresAdminRepository.js';
+import { AdminAuthorizationService } from './admin/adminAuthorizationService.js';
+import { AdminCsrfService } from './admin/adminCsrfService.js';
+import { AdminHttpService } from './admin/adminHttpService.js';
+import {
+  configureExternalApiUsageRecorder,
+  ExternalApiUsageRecorder,
+} from './observability/externalApiUsage/externalApiUsage.js';
+import { PostgresExternalApiUsageWriter } from './observability/externalApiUsage/postgresExternalApiUsageWriter.js';
+
+const developmentAdminCsrfSecret =
+  'trasolve-local-development-admin-csrf-secret';
 
 loadBackendEnvironment();
 const externalApiPolicy = loadExternalApiPolicy();
@@ -47,21 +78,69 @@ async function startBackend(): Promise<void> {
     createLocalTripPersistence,
   );
   let server: Server | undefined;
+  let renewalTimer: ReturnType<typeof setInterval> | undefined;
 
   try {
     const authentication = new AuthenticationService(persistence.auth);
     const sessions = new SessionService(persistence.sessions);
-    const currentUser = new CurrentUserResolver(sessions);
-    const tripController = new TripController(persistence.trips);
+    const currentUser = new CurrentUserResolver(sessions, authentication);
+    const consentHttp = new ConsentHttpFlow(
+      authentication,
+      sessions,
+      currentUser,
+    );
+    const paymentProviders = createPaymentProviders();
+    const billing = new BillingService(
+      persistence.billing,
+      paymentProviders.normal,
+      paymentProviders.debug,
+    );
+    const tokenMeter = new TokenMeter(billing, currentUser);
+    API.Chat.setTokenMeter(tokenMeter);
+    API.TrouteHttp.setTokenMeter(tokenMeter);
+    renewalTimer = setInterval(() => {
+      void billing
+        .renewDue()
+        .catch(() => console.error('Subscription renewal scan failed.'));
+    }, 60_000);
+    renewalTimer.unref();
+    configureExternalApiUsageRecorder(persistence.externalApiUsage);
     const debugGuestUser = isDebugGuestAuthenticationEnabled()
       ? await authentication.ensureDebugGuest(resolveDebugGuestSubject())
       : undefined;
+    const developmentAdmin = createDevelopmentAdmin(
+      persistence.admin,
+      debugGuestUser,
+    );
+    const adminAuthorization = new AdminAuthorizationService(
+      currentUser,
+      persistence.admin,
+      developmentAdmin,
+    );
+    const adminHttp = new AdminHttpService(
+      adminAuthorization,
+      persistence.admin,
+      new AdminCsrfService(
+        developmentAdmin
+          ? (process.env.TRASOLVE_ADMIN_CSRF_SECRET ??
+              developmentAdminCsrfSecret)
+          : persistence.admin
+            ? process.env.TRASOLVE_ADMIN_CSRF_SECRET
+            : undefined,
+        persistence.admin || developmentAdmin
+          ? process.env.TRASOLVE_PUBLIC_ORIGIN
+          : undefined,
+      ),
+      API.TrouteJobs,
+    );
+    const tripController = new TripController(persistence.trips);
     server = createBackendServer(
       API,
       new GoogleOAuthHttpFlow(
         authentication,
         sessions,
         currentUser,
+        consentHttp,
         debugGuestUser?.id,
         externalApiPolicy,
       ),
@@ -79,10 +158,18 @@ async function startBackend(): Promise<void> {
       new AnalyticsQueryHttpService(persistence.analytics, {
         readEnabled: canUseAnalyticsReadApi(),
       }),
+      currentUser,
+      adminHttp,
+      new BillingHttpService(billing, currentUser),
+      new TutorialHttpService(persistence.auth, currentUser),
+      consentHttp,
     );
     await listen(server, port, host);
     console.log(`Backend: http://${host}:${port}`);
   } catch (cause) {
+    if (renewalTimer) {
+      clearInterval(renewalTimer);
+    }
     await persistence.close();
     throw cause;
   }
@@ -93,6 +180,9 @@ async function startBackend(): Promise<void> {
       return;
     }
     isShuttingDown = true;
+    if (renewalTimer) {
+      clearInterval(renewalTimer);
+    }
     console.log(`Received ${signal}; shutting down.`);
 
     try {
@@ -112,9 +202,38 @@ async function startBackend(): Promise<void> {
   }
 }
 
+function createDevelopmentAdmin(
+  repository: AdminRepository | null,
+  debugGuestUser:
+    | {
+        id: string;
+        name?: string;
+        email: string | null;
+        emailVerified: boolean;
+      }
+    | undefined,
+): AdminAuthorizationRecord | undefined {
+  if (repository || process.env.NODE_ENV === 'production' || !debugGuestUser) {
+    return undefined;
+  }
+  return {
+    id: debugGuestUser.id,
+    displayName:
+      debugGuestUser.name ?? debugGuestUser.email ?? debugGuestUser.id,
+    email: debugGuestUser.email,
+    role: 'admin',
+    deleted: false,
+    suspended: false,
+    hasVerifiedGoogleIdentity: debugGuestUser.emailVerified,
+  };
+}
+
 interface RuntimePersistence {
+  readonly billing: BillingRepository;
+  readonly admin: AdminRepository | null;
   readonly analytics: AnalyticsRepository;
   readonly auth: AuthRepository;
+  readonly externalApiUsage: ExternalApiUsageRecorder | null;
   readonly sessions: SessionRepository;
   readonly trips: TripRepository;
   readonly tripShares: TripShareRepository;
@@ -135,7 +254,10 @@ async function createRuntimePersistence(
     const tripPersistence = createLocalTripPersistence(dataRoot);
     console.log(`Persistence: local (${dataRoot})`);
     return {
+      billing: new LocalBillingRepository(dataRoot),
+      admin: null,
       auth,
+      externalApiUsage: null,
       sessions: auth,
       ...tripPersistence,
       close: () => Promise.resolve(),
@@ -153,38 +275,25 @@ async function createRuntimePersistence(
     throw cause;
   }
   console.log('Persistence: PostgreSQL');
+  const admin = new PostgresAdminRepository(database);
+  const externalApiUsage = new ExternalApiUsageRecorder(
+    new PostgresExternalApiUsageWriter(database),
+  );
   return {
+    billing: new PostgresBillingRepository(database),
+    admin,
     analytics: new PostgresAnalyticsRepository(database),
     auth: new PostgresAuthRepository(database),
     sessions: new PostgresSessionRepository(database),
+    externalApiUsage,
     trips: new PostgresTripRepository(database),
     tripShares: new PostgresTripShareRepository(database),
-    close: () => database.close(),
+    close: async () => {
+      await externalApiUsage.flush();
+      configureExternalApiUsageRecorder(null);
+      await database.close();
+    },
   };
-}
-
-function isDebugGuestAuthenticationEnabled(): boolean {
-  const configured = process.env.TRASOLVE_DEBUG_GUEST_AUTH?.trim();
-  if (!configured) {
-    return process.env.NODE_ENV !== 'production';
-  }
-  if (configured === 'true') {
-    return true;
-  }
-  if (configured === 'false') {
-    return false;
-  }
-  throw new Error('TRASOLVE_DEBUG_GUEST_AUTH must be true or false.');
-}
-
-function resolveDebugGuestSubject(): string {
-  const subject = process.env.TRASOLVE_DEBUG_GUEST_SUBJECT?.trim() || 'default';
-  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(subject)) {
-    throw new Error(
-      'TRASOLVE_DEBUG_GUEST_SUBJECT must use lowercase letters, digits, and hyphens.',
-    );
-  }
-  return subject;
 }
 
 function canUseAnalyticsReadApi(): boolean {

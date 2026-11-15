@@ -10,8 +10,10 @@ import {
   getInitialThemeMode,
   resolveTheme,
 } from '@/shared/theme/theme';
+import 'lenis/dist/lenis.css';
 import '@/app/styles/global.css';
 import '@/app/styles/theme.css';
+import '@/app/styles/mobile.css';
 import '@/pages/landing/styles/landing.css';
 
 initSentry();

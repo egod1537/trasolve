@@ -37,6 +37,23 @@ export default [
     },
     rules: {
       'localization/no-unclassified-user-facing-literal': 'error',
+      'max-lines': [
+        'error',
+        { max: 400, skipBlankLines: true, skipComments: true },
+      ],
+      'max-lines-per-function': [
+        'warn',
+        { max: 80, skipBlankLines: true, skipComments: true },
+      ],
+    },
+  },
+  {
+    files: ['frontend/src/**/*.tsx'],
+    rules: {
+      'max-lines-per-function': [
+        'warn',
+        { max: 150, skipBlankLines: true, skipComments: true },
+      ],
     },
   },
 ];

@@ -83,6 +83,7 @@
       "iMThinkingAnswer": "답변을 생각하고 있어요."
     },
     "title": {
+      "aiPlanner": "AI 플래너",
       "archived": "보관됨",
       "recentConversations": "최근 대화",
       "trasolveAi": "트라솔브 AI"

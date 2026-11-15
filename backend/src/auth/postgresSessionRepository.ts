@@ -32,7 +32,8 @@ export class PostgresSessionRepository implements SessionRepository {
        WHERE sessions.token_hash = $1
          AND sessions.revoked_at IS NULL
          AND sessions.expires_at > clock_timestamp()
-         AND users.deleted_at IS NULL`,
+         AND users.deleted_at IS NULL
+         AND users.suspended_at IS NULL`,
       [tokenHash],
     );
     const row = result.rows[0];

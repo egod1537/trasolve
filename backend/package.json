@@ -8,15 +8,18 @@
     "dev": "node --watch --import tsx src/index.ts",
     "db:migrate": "tsx src/database/migrateCli.ts",
     "trip:migrate": "tsx src/trip/migration/migrateLegacyTripsCli.ts",
+    "admin:bootstrap": "tsx src/admin/bootstrapAdminCli.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsc -p tsconfig.test.json --noEmit && node --import tsx --test test/trouteContract.test.ts",
     "start": "node dist/index.js",
     "db:migrate:production": "node dist/database/migrateCli.js",
-    "trip:migrate:production": "node dist/trip/migration/migrateLegacyTripsCli.js"
+    "trip:migrate:production": "node dist/trip/migration/migrateLegacyTripsCli.js",
+    "admin:bootstrap:production": "node dist/admin/bootstrapAdminCli.js"
   },
   "dependencies": {
     "@trasolve/shared": "0.0.0",
+    "cheerio": "1.2.0",
     "pg": "^8.23.0",
     "zod": "^4.5.4"
   },

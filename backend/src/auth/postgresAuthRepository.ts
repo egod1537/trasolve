@@ -1,5 +1,12 @@
 import type { QueryResultRow } from 'pg';
+import {
+  initialTutorialProgress,
+  tutorialProgressSchema,
+  type AuthConsentRecord,
+  type TutorialProgress,
+} from '@trasolve/shared';
 import type { Database } from '../database/database.js';
+import { insertConsent } from './postgresConsent.js';
 import {
   AuthIdentityConflictError,
   type AuthIdentityRecord,
@@ -19,10 +26,11 @@ interface IdentityRow extends QueryResultRow {
 }
 
 interface UserRow extends QueryResultRow {
+  readonly issuer: string;
   readonly id: string;
   readonly display_name: string;
   readonly avatar_url: string | null;
-  readonly email: string;
+  readonly email: string | null;
   readonly email_verified: boolean;
 }
 
@@ -34,9 +42,19 @@ export class PostgresAuthRepository implements AuthRepository {
     subject: string,
   ): Promise<AuthIdentityRecord | undefined> {
     const result = await this.database.query<IdentityRow>(
-      `SELECT id, user_id, issuer, subject, email, email_verified
-       FROM trasolve.auth_identities
-       WHERE issuer = $1 AND subject = $2`,
+      `SELECT
+         identities.id,
+         identities.user_id,
+         identities.issuer,
+         identities.subject,
+         identities.email,
+         identities.email_verified
+       FROM trasolve.auth_identities AS identities
+       JOIN trasolve.users AS users ON users.id = identities.user_id
+       WHERE identities.issuer = $1
+         AND identities.subject = $2
+         AND users.deleted_at IS NULL
+         AND users.suspended_at IS NULL`,
       [issuer, subject],
     );
     return result.rows[0] ? mapIdentity(result.rows[0]) : undefined;
@@ -75,8 +93,35 @@ export class PostgresAuthRepository implements AuthRepository {
         if (!identity) {
           throw new Error('Identity insert did not return a row.');
         }
+        if (input.consent) {
+          await insertConsent(executor, userId, input.consent);
+        }
         return mapIdentity(identity);
       });
+    } catch (cause) {
+      if (isIdentityUniqueViolation(cause)) {
+        throw new AuthIdentityConflictError();
+      }
+      throw cause;
+    }
+  }
+
+  public async attachIdentity(
+    userId: string,
+    input: CreateUserWithIdentityInput,
+  ): Promise<AuthIdentityRecord> {
+    try {
+      const result = await this.database.query<IdentityRow>(
+        `INSERT INTO trasolve.auth_identities (user_id, issuer, subject, email, email_verified, last_login_at)
+         SELECT id, $2, $3, $4, $5, clock_timestamp() FROM trasolve.users
+         WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NULL
+         RETURNING id, user_id, issuer, subject, email, email_verified`,
+        [userId, input.issuer, input.subject, input.email, input.emailVerified],
+      );
+      if (!result.rows[0]) {
+        throw new Error('User is unavailable.');
+      }
+      return mapIdentity(result.rows[0]);
     } catch (cause) {
       if (isIdentityUniqueViolation(cause)) {
         throw new AuthIdentityConflictError();
@@ -110,17 +155,20 @@ export class PostgresAuthRepository implements AuthRepository {
          users.id,
          users.display_name,
          users.avatar_url,
+         identity.issuer,
          identity.email,
          identity.email_verified
        FROM trasolve.users AS users
        JOIN LATERAL (
-         SELECT email, email_verified
+         SELECT issuer, email, email_verified
          FROM trasolve.auth_identities
-         WHERE user_id = users.id AND email IS NOT NULL
+         WHERE user_id = users.id
          ORDER BY last_login_at DESC NULLS LAST, created_at DESC, id DESC
          LIMIT 1
        ) AS identity ON true
-       WHERE users.id = $1 AND users.deleted_at IS NULL`,
+       WHERE users.id = $1
+         AND users.deleted_at IS NULL
+         AND users.suspended_at IS NULL`,
       [userId],
     );
     const row = result.rows[0];
@@ -129,11 +177,86 @@ export class PostgresAuthRepository implements AuthRepository {
     }
     return {
       id: row.id,
+      issuer: row.issuer,
       displayName: row.display_name,
       avatarUrl: row.avatar_url,
       email: row.email,
       emailVerified: row.email_verified,
     };
+  }
+  public async getTutorialProgress(userId: string): Promise<TutorialProgress> {
+    const result = await this.database.query<{ tutorial: unknown }>(
+      `SELECT settings -> 'tutorial' AS tutorial FROM trasolve.users
+       WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NULL`,
+      [userId],
+    );
+    if (!result.rows[0]) {
+      throw new Error('User is unavailable.');
+    }
+    return result.rows[0].tutorial == null
+      ? initialTutorialProgress()
+      : tutorialProgressSchema.parse(result.rows[0].tutorial);
+  }
+
+  public async getConsent(
+    userId: string,
+    termsVersion: string,
+    privacyVersion: string,
+  ): Promise<AuthConsentRecord | undefined> {
+    const result = await this.database.query<{
+      accepted_at: Date;
+      profile_accepted: boolean;
+    }>(
+      `SELECT consent.accepted_at, consent.profile_accepted
+       FROM trasolve.auth_consents AS consent
+       JOIN trasolve.users AS users ON users.id = consent.user_id
+       WHERE user_id = $1 AND terms_version = $2 AND privacy_version = $3
+         AND users.deleted_at IS NULL AND users.suspended_at IS NULL`,
+      [userId, termsVersion, privacyVersion],
+    );
+    const row = result.rows[0];
+    return row
+      ? {
+          termsVersion,
+          privacyVersion,
+          termsAccepted: true,
+          privacyAccepted: true,
+          ageConfirmed: true,
+          acceptedAt: row.accepted_at.toISOString(),
+          profileAccepted: row.profile_accepted,
+        }
+      : undefined;
+  }
+
+  public async saveConsent(
+    userId: string,
+    consent: AuthConsentRecord,
+    clearOptionalProfile: boolean,
+  ): Promise<void> {
+    await this.database.transaction(async (executor) => {
+      const inserted = await insertConsent(executor, userId, consent);
+      if (inserted && clearOptionalProfile) {
+        await executor.query(
+          `UPDATE trasolve.users SET display_name = '', avatar_url = NULL
+           WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NULL`,
+          [userId],
+        );
+      }
+    });
+  }
+
+  public async saveTutorialProgress(
+    userId: string,
+    progress: TutorialProgress,
+  ): Promise<void> {
+    const result = await this.database.query(
+      `UPDATE trasolve.users SET settings = jsonb_set(settings, '{tutorial}', $2::jsonb)
+       WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NULL`,
+      [userId, JSON.stringify(tutorialProgressSchema.parse(progress))],
+    );
+    if (result.rowCount !== 1) {
+      throw new Error('User is unavailable.');
+    }
   }
 }
 

@@ -5,6 +5,16 @@
       "before": "Before"
     }
   },
+  "fastValidation": {
+    "feasible": "A schedule satisfying the constraints exists.",
+    "removePlace": "Exclude from this itinerary",
+    "unsupported": "Quick validation is unavailable for {{count}} places. It supports up to {{maximum}} places.",
+    "verifiedSuggestions": "Each suggestion was checked individually and produced a feasible itinerary using the current travel times."
+  },
+  "mobileTabs": {
+    "settings": "Settings",
+    "validation": "Validation"
+  },
   "routeComparisonMap": {
     "ariaLabel": {
       "enlargeRouteMap": "{{title}} Enlarge route map"
@@ -353,6 +363,18 @@
       "routeOptimizationProgress2": "Route optimization progress {{percentage}}%",
       "serverStatus": "Server Status: {{status}}"
     }
+  },
+  "routeReviewSummary": {
+    "basis": "Based on scheduled times and straight-line distances between pins.",
+    "distanceAdded": "{{distance}} longer",
+    "distanceLabel": "Straight-line distance",
+    "distanceSaved": "{{distance}} shorter",
+    "percentDecrease": "{{percent}} less",
+    "percentIncrease": "{{percent}} more",
+    "timeAdded": "{{duration}} longer",
+    "timeLabel": "Travel and waiting time",
+    "timeSaved": "{{duration}} saved",
+    "title": "Route optimization results"
   },
   "routeSchedulePreview": {
     "afterSchedule": {

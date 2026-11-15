@@ -4,13 +4,17 @@ import type { ChatProvider } from '../chatProvider.js';
 
 // Default development/runtime provider. It does not change map or itinerary state.
 export class RandomChatProvider implements ChatProvider {
-  public async chat(_request: ChatRequest): Promise<ChatResponse> {
+  public async chat(
+    _request: ChatRequest,
+    signal?: AbortSignal,
+  ): Promise<ChatResponse> {
     const delayMs = 500 + Math.floor(Math.random() * 2501);
-    await delay(delayMs);
+    await delay(delayMs, undefined, { signal });
     const index = Math.floor(
       Math.random() * RandomChatProvider.responses.length,
     );
     return {
+      model: 'trasolve-random-v1',
       message: {
         role: 'assistant',
         content: RandomChatProvider.responses[index],

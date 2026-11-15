@@ -2,6 +2,7 @@ export const externalApiServices = [
   'google-places',
   'google-routes',
   'google-oauth',
+  'ssu-sso',
   'gemini',
   'openwebui',
   'troute',

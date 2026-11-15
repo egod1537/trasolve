@@ -7,6 +7,7 @@ import type {
   directionsResultSchema,
   mapRouteSchema,
   routeLocationSchema,
+  upstreamApiErrorDetailsSchema,
 } from '../schemas/routes.js';
 
 export type RouteLocation = z.infer<typeof routeLocationSchema>;
@@ -21,3 +22,6 @@ export type DirectionsErrorResponse = z.infer<
 export type MapRoute = z.infer<typeof mapRouteSchema>;
 export type { TravelMode } from '../constants/travelMode.js';
 export type ApiErrorResponse = z.infer<typeof apiErrorSchema>;
+export type UpstreamApiErrorDetails = z.infer<
+  typeof upstreamApiErrorDetailsSchema
+>;

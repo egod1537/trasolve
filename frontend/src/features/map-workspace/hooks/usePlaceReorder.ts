@@ -1,3 +1,4 @@
+import { useEventCallback } from '@/shared/lib/useEventCallback';
 import {
   useCallback,
   useEffect,
@@ -50,6 +51,7 @@ function getTarget(
   container: HTMLElement | null,
   placeId: string,
   pointerY: number,
+  days: TripDay[],
 ): PlaceDropTarget | null {
   if (!container) {
     return null;
@@ -92,7 +94,13 @@ function getTarget(
   const layerList =
     targetDay.querySelector<HTMLOListElement>('.trip-layer-list');
   if (layerList?.hidden) {
-    return { dayId, index: rows.length };
+    return {
+      dayId,
+      index:
+        days
+          .find((day) => day.id === dayId)
+          ?.places.filter((place) => place.id !== placeId).length ?? 0,
+    };
   }
   const beforeIndex = rows.findIndex((row) => {
     const rect = row.getBoundingClientRect();
@@ -202,7 +210,7 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
     },
     [],
   );
-  const finishPointerDrag = useCallback(
+  const finishPointerDrag = useEventCallback(
     (event: PointerEvent<HTMLButtonElement>, commit: boolean) => {
       const current = dragStateRef.current;
       if (!current || current.pointerId !== event.pointerId) {
@@ -214,6 +222,7 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
         scrollRef.current,
         current.placeId,
         event.clientY,
+        days,
       );
       cancelDrag();
       if (
@@ -225,7 +234,6 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
         onMovePlace(current.placeId, target.dayId, target.index);
       }
     },
-    [cancelDrag, onMovePlace, scrollRef],
   );
   const onPointerUp = useCallback(
     (event: PointerEvent<HTMLButtonElement>) => finishPointerDrag(event, true),
@@ -243,7 +251,7 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
     },
     [cancelDrag],
   );
-  const onKeyDown = useCallback(
+  const onKeyDown = useEventCallback(
     (
       dayId: string,
       placeId: string,
@@ -267,7 +275,6 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
       event.stopPropagation();
       onMovePlace(placeId, dayId, targetIndex);
     },
-    [days, onMovePlace],
   );
 
   useEffect(() => {
@@ -285,6 +292,7 @@ export function usePlaceReorder({ days, scrollRef, onMovePlace }: Options) {
         scrollRef.current,
         current.placeId,
         pointerYRef.current,
+        days,
       );
       if (target) {
         const next = {

@@ -1,3 +1,5 @@
+import type { AuthConsentRecord, TutorialProgress } from '@trasolve/shared';
+
 export interface AuthIdentityRecord {
   readonly id: string;
   readonly userId: string;
@@ -8,10 +10,11 @@ export interface AuthIdentityRecord {
 }
 
 export interface AuthUserRecord {
+  readonly issuer: string;
   readonly id: string;
   readonly displayName: string;
   readonly avatarUrl: string | null;
-  readonly email: string;
+  readonly email: string | null;
   readonly emailVerified: boolean;
 }
 
@@ -20,12 +23,13 @@ export interface CreateUserWithIdentityInput {
   readonly subject: string;
   readonly displayName?: string;
   readonly avatarUrl?: string;
-  readonly email: string;
+  readonly email: string | null;
   readonly emailVerified: boolean;
+  readonly consent?: AuthConsentRecord;
 }
 
 export interface UpdateIdentityLoginInput {
-  readonly email: string;
+  readonly email: string | null;
   readonly emailVerified: boolean;
 }
 
@@ -37,11 +41,30 @@ export interface AuthRepository {
   createUserWithIdentity(
     input: CreateUserWithIdentityInput,
   ): Promise<AuthIdentityRecord>;
+  attachIdentity(
+    userId: string,
+    input: CreateUserWithIdentityInput,
+  ): Promise<AuthIdentityRecord>;
   updateLastLogin(
     identityId: string,
     input: UpdateIdentityLoginInput,
   ): Promise<void>;
   getUserById(userId: string): Promise<AuthUserRecord | undefined>;
+  getConsent(
+    userId: string,
+    termsVersion: string,
+    privacyVersion: string,
+  ): Promise<AuthConsentRecord | undefined>;
+  saveConsent(
+    userId: string,
+    consent: AuthConsentRecord,
+    clearOptionalProfile: boolean,
+  ): Promise<void>;
+  getTutorialProgress(userId: string): Promise<TutorialProgress>;
+  saveTutorialProgress(
+    userId: string,
+    progress: TutorialProgress,
+  ): Promise<void>;
 }
 
 export class AuthIdentityConflictError extends Error {

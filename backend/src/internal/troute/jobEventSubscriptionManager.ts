@@ -211,7 +211,8 @@ export class JobEventSubscriptionManager {
       event.type === 'progress' &&
       current.status === event.state.status &&
       current.stage === event.state.stage &&
-      current.progress === event.state.progress
+      current.progress === event.state.progress &&
+      current.preview?.revision === event.state.preview?.revision
     ) {
       this.rememberEventCursor(channel, event, false);
       return false;

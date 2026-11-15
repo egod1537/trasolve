@@ -1,3 +1,4 @@
+import { matchesLayoutMaxWidth } from '@/shared/config/mobileLayout';
 import {
   memo,
   useCallback,
@@ -14,12 +15,15 @@ import {
   type PlaceDetails,
 } from '@trasolve/shared';
 import { getPlace, searchPlaces } from '@/shared/api/places';
-import { PlaceTypeIcon } from '@/features/place-editor/ui/PlaceTypeIcon';
+import { PlaceSearchResults, type SearchStatus } from './PlaceSearchResults';
 import '@/features/place-editor/ui/map-toolbar.css';
 import { useL } from '@/shared/i18n';
 import { screenView, trackEvent } from '@/shared/analytics';
+import {
+  useGuidedPlaceSearch,
+  type GuidedPlaceSearch,
+} from '../model/useGuidedPlaceSearch';
 
-type SearchStatus = 'idle' | 'loading' | 'ready' | 'selecting' | 'error';
 type SearchBias = PlaceAutocompleteRequest['locationBias'];
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -31,6 +35,7 @@ type Props = {
   onOpenQuickSearch: () => void;
   onSelectPlace: (place: PlaceDetails) => void;
   showQuickSearch?: boolean;
+  guidedSearch?: GuidedPlaceSearch;
 };
 
 function Icon({ path }: { path: string }) {
@@ -48,9 +53,11 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
   onOpenQuickSearch,
   onSelectPlace,
   showQuickSearch = true,
+  guidedSearch,
 }: Props) {
   const L = useL();
-  const [query, setQuery] = useState('');
+  const [draftQuery, setQuery] = useState('');
+  const query = guidedSearch?.query ?? draftQuery;
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle');
   const [searchError, setSearchError] = useState('');
   const [suggestions, setSuggestions] = useState<PlaceAutocompleteSuggestion[]>(
@@ -129,17 +136,23 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
 
   useEffect(() => {
     const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (guidedSearch) {
+        return;
+      }
       if (
         event.target instanceof Node &&
         !searchRootRef.current?.contains(event.target)
       ) {
         closeResults();
+        if (matchesLayoutMaxWidth(760)) {
+          searchRootRef.current?.querySelector('input')?.blur();
+        }
       }
     };
     document.addEventListener('pointerdown', closeOnOutsidePointer);
     return () =>
       document.removeEventListener('pointerdown', closeOnOutsidePointer);
-  }, [closeResults]);
+  }, [closeResults, guidedSearch]);
 
   useEffect(
     () => () => {
@@ -221,6 +234,9 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
       detailsRequestRef.current = null;
       sessionTokenRef.current = null;
       onSelectPlace(place);
+      if (matchesLayoutMaxWidth(760)) {
+        searchRootRef.current?.querySelector('input')?.blur();
+      }
       if (place.name !== query) {
         skipNextQuerySearchRef.current = true;
         setQuery(place.name);
@@ -241,6 +257,14 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
     }
   };
 
+  useGuidedPlaceSearch(
+    guidedSearch,
+    searchStatus,
+    suggestions,
+    selectSuggestion,
+    closeResults,
+  );
+
   return (
     <div className="map-toolbar-positioner" data-ai-open={aiOpen}>
       <div
@@ -252,6 +276,7 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
           <div
             ref={searchRootRef}
             className="map-toolbar-search-root"
+            data-tutorial="place-search"
             onKeyDown={(event) => {
               if (event.key !== 'Escape') {
                 return;
@@ -259,6 +284,9 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
               event.preventDefault();
               event.stopPropagation();
               closeResults();
+              if (matchesLayoutMaxWidth(760)) {
+                searchRootRef.current?.querySelector('input')?.blur();
+              }
             }}
           >
             <form
@@ -277,6 +305,7 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
                 aria-label={L('place:mapSearchToolbar.ariaLabel.searchPlace')}
                 placeholder={L('place:mapSearchToolbar.ariaLabel.searchPlace')}
                 value={query}
+                readOnly={Boolean(guidedSearch)}
                 onChange={(event) => {
                   const nextQuery = event.target.value;
                   clearSearchDebounce();
@@ -307,61 +336,12 @@ export const MapSearchToolbar = memo(function MapSearchToolbar({
               </button>
             </form>
             {dropdownOpen && (
-              <div
-                id="map-place-search-results"
-                className="map-place-search-results"
-                role="listbox"
-                aria-label={L(
-                  'place:mapSearchToolbar.ariaLabel.placeSearchResults',
-                )}
-              >
-                {searchStatus === 'loading' && (
-                  <p role="status">
-                    {L('place:mapSearchToolbar.description.searchingLocation')}
-                  </p>
-                )}
-                {searchStatus === 'selecting' && (
-                  <p role="status">
-                    {L(
-                      'place:googlePlaceCard.description.loadingLocationInformation',
-                    )}
-                  </p>
-                )}
-                {searchError && <p role="alert">{searchError}</p>}
-                {searchStatus === 'ready' && !suggestions.length && (
-                  <p role="status">
-                    {L('place:mapSearchToolbar.description.noSearchResults')}
-                  </p>
-                )}
-                {!!suggestions.length && (
-                  <ul>
-                    {suggestions.map((suggestion) => (
-                      <li key={suggestion.placeId}>
-                        <button
-                          type="button"
-                          data-analytics-id={ANALYTICS_TARGETS.placeSelect}
-                          data-analytics-screen={ANALYTICS_SCREENS.placeSearch}
-                          role="option"
-                          aria-selected="false"
-                          disabled={searchStatus === 'selecting'}
-                          onClick={() => void selectSuggestion(suggestion)}
-                        >
-                          <span className="map-place-search-result-title">
-                            <PlaceTypeIcon types={suggestion.types} />
-                            <strong>{suggestion.text}</strong>
-                          </span>
-                          <span className="map-place-search-result-address">
-                            {suggestion.secondaryText ||
-                              L(
-                                'place:mapSearchToolbar.text.noAddressInformation',
-                              )}
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              <PlaceSearchResults
+                status={searchStatus}
+                error={searchError}
+                suggestions={suggestions}
+                onSelect={selectSuggestion}
+              />
             )}
           </div>
           {showQuickSearch ? (

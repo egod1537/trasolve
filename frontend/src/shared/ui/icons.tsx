@@ -10,6 +10,17 @@ function Icon({ children, ...props }: Props) {
   );
 }
 
+export function PinIcon(props: Props) {
+  return (
+    <Icon fill="currentColor" stroke="none" {...props}>
+      <path
+        transform="rotate(45 12 12)"
+        d="M8 2h8a2 2 0 0 1 0 4h-.5v3.5l2.8 2.2A1.75 1.75 0 0 1 17.2 15H13.25v5.75a1.25 1.25 0 0 1-2.5 0V15H6.8a1.75 1.75 0 0 1-1.1-3.3l2.8-2.2V6H8a2 2 0 0 1 0-4Z"
+      />
+    </Icon>
+  );
+}
+
 export function CloseIcon(props: Props) {
   return (
     <Icon {...props}>
@@ -35,11 +46,30 @@ export function ExpandIcon(props: Props) {
   );
 }
 
+export function FolderOpenIcon(props: Props) {
+  return (
+    <Icon {...props}>
+      <path d="M3 17V6a2 2 0 0 1 2-2h4l3 3h7a2 2 0 0 1 2 2v2" />
+      <path d="m3 17 3-6h16l-3 9H5a2 2 0 0 1-2-3Z" />
+    </Icon>
+  );
+}
+
 export function RefreshIcon(props: Props) {
   return (
     <Icon {...props}>
       <path d="M20 11A8 8 0 1 0 18.5 16" />
       <path d="M20 5v6h-6" />
+    </Icon>
+  );
+}
+
+export function MoreIcon(props: Props) {
+  return (
+    <Icon {...props}>
+      <circle cx="5" cy="12" r="1" />
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
     </Icon>
   );
 }

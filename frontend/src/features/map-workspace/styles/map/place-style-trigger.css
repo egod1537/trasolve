@@ -1,0 +1,105 @@
+.trip-place {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+  padding: 7px 4px 4px 23px;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.trip-place-item .trip-place {
+  gap: 0;
+  padding-left: 10px;
+}
+
+.trip-place-style-control {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  align-self: flex-start;
+  flex: 0 0 52px;
+  width: 52px;
+  height: 44px;
+  padding: 0 0 0 18px;
+  border: 0;
+  background: transparent;
+  color: var(--place-color);
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.trip-place-style-control:hover,
+.trip-place-style-control:focus-visible {
+  color: var(--place-color);
+}
+
+.trip-place-style-control:focus-visible {
+  outline: none;
+}
+
+.trip-place-style-control:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.trip-place-style-icon-frame {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid
+    color-mix(in srgb, var(--place-color) 34%, var(--color-border-strong));
+  border-radius: var(--radius-md);
+  background: color-mix(
+    in srgb,
+    var(--place-color) 8%,
+    var(--color-surface-raised)
+  );
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+.trip-place-style-control:hover:not(:disabled) .trip-place-style-icon-frame,
+.trip-place-style-control:focus-visible .trip-place-style-icon-frame,
+.trip-place-style-control[aria-expanded='true'] .trip-place-style-icon-frame {
+  border-color: color-mix(
+    in srgb,
+    var(--place-color) 62%,
+    var(--color-text-muted)
+  );
+  background: color-mix(
+    in srgb,
+    var(--place-color) 13%,
+    var(--color-surface-raised)
+  );
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.12);
+}
+
+.trip-place-style-control:hover:not(:disabled) .trip-place-style-icon-frame {
+  transform: translateY(-1px);
+}
+
+.trip-place-style-control:focus-visible .trip-place-style-icon-frame {
+  outline: 2px solid color-mix(in srgb, var(--place-color) 42%, transparent);
+  outline-offset: 2px;
+}
+
+.trip-place-style-icon-frame svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}

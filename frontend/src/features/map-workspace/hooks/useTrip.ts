@@ -41,3 +41,29 @@ export function useTripEditController() {
 export function useTripMode(): MapWorkspaceMode {
   return useApplication().mode;
 }
+
+/** Subscribe to domain data without rerendering for save-status-only changes. */
+export function useTripData() {
+  const { store } = useApplication();
+  return useSyncExternalStore(
+    store.subscribe,
+    () => store.getState().trip,
+    () => store.getState().trip,
+  );
+}
+
+/** Read the latest immutable Trip after awaits without subscribing a second store. */
+export function useTripSnapshotReader() {
+  const { store } = useApplication();
+  return () => store.getState().trip;
+}
+
+/** Subscribe to persistence failures without dirty/saving notifications. */
+export function useTripError() {
+  const { store } = useApplication();
+  return useSyncExternalStore(
+    store.subscribe,
+    () => store.getState().error,
+    () => store.getState().error,
+  );
+}

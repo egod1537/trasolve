@@ -1,0 +1,85 @@
+.trip-day-file-action {
+  padding: 12px 24px;
+  list-style: none;
+}
+.trip-file-import-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.trip-file-dialog {
+  width: min(460px, 100%);
+  padding: 24px;
+}
+.trip-file-dialog h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.trip-file-description,
+.trip-file-preview p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.trip-file-dialog footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+}
+.trip-file-dialog fieldset {
+  border: 0;
+  padding: 0;
+  margin: 24px 0;
+}
+.trip-file-dialog legend {
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.trip-file-dialog label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-right: 24px;
+}
+.trip-file-name {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.trip-file-preview {
+  padding: 16px;
+  margin-top: 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+.trip-file-preview p {
+  margin-bottom: 0;
+}
+.trip-file-error {
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.trip-file-import-action svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.trip-file-import-action:hover:not(:disabled) {
+  text-decoration: underline;
+}
+.trip-file-import-action:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: default;
+}

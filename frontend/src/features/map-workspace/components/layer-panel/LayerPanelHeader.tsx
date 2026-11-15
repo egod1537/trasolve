@@ -8,58 +8,20 @@ import {
   type ReactNode,
 } from 'react';
 import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
-import { LoadingSpinner } from '@/shared/ui/LoadingSpinner';
+import { TripSaveStatus } from './TripSaveStatus';
 import type { Trip } from '@/entities/trip';
 import { InlineRename } from '@/shared/ui/InlineRename';
-import { getLanguage, useL, L } from '@/shared/i18n';
+import { useL } from '@/shared/i18n';
 import { trackEvent } from '@/shared/analytics';
-
-type SaveStatus = 'ready' | 'dirty' | 'saving' | 'error';
+import { TripExportDialog } from '../../files/TripFileDialogs';
 
 type Props = {
   trip: Trip;
-  saveStatus: SaveStatus;
-  savedAt: string;
   onAddLayer: () => void;
   onShareTrip: () => void;
   shareButtonRef: RefObject<HTMLButtonElement | null>;
   onRenameTrip: (title: string) => void;
 };
-
-function formatSavedAt(value: string): { label: string; title: string } {
-  const savedAt = new Date(value);
-  if (Number.isNaN(savedAt.getTime())) {
-    return {
-      label: L('map:layerPanelHeader.formatSavedAt.label.saved'),
-      title: value,
-    };
-  }
-
-  const now = new Date();
-  const sameDay =
-    savedAt.getFullYear() === now.getFullYear() &&
-    savedAt.getMonth() === now.getMonth() &&
-    savedAt.getDate() === now.getDate();
-  const time = `${String(savedAt.getHours()).padStart(2, '0')}:${String(
-    savedAt.getMinutes(),
-  ).padStart(2, '0')}`;
-  const date = `${savedAt.getMonth() + 1}/${savedAt.getDate()}`;
-
-  return {
-    label: L('map:layerPanelHeader.formatSavedAt.label.lastSaved', {
-      value: sameDay
-        ? time
-        : L('map:layerPanelHeader.formatSavedAt.label.message', {
-            date: date,
-            time: time,
-          }),
-    }),
-    title: new Intl.DateTimeFormat(getLanguage(), {
-      dateStyle: 'medium',
-      timeStyle: 'medium',
-    }).format(savedAt),
-  };
-}
 
 function ActionIcon({ children }: { children: ReactNode }) {
   return (
@@ -71,8 +33,6 @@ function ActionIcon({ children }: { children: ReactNode }) {
 
 export const LayerPanelHeader = memo(function LayerPanelHeader({
   trip,
-  saveStatus,
-  savedAt,
   onAddLayer,
   onShareTrip,
   shareButtonRef,
@@ -81,21 +41,13 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
   const L = useL();
   const [titleEditing, setTitleEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const rootRef = useRef<HTMLElement>(null);
   const menuId = useId();
-  const saved = formatSavedAt(savedAt);
   const placeCount = trip.days.reduce(
     (total, day) => total + day.places.length,
     0,
   );
-  const saveLabel =
-    saveStatus === 'saving'
-      ? L('map:layerPanelHeader.saveLabel.text.saving')
-      : saveStatus === 'error'
-        ? L('map:layerPanelHeader.saveLabel.text.saveFailed')
-        : saveStatus === 'dirty'
-          ? L('map:layerPanelHeader.saveLabel.text.waitingSave')
-          : saved.label;
 
   useEffect(() => {
     if (!menuOpen) {
@@ -169,29 +121,7 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
               placeCount: placeCount,
             })}
           </p>
-          <p
-            className={`trip-last-saved is-${saveStatus}`}
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-            title={saveStatus === 'ready' ? saved.title : undefined}
-          >
-            {(saveStatus === 'dirty' || saveStatus === 'saving') && (
-              <span
-                className={`trip-save-status-spinner${saveStatus === 'dirty' ? ' is-dirty' : ''}`}
-                aria-hidden="true"
-              >
-                <LoadingSpinner size="sm" />
-              </span>
-            )}
-            <span
-              className={
-                saveStatus === 'dirty' ? 'sr-only' : 'trip-last-saved-label'
-              }
-            >
-              {saveLabel}
-            </span>
-          </p>
+          <TripSaveStatus />
         </div>
 
         <div className="trip-panel-header-menu-anchor">
@@ -221,11 +151,12 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
         </div>
       </div>
 
-      <div className="trip-panel-header-actions">
+      <div className="trip-panel-header-actions" data-tutorial="trip-actions">
         <button
           type="button"
           className="trip-panel-header-action"
           aria-label={L('map:layer.add')}
+          data-tutorial="add-day"
           onClick={onAddLayer}
         >
           <ActionIcon>
@@ -258,7 +189,20 @@ export const LayerPanelHeader = memo(function LayerPanelHeader({
           </ActionIcon>
           <span>{L('map:layerPanelHeader.text.share')}</span>
         </button>
+        <button
+          type="button"
+          className="trip-panel-header-action"
+          aria-label={L('map:tripFiles.exportAction')}
+          title={L('map:tripFiles.exportAction')}
+          onClick={() => setExportOpen(true)}
+        >
+          <ActionIcon>
+            <path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5" />
+          </ActionIcon>
+          <span>{L('map:tripFiles.exportAction')}</span>
+        </button>
       </div>
+      {exportOpen && <TripExportDialog onClose={() => setExportOpen(false)} />}
     </header>
   );
 });

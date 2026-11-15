@@ -5,6 +5,16 @@
       "before": "変更前"
     }
   },
+  "fastValidation": {
+    "feasible": "条件を満たす旅程があります。",
+    "removePlace": "この旅程から除外",
+    "unsupported": "場所が{{count}}か所あるため、事前チェックは利用できません。{{maximum}}か所以下に対応しています。",
+    "verifiedSuggestions": "各修正案を個別に適用した場合、現在の移動時間に基づいて実行可能な旅程を確認しました。"
+  },
+  "mobileTabs": {
+    "settings": "設定",
+    "validation": "検証"
+  },
   "routeComparisonMap": {
     "ariaLabel": {
       "enlargeRouteMap": "{{title}}ルートマップの拡大"
@@ -353,6 +363,18 @@
       "routeOptimizationProgress2": "ルート最適化の進捗状況{{percentage}}％",
       "serverStatus": "サーバーの状態：{{status}}"
     }
+  },
+  "routeReviewSummary": {
+    "basis": "予定時刻とピン間の直線距離に基づきます。",
+    "distanceAdded": "{{distance}}増加",
+    "distanceLabel": "直線移動距離",
+    "distanceSaved": "{{distance}}短縮",
+    "percentDecrease": "{{percent}}減少",
+    "percentIncrease": "{{percent}}増加",
+    "timeAdded": "{{duration}}増加",
+    "timeLabel": "移動・待ち時間",
+    "timeSaved": "{{duration}}短縮",
+    "title": "ルート最適化の結果"
   },
   "routeSchedulePreview": {
     "afterSchedule": {

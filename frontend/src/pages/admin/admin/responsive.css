@@ -1,0 +1,88 @@
+@media (max-width: 767px) {
+  .admin-sidebar {
+    width: min(280px, 85vw);
+    translate: -100% 0;
+    transition: translate 0.18s ease;
+  }
+  .admin-sidebar[data-open='true'] {
+    translate: 0;
+  }
+  .admin-body {
+    margin-left: 0;
+  }
+  .admin-menu-button {
+    display: inline-grid;
+  }
+  .admin-header-inner {
+    gap: 8px;
+    padding-inline: 16px;
+  }
+  .admin-header-controls {
+    gap: 4px;
+  }
+  .admin-breadcrumb {
+    gap: 6px;
+  }
+  .admin-breadcrumb > span {
+    display: none;
+  }
+  .admin-main {
+    gap: 18px;
+    padding: 24px 16px;
+  }
+  .admin-page-heading h1 {
+    font-size: 23px;
+  }
+  .admin-page-heading {
+    align-items: start;
+  }
+  .admin-metrics {
+    gap: 10px;
+  }
+  .admin-metric-value {
+    font-size: 25px;
+  }
+  .admin-card-content {
+    padding: 18px 16px;
+  }
+  .admin-card-header {
+    padding: 18px 16px 0;
+  }
+  .admin-service-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-toolbar {
+    padding: 16px;
+    gap: 10px;
+  }
+  .admin-toolbar label {
+    flex: 1;
+    min-width: 130px;
+  }
+  .admin-toolbar label.admin-grow {
+    min-width: 100%;
+  }
+  .admin-footer {
+    padding-inline: 16px;
+  }
+  .admin-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    border: 0;
+    background: var(--color-overlay-backdrop);
+  }
+  .admin-chart {
+    height: 180px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-spinner {
+    animation: none;
+  }
+  .admin-sidebar {
+    transition: none;
+  }
+}

@@ -1,0 +1,314 @@
+import { PlanBadge } from './PlanBadge';
+import { DebugTokenToggle } from './DebugTokenToggle';
+import { useId, useState } from 'react';
+import type { PaymentProductId } from '@trasolve/shared';
+import { useBilling } from '../model/billingContext';
+import { TokenBalanceGauge } from './TokenBalanceGauge';
+import { getLanguage, NL, useL } from '@/shared/i18n';
+import { Button } from '@/shared/ui/Button';
+import { Dialog } from '@/shared/ui/Dialog';
+import { IconButton } from '@/shared/ui/IconButton';
+import { CloseIcon } from '@/shared/ui/icons';
+import '@/features/billing/ui/token-plans.css';
+
+export function TokenPlansDialog() {
+  const L = useL();
+  const billing = useBilling();
+  const titleId = useId(),
+    descriptionId = useId();
+  const [tab, setTab] = useState<'subscription' | 'topup'>('subscription');
+  const number = new Intl.NumberFormat(getLanguage());
+  const money = new Intl.NumberFormat(getLanguage(), {
+    style: 'currency',
+    currency: 'KRW',
+    maximumFractionDigits: 0,
+  });
+  const summary = billing.summary;
+  const recommendedPlan =
+    summary?.wallet.plan === 'free'
+      ? 'plus'
+      : summary?.wallet.plan === 'plus'
+        ? 'pro'
+        : null;
+  const checkoutAvailable =
+    tab === 'subscription'
+      ? summary?.subscriptionAvailable
+      : summary?.topupAvailable;
+  const names = { plus: NL('Plus'), pro: NL('Pro'), free: NL('Free') };
+  const features = {
+    free: [
+      L('auth:tokenPlans.feature.aiItinerary'),
+      L('auth:tokenPlans.feature.editAndSave'),
+      L('auth:tokenPlans.feature.placeSuggestions'),
+    ],
+    plus: [
+      L('auth:tokenPlans.feature.freeIncluded'),
+      L('auth:tokenPlans.feature.moreItineraries'),
+      L('auth:tokenPlans.feature.personalizedSuggestions'),
+    ],
+    pro: [
+      L('auth:tokenPlans.feature.plusIncluded'),
+      L('auth:tokenPlans.feature.moreUsage'),
+      L('auth:tokenPlans.feature.complexItineraries'),
+    ],
+  };
+  const cards = summary
+    ? [
+        ...(tab === 'subscription'
+          ? [{ id: 'free' as const, amount: 0, tokens: 2000 }]
+          : []),
+        ...summary.products.filter((p) => p.kind === tab),
+      ]
+    : [];
+  return (
+    <Dialog
+      id={billing.dialogId}
+      className="token-plans-dialog"
+      labelledBy={titleId}
+      describedBy={descriptionId}
+      busy={billing.busy}
+      closeOnEscape={!billing.busy}
+      closeOnBackdrop={!billing.busy}
+      onClose={billing.closePlans}
+    >
+      <header className="token-plans-header">
+        <div className="token-plans-heading">
+          <div>
+            <div className="token-plans-title-row">
+              <h2 id={titleId}>{L('auth:tokenPlans.title')}</h2>
+              {summary && <PlanBadge plan={summary.wallet.plan} showFree />}
+              {summary?.mode === 'debug' ? (
+                <DebugTokenToggle />
+              ) : summary?.mode === 'sandbox' ? (
+                <span className="token-plans-mode-badge">
+                  {L('auth:billing.testMode')}
+                </span>
+              ) : null}
+            </div>
+            <p id={descriptionId}>{L('auth:tokenPlans.description')}</p>
+          </div>
+        </div>
+        {summary && (
+          <div className="token-plans-header-balance">
+            <TokenBalanceGauge
+              remaining={summary.wallet.remaining}
+              provided={summary.wallet.provided}
+              unlimited={summary.unlimited}
+            />
+          </div>
+        )}
+        <IconButton
+          className="token-plans-close"
+          aria-label={L('common:action.close')}
+          variant="ghost"
+          icon={<CloseIcon />}
+          disabled={billing.busy}
+          onClick={billing.closePlans}
+        />
+      </header>
+      <div
+        className="billing-tabs"
+        role="group"
+        aria-label={L('auth:billing.purchaseType')}
+      >
+        <Button
+          aria-pressed={tab === 'subscription'}
+          variant={tab === 'subscription' ? 'primary' : 'ghost'}
+          disabled={billing.busy || Boolean(billing.pendingCheckout)}
+          onClick={() => setTab('subscription')}
+        >
+          {L('auth:billing.monthlySubscription')}
+        </Button>
+        <Button
+          aria-pressed={tab === 'topup'}
+          variant={tab === 'topup' ? 'primary' : 'ghost'}
+          disabled={billing.busy || Boolean(billing.pendingCheckout)}
+          onClick={() => setTab('topup')}
+        >
+          {L('auth:billing.topup')}
+        </Button>
+      </div>
+      {billing.loading && !summary && (
+        <p role="status">{L('common:routes.loadingLabel.pageLoading')}</p>
+      )}
+      {!billing.authenticated && (
+        <Button variant="primary" onClick={billing.login}>
+          {L('common:landing.navigation.signIn')}
+        </Button>
+      )}
+      {billing.error && (
+        <div className="billing-error" role="alert">
+          <p>{billing.error}</p>
+          <Button onClick={() => void billing.refresh()}>
+            {L('common:action.retry')}
+          </Button>
+        </div>
+      )}
+      <div className="token-plans-grid" data-kind={tab}>
+        {cards.map((plan) => {
+          const planName =
+            plan.id === 'free' || plan.id === 'plus' || plan.id === 'pro'
+              ? names[plan.id]
+              : L('auth:billing.tokenPack', {
+                  tokens: number.format(plan.tokens),
+                });
+          const current =
+            tab === 'subscription' && plan.id === summary?.wallet.plan;
+          const recommended =
+            tab === 'subscription' && plan.id === recommendedPlan;
+          const higherPlan =
+            tab === 'subscription' &&
+            ((summary?.wallet.plan === 'free' &&
+              (plan.id === 'plus' || plan.id === 'pro')) ||
+              (summary?.wallet.plan === 'plus' && plan.id === 'pro'));
+          const paidSubscriptionExists = summary?.wallet.renewsAt !== null;
+          const upgrade =
+            plan.id === 'pro' && Boolean(summary?.upgradeAvailable);
+          const debugCancel =
+            plan.id === 'free' &&
+            summary?.mode === 'debug' &&
+            paidSubscriptionExists;
+          const featureGroup =
+            plan.id === 'free' || plan.id === 'plus' || plan.id === 'pro'
+              ? features[plan.id]
+              : [
+                  L('auth:billing.topupFeature'),
+                  L('auth:tokenPlans.usageDescription'),
+                ];
+          return (
+            <article
+              key={plan.id}
+              className={`token-plan-card${recommended ? ' token-shimmer' : ''}`}
+              data-recommended={recommended}
+              data-selected={current}
+            >
+              {current && (
+                <span className="token-plan-current-label">
+                  {L('auth:tokenPlans.currentPlan')}
+                </span>
+              )}
+              <div className="token-plan-name-row">
+                <h3>{planName}</h3>
+                {recommended && (
+                  <span className="token-plan-recommended">
+                    {L('auth:tokenPlans.recommended')}
+                  </span>
+                )}
+              </div>
+              <p className="token-plan-subtitle">
+                {plan.id === 'free'
+                  ? L('auth:tokenPlans.freeSubtitle')
+                  : plan.id === 'plus'
+                    ? L('auth:tokenPlans.plusSubtitle')
+                    : plan.id === 'pro'
+                      ? L('auth:tokenPlans.proSubtitle')
+                      : L('auth:billing.topupDescription')}
+              </p>
+              <div className="token-plan-price">
+                <strong>
+                  {plan.amount === 0
+                    ? L('auth:tokenPlans.freePrice')
+                    : money.format(plan.amount)}
+                </strong>
+                {plan.amount > 0 && (
+                  <span>
+                    {tab === 'subscription'
+                      ? L('auth:tokenPlans.perMonth')
+                      : L('auth:billing.oneTime')}
+                  </span>
+                )}
+              </div>
+              <div className="token-plan-allowance">
+                {tab === 'subscription'
+                  ? L('auth:tokenPlans.monthlyAllowance', {
+                      allowance: number.format(plan.tokens),
+                    })
+                  : L('auth:billing.tokenPack', {
+                      tokens: number.format(plan.tokens),
+                    })}
+              </div>
+              <ul className="token-plan-features">
+                {featureGroup.map((feature) => (
+                  <li key={feature}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="m5 12 4 4L19 6" />
+                    </svg>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                className="token-plan-select"
+                variant={higherPlan ? 'primary' : 'secondary'}
+                disabled={
+                  current ||
+                  (plan.id === 'free' && !debugCancel) ||
+                  billing.busy ||
+                  Boolean(billing.pendingCheckout) ||
+                  (!checkoutAvailable && !debugCancel) ||
+                  (tab === 'subscription' &&
+                    paidSubscriptionExists &&
+                    !upgrade &&
+                    !debugCancel)
+                }
+                onClick={() => {
+                  if (debugCancel) {
+                    void billing.cancelSubscription(true);
+                  } else {
+                    void billing.purchase(plan.id as PaymentProductId);
+                  }
+                }}
+              >
+                {current
+                  ? L('auth:tokenPlans.currentPlan')
+                  : L('auth:tokenPlans.selectPlan', { plan: planName })}
+              </Button>
+            </article>
+          );
+        })}
+      </div>
+      <footer className="token-plans-footer">
+        <p>{L('auth:tokenPlans.usageDescription')}</p>
+        {tab === 'subscription' && <p>{L('auth:billing.subscriptionTerms')}</p>}
+        {summary?.wallet.renewsAt && (
+          <div className="billing-subscription-status">
+            <p>
+              {summary.wallet.cancelAtPeriodEnd
+                ? L('auth:billing.endsAt', {
+                    date: new Intl.DateTimeFormat(getLanguage()).format(
+                      new Date(summary.wallet.renewsAt),
+                    ),
+                  })
+                : L('auth:billing.renewsAt', {
+                    date: new Intl.DateTimeFormat(getLanguage()).format(
+                      new Date(summary.wallet.renewsAt),
+                    ),
+                  })}
+            </p>
+            <Button
+              disabled={billing.busy || summary.wallet.cancelAtPeriodEnd}
+              onClick={() => void billing.cancelSubscription()}
+            >
+              {L('auth:billing.cancelSubscription')}
+            </Button>
+            {summary.mode === 'debug' && (
+              <Button
+                variant="danger"
+                disabled={billing.busy || Boolean(billing.pendingCheckout)}
+                onClick={() => void billing.cancelSubscription(true)}
+              >
+                <span>{L('auth:billing.debugMode')}</span>
+                {L('auth:billing.cancelSubscription')}
+                <span aria-hidden="true">{NL('→')}</span>
+                {NL('Free')}
+              </Button>
+            )}
+          </div>
+        )}
+        {summary && !checkoutAvailable && (
+          <p role="status">{L('auth:billing.notConfigured')}</p>
+        )}
+      </footer>
+    </Dialog>
+  );
+}

@@ -1,6 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { TokenMeter } from '../billing/billingHttpService.js';
+import { BillingError } from '../billing/paymentProvider.js';
 import {
   trouteOptimizeRequestSchema,
+  routeValidationRequestSchema,
   type ApiErrorResponse,
 } from '@trasolve/shared';
 import { TrouteClientError, TrouteHttpError } from './errors.js';
@@ -28,6 +31,85 @@ export class TrouteHttpService {
     private readonly partialVisitEnabled = false,
     private readonly externalApiPolicy: ExternalApiPolicy = loadExternalApiPolicy(),
   ) {}
+
+  public setTokenMeter(meter: TokenMeter): void {
+    this.tokenMeter = meter;
+  }
+
+  public async handleValidation(
+    request: IncomingMessage,
+    response: ServerResponse,
+  ): Promise<void> {
+    response.setHeader('Content-Type', 'application/json; charset=utf-8');
+    response.setHeader('Cache-Control', 'no-store');
+    const controller = new AbortController();
+    const abort = () => {
+      if (!response.writableEnded) {
+        controller.abort();
+      }
+    };
+    response.once('close', abort);
+    try {
+      if (request.method !== 'POST') {
+        response.setHeader('Allow', 'POST');
+        throw new TrouteHttpError(
+          405,
+          'METHOD_NOT_ALLOWED',
+          'POST 요청을 사용해 주세요.',
+        );
+      }
+      if (
+        request.headers['content-type']?.split(';')[0]?.trim().toLowerCase() !==
+        'application/json'
+      ) {
+        throw new TrouteHttpError(
+          415,
+          'UNSUPPORTED_MEDIA_TYPE',
+          'Content-Type을 application/json으로 지정해 주세요.',
+        );
+      }
+      if (!this.client) {
+        throw this.notConfiguredError();
+      }
+      const parsed = routeValidationRequestSchema.safeParse(
+        await this.readJson(request),
+      );
+      if (!parsed.success) {
+        throw new TrouteHttpError(
+          400,
+          'INVALID_TROUTE_REQUEST',
+          'troute 최적화 요청의 형식과 값을 확인해 주세요.',
+        );
+      }
+      const result = await this.client.validateRoute(
+        {
+          ...parsed.data,
+          route: this.prepareRequestForServer(parsed.data.route),
+        },
+        controller.signal,
+      );
+      if (!response.destroyed) {
+        response.writeHead(200);
+        response.end(JSON.stringify(result));
+      }
+    } catch (cause) {
+      if (!controller.signal.aborted && !response.destroyed) {
+        const error = this.toHttpError(cause, null);
+        response.writeHead(error.status);
+        response.end(
+          JSON.stringify({
+            error: {
+              code: error.code,
+              message: error.message,
+              ...(error.service ? { service: error.service } : {}),
+            },
+          }),
+        );
+      }
+    } finally {
+      response.off('close', abort);
+    }
+  }
 
   public async handle(
     request: IncomingMessage,
@@ -74,10 +156,20 @@ export class TrouteHttpService {
 
       this.externalApiPolicy.resolve('troute', 'submit-job');
 
-      this.jobs.create(optimizeRequest);
-      createdJobId = optimizeRequest.job_id;
-      this.jobs.markGatewayRequestStarted(createdJobId);
-      const acceptedJobId = await this.client.submitJob(optimizeRequest);
+      const submit = async () => {
+        this.jobs.create(optimizeRequest!);
+        createdJobId = optimizeRequest!.job_id;
+        this.jobs.markGatewayRequestStarted(createdJobId);
+        return this.client!.submitJob(optimizeRequest!);
+      };
+      const acceptedJobId = this.tokenMeter
+        ? await this.tokenMeter.run(
+            request,
+            'optimize',
+            submit,
+            optimizeRequest.locations.length,
+          )
+        : await submit();
       void this.subscriptions?.track(acceptedJobId).catch((cause) => {
         console.warn('제출한 troute Job SSE 추적을 시작하지 못했습니다.', {
           jobId: acceptedJobId,
@@ -151,6 +243,7 @@ export class TrouteHttpService {
   }
 
   private readonly maxBodyBytes = 1_048_576;
+  private tokenMeter?: TokenMeter;
 
   private prepareRequestForServer(
     request: Parameters<TrouteClient['submitJob']>[0],
@@ -220,6 +313,9 @@ export class TrouteHttpService {
     cause: unknown,
     request: Parameters<TrouteClient['submitJob']>[0] | null,
   ): TrouteHttpError {
+    if (cause instanceof BillingError) {
+      return new TrouteHttpError(cause.status, cause.code, cause.code);
+    }
     if (cause instanceof TrouteHttpError) {
       return cause;
     }

@@ -1,4 +1,12 @@
 export {
+  TUTORIAL_VERSION,
+  TUTORIAL_STEPS,
+  tutorialProgressSchema,
+  initialTutorialProgress,
+  type TutorialProgress,
+} from './schemas/tutorial.js';
+
+export {
   API_ROUTE_SUFFIXES,
   API_ROUTES,
   ANALYTICS_SCREENS,
@@ -18,11 +26,64 @@ export {
   buildSharedTripApiRoute,
   buildSharedTripCopyApiRoute,
   buildTripShareApiRoute,
+  buildAdminTripMetadataApiRoute,
+  buildAdminUserActionApiRoute,
+  buildAdminUserApiRoute,
   getGoogleMapsLocale,
   type GoogleMapsLanguageCode,
   type GoogleMapsLocale,
   type GoogleMapsRegionCode,
 } from './constants/index.js';
+
+export {
+  adminAuditEventSchema,
+  adminAuditListResponseSchema,
+  adminIdentitySummarySchema,
+  adminJobMirrorSummarySchema,
+  adminMeResponseSchema,
+  adminOperationsSummaryResponseSchema,
+  adminOperationServiceSchema,
+  adminReasonCodeSchema,
+  adminRoleSchema,
+  adminSummaryResponseSchema,
+  adminTripListResponseSchema,
+  adminTripMetadataResponseSchema,
+  adminTripSummarySchema,
+  adminUserActionResponseSchema,
+  adminUserDetailResponseSchema,
+  adminUserListResponseSchema,
+  adminUserStateSchema,
+  adminUserSummarySchema,
+  externalApiOutcomeSchema,
+  externalApiServiceSchema,
+  externalApiUsageActorSummarySchema,
+  externalApiUsageBucketSchema,
+  externalApiUsageServiceSummarySchema,
+  externalApiUsageSummaryResponseSchema,
+} from './schemas/admin.js';
+
+export type {
+  AdminAuditEvent,
+  AdminAuditListResponse,
+  AdminIdentitySummary,
+  AdminJobMirrorSummary,
+  AdminMeResponse,
+  AdminOperationsSummaryResponse,
+  AdminOperationService,
+  AdminRole,
+  AdminSummaryResponse,
+  AdminTripListResponse,
+  AdminTripMetadataResponse,
+  AdminTripSummary,
+  AdminUserActionResponse,
+  AdminUserDetailResponse,
+  AdminUserListResponse,
+  AdminUserState,
+  AdminUserSummary,
+  ExternalApiOutcome,
+  ExternalApiService,
+  ExternalApiUsageSummaryResponse,
+} from './types/admin.js';
 
 export {
   googleMapsLanguageCodeSchema,
@@ -137,6 +198,7 @@ export {
   routeRequestDiagnosticsSchema,
   routeUpstreamDiagnosticsSchema,
   routeLocationSchema,
+  upstreamApiErrorDetailsSchema,
 } from './schemas/routes.js';
 
 export type {
@@ -147,6 +209,7 @@ export type {
   DirectionsResult,
   MapRoute,
   RouteLocation,
+  UpstreamApiErrorDetails,
 } from './types/routes.js';
 
 export {
@@ -179,6 +242,8 @@ export {
   chatMessageSchema,
   chatRequestSchema,
   chatResponseSchema,
+  chatStreamEventSchema,
+  chatWebImageSchema,
 } from './schemas/chat.js';
 
 export type {
@@ -186,7 +251,11 @@ export type {
   ChatMessage,
   ChatRequest,
   ChatResponse,
+  ChatStreamEvent,
+  ChatWebImage,
 } from './types/chat.js';
+
+export { readSseData } from './streaming/readSseData.js';
 
 export {
   googleOAuthProfileSchema,
@@ -201,6 +270,17 @@ export type {
 export { authMeResponseSchema, authUserSchema } from './schemas/auth.js';
 
 export type { AuthMeResponse, AuthUser } from './types/auth.js';
+
+export {
+  LEGAL_VERSIONS,
+  LEGAL_PATHS,
+  authConsentAcceptanceSchema,
+  authConsentRecordSchema,
+  authConsentStatusSchema,
+  type AuthConsentAcceptance,
+  type AuthConsentRecord,
+  type AuthConsentStatus,
+} from './schemas/legal.js';
 
 export {
   openWebUIModelSchema,
@@ -292,6 +372,7 @@ export type {
 
 export {
   TROUTE_MAX_DEBUG_JOB_DURATION_MS,
+  TROUTE_MAX_PREVIEW_FRAMES,
   isTrouteJobTerminalStatus,
   trouteDebugOptionsSchema,
   trouteHealthResponseSchema,
@@ -359,3 +440,15 @@ export type {
   TrouteVisitPolicy,
   TrouteTravelMode,
 } from './types/troute.js';
+export * from './schemas/billing.js';
+
+export * from './schemas/routeValidation.js';
+export {
+  workspaceCommandDefinitions,
+  workspaceCommandRequestSchema,
+  validateWorkspaceCommand,
+  type WorkspaceCommandRequest,
+  type WorkspaceCommandDefinition,
+} from './schemas/workspaceCommand.js';
+
+export { quoteRouteTokens } from './domain/tokenCosts.js';

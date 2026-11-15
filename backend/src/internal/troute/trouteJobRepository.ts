@@ -36,6 +36,13 @@ export type TrouteJobEventVersion = {
   updatedAt?: number;
 };
 
+export type TrouteJobOperationalMetadata = {
+  status: TrouteJobState['status'];
+  createdAt: number;
+  updatedAt: number;
+  completedAt: number | null;
+};
+
 export type TrouteJobRepositoryErrorKind =
   'invalid_job_id' | 'job_already_exists' | 'job_not_found';
 
@@ -157,6 +164,23 @@ export class TrouteJobRepository {
       }));
   }
 
+  public listRecentOperationalMetadata(
+    limit: number,
+  ): TrouteJobOperationalMetadata[] {
+    return [...this.jobs.values()]
+      .sort(
+        (left, right) =>
+          right.updatedAt - left.updatedAt || right.createdAt - left.createdAt,
+      )
+      .slice(0, limit)
+      .map((job) => ({
+        status: job.state.status,
+        createdAt: job.createdAt,
+        updatedAt: job.updatedAt,
+        completedAt: job.completedAt,
+      }));
+  }
+
   public needsSync(summary: TrouteRemoteJobSummary): boolean {
     const storedJob = this.jobs.get(summary.job_id);
     return (
@@ -196,6 +220,7 @@ export class TrouteJobRepository {
       last_message: remote.last_message,
       error: remote.error,
       result: remote.result,
+      ...(remote.preview ? { preview: remote.preview } : {}),
     };
     const storedJob: StoredTrouteJob = {
       state,

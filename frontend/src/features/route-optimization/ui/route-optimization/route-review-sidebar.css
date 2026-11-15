@@ -1,0 +1,108 @@
+.route-review-sidebar {
+  position: absolute;
+  z-index: 2500;
+  inset: 16px auto 16px 16px;
+  display: flex;
+  flex-direction: column;
+  width: var(--trip-panel-width);
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-map-overlay-ring);
+  border-radius: var(--radius-lg);
+  background: var(--color-map-overlay-surface);
+  box-shadow: var(--shadow-map-overlay);
+  -webkit-backdrop-filter: var(--map-overlay-filter);
+  backdrop-filter: var(--map-overlay-filter);
+}
+
+.route-review-sidebar > header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.route-review-sidebar h1 {
+  margin: 0;
+  font-size: 23px;
+  line-height: 1.4;
+}
+
+.route-review-sidebar header p {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.route-review-day-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 24px;
+}
+
+.route-review-day-heading h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.route-review-day-heading span {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.route-review-day-heading .route-review-mode-badge {
+  padding: 6px 10px;
+  color: var(--route-review-color);
+  background: color-mix(in srgb, var(--route-review-color), transparent 90%);
+  border-radius: var(--radius-pill);
+}
+
+.route-review-place-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 20px 20px;
+  min-height: 0;
+}
+
+.route-review-place-list > li {
+  padding: 14px 0;
+  border-top: 1px solid var(--border-default);
+}
+
+.route-review-place-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.route-review-place-heading strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.route-review-place-number {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--route-review-color), transparent 90%);
+  color: var(--route-review-color);
+  font-weight: 700;
+}
+
+.route-review-place-timeline {
+  margin: 10px 0 0 40px;
+}
+
+.route-review-place-list-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+}

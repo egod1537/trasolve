@@ -1,0 +1,145 @@
+.trip-layer-time-compact {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .trip-map-page .trip-sidebar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px;
+    grid-template-rows: 46px 44px minmax(0, 1fr);
+  }
+
+  .mobile-layer-sheet-handle {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .trip-sidebar .trip-sidebar-header {
+    display: flex;
+    align-items: center;
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+    padding: 0 4px;
+  }
+
+  .trip-sidebar .trip-panel-header-body {
+    display: contents;
+  }
+
+  .trip-sidebar .trip-panel-header-copy {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .trip-sidebar .trip-panel-header-copy:has(input, .is-error) {
+    z-index: 6;
+    inset: 0 48px 0 8px;
+    display: flex;
+    align-items: center;
+    width: auto;
+    height: auto;
+    clip-path: none;
+    background: var(--color-surface-raised);
+  }
+
+  .trip-sidebar .trip-plan-title:not(:has(input)) {
+    display: none;
+  }
+
+  .trip-sidebar .trip-plan-title:has(input) {
+    width: 100%;
+  }
+
+  .trip-sidebar .trip-panel-header-menu-anchor {
+    order: 2;
+  }
+
+  .trip-sidebar .trip-panel-header-actions {
+    display: flex;
+    flex: 1;
+    order: 1;
+    gap: 2px;
+    padding: 0;
+    background: transparent;
+  }
+
+  .trip-sidebar .trip-panel-header-action,
+  .trip-sidebar .trip-panel-header-menu-trigger {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+  }
+
+  .trip-sidebar .trip-panel-header-action > span {
+    display: none;
+  }
+
+  .trip-sidebar .trip-layer-visibility-actions {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 0;
+    border-bottom: 1px solid var(--color-map-overlay-ring);
+  }
+
+  .trip-sidebar .trip-sidebar-scroll {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .trip-sidebar[data-mobile-sheet='collapsed'] {
+    grid-template-rows: 46px;
+  }
+
+  .trip-sidebar .trip-day-heading {
+    min-height: 44px;
+    padding: 0 4px;
+  }
+
+  .trip-sidebar .trip-day-heading h2 button {
+    min-height: 44px;
+    padding-block: 6px;
+  }
+
+  .trip-sidebar .trip-layer-list {
+    margin-top: 0;
+    margin-left: 4px;
+    padding-block: 0;
+  }
+
+  .trip-sidebar .trip-place {
+    min-height: 48px;
+    padding-block: 5px;
+  }
+
+  .trip-sidebar .trip-polyline {
+    min-height: 44px;
+    padding-block: 4px;
+  }
+
+  .trip-sidebar :is(.place-time-summary, .trip-polyline-time-summary) {
+    display: none;
+  }
+
+  .trip-sidebar .trip-layer-time-compact {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+  }
+
+  .trip-sidebar .trip-polyline-content {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 2px 8px;
+  }
+
+  .trip-sidebar .trip-polyline-name {
+    grid-column: 1 / -1;
+  }
+}

@@ -1,5 +1,6 @@
 import { useId, type ReactNode, type RefObject } from 'react';
 import { CloseIcon } from '@/shared/ui/icons';
+import { IconButton } from '@/shared/ui/IconButton';
 import '@/shared/ui/map/place-info-card.css';
 
 type Props = {
@@ -27,14 +28,14 @@ export function MapPopupCardShell({
 }: Props) {
   const titleId = useId();
   const closeButton = (
-    <button
-      type="button"
+    <IconButton
       className="place-info-card-close"
       aria-label={closeLabel}
+      size="sm"
+      variant="ghost"
+      icon={<CloseIcon />}
       onClick={onClose}
-    >
-      <CloseIcon />
-    </button>
+    />
   );
 
   return (

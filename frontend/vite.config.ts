@@ -2,6 +2,8 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
+import { mobileLayout } from './build/mobileLayout';
+import { localizationPreload } from './build/localizationPreload';
 
 const frontendDir = fileURLToPath(new URL('.', import.meta.url));
 const defaultRepositoryUrl = 'https://github.com/egod1537/trasolve';
@@ -45,7 +47,11 @@ function parseBuildChannel(value: string): BuildChannel | undefined {
 }
 
 const proxy = {
-  '/api': 'http://127.0.0.1:43127',
+  '/api': {
+    target: 'http://127.0.0.1:43127',
+    // Preserve the browser Host so backend Origin validation remains same-origin.
+    changeOrigin: false,
+  },
 };
 
 export default defineConfig(({ command, mode, isPreview }) => {
@@ -89,7 +95,8 @@ export default defineConfig(({ command, mode, isPreview }) => {
   );
 
   return {
-    plugins: [react()],
+    plugins: [react(), localizationPreload()],
+    css: { postcss: { plugins: [mobileLayout()] } },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),

@@ -1,3 +1,4 @@
+import { matchesLayoutMaxWidth } from '@/shared/config/mobileLayout';
 import { useLayoutEffect, useState, type RefObject } from 'react';
 
 export type AnchoredSideCardPlacement = 'left' | 'overlay' | 'right';
@@ -35,8 +36,11 @@ export function useAnchoredSideCardPlacement({
       const mainRect = mainCard.getBoundingClientRect();
       const requiredSpace =
         sideCard.offsetWidth + SIDE_CARD_GAP + VIEWPORT_EDGE_GAP;
-      const nextPlacement: AnchoredSideCardPlacement =
-        window.innerWidth - mainRect.right >= requiredSpace
+      const nextPlacement: AnchoredSideCardPlacement = matchesLayoutMaxWidth(
+        760,
+      )
+        ? 'overlay'
+        : window.innerWidth - mainRect.right >= requiredSpace
           ? 'right'
           : mainRect.left >= requiredSpace
             ? 'left'
