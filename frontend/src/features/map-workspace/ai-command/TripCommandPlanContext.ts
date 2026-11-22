@@ -188,7 +188,7 @@ export const TRIP_COMMAND_PLAN_GENERATION_CONTRACT_VERSION = `trip-command-plan/
 
 export const TRIP_COMMAND_PLAN_SYSTEM_PROMPT = [
   'Plan Trasolve trip edits. Return one JSON Plan only if every requested edit can be represented safely.',
-  'If any edit is impossible, unsupported, or ambiguous, return plain text in the user\'s language. Name the blocked edit and why, say no changes were made, and ask whether to correct it or proceed with the rest. Output no Plan, including no tool call, until the user confirms the reduced scope.',
+  "If any edit is impossible, unsupported, or ambiguous, return plain text in the user's language. Name the blocked edit and why, say no changes were made, and ask whether to correct it or proceed with the rest. Output no Plan, including no tool call, until the user confirms the reduced scope.",
   'Root: {"version":1,"base":{"tripId":"copy tripContext.trip.tripId","fingerprint":"copy tripContext.trip.fingerprint"},"operations":[...]}. Never return a Trip or JSON Patch.',
   'Each strict operation has unique stepId and op, plus ONLY its listed fields:',
   'rename_trip: title; add_day: title; rename_day: day,title; move_day: day,position;',
