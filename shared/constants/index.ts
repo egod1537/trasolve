@@ -37,6 +37,7 @@ export const API_ROUTES = {
   tcacheInternalHealth: '/api/internal/tcache/health',
   tcacheInternalJobs: '/api/internal/tcache/jobs',
   trips: '/api/trips',
+  destinationKnowledge: '/api/destination-knowledge',
   sharedTrips: '/api/shared-trips',
   routes: '/api/routes',
   placesAutocomplete: '/api/google/maps/places/autocomplete',

@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { z } from 'zod';
+import currentData from './destinations.json' with { type: 'json' };
 import {
   destinationDatasetVersion,
   normalizeDestinationIdentity,
@@ -66,15 +67,32 @@ async function main(): Promise<void> {
     left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
   );
 
-  const snapshot = snapshotSchema.parse({
-    schemaVersion: 1,
-    destinations: destinationRows,
+  const current = snapshotSchema.parse(currentData);
+  const currentVersion = destinationDatasetVersion(current);
+  const coordinatesById = new Map(
+    current.destinations.map(({ id, coordinates }) => [id, coordinates]),
+  );
+  const candidate = snapshotSchema.parse({
+    schemaVersion: current.schemaVersion,
+    updatedAt: current.updatedAt,
+    destinations: destinationRows.map((destination) => ({
+      ...destination,
+      coordinates: coordinatesById.get(destination.id),
+    })),
   });
+  const candidateVersion = destinationDatasetVersion(candidate);
+  const snapshot = {
+    ...candidate,
+    updatedAt:
+      candidateVersion === currentVersion
+        ? current.updatedAt
+        : new Date().toISOString(),
+  };
   await writeFile(outputFile, `${JSON.stringify(snapshot, null, 2)}\n`, {
     flag: 'wx',
   });
   console.log(
-    `${snapshot.destinations.length} destinations, ${destinationDatasetVersion(snapshot)}`,
+    `${snapshot.destinations.length} destinations, ${candidateVersion}, updated ${snapshot.updatedAt}`,
   );
 }
 

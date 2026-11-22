@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "updatedAt": "2026-11-22T04:54:25.763Z",
   "destinations": [
     {
       "id": "JP:0266e06711a3afd17fa745ec",
@@ -3918,6 +3919,11 @@
       "bestSeason": "사계절",
       "suggestedStay": "2~4시간",
       "tags": ["박물관·문화", "간토", "좌표확인"],
+      "coordinates": {
+        "lat": 35.718889,
+        "lng": 139.776389,
+        "sourceUrl": "https://www.wikidata.org/wiki/Q653433#P625"
+      },
       "source": {
         "kind": "공개 좌표 데이터",
         "name": "Wikidata",
@@ -4968,6 +4974,11 @@
       "bestSeason": "봄·가을",
       "suggestedStay": "반일",
       "tags": ["성", "유네스코", "건축"],
+      "coordinates": {
+        "lat": 34.839444,
+        "lng": 134.693611,
+        "sourceUrl": "https://www.wikidata.org/wiki/Q188754#P625"
+      },
       "source": {
         "kind": "편집 가이드",
         "name": "Japan Guide",
@@ -5293,6 +5304,11 @@
       "bestSeason": "사계절",
       "suggestedStay": "2~4시간",
       "tags": ["궁궐·성곽", "수도권", "좌표확인"],
+      "coordinates": {
+        "lat": 37.579444,
+        "lng": 126.991667,
+        "sourceUrl": "https://www.wikidata.org/wiki/Q477157#P625"
+      },
       "source": {
         "kind": "공개 좌표 데이터",
         "name": "Wikidata",
@@ -6743,6 +6759,11 @@
       "bestSeason": "사계절",
       "suggestedStay": "2~4시간",
       "tags": ["박물관·문화", "수도권", "좌표확인"],
+      "coordinates": {
+        "lat": 37.523889,
+        "lng": 126.980278,
+        "sourceUrl": "https://www.wikidata.org/wiki/Q494407#P625"
+      },
       "source": {
         "kind": "공개 좌표 데이터",
         "name": "Wikidata",
@@ -12743,6 +12764,11 @@
       "bestSeason": "6~9월",
       "suggestedStay": "2~4시간",
       "tags": ["종교·역사", "울란바토르·근교", "좌표확인"],
+      "coordinates": {
+        "lat": 47.923056,
+        "lng": 106.895,
+        "sourceUrl": "https://www.wikidata.org/wiki/Q965633#P625"
+      },
       "source": {
         "kind": "공개 좌표 데이터",
         "name": "Wikidata",
@@ -13243,6 +13269,11 @@
       "bestSeason": "6~9월",
       "suggestedStay": "2~4시간",
       "tags": ["역사·유산", "중앙몽골", "좌표확인"],
+      "coordinates": {
+        "lat": 47.431111,
+        "lng": 102.659444,
+        "sourceUrl": "https://www.wikidata.org/wiki/Q2475401#P625"
+      },
       "source": {
         "kind": "공개 좌표 데이터",
         "name": "Wikidata",

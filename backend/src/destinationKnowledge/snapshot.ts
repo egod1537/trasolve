@@ -5,7 +5,9 @@ export const destinationCountryCodeSchema = z.enum(['JP', 'KR', 'MN']);
 
 const text = z.string().trim().min(1);
 const list = z.array(text).readonly();
-const destinationIdSchema = z.string().regex(/^(JP|KR|MN):[a-f0-9]{24}$/);
+export const destinationIdSchema = z
+  .string()
+  .regex(/^(JP|KR|MN):[a-f0-9]{24}$/);
 
 const destinationSchema = z
   .strictObject({
@@ -21,6 +23,14 @@ const destinationSchema = z
     bestSeason: text.optional(),
     suggestedStay: text.optional(),
     tags: list,
+    coordinates: z
+      .strictObject({
+        lat: z.number().min(-90).max(90),
+        lng: z.number().min(-180).max(180),
+        sourceUrl: z.url({ protocol: /^https$/ }),
+      })
+      .readonly()
+      .optional(),
     source: z
       .strictObject({
         kind: text,
@@ -38,6 +48,7 @@ export type DestinationKnowledge = z.infer<typeof destinationSchema>;
 export const snapshotSchema = z
   .strictObject({
     schemaVersion: z.literal(1),
+    updatedAt: z.iso.datetime(),
     destinations: z
       .array(destinationSchema)
       .min(1)
@@ -60,5 +71,9 @@ export function normalizeDestinationIdentity(value: string): string {
 export function destinationDatasetVersion(
   snapshot: DestinationSnapshot,
 ): string {
-  return `sha256:${createHash('sha256').update(JSON.stringify(snapshot)).digest('hex')}`;
+  const content = {
+    schemaVersion: snapshot.schemaVersion,
+    destinations: snapshot.destinations,
+  };
+  return `sha256:${createHash('sha256').update(JSON.stringify(content)).digest('hex')}`;
 }

@@ -13,6 +13,7 @@ import type { TripShareHttpService } from './trip-sharing/tripShareHttpService.j
 import type { AnalyticsEventHttpService } from './analytics/analyticsEventHttpService.js';
 import type { AnalyticsQueryHttpService } from './analytics/analyticsQueryHttpService.js';
 import type { CurrentUserResolver } from './auth/currentUserResolver.js';
+import { handleDestinationKnowledge } from './destinationKnowledge/http.js';
 import type { AdminHttpService } from './admin/adminHttpService.js';
 import type { BillingHttpService } from './billing/billingHttpService.js';
 import type { TutorialHttpService } from './auth/tutorialHttpService.js';
@@ -156,6 +157,24 @@ export function createBackendServer(
           pathname === API_ROUTES.trips
             ? undefined
             : pathname.slice(API_ROUTES.trips.length + 1),
+        );
+        return;
+      }
+
+      const destinationId = matchSinglePathSegment(
+        pathname,
+        `${API_ROUTES.destinationKnowledge}/`,
+      );
+      if (
+        pathname === API_ROUTES.destinationKnowledge ||
+        destinationId !== null
+      ) {
+        void handleDestinationKnowledge(
+          request,
+          response,
+          requestUrl,
+          currentUser,
+          destinationId,
         );
         return;
       }
