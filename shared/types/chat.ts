@@ -5,6 +5,7 @@ import type {
   chatRequestSchema,
   chatResponseSchema,
   chatStreamEventSchema,
+  chatToolProgressSchema,
   chatWebImageSchema,
 } from '../schemas/chat.js';
 
@@ -14,3 +15,5 @@ export type ChatRequest = z.infer<typeof chatRequestSchema>;
 export type ChatResponse = z.infer<typeof chatResponseSchema>;
 export type ChatStreamEvent = z.infer<typeof chatStreamEventSchema>;
 export type ChatWebImage = z.infer<typeof chatWebImageSchema>;
+
+export type ChatToolProgress = z.infer<typeof chatToolProgressSchema>;

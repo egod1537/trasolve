@@ -12,6 +12,7 @@ export {
   ANALYTICS_SCREENS,
   ANALYTICS_TARGETS,
   CHAT_LIMITS,
+  CHAT_TOOL_PROGRESS_ACCEPT,
   GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
   GOOGLE_MAPS_LANGUAGE_CODES,
   GOOGLE_MAPS_REGION_CODE,
@@ -243,6 +244,7 @@ export {
   chatRequestSchema,
   chatResponseSchema,
   chatStreamEventSchema,
+  chatToolProgressSchema,
   chatWebImageSchema,
 } from './schemas/chat.js';
 
@@ -252,6 +254,7 @@ export type {
   ChatRequest,
   ChatResponse,
   ChatStreamEvent,
+  ChatToolProgress,
   ChatWebImage,
 } from './types/chat.js';
 

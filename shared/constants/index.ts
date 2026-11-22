@@ -1,5 +1,5 @@
 export { TravelMode } from './travelMode.js';
-export { CHAT_LIMITS } from './chat.js';
+export { CHAT_LIMITS, CHAT_TOOL_PROGRESS_ACCEPT } from './chat.js';
 export { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from './analytics.js';
 export {
   GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,

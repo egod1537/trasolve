@@ -51,6 +51,12 @@ export const chatResponseSchema = z.strictObject({
     .optional(),
 });
 
+export const chatToolProgressSchema = z.strictObject({
+  tool: z.enum(['web_search', 'propose_trip_command_plan']),
+  index: z.number().int().min(0).max(1023),
+  status: z.enum(['running', 'completed', 'failed']),
+});
+
 export const chatStreamEventSchema = z.discriminatedUnion('type', [
   z.strictObject({
     type: z.literal('status'),
@@ -61,6 +67,7 @@ export const chatStreamEventSchema = z.discriminatedUnion('type', [
     text: z.string().max(CHAT_LIMITS.messageLength),
   }),
   z.strictObject({ type: z.literal('summary'), text: z.string().max(8000) }),
+  chatToolProgressSchema.extend({ type: z.literal('tool') }),
   z.strictObject({ type: z.literal('complete'), result: chatResponseSchema }),
   z.strictObject({
     type: z.literal('error'),

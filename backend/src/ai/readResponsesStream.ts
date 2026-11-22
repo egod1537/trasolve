@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   CHAT_LIMITS,
   chatResponseSchema,
+  chatToolProgressSchema,
   readSseData,
   type ChatResponse,
 } from '@trasolve/shared';
@@ -19,8 +20,53 @@ const frameSchema = z.object({
   type: z.string(),
   delta: z.string().optional(),
   item: z.unknown().optional(),
+  output_index: z.unknown().optional(),
   response: z.unknown().optional(),
 });
+const webSearchItemSchema = z.object({
+  type: z.literal('web_search_call'),
+  status: z.string().optional(),
+});
+
+function readWebSearchProgress(event: z.infer<typeof frameSchema>) {
+  let status: 'running' | 'completed' | 'failed' | undefined;
+  switch (event.type) {
+    case 'response.web_search_call.in_progress':
+    case 'response.web_search_call.searching':
+      status = 'running';
+      break;
+    case 'response.web_search_call.completed':
+      status = 'completed';
+      break;
+    case 'response.output_item.added':
+    case 'response.output_item.done': {
+      const item = webSearchItemSchema.safeParse(event.item);
+      if (item.success) {
+        switch (item.data.status) {
+          case 'in_progress':
+          case 'searching':
+            status = 'running';
+            break;
+          case 'completed':
+          case 'failed':
+            status = item.data.status;
+            break;
+        }
+      }
+      break;
+    }
+  }
+  if (!status) {
+    return undefined;
+  }
+  const progress = chatToolProgressSchema.safeParse({
+    tool: 'web_search',
+    index: event.output_index,
+    status,
+  });
+  return progress.success ? progress.data : undefined;
+}
+
 export async function readResponsesStream(
   response: Response,
   model: string,
@@ -42,6 +88,10 @@ export async function readResponsesStream(
       break;
     }
     const event = frameSchema.parse(JSON.parse(data));
+    const progress = readWebSearchProgress(event);
+    if (progress) {
+      options.onEvent({ type: 'tool', ...progress });
+    }
     if (event.type === 'response.output_item.done') {
       completedOutputItems.push(openWebUIOutputItemSchema.parse(event.item));
     } else if (event.type === 'response.output_text.delta' && event.delta) {
