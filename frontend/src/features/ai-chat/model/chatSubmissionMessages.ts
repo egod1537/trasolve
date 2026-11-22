@@ -14,6 +14,7 @@ export function appendSubmittedMessage(
   content: string,
   command: DebugDelayCommand,
   log: SubmissionLogger,
+  clearDraft: boolean,
 ): SubmittedMessages | null {
   const submittedAt = Date.now();
   const message: UiChatMessage = {
@@ -50,8 +51,10 @@ export function appendSubmittedMessage(
         : thread,
     ),
   );
-  store.draftsRef.current = { ...store.draftsRef.current, [threadId]: '' };
-  store.setDrafts(store.draftsRef.current);
+  if (clearDraft) {
+    store.draftsRef.current = { ...store.draftsRef.current, [threadId]: '' };
+    store.setDrafts(store.draftsRef.current);
+  }
   return requestMessages;
 }
 

@@ -1,4 +1,4 @@
-import { parseDebugDelayCommand } from './debugDelay';
+import { parseDebugDelayCommand, type DebugDelayCommand } from './debugDelay';
 import { logThreadRequestLifecycle } from './requestLifecycle';
 import {
   appendSubmittedMessage,
@@ -11,7 +11,7 @@ import type {
 } from './chatSubmissionTypes';
 
 export function useChatSubmission(options: ChatSubmissionOptions) {
-  return async () => {
+  return async (followUp?: { threadId: string; text: string }) => {
     const {
       selectedThreadIdRef,
       draftsRef,
@@ -22,11 +22,20 @@ export function useChatSubmission(options: ChatSubmissionOptions) {
       L,
     } = options;
     const threadId = selectedThreadIdRef.current;
-    const content = (draftsRef.current[threadId] ?? '').trim();
+    if (followUp && followUp.threadId !== threadId) {
+      return;
+    }
+    const content = (
+      followUp?.text ??
+      draftsRef.current[threadId] ??
+      ''
+    ).trim();
     if (!content || isThreadSending(threadId)) {
       return;
     }
-    const command = parseDebugDelayCommand(content);
+    const command: DebugDelayCommand = followUp
+      ? { kind: 'none' }
+      : parseDebugDelayCommand(content);
     const request = command.kind === 'invalid' ? null : beginRequest(threadId);
     if (command.kind !== 'invalid' && !request) {
       return;
@@ -47,6 +56,7 @@ export function useChatSubmission(options: ChatSubmissionOptions) {
       content,
       command,
       log,
+      followUp === undefined,
     );
     if (!messages || command.kind === 'invalid' || !request) {
       if (request) {

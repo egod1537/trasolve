@@ -22,6 +22,7 @@ type Props = {
   sending: boolean;
   messagesRef: RefObject<HTMLDivElement | null>;
   onSuggestion: (text: string) => void;
+  onFollowUp: (text: string) => void;
   renderAssistantActions?: (content: string, context?: string) => ReactNode;
 };
 
@@ -31,6 +32,7 @@ export const ChatV2Messages = memo(function ChatV2Messages({
   sending,
   messagesRef,
   onSuggestion,
+  onFollowUp,
   renderAssistantActions,
 }: Props) {
   const L = useL();
@@ -146,7 +148,7 @@ export const ChatV2Messages = memo(function ChatV2Messages({
                 <button
                   key={suggestion}
                   type="button"
-                  onClick={() => onSuggestion(suggestion)}
+                  onClick={() => onFollowUp(suggestion)}
                 >
                   {suggestion}
                   <span aria-hidden="true">↗</span>
