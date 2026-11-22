@@ -1,10 +1,18 @@
-import { CHAT_LIMITS, chatResponseSchema } from '@trasolve/shared';
+import {
+  CHAT_LIMITS,
+  chatResponseSchema,
+  chatToolProgressSchema,
+} from '@trasolve/shared';
 import {
   type UiChatMessage,
   type PersistedProductChat,
 } from '@/features/ai-chat/model/chatTypes';
 
 export const MAX_REQUEST_CONTEXT_LENGTH = 100_000;
+
+const savedToolProgressSchema = chatToolProgressSchema
+  .array()
+  .max(CHAT_LIMITS.toolProgress);
 
 export function readProductChat(
   key: string | undefined,
@@ -48,13 +56,20 @@ export function readProductChat(
       ) {
         return null;
       }
-      const { requestContext, followUps, summary, webImages, ...rest } =
-        message;
+      const {
+        requestContext,
+        followUps,
+        summary,
+        webImages,
+        toolProgress,
+        ...rest
+      } = message;
       const savedFollowUps =
         chatResponseSchema.shape.followUps.safeParse(followUps);
       const savedSummary = chatResponseSchema.shape.summary.safeParse(summary);
       const savedWebImages =
         chatResponseSchema.shape.webImages.safeParse(webImages);
+      const savedToolProgress = savedToolProgressSchema.safeParse(toolProgress);
       messages.push({
         ...(rest as UiChatMessage),
         ...(savedFollowUps.success && savedFollowUps.data
@@ -62,6 +77,13 @@ export function readProductChat(
           : {}),
         ...(savedSummary.success && savedSummary.data
           ? { summary: savedSummary.data }
+          : {}),
+        ...(savedToolProgress.success
+          ? {
+              toolProgress: savedToolProgress.data.filter(
+                ({ status }) => status !== 'running',
+              ),
+            }
           : {}),
         ...(savedWebImages.success && savedWebImages.data
           ? { webImages: savedWebImages.data }

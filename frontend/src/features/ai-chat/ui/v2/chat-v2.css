@@ -212,12 +212,16 @@
   font-size: 12px;
 }
 
+.chat-v2-progress-status,
 .chat-v2-progress summary {
   display: flex;
   align-items: center;
   gap: 8px;
   width: fit-content;
   padding: 5px 0;
+}
+
+.chat-v2-progress summary {
   list-style: none;
   cursor: pointer;
 }
@@ -242,6 +246,27 @@
   padding: 6px 14px;
   border-left: 2px solid var(--color-border-strong);
   color: var(--color-text-muted);
+}
+
+.chat-v2-progress-tools {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chat-v2-progress-tools li > span {
+  margin-inline-start: 8px;
+}
+
+.chat-v2-progress-tools code {
+  overflow-wrap: anywhere;
+  color: var(--color-text-secondary);
+}
+
+.chat-v2-progress-tools + * {
+  margin-top: 8px;
 }
 
 .chat-v2-progress-content p {

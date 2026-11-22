@@ -1,6 +1,6 @@
-import type { ChatMessage, ChatRequest, ChatResponse } from '@trasolve/shared';
+import type { ChatMessage, ChatRequest } from '@trasolve/shared';
 import type { Localize } from '@/shared/i18n';
-import type { ChatSessionOptions } from './chatTypes';
+import type { ChatSessionOptions, ChatSubmissionResult } from './chatTypes';
 import type { ChatThreadState } from './useChatThreads';
 import type { useThreadRequests } from './useThreadRequests';
 import type { ThreadRequestLifecycleStage } from './requestLifecycle';
@@ -31,7 +31,7 @@ export type ChatSubmissionOptions = ChatSubmissionStore &
       request: ChatRequest,
       signal: AbortSignal,
       threadId: string,
-    ) => Promise<ChatResponse>;
+    ) => Promise<ChatSubmissionResult>;
   };
 export type SubmissionLogger = (
   stage: ThreadRequestLifecycleStage,

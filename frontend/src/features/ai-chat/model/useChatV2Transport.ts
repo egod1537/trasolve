@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ChatRequest } from '@trasolve/shared';
+import {
+  CHAT_LIMITS,
+  type ChatRequest,
+  type ChatToolProgress,
+} from '@trasolve/shared';
 import { streamChat } from '../api/chatStream';
 import {
   createChatStreamBuffer,
@@ -29,7 +33,7 @@ export function useChatV2Transport() {
         requestId,
         content: '',
         summary: '',
-        stage: 'waiting',
+        toolProgress: [],
       };
       const buffer = createChatStreamBuffer(initial, (snapshot) => {
         if (!signal.aborted) {
@@ -56,7 +60,33 @@ export function useChatV2Transport() {
       setPending((current) => ({ ...current, [threadId]: initial }));
       signal.addEventListener('abort', clear, { once: true });
       try {
-        return await streamChat(request, signal, buffer.accept);
+        const result = await streamChat(request, signal, buffer.accept);
+        signal.throwIfAborted();
+        const snapshot = buffer.getSnapshot();
+        const toolProgress = snapshot.toolProgress.filter(
+          ({ status }) => status !== 'running',
+        );
+        if (
+          result.toolCall &&
+          !toolProgress.some(
+            ({ tool, status }) =>
+              tool === result.toolCall?.name && status === 'completed',
+          )
+        ) {
+          const plan: ChatToolProgress = {
+            tool: result.toolCall.name,
+            index: 0,
+            status: 'completed',
+          };
+          toolProgress.splice(CHAT_LIMITS.toolProgress - 1, 1);
+          toolProgress.push(plan);
+        }
+        const summary = result.summary?.trim() || snapshot.summary.trim();
+        return {
+          ...result,
+          ...(summary ? { summary } : {}),
+          ...(toolProgress.length ? { toolProgress } : {}),
+        };
       } finally {
         signal.removeEventListener('abort', clear);
         clear();

@@ -132,8 +132,9 @@ export const ChatV2Messages = memo(function ChatV2Messages({
           <article className="chat-v2-message is-assistant is-pending">
             <ChatV2Progress
               busy
+              stage={pending?.stage}
               summary={pending?.summary}
-              waiting={!pending || pending.stage === 'waiting'}
+              tools={pending?.toolProgress}
             />
             {pending?.content && <ChatMarkdown content={pending.content} />}
           </article>
@@ -200,7 +201,7 @@ const ChatV2Message = memo(function ChatV2Message({
   }
   return (
     <article className="chat-v2-message is-assistant">
-      <ChatV2Progress summary={message.summary} />
+      <ChatV2Progress summary={message.summary} tools={message.toolProgress} />
       <ChatAssistantBody
         content={message.content}
         context={message.requestContext}

@@ -1,5 +1,4 @@
-import type { ChatResponse } from '@trasolve/shared';
-import type { UiChatMessage } from './chatTypes';
+import type { ChatSubmissionResult, UiChatMessage } from './chatTypes';
 import type { DebugDelayCommand } from './debugDelay';
 import { buildChatRequestMessages } from './chatThreads';
 import type {
@@ -58,7 +57,7 @@ export function appendSubmittedMessage(
 export function appendChatAnswer(
   store: ChatSubmissionStore,
   threadId: string,
-  result: ChatResponse,
+  result: ChatSubmissionResult,
   context: string | undefined,
   log: SubmissionLogger,
 ): void {
@@ -67,6 +66,9 @@ export function appendChatAnswer(
     ...result.message,
     ...(result.followUps ? { followUps: result.followUps } : {}),
     ...(result.summary ? { summary: result.summary } : {}),
+    ...(result.toolProgress?.length
+      ? { toolProgress: result.toolProgress }
+      : {}),
     ...(result.webImages ? { webImages: result.webImages } : {}),
     id: `assistant-${store.nextMessageIdRef.current++}`,
     createdAt: completedAt,

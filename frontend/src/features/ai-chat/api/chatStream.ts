@@ -1,5 +1,6 @@
 import {
   API_ROUTES,
+  CHAT_TOOL_PROGRESS_ACCEPT,
   chatRequestSchema,
   chatStreamEventSchema,
   readSseData,
@@ -27,7 +28,7 @@ export async function streamChat(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Accept: 'text/event-stream',
+        Accept: CHAT_TOOL_PROGRESS_ACCEPT,
         ...billingHeaders(),
       },
       body: JSON.stringify(chatRequestSchema.parse(request)),
