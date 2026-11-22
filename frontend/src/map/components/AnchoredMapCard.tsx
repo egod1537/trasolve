@@ -9,7 +9,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import type { GeoPoint } from '@/shared/types/mapTypes';
 import { useGoogleMap } from '@/map/components/GoogleMap';
 import '@/map/components/anchored-map-card.css';
@@ -172,7 +172,7 @@ export function AnchoredMapCard({
   children,
   occlusionRef,
 }: Props) {
-  const { overlayHost, canvasRef, isZooming } = useGoogleMap();
+  const { overlayHost, canvasRef } = useGoogleMap();
   const cardRef = useRef<HTMLDivElement>(null);
   const initialPositionFrameRef = useRef(0);
   const positionedAnchorKeyRef = useRef<string | null>(null);
@@ -320,7 +320,7 @@ export function AnchoredMapCard({
   useLayoutEffect(() => {
     const card = cardRef.current;
     const canvas = canvasRef.current;
-    if (!card || !canvas || isZooming) {
+    if (!card || !canvas) {
       return;
     }
 
@@ -330,7 +330,11 @@ export function AnchoredMapCard({
     if (occlusionRef?.current) {
       observer.observe(occlusionRef.current);
     }
-    const unsubscribe = overlayHost.subscribeDraw(updateLayout);
+    // A draw can rebase every host-local pixel in the frame that also moves the
+    // pane, so the new position must be committed before that frame is painted.
+    const unsubscribe = overlayHost.subscribeDraw(() => {
+      flushSync(updateLayout);
+    });
     updateLayout();
     return () => {
       cancelAnimationFrame(initialPositionFrameRef.current);
@@ -338,7 +342,7 @@ export function AnchoredMapCard({
       observer.disconnect();
       unsubscribe();
     };
-  }, [canvasRef, isZooming, occlusionRef, overlayHost, updateLayout]);
+  }, [canvasRef, occlusionRef, overlayHost, updateLayout]);
 
   const layoutMatchesAnchor = layout.anchorKey === anchorKey;
   const layoutReady = layoutMatchesAnchor && layout.ready && layout.visible;

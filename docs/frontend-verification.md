@@ -649,3 +649,29 @@ and Alt+Arrow reordering, undo/redo, and save failure/recovery in a normal brows
   browser connection restriction. Review horizontal/diagonal drags, both flick
   directions, holding before release, interruption/cancellation, idle recovery,
   reduced motion and mobile vertical scrolling in the deployed build.
+
+## Anchored map card position jumps (2026-11-22)
+
+- Cause 1: `AnchoredMapCard` positioned itself with an ordinary React state
+  update inside the overlay `draw` callback. Google calls `draw` in an animation
+  frame and, when a drag or `panTo` ends, rebases every host-local pixel in the
+  same frame that resets the pane transform. React committed the new position
+  one frame later, so the card was painted once at the old local coordinates
+  under the new pane origin, displaced by the whole pan distance.
+- Cause 2: the card unsubscribed from `draw` and resize while `isZooming`, so it
+  kept pre-zoom coordinates for the entire zoom and snapped back on `idle`.
+- Fix: the `draw` subscription commits with `flushSync`, and the card keeps
+  tracking during zoom. Resize observation stays asynchronous to avoid
+  ResizeObserver loop errors. Marker zoom visibility in `TripLayer` is unchanged.
+- Measured with the real `AnchoredMapCard` and `GoogleOverlayHost` on a keyless
+  raster map (Maps JS 3.67, headless Chromium, 1200×800), counting painted frames
+  where the card pointer was more than 2 px from its anchor. Before: drag ×4
+  3 frames (max 193 px), wheel zoom 59 of 62 frames (max 507 px), `panTo`
+  2 frames (max 46 px). After: 0 frames for drag, `panTo` and `setZoom`; wheel
+  zoom only shows the intended pointer clamp at the canvas corner (≤ 22 px).
+  The temporary harness lived outside the repository and was not added.
+- Typecheck, lint and production build pass; the existing function-size warning
+  remains. No browser Maps key exists on this machine, so the full workspace was
+  not exercised. Manually review fast drags, wheel zoom, consecutive place
+  selection, panel open/close, window resize, card editing and the vector map ID.
+  The reported recording was not available for comparison.
