@@ -42,6 +42,18 @@ export const chatResponseSchema = z.strictObject({
   webImages: z.array(chatWebImageSchema).max(CHAT_LIMITS.webImages).optional(),
   followUps: z.array(z.string().trim().min(1).max(160)).max(3).optional(),
   summary: z.string().max(8000).optional(),
+  placeRecommendations: z
+    .array(
+      z.strictObject({
+        id: z.string().min(1).max(80),
+        name: z.string().min(1).max(150),
+        reason: z.string().min(1).max(240),
+        sourceLabel: z.string().min(1).max(150),
+        sourceUrl: z.url({ protocol: /^https?$/ }),
+      }),
+    )
+    .max(4)
+    .optional(),
   /** The validated tool call the message content was built from. */
   toolCall: z
     .strictObject({

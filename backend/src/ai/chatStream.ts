@@ -6,6 +6,10 @@ import {
   type ChatStreamEvent,
 } from '@trasolve/shared';
 import type { ChatProvider, ChatStreamOptions } from './chatProvider.js';
+import {
+  addDestinationSources,
+  prepareDestinationRecommendations,
+} from './destinationRecommendations.js';
 
 const followUpsSchema = z.array(z.string().trim().min(1).max(160)).max(3);
 
@@ -17,23 +21,30 @@ export async function runChatStream(
   options.signal.throwIfAborted();
   options.onEvent({ type: 'status', stage: 'waiting' });
   options.onEvent({ type: 'status', stage: 'generating' });
+  const knowledge = options.destinationKnowledge
+    ? prepareDestinationRecommendations(request)
+    : null;
+  const providerRequest = knowledge?.request ?? request;
   const result = chatResponseSchema.parse(
     provider.stream
-      ? await provider.stream(request, options)
-      : await provider.chat(request, options.signal),
+      ? await provider.stream(providerRequest, options)
+      : await provider.chat(providerRequest, options.signal),
   );
   options.signal.throwIfAborted();
+  const answer = knowledge
+    ? addDestinationSources(result, knowledge.items)
+    : result;
   if (request.generateFollowUps === false) {
-    return result;
+    return answer;
   }
   const followUps = await generateFollowUps(
     provider,
     request,
-    result,
+    answer,
     options.signal,
   );
   options.signal.throwIfAborted();
-  return { ...result, followUps };
+  return { ...answer, followUps };
 }
 
 async function generateFollowUps(

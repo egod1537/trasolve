@@ -65,6 +65,9 @@ export function appendChatAnswer(
   const completedAt = Date.now();
   const message: UiChatMessage = {
     ...result.message,
+    ...(result.placeRecommendations
+      ? { placeRecommendations: result.placeRecommendations }
+      : {}),
     ...(result.followUps ? { followUps: result.followUps } : {}),
     ...(result.summary ? { summary: result.summary } : {}),
     ...(result.webImages ? { webImages: result.webImages } : {}),

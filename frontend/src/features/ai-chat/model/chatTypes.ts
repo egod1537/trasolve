@@ -28,6 +28,7 @@ export type UiChatMessage = ChatMessage & {
   requestContent?: string | null;
   /** Opaque context captured when the request for this answer was sent. */
   requestContext?: string;
+  placeRecommendations?: import('@trasolve/shared').ChatResponse['placeRecommendations'];
   followUps?: string[];
   summary?: string;
   webImages?: ChatWebImage[];

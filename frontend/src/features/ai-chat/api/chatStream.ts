@@ -23,7 +23,8 @@ export async function streamChat(
 ): Promise<ChatResponse> {
   const timeout = AbortSignal.timeout(145000);
   try {
-    const response = await fetch(withBillingMode(API_ROUTES.chatStream), {
+    const path = `${API_ROUTES.chatStream}?destinationKnowledge=1`;
+    const response = await fetch(withBillingMode(path), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

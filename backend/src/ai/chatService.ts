@@ -124,6 +124,11 @@ export class ChatService {
       const execute = () =>
         stream
           ? runChatStream(this.provider, parsed.data, {
+              destinationKnowledge:
+                new URL(
+                  request.url ?? '/',
+                  'http://localhost',
+                ).searchParams.get('destinationKnowledge') === '1',
               signal: controller.signal,
               onEvent: (event) => writeChatStreamEvent(response, event),
             })

@@ -31,7 +31,14 @@ export function readProductChat(
       if (!item || typeof item !== 'object') {
         return null;
       }
-      const message = item as Record<string, unknown>;
+      const { placeRecommendations, ...message } = item as Record<
+        string,
+        unknown
+      >;
+      const savedRecommendations =
+        chatResponseSchema.shape.placeRecommendations.safeParse(
+          placeRecommendations,
+        );
       if (
         typeof message.id !== 'string' ||
         !/^(user|assistant)-[1-9]\d*$/.test(message.id) ||
@@ -65,6 +72,11 @@ export function readProductChat(
           : {}),
         ...(savedWebImages.success && savedWebImages.data
           ? { webImages: savedWebImages.data }
+          : {}),
+        ...(message.role === 'assistant' &&
+        savedRecommendations.success &&
+        savedRecommendations.data
+          ? { placeRecommendations: savedRecommendations.data }
           : {}),
         // Only a well-formed string is trusted; anything else is dropped so a
         // consumer treats the answer as having no verifiable request context.

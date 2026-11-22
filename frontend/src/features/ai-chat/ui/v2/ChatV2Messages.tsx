@@ -204,6 +204,7 @@ const ChatV2Message = memo(function ChatV2Message({
       <ChatAssistantBody
         content={message.content}
         context={message.requestContext}
+        placeRecommendations={message.placeRecommendations}
         renderActions={renderAssistantActions}
       />
       <ChatWebImages images={message.webImages} />

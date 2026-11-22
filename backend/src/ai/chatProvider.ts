@@ -5,6 +5,7 @@ import type {
 } from '@trasolve/shared';
 
 export type ChatStreamOptions = {
+  destinationKnowledge?: boolean;
   signal: AbortSignal;
   onEvent: (event: ChatStreamEvent) => void;
 };
