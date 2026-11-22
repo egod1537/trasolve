@@ -17,6 +17,7 @@
 1. [시나리오와 수동 실행 절차](scenarios.md): 초기 상태, ID 확보, strict Plan, 상태 차이, 합격 기준.
 2. [기존 T3 증거 보존본](historical-evidence.md): 원본 파일별 SHA256, 전체 원문, 케이스별 결과. 새 실행 결과와 합산하지 않는다.
 3. [양성준 검토 요청문](review-yang-seongjun.md): 복사 가능한 검토 패킷. 외부 전송하지 않았다.
+4. [Manifest 기반 Chrome 일괄 실행](batch-run.md): 격리 브라우저의 Preview, canonical 상태, Chat·SSE와 실패 근거 검증.
 
 ## 요구사항 추적과 미확인 사항
 
