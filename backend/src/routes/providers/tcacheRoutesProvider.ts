@@ -206,10 +206,24 @@ export class TcacheRoutesProvider implements RouteProvider {
     ];
     const countryCode = request.countryCode ?? this.inferCountryCode(locations);
     const travelMode = request.travelMode ?? TravelMode.DRIVING;
-    return {
-      locations: locations.map((location) => this.toTcacheLocation(location)),
-      mode: travelMode,
-      departureTime: new Date(Date.now() + 5 * 60_000).toISOString(),
+    const domesticRoadRoute =
+      countryCode === 'KR' &&
+      (travelMode === TravelMode.DRIVING || travelMode === TravelMode.WALKING);
+    const now = Date.now();
+    if (
+      domesticRoadRoute &&
+      request.departureTime &&
+      Math.floor(Date.parse(request.departureTime) / 60_000) <=
+        Math.floor(now / 60_000)
+    ) {
+      throw new RouteError(
+        400,
+        'INVALID_ROUTE_OPTIONS',
+        '자동차 출발 시각을 현재 시각보다 나중으로 지정해 주세요.',
+        'tcache',
+      );
+    }
+    const options = {
       computeAlternativeRoutes: request.computeAlternativeRoutes ?? false,
       ...(request.languageCode ? { languageCode: request.languageCode } : {}),
       ...(countryCode
@@ -217,9 +231,31 @@ export class TcacheRoutesProvider implements RouteProvider {
         : request.regionCode
           ? { regionCode: request.regionCode }
           : {}),
+      ...(request.routingRegion
+        ? { routingRegion: request.routingRegion }
+        : {}),
       ...(travelMode === TravelMode.DRIVING
         ? { routingPreference: 'TRAFFIC_AWARE' }
         : {}),
+    };
+    if (domesticRoadRoute && !request.departureTime) {
+      // tcache's ordered request requires a time, which selects scheduled Kakao driving.
+      return {
+        ...options,
+        origin: this.toTcacheLocation(request.origin),
+        destination: this.toTcacheLocation(request.destination),
+        intermediates: (request.intermediates ?? []).map((location) =>
+          this.toTcacheLocation(location),
+        ),
+        travelMode,
+      };
+    }
+    return {
+      ...options,
+      locations: locations.map((location) => this.toTcacheLocation(location)),
+      mode: travelMode,
+      departureTime:
+        request.departureTime ?? new Date(now + 5 * 60_000).toISOString(),
     };
   }
 
@@ -294,7 +330,27 @@ export class TcacheRoutesProvider implements RouteProvider {
   }
 
   private failedJob(code?: string, message?: string): RouteError {
-    if (code === 'ROUTE_NOT_FOUND' || code === 'ZERO_RESULTS') {
+    if (code === 'ROUTE_PROVIDER_TIMEOUT') {
+      return new RouteError(
+        504,
+        'ROUTES_TIMEOUT',
+        '경로 조회 시간이 초과됐습니다. 잠시 후 다시 시도해 주세요.',
+        'tcache',
+      );
+    }
+    if (code === 'ROUTE_PROVIDER_RATE_LIMITED') {
+      return new RouteError(
+        503,
+        'ROUTES_QUOTA_EXCEEDED',
+        '경로 조회 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.',
+        'tcache',
+      );
+    }
+    if (
+      code === 'ROUTE_NOT_FOUND' ||
+      code === 'ZERO_RESULTS' ||
+      code === 'ROUTE_PROVIDER_NO_ROUTE'
+    ) {
       return new RouteError(
         422,
         'ROUTE_NOT_FOUND',
