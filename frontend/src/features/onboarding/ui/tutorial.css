@@ -113,10 +113,45 @@
   box-shadow: var(--shadow-map-overlay);
 }
 .tutorial-exit-dialog {
-  width: min(420px, calc(100vw - 2rem));
   display: grid;
-  gap: 1rem;
+  box-sizing: border-box;
+  width: min(400px, calc(100vw - 2rem));
+  gap: 24px;
+  padding: 24px;
   box-shadow: var(--shadow-map-overlay);
+}
+.tutorial-exit-heading {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+.tutorial-exit-heading h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+.tutorial-exit-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-danger-border);
+  border-radius: 12px;
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+.tutorial-exit-icon svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
 }
 .tutorial-reentry-dialog h2,
 .tutorial-reentry-dialog p {
@@ -129,7 +164,10 @@
 .tutorial-dialog-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: 8px;
+}
+.tutorial-dialog-actions .ui-button {
+  min-width: 76px;
 }
 @media (max-width: 700px) {
   .driver-popover.trasolve-tutorial {
@@ -141,6 +179,13 @@
   .tutorial-reentry-button {
     right: max(0.75rem, env(safe-area-inset-right));
     bottom: max(5rem, env(safe-area-inset-bottom));
+  }
+  .tutorial-exit-dialog {
+    gap: 20px;
+    padding: 20px;
+  }
+  .tutorial-dialog-actions .ui-button {
+    flex: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {

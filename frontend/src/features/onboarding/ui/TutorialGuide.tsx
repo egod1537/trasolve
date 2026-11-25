@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { driver, type Driver } from 'driver.js';
 import { TUTORIAL_STEPS } from '@trasolve/shared';
 import { useL } from '@/shared/i18n';
@@ -18,9 +18,11 @@ export function TutorialGuide() {
     current.current = tutorial;
   }, [tutorial]);
   const instance = useRef<Driver | null>(null);
-  const allowDestroy = useRef(false);
   const [confirmExit, setConfirmExit] = useState(false);
-  const exitTitleId = useId();
+  const requestExit = useCallback((guide: Driver | null = instance.current) => {
+    setConfirmExit(true);
+    guide?.destroy();
+  }, []);
 
   useEffect(() => {
     let disposed = false;
@@ -43,12 +45,12 @@ export function TutorialGuide() {
       disableActiveInteraction: true,
       waitForElement: 8000,
       onElementMissing: () => false,
-      onCloseClick: () => setConfirmExit(true),
+      onCloseClick: () => requestExit(),
       onDestroyStarted: (_element, _step, { driver: activeDriver }) => {
-        if (disposed || allowDestroy.current) {
+        if (disposed) {
           activeDriver.destroy();
         } else {
-          setConfirmExit(true);
+          requestExit(activeDriver);
         }
       },
       onPopoverRender: (popover, { index }) => {
@@ -60,9 +62,7 @@ export function TutorialGuide() {
         exit.type = 'button';
         exit.className = 'driver-popover-footer-btn tutorial-exit-button';
         exit.textContent = L('common:tutorial.action.skip');
-        exit.addEventListener('click', () => {
-          setConfirmExit(true);
-        });
+        exit.addEventListener('click', () => requestExit());
         popover.footer.append(exit);
       },
       onHighlighted: (element, _step, { index }) => {
@@ -90,7 +90,6 @@ export function TutorialGuide() {
       },
       onDoneClick: () => {
         current.current.stop(true);
-        allowDestroy.current = true;
         guide.destroy();
       },
     });
@@ -130,13 +129,12 @@ export function TutorialGuide() {
     const stopTracking = trackTutorialLayout(guide);
     return () => {
       disposed = true;
-      allowDestroy.current = true;
       stopTracking();
       observer.disconnect();
       instance.current = null;
       guide.destroy();
     };
-  }, [L, tutorial.run]);
+  }, [L, requestExit, tutorial.run]);
 
   useEffect(() => {
     const index = Math.max(
@@ -144,35 +142,58 @@ export function TutorialGuide() {
       TUTORIAL_STEPS.findIndex((step) => step === tutorial.progress.step),
     );
     const guide = instance.current;
-    if (guide && guide.getActiveIndex() !== index) {
+    if (!confirmExit && guide && guide.getActiveIndex() !== index) {
       guide.drive(index);
     }
-  }, [tutorial.progress.step]);
+  }, [confirmExit, tutorial.progress.step]);
 
   return confirmExit ? (
+    <TutorialExitDialog
+      onCancel={() => setConfirmExit(false)}
+      onConfirm={() => {
+        current.current.stop();
+        setConfirmExit(false);
+      }}
+    />
+  ) : null;
+}
+
+function TutorialExitDialog({
+  onCancel,
+  onConfirm,
+}: {
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const L = useL();
+  const titleId = useId();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  return (
     <Dialog
       className="tutorial-exit-dialog"
       role="alertdialog"
-      labelledBy={exitTitleId}
-      onClose={() => setConfirmExit(false)}
+      labelledBy={titleId}
+      initialFocusRef={cancelRef}
+      onClose={onCancel}
     >
-      <h2 id={exitTitleId}>{L('common:tutorial.action.skip')}</h2>
+      <div className="tutorial-exit-heading">
+        <span className="tutorial-exit-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 8v5" />
+            <path d="M12 16.5v.01" />
+            <path d="M10.3 3.8 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.8a2 2 0 0 0-3.4 0Z" />
+          </svg>
+        </span>
+        <h2 id={titleId}>{L('common:tutorial.action.skip')}</h2>
+      </div>
       <div className="tutorial-dialog-actions">
-        <Button onClick={() => setConfirmExit(false)}>
+        <Button ref={cancelRef} onClick={onCancel}>
           {L('common:action.cancel')}
         </Button>
-        <Button
-          variant="primary"
-          onClick={() => {
-            current.current.stop();
-            allowDestroy.current = true;
-            setConfirmExit(false);
-            instance.current?.destroy();
-          }}
-        >
+        <Button variant="danger" onClick={onConfirm}>
           {L('common:tutorial.action.skip')}
         </Button>
       </div>
     </Dialog>
-  ) : null;
+  );
 }

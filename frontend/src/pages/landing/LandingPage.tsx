@@ -15,6 +15,7 @@ import {
   isDebugGuestMode,
   isDemoModeRequested,
   useCurrentUser,
+  withDemoRequest,
 } from '@/features/auth';
 import { NL, useL, type Localize } from '@/shared/i18n';
 import { trackEvent, useScreenView } from '@/shared/analytics';
@@ -57,7 +58,7 @@ export function LandingPage() {
     authNotice,
   } = useCurrentUser();
   const debugGuestMode = isDebugGuestMode(window.location.search);
-  const demoRequested = isDemoModeRequested(window.location.search);
+  const demoRequested = isDemoModeRequested();
   const demoEntryAvailable = Boolean(
     demoStatus?.automatic || (demoRequested && demoStatus?.available === true),
   );
@@ -78,7 +79,7 @@ export function LandingPage() {
       return;
     }
     const mapPath = withMobileLayout(
-      debugGuestMode ? '/map?debug=1' : demoRequested ? '/map?demo=1' : '/map',
+      withDemoRequest(debugGuestMode ? '/map?debug=1' : '/map'),
     );
     if (state.status === 'signed-in') {
       if (state.user.demo && demoStatus?.hasPreviousActivity) {
@@ -135,7 +136,7 @@ export function LandingPage() {
   const enterSelectedDemo = (reset: boolean): void => {
     setDemoChoiceOpen(false);
     trackLandingButton(ANALYTICS_TARGETS.landingEnterMap);
-    void loginAsDemo(withMobileLayout(demoRequested ? '/map?demo=1' : '/map'), {
+    void loginAsDemo(withMobileLayout(withDemoRequest('/map')), {
       requested: demoRequested,
       reset,
     });
