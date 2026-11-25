@@ -41,6 +41,7 @@ type CommonProps = {
   onRefresh: () => void;
   onOpen: (id: string) => void;
   onLogin: () => void;
+  exampleTripId: string | null;
 };
 
 type Props = CommonProps &
@@ -77,6 +78,7 @@ export function TripPickerPopup({
   onCreateTokyoExample,
   onDelete,
   onLogin,
+  exampleTripId,
 }: Props) {
   const L = useL();
   const mobile = useLayoutMaxWidth();
@@ -295,6 +297,11 @@ export function TripPickerPopup({
                         >
                           {trip.title}
                         </strong>
+                        {trip.id === exampleTripId && (
+                          <span className="trip-map-picker-example-badge">
+                            {L('auth:tokenPlans.preview')}
+                          </span>
+                        )}
                       </button>
                       <div className="trip-map-picker-item-actions">
                         {mode === 'edit' && (

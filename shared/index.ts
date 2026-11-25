@@ -273,6 +273,12 @@ export type {
 export { authMeResponseSchema, authUserSchema } from './schemas/auth.js';
 
 export type { AuthMeResponse, AuthUser } from './types/auth.js';
+export {
+  demoEnterResponseSchema,
+  demoStatusSchema,
+  type DemoEnterResponse,
+  type DemoStatus,
+} from './schemas/demo.js';
 
 export {
   LEGAL_VERSIONS,

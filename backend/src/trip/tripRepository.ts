@@ -21,6 +21,7 @@ export interface TripRepository {
     tripId: string,
     expectedRevision: string,
   ): Promise<string>;
+  deleteAll(actorUserId: string): Promise<void>;
 }
 
 export class TripRevisionConflictError extends Error {

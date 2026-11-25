@@ -48,6 +48,7 @@ export const API_ROUTES = {
   googleOAuthCallback: '/api/auth/google/callback',
   googleOAuthResult: '/api/auth/google/result',
   authLocalLogin: '/api/auth/local',
+  authDemo: '/api/auth/demo',
   authMe: '/api/auth/me',
   authConsent: '/api/auth/consent',
   authConsentCancel: '/api/auth/consent/cancel',

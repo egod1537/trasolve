@@ -13,6 +13,7 @@ import {
   type AuthRepository,
   type AuthUserRecord,
   type CreateUserWithIdentityInput,
+  type DemoWorkspaceRecord,
   type UpdateIdentityLoginInput,
 } from './authRepository.js';
 
@@ -253,6 +254,55 @@ export class PostgresAuthRepository implements AuthRepository {
       `UPDATE trasolve.users SET settings = jsonb_set(settings, '{tutorial}', $2::jsonb)
        WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NULL`,
       [userId, JSON.stringify(tutorialProgressSchema.parse(progress))],
+    );
+    if (result.rowCount !== 1) {
+      throw new Error('User is unavailable.');
+    }
+  }
+
+  public async getDemoWorkspace(
+    userId: string,
+  ): Promise<DemoWorkspaceRecord | undefined> {
+    const result = await this.database.query<{ workspace: unknown }>(
+      `SELECT settings -> 'demoWorkspace' AS workspace FROM trasolve.users
+       WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NULL`,
+      [userId],
+    );
+    if (!result.rows[0]) {
+      throw new Error('User is unavailable.');
+    }
+    const value = result.rows[0].workspace;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return undefined;
+    }
+    const record = value as Record<string, unknown>;
+    if (
+      typeof record.initialized !== 'boolean' ||
+      (record.exampleTripId !== null &&
+        typeof record.exampleTripId !== 'string') ||
+      (record.exampleUpdatedAt !== null &&
+        typeof record.exampleUpdatedAt !== 'string') ||
+      (record.activity !== undefined && typeof record.activity !== 'boolean')
+    ) {
+      throw new Error('Demo workspace has an invalid schema.');
+    }
+    return {
+      initialized: record.initialized,
+      exampleTripId: record.exampleTripId,
+      exampleUpdatedAt: record.exampleUpdatedAt,
+      activity: record.activity === true,
+    };
+  }
+
+  public async saveDemoWorkspace(
+    userId: string,
+    workspace: DemoWorkspaceRecord,
+  ): Promise<void> {
+    const result = await this.database.query(
+      `UPDATE trasolve.users
+       SET settings = jsonb_set(settings, '{demoWorkspace}', $2::jsonb)
+       WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NULL`,
+      [userId, JSON.stringify(workspace)],
     );
     if (result.rowCount !== 1) {
       throw new Error('User is unavailable.');

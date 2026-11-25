@@ -33,6 +33,13 @@ export interface UpdateIdentityLoginInput {
   readonly emailVerified: boolean;
 }
 
+export interface DemoWorkspaceRecord {
+  readonly initialized: boolean;
+  readonly exampleTripId: string | null;
+  readonly exampleUpdatedAt: string | null;
+  readonly activity: boolean;
+}
+
 export interface AuthRepository {
   findIdentity(
     issuer: string,
@@ -64,6 +71,11 @@ export interface AuthRepository {
   saveTutorialProgress(
     userId: string,
     progress: TutorialProgress,
+  ): Promise<void>;
+  getDemoWorkspace(userId: string): Promise<DemoWorkspaceRecord | undefined>;
+  saveDemoWorkspace(
+    userId: string,
+    workspace: DemoWorkspaceRecord,
   ): Promise<void>;
 }
 

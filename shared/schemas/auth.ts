@@ -7,6 +7,7 @@ export const authUserSchema = z.object({
   loginProvider: z.enum(['google', 'ssu', 'local']).optional(),
   name: z.string().min(1).optional(),
   pictureUrl: z.url().optional(),
+  demo: z.boolean().optional(),
 });
 
 export const authMeResponseSchema = z.object({

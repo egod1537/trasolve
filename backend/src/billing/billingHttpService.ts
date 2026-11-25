@@ -73,6 +73,10 @@ export class TokenMeter {
     if (!userId) {
       throw new BillingError('AUTHENTICATION_REQUIRED', 401);
     }
+    if (await this.currentUser.isDemo(request)) {
+      await this.currentUser.markDemoActivity(request);
+      return operation();
+    }
     const owner = this.billing.owner(userId, isPaymentDebugRequested(request));
     if (this.billing.isUsageUnlimited(owner, isTokenDebugRequested(request))) {
       return operation();
@@ -134,14 +138,35 @@ export class BillingHttpService {
         return;
       }
       const userId = await this.currentUser.require(request);
+      const demo = await this.currentUser.isDemo(request);
       const owner = this.billing.owner(
         userId,
         isPaymentDebugRequested(request),
       );
       if (path === '/summary') {
         this.method(request, 'GET');
-        send(response, 200, await this.summary(owner, request));
+        const summary = await this.summary(owner, request);
+        send(
+          response,
+          200,
+          demo
+            ? {
+                ...summary,
+                unlimited: true,
+                unlimitedAvailable: false,
+                available: false,
+                subscriptionAvailable: false,
+                upgradeAvailable: false,
+                topupAvailable: false,
+                costs: { chat: 0, optimize: 0 },
+                products: [],
+              }
+            : summary,
+        );
         return;
+      }
+      if (demo) {
+        throw new BillingError('PAYMENT_DEBUG_DISABLED', 403);
       }
       this.method(request, 'POST');
       validateBillingRequest(request);

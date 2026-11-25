@@ -46,6 +46,18 @@ export class CurrentUserResolver {
     return userId;
   }
 
+  public async isDemo(request: IncomingMessage): Promise<boolean> {
+    const userId = await this.resolve(request);
+    return userId ? this.authentication.isDemoUser(userId) : false;
+  }
+
+  public async markDemoActivity(request: IncomingMessage): Promise<void> {
+    const userId = await this.resolve(request);
+    if (userId) {
+      await this.authentication.markDemoActivity(userId);
+    }
+  }
+
   private readonly users = new WeakMap<
     IncomingMessage,
     Promise<string | undefined>

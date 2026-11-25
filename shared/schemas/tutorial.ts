@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const TUTORIAL_VERSION = 2;
+export const TUTORIAL_VERSION = 3;
 export const TUTORIAL_STEPS = [
   'create',
   'days',
@@ -12,7 +12,13 @@ export const TUTORIAL_STEPS = [
 export const tutorialProgressSchema = z
   .strictObject({
     version: z.number().int().positive(),
-    status: z.enum(['not-started', 'in-progress', 'completed', 'skipped']),
+    status: z.enum([
+      'not-started',
+      'in-progress',
+      'paused',
+      'completed',
+      'skipped',
+    ]),
     // Keep version-one records readable so the provider can restart the new flow.
     step: z.enum([...TUTORIAL_STEPS, 'share']),
     tripId: z.uuid().nullable(),

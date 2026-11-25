@@ -1,6 +1,6 @@
 import { WorkspaceCommandProvider } from './command-console/CommandProvider';
 import { CatalogCommands } from './command-console/CatalogCommands';
-import { Component, useEffect } from 'react';
+import { Component } from 'react';
 import type { Trip } from '@trasolve/shared';
 import { GoogleMap } from '@/map/components/GoogleMap';
 import { TripPickerPopup } from '@/features/map-workspace/components/TripPickerPopup';
@@ -15,8 +15,9 @@ import { type MapWorkspaceMode } from '@/features/map-workspace/model/mapWorkspa
 import '@/features/map-workspace/styles/trip-maps.css';
 import { useL, type Localize } from '@/shared/i18n';
 import {
-  isDebugGuestMode,
+  DemoBadge,
   useCurrentUser,
+  useDemoMapEntry,
   type CurrentUserState,
 } from '@/features/auth';
 import { AnalyticsOverlay } from '@/features/analytics-overlay';
@@ -36,6 +37,7 @@ type Props = {
   initialTripId: string | null;
   authenticationStatus: CurrentUserState['status'];
   authNotice: string | null;
+  exampleTripId: string | null;
   onLogin: () => void;
   onTutorialCreated: (tripId: string) => void;
 };
@@ -64,15 +66,9 @@ export default function MapWorkspaceFeature({
   initialTripId: string | null;
 }) {
   const L = useL();
-  const { state, login, authNotice } = useCurrentUser();
-
-  useEffect(() => {
-    if (state.status === 'signed-out') {
-      window.location.replace(
-        isDebugGuestMode(window.location.search) ? '/?debug=1' : '/',
-      );
-    }
-  }, [state.status]);
+  const { state, demoStatus, login, loginAsDemo, authNotice } =
+    useCurrentUser();
+  useDemoMapEntry(state.status === 'signed-out', demoStatus, loginAsDemo);
 
   if (state.status !== 'signed-in') {
     return <p role="status">{L('map:routes.loadingLabel.loadingTravelMap')}</p>;
@@ -84,7 +80,9 @@ export default function MapWorkspaceFeature({
       userId={state.user.id}
       enabled={mode === 'edit' && !analyticsMode}
       debug={debugMode || import.meta.env.DEV}
+      demo={state.user.demo === true}
     >
+      {state.user.demo === true && <DemoBadge />}
       <GuidedWorkspace
         L={L}
         mode={mode}
@@ -93,6 +91,7 @@ export default function MapWorkspaceFeature({
         initialTripId={initialTripId}
         authenticationStatus={state.status}
         authNotice={authNotice}
+        exampleTripId={demoStatus?.exampleTripId ?? null}
         onLogin={() => void login()}
       />
     </TutorialProvider>
@@ -152,6 +151,7 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
       authenticationStatus,
       authNotice,
       onLogin,
+      exampleTripId,
     } = this.props;
     const {
       selectedTripId,
@@ -181,6 +181,7 @@ class MapWorkspaceFeatureView extends Component<Props, State> {
       onRefresh: this.refreshTrips,
       onOpen: this.openTrip,
       onLogin,
+      exampleTripId,
     };
 
     return (

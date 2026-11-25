@@ -17,6 +17,7 @@ import { handleDestinationKnowledge } from './destinationKnowledge/http.js';
 import type { AdminHttpService } from './admin/adminHttpService.js';
 import type { BillingHttpService } from './billing/billingHttpService.js';
 import type { TutorialHttpService } from './auth/tutorialHttpService.js';
+import type { DemoModeHttpService } from './demo/demoModeHttpService.js';
 import { runWithExternalApiRequestContext } from './observability/externalApiUsage/externalApiUsage.js';
 
 export function createBackendServer(
@@ -30,6 +31,7 @@ export function createBackendServer(
   adminHttp: AdminHttpService,
   billingHttp: BillingHttpService,
   tutorialHttp: TutorialHttpService,
+  demoHttp: DemoModeHttpService,
   consentHttp: ConsentHttpFlow,
 ): Server {
   const server = createServer((request, response) => {
@@ -46,6 +48,10 @@ export function createBackendServer(
       }
       if (pathname === API_ROUTES.tutorial) {
         void tutorialHttp.handle(request, response);
+        return;
+      }
+      if (pathname === API_ROUTES.authDemo) {
+        void demoHttp.handle(request, response);
         return;
       }
       if (

@@ -117,6 +117,19 @@ export class LocalFileTripRepository implements TripRepository {
     return expectedRevision;
   }
 
+  public async deleteAll(actorUserId: string): Promise<void> {
+    const trips = await this.list(actorUserId);
+    await Promise.all(
+      trips.map(({ trip }) =>
+        unlink(this.path(actorUserId, trip.id)).catch((cause: unknown) => {
+          if (!this.isMissing(cause)) {
+            throw cause;
+          }
+        }),
+      ),
+    );
+  }
+
   private readonly rootDir: string;
   private readonly writes = new Map<string, Promise<void>>();
 

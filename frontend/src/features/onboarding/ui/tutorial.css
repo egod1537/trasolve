@@ -101,12 +101,46 @@
   display: grid;
   gap: 10px;
 }
+.tutorial-reentry-button {
+  position: fixed;
+  z-index: 800;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  box-shadow: var(--shadow-map-overlay);
+}
+.tutorial-reentry-dialog {
+  width: min(420px, calc(100vw - 2rem));
+  box-shadow: var(--shadow-map-overlay);
+}
+.tutorial-exit-dialog {
+  width: min(420px, calc(100vw - 2rem));
+  display: grid;
+  gap: 1rem;
+  box-shadow: var(--shadow-map-overlay);
+}
+.tutorial-reentry-dialog h2,
+.tutorial-reentry-dialog p {
+  margin: 0;
+}
+.tutorial-reentry-dialog {
+  display: grid;
+  gap: 1rem;
+}
+.tutorial-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
 @media (max-width: 700px) {
   .driver-popover.trasolve-tutorial {
     max-height: min(280px, 45dvh);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 18px;
+  }
+  .tutorial-reentry-button {
+    right: max(0.75rem, env(safe-area-inset-right));
+    bottom: max(5rem, env(safe-area-inset-bottom));
   }
 }
 @media (prefers-reduced-motion: reduce) {

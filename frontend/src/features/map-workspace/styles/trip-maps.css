@@ -361,6 +361,15 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.trip-map-picker-example-badge {
+  flex: none;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
 
 .trip-map-picker-item-meta {
   font-size: 12px;
