@@ -1,5 +1,4 @@
-import type { ChatResponse } from '@trasolve/shared';
-import type { UiChatMessage } from './chatTypes';
+import type { ChatSubmissionResult, UiChatMessage } from './chatTypes';
 import type { DebugDelayCommand } from './debugDelay';
 import { buildChatRequestMessages } from './chatThreads';
 import type {
@@ -14,6 +13,7 @@ export function appendSubmittedMessage(
   content: string,
   command: DebugDelayCommand,
   log: SubmissionLogger,
+  clearDraft: boolean,
 ): SubmittedMessages | null {
   const submittedAt = Date.now();
   const message: UiChatMessage = {
@@ -50,23 +50,31 @@ export function appendSubmittedMessage(
         : thread,
     ),
   );
-  store.draftsRef.current = { ...store.draftsRef.current, [threadId]: '' };
-  store.setDrafts(store.draftsRef.current);
+  if (clearDraft) {
+    store.draftsRef.current = { ...store.draftsRef.current, [threadId]: '' };
+    store.setDrafts(store.draftsRef.current);
+  }
   return requestMessages;
 }
 
 export function appendChatAnswer(
   store: ChatSubmissionStore,
   threadId: string,
-  result: ChatResponse,
+  result: ChatSubmissionResult,
   context: string | undefined,
   log: SubmissionLogger,
 ): void {
   const completedAt = Date.now();
   const message: UiChatMessage = {
     ...result.message,
+    ...(result.placeRecommendations
+      ? { placeRecommendations: result.placeRecommendations }
+      : {}),
     ...(result.followUps ? { followUps: result.followUps } : {}),
     ...(result.summary ? { summary: result.summary } : {}),
+    ...(result.toolProgress?.length
+      ? { toolProgress: result.toolProgress }
+      : {}),
     ...(result.webImages ? { webImages: result.webImages } : {}),
     id: `assistant-${store.nextMessageIdRef.current++}`,
     createdAt: completedAt,

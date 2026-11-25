@@ -42,6 +42,18 @@ export const chatResponseSchema = z.strictObject({
   webImages: z.array(chatWebImageSchema).max(CHAT_LIMITS.webImages).optional(),
   followUps: z.array(z.string().trim().min(1).max(160)).max(3).optional(),
   summary: z.string().max(8000).optional(),
+  placeRecommendations: z
+    .array(
+      z.strictObject({
+        id: z.string().min(1).max(80),
+        name: z.string().min(1).max(150),
+        reason: z.string().min(1).max(240),
+        sourceLabel: z.string().min(1).max(150),
+        sourceUrl: z.url({ protocol: /^https?$/ }),
+      }),
+    )
+    .max(4)
+    .optional(),
   /** The validated tool call the message content was built from. */
   toolCall: z
     .strictObject({
@@ -49,6 +61,12 @@ export const chatResponseSchema = z.strictObject({
       arguments: tripCommandPlanSchema,
     })
     .optional(),
+});
+
+export const chatToolProgressSchema = z.strictObject({
+  tool: z.enum(['web_search', 'propose_trip_command_plan']),
+  index: z.number().int().min(0).max(1023),
+  status: z.enum(['running', 'completed', 'failed']),
 });
 
 export const chatStreamEventSchema = z.discriminatedUnion('type', [
@@ -61,6 +79,7 @@ export const chatStreamEventSchema = z.discriminatedUnion('type', [
     text: z.string().max(CHAT_LIMITS.messageLength),
   }),
   z.strictObject({ type: z.literal('summary'), text: z.string().max(8000) }),
+  chatToolProgressSchema.extend({ type: z.literal('tool') }),
   z.strictObject({ type: z.literal('complete'), result: chatResponseSchema }),
   z.strictObject({
     type: z.literal('error'),

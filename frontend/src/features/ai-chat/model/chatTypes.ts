@@ -1,6 +1,8 @@
 import {
   type ChatMessage,
   type ChatRequest,
+  type ChatResponse,
+  type ChatToolProgress,
   type ChatWebImage,
 } from '@trasolve/shared';
 
@@ -21,6 +23,10 @@ export type ChatSessionOptions = {
   onUnreadPreviewsChange?: (previews: MapAiUnreadPreview[]) => void;
 };
 
+export type ChatSubmissionResult = ChatResponse & {
+  toolProgress?: readonly ChatToolProgress[];
+};
+
 export type UiChatMessage = ChatMessage & {
   id: string;
   createdAt: number;
@@ -28,8 +34,10 @@ export type UiChatMessage = ChatMessage & {
   requestContent?: string | null;
   /** Opaque context captured when the request for this answer was sent. */
   requestContext?: string;
+  placeRecommendations?: import('@trasolve/shared').ChatResponse['placeRecommendations'];
   followUps?: string[];
   summary?: string;
+  toolProgress?: readonly ChatToolProgress[];
   webImages?: ChatWebImage[];
 };
 

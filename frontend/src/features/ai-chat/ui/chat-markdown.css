@@ -115,3 +115,27 @@
 .chat-markdown > :last-child {
   margin-bottom: 0;
 }
+
+.chat-place-recommendations {
+  margin: 12px 0 0;
+  padding-inline-start: 1.5em;
+  overflow-wrap: anywhere;
+}
+
+.chat-place-recommendations > li {
+  padding-block: 8px;
+}
+
+.chat-place-recommendations > li + li {
+  border-top: 1px solid var(--color-border-strong);
+}
+
+.chat-place-recommendations p {
+  margin: 2px 0;
+}
+
+.chat-place-recommendations cite {
+  color: var(--color-text-secondary);
+  font-size: 0.9em;
+  font-style: normal;
+}

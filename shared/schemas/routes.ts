@@ -25,16 +25,36 @@ export const routeLocationSchema = z.discriminatedUnion('type', [
   }),
 ]);
 
-export const directionsRequestSchema = z.strictObject({
-  origin: routeLocationSchema,
-  destination: routeLocationSchema,
-  travelMode: z.enum(TravelMode).optional(),
-  intermediates: z.array(routeLocationSchema).max(25).optional(),
-  computeAlternativeRoutes: z.boolean().optional(),
-  languageCode: googleMapsLanguageCodeSchema.optional(),
-  regionCode: googleMapsRegionCodeSchema.optional(),
-  countryCode: googleMapsRegionCodeSchema.optional(),
-});
+export const directionsRequestSchema = z
+  .strictObject({
+    origin: routeLocationSchema,
+    destination: routeLocationSchema,
+    travelMode: z.enum(TravelMode).optional(),
+    intermediates: z.array(routeLocationSchema).max(25).optional(),
+    computeAlternativeRoutes: z.boolean().optional(),
+    languageCode: googleMapsLanguageCodeSchema.optional(),
+    regionCode: googleMapsRegionCodeSchema.optional(),
+    countryCode: googleMapsRegionCodeSchema.optional(),
+    departureTime: z.iso.datetime({ offset: true }).optional(),
+    routingRegion: z
+      .string()
+      .regex(/^KR-[0-9]{2}$/)
+      .optional(),
+  })
+  .refine(
+    ({ routingRegion, countryCode }) =>
+      routingRegion === undefined || countryCode === 'KR',
+    {
+      path: ['routingRegion'],
+      message: 'routingRegion requires countryCode KR',
+    },
+  )
+  .refine(
+    ({ departureTime, travelMode }) =>
+      departureTime === undefined ||
+      (travelMode ?? TravelMode.DRIVING) === TravelMode.DRIVING,
+    { path: ['departureTime'], message: 'departureTime requires driving mode' },
+  );
 
 export const routeRequestDiagnosticsSchema = z.strictObject({
   travelMode: z.enum(TravelMode),

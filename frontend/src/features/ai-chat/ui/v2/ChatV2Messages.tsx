@@ -22,6 +22,7 @@ type Props = {
   sending: boolean;
   messagesRef: RefObject<HTMLDivElement | null>;
   onSuggestion: (text: string) => void;
+  onFollowUp: (text: string) => void;
   renderAssistantActions?: (content: string, context?: string) => ReactNode;
 };
 
@@ -31,6 +32,7 @@ export const ChatV2Messages = memo(function ChatV2Messages({
   sending,
   messagesRef,
   onSuggestion,
+  onFollowUp,
   renderAssistantActions,
 }: Props) {
   const L = useL();
@@ -132,8 +134,9 @@ export const ChatV2Messages = memo(function ChatV2Messages({
           <article className="chat-v2-message is-assistant is-pending">
             <ChatV2Progress
               busy
+              stage={pending?.stage}
               summary={pending?.summary}
-              waiting={!pending || pending.stage === 'waiting'}
+              tools={pending?.toolProgress}
             />
             {pending?.content && <ChatMarkdown content={pending.content} />}
           </article>
@@ -146,7 +149,7 @@ export const ChatV2Messages = memo(function ChatV2Messages({
                 <button
                   key={suggestion}
                   type="button"
-                  onClick={() => onSuggestion(suggestion)}
+                  onClick={() => onFollowUp(suggestion)}
                 >
                   {suggestion}
                   <span aria-hidden="true">↗</span>
@@ -200,10 +203,11 @@ const ChatV2Message = memo(function ChatV2Message({
   }
   return (
     <article className="chat-v2-message is-assistant">
-      <ChatV2Progress summary={message.summary} />
+      <ChatV2Progress summary={message.summary} tools={message.toolProgress} />
       <ChatAssistantBody
         content={message.content}
         context={message.requestContext}
+        placeRecommendations={message.placeRecommendations}
         renderActions={renderAssistantActions}
       />
       <ChatWebImages images={message.webImages} />

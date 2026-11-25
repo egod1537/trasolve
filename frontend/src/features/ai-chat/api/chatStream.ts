@@ -1,5 +1,6 @@
 import {
   API_ROUTES,
+  CHAT_TOOL_PROGRESS_ACCEPT,
   chatRequestSchema,
   chatStreamEventSchema,
   readSseData,
@@ -23,11 +24,12 @@ export async function streamChat(
 ): Promise<ChatResponse> {
   const timeout = AbortSignal.timeout(145000);
   try {
-    const response = await fetch(withBillingMode(API_ROUTES.chatStream), {
+    const path = `${API_ROUTES.chatStream}?destinationKnowledge=1`;
+    const response = await fetch(withBillingMode(path), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Accept: 'text/event-stream',
+        Accept: CHAT_TOOL_PROGRESS_ACCEPT,
         ...billingHeaders(),
       },
       body: JSON.stringify(chatRequestSchema.parse(request)),

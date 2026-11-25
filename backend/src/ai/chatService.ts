@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
   CHAT_LIMITS,
+  CHAT_TOOL_PROGRESS_ACCEPT,
   chatRequestSchema,
   chatResponseSchema,
   type ApiErrorResponse,
@@ -121,11 +122,25 @@ export class ChatService {
       const controller = new AbortController();
       const abort = () => controller.abort();
       response.once('close', abort);
+      const toolProgressAccepted =
+        parsed.data.webSearch !== false &&
+        request.headers.accept
+          ?.split(',')
+          .some((value) => value.trim() === CHAT_TOOL_PROGRESS_ACCEPT);
       const execute = () =>
         stream
           ? runChatStream(this.provider, parsed.data, {
+              destinationKnowledge:
+                new URL(
+                  request.url ?? '/',
+                  'http://localhost',
+                ).searchParams.get('destinationKnowledge') === '1',
               signal: controller.signal,
-              onEvent: (event) => writeChatStreamEvent(response, event),
+              onEvent: (event) => {
+                if (event.type !== 'tool' || toolProgressAccepted) {
+                  writeChatStreamEvent(response, event);
+                }
+              },
             })
           : this.chat(parsed.data, controller.signal);
       const heartbeat = stream

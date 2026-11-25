@@ -64,6 +64,9 @@ export const ChatPanelV2 = forwardRef<MapAiPanelHandle, Props>(
               sending={state.selectedThreadSending}
               messagesRef={state.messagesRef}
               onSuggestion={suggestion}
+              onFollowUp={(text) =>
+                void submit({ threadId: state.selectedThread.id, text })
+              }
               renderAssistantActions={props.renderAssistantActions}
             />
             <ChatV2Composer

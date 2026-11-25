@@ -1,5 +1,5 @@
 export { TravelMode } from './travelMode.js';
-export { CHAT_LIMITS } from './chat.js';
+export { CHAT_LIMITS, CHAT_TOOL_PROGRESS_ACCEPT } from './chat.js';
 export { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from './analytics.js';
 export {
   GOOGLE_MAPS_DEFAULT_LANGUAGE_CODE,
@@ -37,6 +37,7 @@ export const API_ROUTES = {
   tcacheInternalHealth: '/api/internal/tcache/health',
   tcacheInternalJobs: '/api/internal/tcache/jobs',
   trips: '/api/trips',
+  destinationKnowledge: '/api/destination-knowledge',
   sharedTrips: '/api/shared-trips',
   routes: '/api/routes',
   placesAutocomplete: '/api/google/maps/places/autocomplete',
