@@ -182,6 +182,15 @@ export class PostgresTripRepository implements TripRepository {
     return validateRevision(row.revision);
   }
 
+  public async deleteAll(actorUserId: string): Promise<void> {
+    await this.database.query(
+      `UPDATE trasolve.trips
+       SET deleted_at = clock_timestamp(), updated_at = clock_timestamp()
+       WHERE owner_user_id = $1 AND deleted_at IS NULL`,
+      [actorUserId],
+    );
+  }
+
   private async throwWriteMiss(
     actorUserId: string,
     tripId: string,

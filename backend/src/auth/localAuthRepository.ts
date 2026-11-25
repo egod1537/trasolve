@@ -15,6 +15,7 @@ import {
   type AuthRepository,
   type AuthUserRecord,
   type CreateUserWithIdentityInput,
+  type DemoWorkspaceRecord,
   type UpdateIdentityLoginInput,
 } from './authRepository.js';
 import type {
@@ -28,6 +29,14 @@ const localUserSchema = z.strictObject({
   displayName: z.string(),
   avatarUrl: z.string().nullable(),
   tutorial: z.unknown().optional(),
+  demoWorkspace: z
+    .strictObject({
+      initialized: z.boolean(),
+      exampleTripId: z.string().nullable(),
+      exampleUpdatedAt: z.string().nullable(),
+      activity: z.boolean().default(false),
+    })
+    .optional(),
   consents: z.array(authConsentRecordSchema).default([]),
 });
 const localIdentitySchema = z.strictObject({
@@ -258,6 +267,30 @@ export class LocalAuthRepository implements AuthRepository, SessionRepository {
         throw new Error('User is unavailable.');
       }
       user.tutorial = tutorialProgressSchema.parse(progress);
+    });
+  }
+
+  public async getDemoWorkspace(
+    userId: string,
+  ): Promise<DemoWorkspaceRecord | undefined> {
+    const document = await this.readSnapshot();
+    const user = document.users.find((candidate) => candidate.id === userId);
+    if (!user) {
+      throw new Error('User is unavailable.');
+    }
+    return user.demoWorkspace;
+  }
+
+  public saveDemoWorkspace(
+    userId: string,
+    workspace: DemoWorkspaceRecord,
+  ): Promise<void> {
+    return this.mutate((document) => {
+      const user = document.users.find((candidate) => candidate.id === userId);
+      if (!user) {
+        throw new Error('User is unavailable.');
+      }
+      user.demoWorkspace = { ...workspace };
     });
   }
 

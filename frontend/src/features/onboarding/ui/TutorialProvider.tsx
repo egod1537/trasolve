@@ -16,17 +16,26 @@ import {
   type TutorialMode,
 } from '../opts';
 import { TutorialGuide } from './TutorialGuide';
+import { TutorialReentry } from './TutorialReentry';
 
 type Props = {
   userId: string;
   enabled: boolean;
   debug: boolean;
+  demo: boolean;
   children: ReactNode;
 };
 
-export function TutorialProvider({ userId, enabled, debug, children }: Props) {
+export function TutorialProvider({
+  userId,
+  enabled,
+  debug,
+  demo,
+  children,
+}: Props) {
   const [mode, updateMode] = useState(() => resolveTutorialMode(debug));
   const [active, setActive] = useState(false);
+  const activeRef = useRef(active);
   const [run, setRun] = useState(0);
   const [progress, setProgress] = useState(initialTutorialProgress);
   const progressRef = useRef(progress);
@@ -35,6 +44,7 @@ export function TutorialProvider({ userId, enabled, debug, children }: Props) {
   const begin = useCallback(
     (initial: TutorialProgress | null, nextMode: TutorialMode) => {
       setActive(false);
+      activeRef.current = false;
       if (
         !enabled ||
         nextMode === 'off' ||
@@ -52,11 +62,16 @@ export function TutorialProvider({ userId, enabled, debug, children }: Props) {
           : initial!;
       progressRef.current = next;
       setProgress(next);
-      if (next.status === 'completed' || next.status === 'skipped') {
+      if (
+        next.status === 'completed' ||
+        next.status === 'skipped' ||
+        next.status === 'paused'
+      ) {
         return;
       }
       setRun((value) => value + 1);
       setActive(true);
+      activeRef.current = true;
     },
     [enabled],
   );
@@ -88,6 +103,11 @@ export function TutorialProvider({ userId, enabled, debug, children }: Props) {
         return;
       }
       update({ ...current, step: nextStep, status: 'in-progress' });
+      if (!activeRef.current) {
+        activeRef.current = true;
+        setRun((value) => value + 1);
+        setActive(true);
+      }
     },
     [update],
   );
@@ -121,31 +141,57 @@ export function TutorialProvider({ userId, enabled, debug, children }: Props) {
   );
 
   const restart = useCallback(() => {
-    // Replaying is a preview and never clears an account's completion marker.
-    preview.current = true;
+    preview.current = !demo;
     const next = initialTutorialProgress();
     progressRef.current = next;
     setProgress(next);
+    if (demo) {
+      save(next);
+    }
     setRun((value) => value + 1);
     setActive(true);
-  }, []);
+    activeRef.current = true;
+  }, [demo, save]);
+
+  const resume = useCallback(() => {
+    const current = progressRef.current;
+    if (current.status === 'completed' || current.status === 'not-started') {
+      return;
+    }
+    const next = { ...current, status: 'in-progress' as const };
+    progressRef.current = next;
+    setProgress(next);
+    if (!preview.current) {
+      save(next);
+    }
+    setRun((value) => value + 1);
+    setActive(true);
+    activeRef.current = true;
+  }, [save]);
 
   const stop = useCallback(
     (completed = false) => {
       update({
         ...progressRef.current,
-        status: completed ? 'completed' : 'skipped',
+        status: completed ? 'completed' : 'paused',
       });
       setActive(false);
+      activeRef.current = false;
     },
     [update],
   );
 
   const reset = useCallback(() => {
     setActive(false);
+    activeRef.current = false;
     preview.current = false;
     update(initialTutorialProgress());
   }, [update]);
+
+  const suspendOverlay = useCallback(() => {
+    activeRef.current = false;
+    setActive(false);
+  }, []);
 
   const setMode = useCallback(
     (next: TutorialMode) => {
@@ -171,6 +217,8 @@ export function TutorialProvider({ userId, enabled, debug, children }: Props) {
     created,
     completeStep,
     restart,
+    resume,
+    suspendOverlay,
     stop,
     reset,
     setMode,
@@ -181,6 +229,7 @@ export function TutorialProvider({ userId, enabled, debug, children }: Props) {
     <TutorialContext value={enabled ? value : null}>
       {children}
       {enabled && active && <TutorialGuide />}
+      {enabled && demo && !active && <TutorialReentry />}
     </TutorialContext>
   );
 }

@@ -15,6 +15,8 @@ import {
 } from './lastLoginProvider';
 import { L } from '@/shared/i18n';
 import { AUTH_SESSION_EVENT } from '@/shared/api/authEvents';
+import { enterDemo, fetchDemoStatus } from '../api/demo';
+import type { DemoStatus } from '@trasolve/shared';
 
 export type CurrentUserState =
   | { status: 'loading' }
@@ -61,14 +63,19 @@ export function useCurrentUser() {
   const openLoginDialog = useLoginDialog();
   const [state, setState] = useState<CurrentUserState>({ status: 'loading' });
   const [authNotice, setAuthNotice] = useState<string | null>(null);
+  const [demoStatus, setDemoStatus] = useState<DemoStatus | null>(null);
 
   const refresh = useCallback(async () => {
     try {
-      const user = await fetchCurrentUser();
+      const [user, demo] = await Promise.all([
+        fetchCurrentUser(),
+        fetchDemoStatus().catch(() => null),
+      ]);
       if (user && !readLastLoginProvider()) {
         rememberLastLoginProvider(user.loginProvider);
       }
       setState(user ? { status: 'signed-in', user } : { status: 'signed-out' });
+      setDemoStatus(demo);
     } catch {
       setState({ status: 'signed-out' });
     }
@@ -173,13 +180,58 @@ export function useCurrentUser() {
     [],
   );
 
+  const loginAsDemo = useCallback(
+    async (
+      returnTo = window.location.pathname,
+      options: { requested: boolean; reset?: boolean },
+    ) => {
+      returnTo = withMobileLayout(returnTo);
+      setAuthNotice(null);
+      try {
+        const result = await enterDemo(
+          options.requested,
+          options.reset === true,
+        );
+        setDemoStatus(result.status);
+        setState({ status: 'signed-in', user: result.user });
+        if (returnTo !== window.location.pathname + window.location.search) {
+          window.location.assign(returnTo);
+        }
+      } catch {
+        setState({ status: 'signed-out' });
+        setAuthNotice(
+          L('auth:useCurrentUser.text.failedLoadLoginResultsTryAgain'),
+        );
+      }
+    },
+    [],
+  );
+
   const logout = useCallback(async () => {
     await requestLogout();
     setState({ status: 'signed-out' });
   }, []);
 
   return useMemo(
-    () => ({ state, login, loginAsGuest, logout, refresh, authNotice }),
-    [state, login, loginAsGuest, logout, refresh, authNotice],
+    () => ({
+      state,
+      demoStatus,
+      login,
+      loginAsGuest,
+      loginAsDemo,
+      logout,
+      refresh,
+      authNotice,
+    }),
+    [
+      state,
+      demoStatus,
+      login,
+      loginAsGuest,
+      loginAsDemo,
+      logout,
+      refresh,
+      authNotice,
+    ],
   );
 }

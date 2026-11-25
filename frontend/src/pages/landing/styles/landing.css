@@ -2,3 +2,19 @@
 @import './landing/planning-and-responsive.css';
 @import './landing/planning-animation.css';
 @import './landing/header-profile-button.css';
+
+.landing-demo-choice {
+  display: grid;
+  width: min(420px, calc(100vw - 2rem));
+  gap: 1rem;
+}
+
+.landing-demo-choice h2 {
+  margin: 0;
+}
+
+.landing-demo-choice-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}

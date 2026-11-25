@@ -51,11 +51,12 @@ export function tutorialSteps(L: Localize): DriveStep[] {
     },
     {
       element: '[data-tutorial="optimize"]',
+      disableActiveInteraction: false,
       popover: {
         side,
         title: L('common:tutorial.optimize.title'),
         description: L('common:tutorial.optimize.description'),
-        showButtons: ['next', 'close'],
+        showButtons: ['close'],
       },
     },
     {

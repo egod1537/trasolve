@@ -1,5 +1,5 @@
 import { withMobileLayout } from '@/shared/config/mobileLayout';
-import { Component } from 'react';
+import { Component, useId, useState } from 'react';
 import {
   ANALYTICS_SCREENS,
   ANALYTICS_TARGETS,
@@ -10,10 +10,12 @@ import { FeatureSection } from '@/pages/landing/components/FeatureSection';
 import { Header } from '@/pages/landing/components/Header';
 import { Hero } from '@/pages/landing/components/Hero';
 import { PlanningSection } from '@/pages/landing/components/PlanningSection';
-import { isDebugGuestMode, useCurrentUser } from '@/features/auth';
+import { DemoBadge, isDebugGuestMode, useCurrentUser } from '@/features/auth';
 import { NL, useL, type Localize } from '@/shared/i18n';
 import { trackEvent, useScreenView } from '@/shared/analytics';
 import { LegalLinks } from '@/shared/ui/LegalLinks';
+import { Button } from '@/shared/ui/Button';
+import { Dialog } from '@/shared/ui/Dialog';
 
 type ApiHealth = 'checking' | 'available' | 'unavailable';
 
@@ -35,12 +37,28 @@ type LandingPageProps = {
   onHeaderAction: () => void;
   onHeroPrimaryAction: () => void;
   onLogout: () => Promise<void>;
+  demo: boolean;
 };
 
 export function LandingPage() {
   const L = useL();
-  const { state, login, loginAsGuest, logout, authNotice } = useCurrentUser();
+  const {
+    state,
+    demoStatus,
+    login,
+    loginAsGuest,
+    loginAsDemo,
+    logout,
+    authNotice,
+  } = useCurrentUser();
   const debugGuestMode = isDebugGuestMode(window.location.search);
+  const demoRequested =
+    new URLSearchParams(window.location.search).get('demo') === 'true';
+  const demoEntryAvailable = Boolean(
+    demoStatus?.automatic || (demoRequested && demoStatus?.available === true),
+  );
+  const [demoChoiceOpen, setDemoChoiceOpen] = useState(false);
+  const demoChoiceTitleId = useId();
   useScreenView(ANALYTICS_SCREENS.landing);
 
   const trackLandingButton = (target: AnalyticsTarget): void => {
@@ -57,6 +75,10 @@ export function LandingPage() {
     }
     const mapPath = withMobileLayout(debugGuestMode ? '/map?debug=1' : '/map');
     if (state.status === 'signed-in') {
+      if (state.user.demo && demoStatus?.hasPreviousActivity) {
+        setDemoChoiceOpen(true);
+        return;
+      }
       trackLandingButton(ANALYTICS_TARGETS.landingEnterMap);
       window.location.assign(mapPath);
       return;
@@ -66,13 +88,22 @@ export function LandingPage() {
       void loginAsGuest(mapPath);
       return;
     }
+    if (demoEntryAvailable) {
+      if (demoStatus?.hasPreviousActivity) {
+        setDemoChoiceOpen(true);
+        return;
+      }
+      trackLandingButton(ANALYTICS_TARGETS.landingEnterMap);
+      void loginAsDemo(mapPath, { requested: demoRequested });
+      return;
+    }
     trackLandingButton(ANALYTICS_TARGETS.landingLogin);
     void login(mapPath);
   };
 
   const handleHeaderAction = (): void => {
     if (state.status === 'signed-out') {
-      if (debugGuestMode) {
+      if (debugGuestMode || demoEntryAvailable) {
         enterService();
         return;
       }
@@ -83,42 +114,75 @@ export function LandingPage() {
     enterService();
   };
 
+  const enterSelectedDemo = (reset: boolean): void => {
+    setDemoChoiceOpen(false);
+    trackLandingButton(ANALYTICS_TARGETS.landingEnterMap);
+    void loginAsDemo(withMobileLayout('/map'), {
+      requested: demoRequested,
+      reset,
+    });
+  };
+
   return (
-    <LandingPageView
-      L={L}
-      authNotice={authNotice}
-      headerProfile={
-        state.status === 'signed-in'
-          ? {
-              displayName: state.user.name ?? state.user.email ?? state.user.id,
-              pictureUrl: state.user.pictureUrl,
-            }
-          : null
-      }
-      headerActionLabel={
-        state.status === 'signed-out'
-          ? debugGuestMode
-            ? L('common:landing.action.startTrip')
-            : L('common:landing.navigation.signIn')
-          : L('common:header.text.goServices')
-      }
-      authLoading={state.status === 'loading'}
-      heroPrimaryLabel={
-        state.status === 'loading'
-          ? L('auth:mapUserControls.tooltip.preparing')
-          : state.status === 'signed-out' && !debugGuestMode
-            ? L('auth:loginDialog.signIn')
-            : L('common:landing.action.planTrip')
-      }
-      heroPrimaryTarget={
-        state.status === 'signed-in' || debugGuestMode
-          ? ANALYTICS_TARGETS.landingEnterMap
-          : ANALYTICS_TARGETS.landingLogin
-      }
-      onHeaderAction={handleHeaderAction}
-      onHeroPrimaryAction={enterService}
-      onLogout={logout}
-    />
+    <>
+      <LandingPageView
+        L={L}
+        authNotice={authNotice}
+        headerProfile={
+          state.status === 'signed-in'
+            ? {
+                displayName:
+                  state.user.name ?? state.user.email ?? state.user.id,
+                pictureUrl: state.user.pictureUrl,
+              }
+            : null
+        }
+        headerActionLabel={
+          state.status === 'signed-out'
+            ? debugGuestMode || demoEntryAvailable
+              ? L('common:landing.action.startTrip')
+              : L('common:landing.navigation.signIn')
+            : L('common:header.text.goServices')
+        }
+        authLoading={state.status === 'loading'}
+        heroPrimaryLabel={
+          state.status === 'loading'
+            ? L('auth:mapUserControls.tooltip.preparing')
+            : state.status === 'signed-out' &&
+                !debugGuestMode &&
+                !demoEntryAvailable
+              ? L('auth:loginDialog.signIn')
+              : L('common:landing.action.planTrip')
+        }
+        heroPrimaryTarget={
+          state.status === 'signed-in' || debugGuestMode || demoEntryAvailable
+            ? ANALYTICS_TARGETS.landingEnterMap
+            : ANALYTICS_TARGETS.landingLogin
+        }
+        onHeaderAction={handleHeaderAction}
+        onHeroPrimaryAction={enterService}
+        onLogout={logout}
+        demo={state.status === 'signed-in' && state.user.demo === true}
+      />
+      {demoChoiceOpen && (
+        <Dialog
+          className="landing-demo-choice"
+          role="alertdialog"
+          labelledBy={demoChoiceTitleId}
+          onClose={() => setDemoChoiceOpen(false)}
+        >
+          <h2 id={demoChoiceTitleId}>{NL('DEMO')}</h2>
+          <div className="landing-demo-choice-actions">
+            <Button onClick={() => enterSelectedDemo(false)}>
+              {L('common:hero.text.gettingStarted')}
+            </Button>
+            <Button variant="primary" onClick={() => enterSelectedDemo(true)}>
+              {L('admin:common.reset')}
+            </Button>
+          </div>
+        </Dialog>
+      )}
+    </>
   );
 }
 
@@ -156,6 +220,7 @@ class LandingPageView extends Component<LandingPageProps, LandingPageState> {
       onHeaderAction,
       onHeroPrimaryAction,
       onLogout,
+      demo,
     } = this.props;
     const { apiHealth } = this.state;
     const healthLabel = {
@@ -171,6 +236,7 @@ class LandingPageView extends Component<LandingPageProps, LandingPageState> {
     }[apiHealth];
     return (
       <div className="landing-page" data-api-health={apiHealth}>
+        {demo && <DemoBadge />}
         <Header
           actionLabel={headerActionLabel}
           actionDisabled={authLoading}

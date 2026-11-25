@@ -57,6 +57,7 @@ import {
   ExternalApiUsageRecorder,
 } from './observability/externalApiUsage/externalApiUsage.js';
 import { PostgresExternalApiUsageWriter } from './observability/externalApiUsage/postgresExternalApiUsageWriter.js';
+import { DemoModeHttpService } from './demo/demoModeHttpService.js';
 
 const developmentAdminCsrfSecret =
   'trasolve-local-development-admin-csrf-secret';
@@ -162,6 +163,14 @@ async function startBackend(): Promise<void> {
       adminHttp,
       new BillingHttpService(billing, currentUser),
       new TutorialHttpService(persistence.auth, currentUser),
+      new DemoModeHttpService(
+        authentication,
+        persistence.auth,
+        sessions,
+        currentUser,
+        persistence.trips,
+        tripController,
+      ),
       consentHttp,
     );
     await listen(server, port, host);

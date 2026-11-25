@@ -15,6 +15,7 @@ import {
 export const canonicalSsuIssuer = 'https://smartid.ssu.ac.kr';
 export const canonicalGoogleIssuer = 'https://accounts.google.com';
 const debugGuestIssuer = 'urn:trasolve:local-development';
+export const demoGuestIssuer = 'urn:trasolve:demo';
 
 export interface PendingIdentity {
   readonly issuer: string;
@@ -77,8 +78,28 @@ export class AuthenticationService {
     const user = await this.repository.getUserById(userId);
     return (
       !user ||
-      (user.issuer !== debugGuestIssuer && !(await this.getConsent(userId)))
+      (![debugGuestIssuer, demoGuestIssuer].includes(user.issuer) &&
+        !(await this.getConsent(userId)))
     );
+  }
+
+  public async isDemoUser(userId: string): Promise<boolean> {
+    return (
+      (await this.repository.getUserById(userId))?.issuer === demoGuestIssuer
+    );
+  }
+
+  public async markDemoActivity(userId: string): Promise<void> {
+    if (!(await this.isDemoUser(userId))) {
+      return;
+    }
+    const workspace = await this.repository.getDemoWorkspace(userId);
+    if (workspace?.initialized && !workspace.activity) {
+      await this.repository.saveDemoWorkspace(userId, {
+        ...workspace,
+        activity: true,
+      });
+    }
   }
 
   public async acceptForUser(
@@ -147,6 +168,34 @@ export class AuthenticationService {
     const user = await this.repository.getUserById(identity.userId);
     if (!user) {
       throw new Error('Debug guest user record is unavailable.');
+    }
+    return mapAuthUser(user);
+  }
+
+  public async ensureDemoGuest(subject: string): Promise<AuthUser> {
+    let identity = await this.repository.findIdentity(demoGuestIssuer, subject);
+    if (!identity) {
+      try {
+        identity = await this.repository.createUserWithIdentity({
+          issuer: demoGuestIssuer,
+          subject,
+          displayName: 'Trasolve Demo',
+          email: null,
+          emailVerified: false,
+        });
+      } catch (cause) {
+        if (!(cause instanceof AuthIdentityConflictError)) {
+          throw cause;
+        }
+        identity = await this.repository.findIdentity(demoGuestIssuer, subject);
+        if (!identity) {
+          throw cause;
+        }
+      }
+    }
+    const user = await this.repository.getUserById(identity.userId);
+    if (!user) {
+      throw new Error('Demo user record is unavailable.');
     }
     return mapAuthUser(user);
   }
@@ -239,5 +288,6 @@ function mapAuthUser(user: AuthUserRecord): AuthUser {
           : 'local',
     ...(user.displayName ? { name: user.displayName } : {}),
     ...(user.avatarUrl ? { pictureUrl: user.avatarUrl } : {}),
+    ...(user.issuer === demoGuestIssuer ? { demo: true } : {}),
   };
 }
