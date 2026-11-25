@@ -15,7 +15,6 @@ export type TutorialController = {
   completeStep(step: 'days' | 'add-place'): void;
   restart(): void;
   resume(): void;
-  suspendOverlay(): void;
   stop(completed?: boolean): void;
   reset(): void;
   setMode(mode: TutorialMode): void;

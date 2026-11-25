@@ -188,11 +188,6 @@ export function TutorialProvider({
     update(initialTutorialProgress());
   }, [update]);
 
-  const suspendOverlay = useCallback(() => {
-    activeRef.current = false;
-    setActive(false);
-  }, []);
-
   const setMode = useCallback(
     (next: TutorialMode) => {
       if (!debug) {
@@ -218,7 +213,6 @@ export function TutorialProvider({
     completeStep,
     restart,
     resume,
-    suspendOverlay,
     stop,
     reset,
     setMode,

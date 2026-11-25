@@ -46,12 +46,15 @@ export function tutorialSteps(L: Localize): DriveStep[] {
         side,
         title: L('common:tutorial.addPlace.title'),
         description: L('common:tutorial.addPlace.description'),
-        showButtons: ['previous', 'close'],
+        showButtons: ['previous', 'next', 'close'],
       },
     },
     {
-      element: '[data-tutorial="optimize"]',
+      element: () =>
+        document.querySelector<HTMLElement>('[data-tutorial="optimize-run"]') ??
+        document.querySelector<HTMLElement>('[data-tutorial="optimize"]')!,
       disableActiveInteraction: false,
+      allowedElements: ['.route-settings-dialog'],
       popover: {
         side,
         title: L('common:tutorial.optimize.title'),

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { driver, type Driver } from 'driver.js';
-import { TUTORIAL_STEPS } from '@trasolve/shared';
+import { TUTORIAL_STEPS, type TutorialProgress } from '@trasolve/shared';
 import { useL } from '@/shared/i18n';
 import { useTutorial } from '../model/tutorialContext';
 import { tutorialSteps } from './tutorialSteps';
@@ -65,21 +65,14 @@ export function TutorialGuide() {
         exit.addEventListener('click', () => requestExit());
         popover.footer.append(exit);
       },
-      onHighlighted: (element, _step, { index }) => {
+      onHighlighted: (_element, _step, { index }) => {
         if (!disposed && index !== undefined) {
           current.current.step(index);
-          if (index === 4) {
-            element?.addEventListener(
-              'click',
-              () => current.current.suspendOverlay(),
-              { once: true },
-            );
-          }
         }
       },
       onNextClick: () => {
-        // Creation advances only through the repository's success callback.
-        if (![0, 1, 3].includes(guide.getActiveIndex() ?? 0)) {
+        // Creation and Day addition advance only through their success callbacks.
+        if (![0, 1].includes(guide.getActiveIndex() ?? 0)) {
           guide.moveNext();
         }
       },
@@ -102,27 +95,23 @@ export function TutorialGuide() {
         ),
       ),
     );
-    // Place details arrive asynchronously; move the spotlight to the real Add
-    // button as soon as it is mounted, and retain search/retry while loading.
+    // Place details and the optimization dialog mount asynchronously. Move the
+    // spotlight to the real action as soon as it becomes available.
     let lastTarget = guide.getActiveElement();
     const observer = new MutationObserver(() => {
-      if (
-        disposed ||
-        !guide.isActive() ||
-        current.current.progress.step !== 'add-place'
-      ) {
+      if (disposed || !guide.isActive()) {
         return;
       }
-      const target =
-        document.querySelector('[data-tutorial="add-place"]') ??
-        document.querySelector('[data-tutorial="place-search"]');
+      const dynamicTarget = getDynamicTutorialTarget(
+        current.current.progress.step,
+      );
       if (
-        target &&
-        guide.getActiveElement() !== target &&
-        lastTarget !== target
+        dynamicTarget &&
+        guide.getActiveElement() !== dynamicTarget.element &&
+        lastTarget !== dynamicTarget.element
       ) {
-        lastTarget = target;
-        guide.drive(3);
+        lastTarget = dynamicTarget.element;
+        guide.drive(dynamicTarget.index);
       }
     });
     observer.observe(document.body, { childList: true, subtree: true });
@@ -156,6 +145,24 @@ export function TutorialGuide() {
       }}
     />
   ) : null;
+}
+
+function getDynamicTutorialTarget(
+  step: TutorialProgress['step'],
+): { element: Element; index: number } | null {
+  if (step === 'add-place') {
+    const element =
+      document.querySelector('[data-tutorial="add-place"]') ??
+      document.querySelector('[data-tutorial="place-search"]');
+    return element ? { element, index: 3 } : null;
+  }
+  if (step === 'optimize') {
+    const element =
+      document.querySelector('[data-tutorial="optimize-run"]') ??
+      document.querySelector('[data-tutorial="optimize"]');
+    return element ? { element, index: 4 } : null;
+  }
+  return null;
 }
 
 function TutorialExitDialog({

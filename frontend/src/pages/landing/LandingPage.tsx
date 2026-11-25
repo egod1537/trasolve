@@ -1,5 +1,5 @@
 import { withMobileLayout } from '@/shared/config/mobileLayout';
-import { Component, useId, useState } from 'react';
+import { Component, useId, useRef, useState } from 'react';
 import {
   ANALYTICS_SCREENS,
   ANALYTICS_TARGETS,
@@ -22,6 +22,8 @@ import { trackEvent, useScreenView } from '@/shared/analytics';
 import { LegalLinks } from '@/shared/ui/LegalLinks';
 import { Button } from '@/shared/ui/Button';
 import { Dialog } from '@/shared/ui/Dialog';
+import { IconButton } from '@/shared/ui/IconButton';
+import { CloseIcon, FolderOpenIcon, RefreshIcon } from '@/shared/ui/icons';
 
 type ApiHealth = 'checking' | 'available' | 'unavailable';
 
@@ -63,7 +65,6 @@ export function LandingPage() {
     demoStatus?.automatic || (demoRequested && demoStatus?.available === true),
   );
   const [demoChoiceOpen, setDemoChoiceOpen] = useState(false);
-  const demoChoiceTitleId = useId();
   useScreenView(ANALYTICS_SCREENS.landing);
 
   const trackLandingButton = (target: AnalyticsTarget): void => {
@@ -183,25 +184,80 @@ export function LandingPage() {
         onLogout={logout}
         demo={state.status === 'signed-in' && state.user.demo === true}
       />
-      {demoChoiceOpen && (
-        <Dialog
-          className="landing-demo-choice"
-          role="alertdialog"
-          labelledBy={demoChoiceTitleId}
-          onClose={() => setDemoChoiceOpen(false)}
-        >
-          <h2 id={demoChoiceTitleId}>{NL('DEMO')}</h2>
-          <div className="landing-demo-choice-actions">
-            <Button onClick={() => enterSelectedDemo(false)}>
-              {L('common:hero.text.gettingStarted')}
-            </Button>
-            <Button variant="primary" onClick={() => enterSelectedDemo(true)}>
-              {L('admin:common.reset')}
-            </Button>
-          </div>
-        </Dialog>
-      )}
+      <DemoChoiceDialog
+        open={demoChoiceOpen}
+        onClose={() => setDemoChoiceOpen(false)}
+        onContinue={() => enterSelectedDemo(false)}
+        onReset={() => enterSelectedDemo(true)}
+      />
     </>
+  );
+}
+
+function DemoChoiceDialog({
+  open,
+  onClose,
+  onContinue,
+  onReset,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onContinue: () => void;
+  onReset: () => void;
+}) {
+  const L = useL();
+  const titleId = useId();
+  const continueRef = useRef<HTMLButtonElement>(null);
+  if (!open) {
+    return null;
+  }
+  return (
+    <Dialog
+      className="landing-demo-choice"
+      labelledBy={titleId}
+      initialFocusRef={continueRef}
+      onClose={onClose}
+    >
+      <header className="landing-demo-choice-header">
+        <span className="landing-demo-choice-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <circle cx="6" cy="17" r="2" />
+            <circle cx="18" cy="7" r="2" />
+            <path d="M7.8 16.1 16.2 7.9" />
+            <path d="M10 7H5v5" />
+          </svg>
+        </span>
+        <div className="landing-demo-choice-heading">
+          <span className="landing-demo-choice-eyebrow">{NL('DEMO')}</span>
+          <h2 id={titleId}>{L('common:landing.action.startTrip')}</h2>
+        </div>
+        <IconButton
+          className="landing-demo-choice-close"
+          variant="ghost"
+          size="sm"
+          icon={<CloseIcon />}
+          aria-label={L('common:action.close')}
+          onClick={onClose}
+        />
+      </header>
+      <p className="landing-demo-choice-description">
+        {L('common:landing.hero.description')}
+      </p>
+      <div className="landing-demo-choice-actions">
+        <Button
+          ref={continueRef}
+          className="landing-demo-choice-continue"
+          variant="primary"
+          startIcon={<FolderOpenIcon />}
+          onClick={onContinue}
+        >
+          {L('common:hero.text.gettingStarted')}
+        </Button>
+        <Button startIcon={<RefreshIcon />} onClick={onReset}>
+          {L('admin:common.reset')}
+        </Button>
+      </div>
+    </Dialog>
   );
 }
 

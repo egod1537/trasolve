@@ -166,6 +166,7 @@ export function RouteOptimizationModal({
             {L('common:action.cancel')}
           </Button>
           <Button
+            data-tutorial="optimize-run"
             variant="primary"
             loading={running}
             disabled={validation.blocksOptimization || running || !canAfford}
