@@ -1,35 +1,100 @@
-import type { TripInput } from '@trasolve/shared';
+import type { TripInput, TripPlace } from '@trasolve/shared';
 
-const places = [
-  ['seoul-station', '서울역', 37.5540455, 126.9708338, true],
-  ['ddp', '동대문디자인플라자', 37.5665256, 127.0092236, false],
-  ['deoksugung', '덕수궁 대한문', 37.5658028, 126.9751461, false],
-  ['ssamziegil', '인사동 쌈지길', 37.5743296, 126.9849281, false],
-  ['myeongdong-cathedral', '명동성당', 37.563177, 126.987369, false],
-  ['gwanghwamun', '광화문광장', 37.572389, 126.9769117, false],
-  ['cheonggye', '청계광장', 37.5691642, 126.9786692, false],
-  ['dongdaemun-station', '동대문역사문화공원역', 37.565637, 127.008972, true],
-] as const;
+type DemoPlace = Omit<TripPlace, 'order'>;
+
+const places: readonly DemoPlace[] = [
+  {
+    id: 'seoul-station',
+    placeId: 'ChIJlU6-zWiifDURBCDQ_VkAI7s',
+    name: '서울역',
+    location: { lat: 37.5540455, lng: 126.9708338 },
+    visitDurationMinutes: 30,
+    orderLocked: true,
+  },
+  {
+    id: 'hongdae',
+    placeId: 'ChIJ4d9T2emYfDURGK_RrkTeN0o',
+    name: '홍대입구',
+    location: { lat: 37.557527, lng: 126.9244669 },
+    visitDurationMinutes: 60,
+  },
+  {
+    id: 'myeongdong',
+    placeId: 'ChIJ_du5f_qifDURo58Y4M0dDfY',
+    name: '명동',
+    location: { lat: 37.560918, lng: 126.985865 },
+    visitDurationMinutes: 60,
+  },
+  {
+    id: 'mangwon-hangang-park',
+    placeId: 'ChIJkfry2i-ZfDURdkxPeBp8x7Q',
+    name: '망원한강공원',
+    location: { lat: 37.5527919, lng: 126.8985613 },
+    visitDurationMinutes: 60,
+  },
+  {
+    id: 'gyeongbokgung',
+    placeId: 'ChIJod7tSseifDUR9hXHLFNGMIs',
+    name: '경복궁',
+    location: { lat: 37.579617, lng: 126.977041 },
+    visitDurationMinutes: 90,
+  },
+  {
+    id: 'yeouido',
+    placeId: 'ChIJkyjFLRaffDUR83w6PTvM0_c',
+    name: '여의도',
+    location: { lat: 37.52064, lng: 126.924838 },
+    visitDurationMinutes: 60,
+  },
+  {
+    id: 'n-seoul-tower',
+    placeId: 'ChIJqWqOqFeifDURpYJ5LnxX-Fw',
+    name: 'N서울타워',
+    location: { lat: 37.5511694, lng: 126.9882266 },
+    visitDurationMinutes: 60,
+  },
+  {
+    id: 'namdaemun-market',
+    placeId: 'ChIJfYjlFvWifDURYSDsoxYbN80',
+    name: '남대문시장',
+    location: { lat: 37.559277, lng: 126.9777029 },
+    visitDurationMinutes: 60,
+    orderLocked: true,
+  },
+];
+
+function createDemoDay(): TripInput['days'][number] {
+  const orderedPlaces = places.map((place, index) => ({
+    ...place,
+    location: { ...place.location },
+    order: index + 1,
+  }));
+  const polylines = orderedPlaces.slice(0, -1).map((place, index) => ({
+    id: `demo-route-${index + 1}`,
+    fromPlaceId: place.id,
+    toPlaceId: orderedPlaces[index + 1]!.id,
+    mode: 'transit' as const,
+    order: index + 1,
+  }));
+  return {
+    id: 'demo-day',
+    title: '경로 최적화 예제',
+    color: '#2563eb',
+    places: orderedPlaces,
+    polylines,
+    layerItems: orderedPlaces.flatMap((place, index) => [
+      { type: 'place' as const, id: place.id },
+      ...(polylines[index]
+        ? [{ type: 'polyline' as const, id: polylines[index].id }]
+        : []),
+    ]),
+  };
+}
 
 export function createDemoExampleTrip(): TripInput {
-  return {
-    title: '서울 여행 · 경로 최적화 체험',
-    days: [
-      {
-        id: 'demo-day',
-        title: '서울 당일 여행',
-        color: '#2563eb',
-        places: places.map(([id, name, lat, lng, orderLocked], index) => ({
-          id,
-          name,
-          location: { lat, lng },
-          visitDurationMinutes: 45,
-          orderLocked,
-          order: index + 1,
-        })),
-        polylines: [],
-        layerItems: places.map(([id]) => ({ type: 'place' as const, id })),
-      },
-    ],
-  };
+  return createDemoStarterTrip('서울 여행 · 경로 최적화 체험');
+}
+
+export function createDemoStarterTrip(title: string): TripInput {
+  return { title, days: [createDemoDay()] };
 }

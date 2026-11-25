@@ -255,12 +255,19 @@ write_compose_env() {
   local path="$1" branch="$2" slug="$3" commit="$4" worktree="$5"
   local debug_guest_auth="$6"
   local hostname="$7" database="$8"
+  local demo_mode=false demo_query_enabled=false
+  if [[ "$branch" == impl ]]; then
+    demo_mode=true
+    demo_query_enabled=true
+  fi
   {
     # Compose env-file syntax has interpolation characters that valid Git refs
     # may contain. The full branch is already preserved in runtime state.
     printf 'JJS_BRANCH=%s\n' "$slug"
     printf 'JJS_BRANCH_SLUG=%s\n' "$slug"
     printf 'JJS_DEBUG_GUEST_AUTH=%s\n' "$debug_guest_auth"
+    printf 'JJS_DEMO_MODE=%s\n' "$demo_mode"
+    printf 'JJS_DEMO_QUERY_ENABLED=%s\n' "$demo_query_enabled"
     printf 'JJS_HOSTNAME=%s\n' "$hostname"
     printf 'JJS_DATABASE_NAME=%s\n' "$database"
     printf 'JJS_COMMIT_SHA=%s\n' "$commit"

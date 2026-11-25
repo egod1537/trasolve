@@ -5,6 +5,7 @@ import {
   type CurrentUserResolver,
 } from '../auth/currentUserResolver.js';
 import type { TripController } from './tripController.js';
+import { createDemoStarterTrip } from '../demo/demoExampleTrip.js';
 import {
   TripError,
   invalidTripRequest,
@@ -65,9 +66,12 @@ export class TripHttpService {
           }
           break;
         case 'POST': {
+          const input = await this.readInput(request);
           const stored = await this.controller.createTrip(
             actorUserId,
-            await this.readInput(request),
+            (await this.currentUser.isDemo(request)) && input.days.length === 0
+              ? createDemoStarterTrip(input.title)
+              : input,
           );
           body = stored.trip;
           revision = stored.revision;

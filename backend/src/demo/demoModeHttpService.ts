@@ -83,7 +83,8 @@ export class DemoModeHttpService {
       const activeUserId = await this.currentUser.resolve(request);
       if (
         activeUserId &&
-        !(await this.authentication.isDemoUser(activeUserId))
+        !(await this.authentication.isDemoUser(activeUserId)) &&
+        !(await this.authentication.isDebugGuestUser(activeUserId))
       ) {
         this.send(response, 409, { error: { code: 'ACCOUNT_ALREADY_ACTIVE' } });
         return;

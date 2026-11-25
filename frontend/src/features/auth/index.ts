@@ -3,6 +3,7 @@ export { consumeGoogleOAuthResult, startGoogleOAuth } from './api/googleOAuth';
 export { isDebugGuestMode } from './model/debugGuestMode';
 export { useCurrentUser, type CurrentUserState } from './model/useCurrentUser';
 export { useDemoMapEntry } from './model/useDemoMapEntry';
+export { isDemoModeRequested } from './model/demoRequest';
 export { MapUserControls } from './ui/MapUserControls';
 export { DemoBadge } from './ui/DemoBadge';
 export { useLoginDialog } from './model/loginDialogContext';

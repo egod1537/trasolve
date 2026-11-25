@@ -89,6 +89,12 @@ export class AuthenticationService {
     );
   }
 
+  public async isDebugGuestUser(userId: string): Promise<boolean> {
+    return (
+      (await this.repository.getUserById(userId))?.issuer === debugGuestIssuer
+    );
+  }
+
   public async markDemoActivity(userId: string): Promise<void> {
     if (!(await this.isDemoUser(userId))) {
       return;

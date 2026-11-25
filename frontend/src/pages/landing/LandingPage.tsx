@@ -10,7 +10,12 @@ import { FeatureSection } from '@/pages/landing/components/FeatureSection';
 import { Header } from '@/pages/landing/components/Header';
 import { Hero } from '@/pages/landing/components/Hero';
 import { PlanningSection } from '@/pages/landing/components/PlanningSection';
-import { DemoBadge, isDebugGuestMode, useCurrentUser } from '@/features/auth';
+import {
+  DemoBadge,
+  isDebugGuestMode,
+  isDemoModeRequested,
+  useCurrentUser,
+} from '@/features/auth';
 import { NL, useL, type Localize } from '@/shared/i18n';
 import { trackEvent, useScreenView } from '@/shared/analytics';
 import { LegalLinks } from '@/shared/ui/LegalLinks';
@@ -52,8 +57,7 @@ export function LandingPage() {
     authNotice,
   } = useCurrentUser();
   const debugGuestMode = isDebugGuestMode(window.location.search);
-  const demoRequested =
-    new URLSearchParams(window.location.search).get('demo') === 'true';
+  const demoRequested = isDemoModeRequested(window.location.search);
   const demoEntryAvailable = Boolean(
     demoStatus?.automatic || (demoRequested && demoStatus?.available === true),
   );
@@ -73,10 +77,24 @@ export function LandingPage() {
     if (state.status === 'loading') {
       return;
     }
-    const mapPath = withMobileLayout(debugGuestMode ? '/map?debug=1' : '/map');
+    const mapPath = withMobileLayout(
+      debugGuestMode ? '/map?debug=1' : demoRequested ? '/map?demo=1' : '/map',
+    );
     if (state.status === 'signed-in') {
       if (state.user.demo && demoStatus?.hasPreviousActivity) {
         setDemoChoiceOpen(true);
+        return;
+      }
+      if (
+        !state.user.demo &&
+        state.user.loginProvider === 'local' &&
+        demoEntryAvailable
+      ) {
+        if (demoStatus?.hasPreviousActivity) {
+          setDemoChoiceOpen(true);
+        } else {
+          void loginAsDemo(mapPath, { requested: demoRequested });
+        }
         return;
       }
       trackLandingButton(ANALYTICS_TARGETS.landingEnterMap);
@@ -117,7 +135,7 @@ export function LandingPage() {
   const enterSelectedDemo = (reset: boolean): void => {
     setDemoChoiceOpen(false);
     trackLandingButton(ANALYTICS_TARGETS.landingEnterMap);
-    void loginAsDemo(withMobileLayout('/map'), {
+    void loginAsDemo(withMobileLayout(demoRequested ? '/map?demo=1' : '/map'), {
       requested: demoRequested,
       reset,
     });

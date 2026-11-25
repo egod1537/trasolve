@@ -58,7 +58,6 @@ function EditableMapWorkspace({
   const L = useL();
   const trip = useTripData();
   const tutorial = useTutorial();
-  const tutorialDayCount = useRef(trip.days.length);
   useEffect(() => {
     if (
       tutorial?.active &&
@@ -70,12 +69,12 @@ function EditableMapWorkspace({
     if (
       tutorial?.active &&
       tutorial.progress.step === 'days' &&
-      trip.days.length > tutorialDayCount.current
+      tutorial.progress.tripId === trip.id &&
+      trip.days.length > 0
     ) {
       tutorial.completeStep('days');
     }
-    tutorialDayCount.current = trip.days.length;
-  }, [tutorial, trip.days]);
+  }, [tutorial, trip.days, trip.id]);
   const controller = useTripEditController();
   const { canUndo, canRedo } = useTripHistoryState(controller);
   const ui = useMapWorkspace(trip, controller);

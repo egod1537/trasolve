@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { DemoStatus } from '@trasolve/shared';
 import { isDebugGuestMode } from './debugGuestMode';
+import { isDemoModeRequested } from './demoRequest';
 
 export function useDemoMapEntry(
   signedOut: boolean,
@@ -10,8 +11,7 @@ export function useDemoMapEntry(
     options: { requested: boolean; reset?: boolean },
   ) => Promise<void>,
 ): void {
-  const requested =
-    new URLSearchParams(window.location.search).get('demo') === 'true';
+  const requested = isDemoModeRequested(window.location.search);
   useEffect(() => {
     if (!signedOut) {
       return;
