@@ -49,6 +49,7 @@ export function RouteComparisonActions({
         {L('common:action.close')}
       </Button>
       <Button
+        data-tutorial="optimize-result"
         variant="primary"
         loading={comparison.applying}
         disabled={comparison.applying || comparison.stale}

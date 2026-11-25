@@ -1,5 +1,4 @@
-import { memo, useEffect, useRef, type RefObject } from 'react';
-import { useTutorial } from '@/features/onboarding';
+import { memo, type RefObject } from 'react';
 import type { Measurement } from '../measurement/useMeasurement';
 import { MeasurementPanel } from '../measurement/MeasurementPanel';
 import { useViewCapture } from '../capture/useViewCapture';
@@ -63,19 +62,6 @@ export const MapOverlayHost = memo(function MapOverlayHost({
   onClearSelection,
 }: Props) {
   const capture = useViewCapture();
-  const tutorial = useTutorial();
-  const routeToolsWereOpen = useRef(routeOptimizationOpen);
-  useEffect(() => {
-    if (
-      routeToolsWereOpen.current &&
-      !routeOptimizationOpen &&
-      tutorial?.active &&
-      tutorial.progress.step === 'optimize'
-    ) {
-      tutorial.step(5);
-    }
-    routeToolsWereOpen.current = routeOptimizationOpen;
-  }, [routeOptimizationOpen, tutorial]);
   const measuring = measurement.tool !== 'pan';
   return (
     <>

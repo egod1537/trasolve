@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import type { TutorialProgress } from '@trasolve/shared';
+import { TUTORIAL_STEPS, type TutorialProgress } from '@trasolve/shared';
 import { Button } from '@/shared/ui/Button';
 import { Dialog } from '@/shared/ui/Dialog';
 import { useL } from '@/shared/i18n';
@@ -16,9 +16,7 @@ export function TutorialReentry() {
   const resumable = ['in-progress', 'paused', 'skipped'].includes(
     tutorial.progress.status,
   );
-  const progressLabel = `${
-    tutorial.progress.step === 'ai' ? 6 : stepIndex(tutorial.progress)
-  } / 6`;
+  const progressLabel = `${stepIndex(tutorial.progress)} / ${TUTORIAL_STEPS.length}`;
   return (
     <>
       <Button
@@ -65,10 +63,9 @@ export function TutorialReentry() {
 }
 
 function stepIndex(progress: TutorialProgress): number {
-  return (
-    ['create', 'days', 'search', 'add-place', 'optimize', 'ai'].indexOf(
-      progress.step,
-    ) + 1
+  return Math.max(
+    1,
+    TUTORIAL_STEPS.findIndex((step) => step === progress.step) + 1,
   );
 }
 
@@ -87,6 +84,14 @@ function stepTitle(
       return L('common:tutorial.addPlace.title');
     case 'optimize':
       return L('common:tutorial.optimize.title');
+    case 'optimize-running':
+      return L(
+        'routeOptimization:routeOptimizationProgressDialog.getTitle.text.optimizingRoute',
+      );
+    case 'optimize-result':
+      return L(
+        'routeOptimization:routeOptimizationModal.action.applyThisResult',
+      );
     case 'ai':
       return L('common:tutorial.ai.title');
     case 'share':

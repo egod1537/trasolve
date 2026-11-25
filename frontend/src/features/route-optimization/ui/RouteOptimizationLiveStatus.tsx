@@ -59,6 +59,7 @@ export function RouteOptimizationLiveStatus(
     .padStart(2, '0')}:${(elapsed % 60).toString().padStart(2, '0')}`;
   return createPortal(
     <section
+      data-tutorial="optimize-running"
       className={`route-optimization-live-status${phase === 'failed' ? ' is-failure' : ''}`}
       aria-label={title}
       aria-busy={active}

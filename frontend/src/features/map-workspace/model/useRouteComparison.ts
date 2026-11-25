@@ -9,7 +9,7 @@ import type {
 } from '@/features/route-optimization';
 import { useL } from '@/shared/i18n';
 import { trackEvent } from '@/shared/analytics';
-import { useTutorial } from '@/features/onboarding';
+import { useOptimizationTutorialProgress } from './useOptimizationTutorialProgress';
 
 export function useRouteComparison(
   trip: Trip,
@@ -17,7 +17,6 @@ export function useRouteComparison(
   onApplied: (dayId: string) => void,
 ) {
   const L = useL();
-  const tutorial = useTutorial();
   const [data, setData] = useState<RouteComparisonData | null>(null);
   const [mode, setMode] = useState<RouteComparisonMode>('result');
   const [applying, setApplying] = useState(false);
@@ -25,38 +24,48 @@ export function useRouteComparison(
   const [error, setError] = useState<string | null>(null);
   const applyingRef = useRef(false);
   const latestTrip = useRef(trip);
+  const {
+    sync: syncTutorial,
+    resetResult: resetTutorialResult,
+    complete: completeTutorial,
+  } = useOptimizationTutorialProgress(data);
   useLayoutEffect(() => {
     latestTrip.current = trip;
   }, [trip]);
-  const onCompare = useCallback((next: RouteComparisonData | null) => {
-    setData(next);
-    setMode(
-      next?.live?.hasResult === false && !next.live.illustrative
-        ? 'current'
-        : 'result',
-    );
-    setConfirming(false);
-    setError(null);
-    if (!next || next.live) {
-      return;
-    }
-    trackEvent({
-      eventType: 'result_view',
-      screen: ANALYTICS_SCREENS.routeResult,
-      metadata: { source: 'route_optimization' },
-    });
-  }, []);
+  const onCompare = useCallback(
+    (next: RouteComparisonData | null) => {
+      syncTutorial(next);
+      setData(next);
+      setMode(
+        next?.live?.hasResult === false && !next.live.illustrative
+          ? 'current'
+          : 'result',
+      );
+      setConfirming(false);
+      setError(null);
+      if (!next || next.live) {
+        return;
+      }
+      trackEvent({
+        eventType: 'result_view',
+        screen: ANALYTICS_SCREENS.routeResult,
+        metadata: { source: 'route_optimization' },
+      });
+    },
+    [syncTutorial],
+  );
   const onExit = useCallback(() => {
     if (data?.live) {
       (data.live.onClose ?? data.live.onCancel)();
       return;
     }
     if (!applyingRef.current) {
+      resetTutorialResult();
       setData(null);
       setConfirming(false);
       setError(null);
     }
-  }, [data]);
+  }, [data, resetTutorialResult]);
   const onApply = useCallback(async () => {
     if (!data || data.live || !confirming || applyingRef.current) {
       return;
@@ -81,9 +90,7 @@ export function useRouteComparison(
       });
       if (await controller.applyOptimizedSchedule(data.day.id, data.update)) {
         onApplied(data.day.id);
-        if (tutorial?.progress.step === 'optimize') {
-          tutorial.step(5);
-        }
+        completeTutorial();
         setData(null);
         setConfirming(false);
       } else {
@@ -103,7 +110,7 @@ export function useRouteComparison(
       applyingRef.current = false;
       setApplying(false);
     }
-  }, [controller, data, L, onApplied, confirming, tutorial]);
+  }, [controller, data, L, onApplied, confirming, completeTutorial]);
   const day = data
     ? trip.days.find((day) => day.id === data.day.id)
     : undefined;

@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { driver, type Driver } from 'driver.js';
-import { TUTORIAL_STEPS, type TutorialProgress } from '@trasolve/shared';
+import {
+  TUTORIAL_STEPS,
+  type TutorialProgress,
+  type TutorialStep,
+} from '@trasolve/shared';
 import { useL } from '@/shared/i18n';
 import { useTutorial } from '../model/tutorialContext';
 import { tutorialSteps } from './tutorialSteps';
@@ -67,17 +71,21 @@ export function TutorialGuide() {
       },
       onHighlighted: (_element, _step, { index }) => {
         if (!disposed && index !== undefined) {
-          current.current.step(index);
+          const highlightedStep = TUTORIAL_STEPS[index];
+          if (highlightedStep) {
+            current.current.step(highlightedStep);
+          }
         }
       },
       onNextClick: () => {
         // Creation and Day addition advance only through their success callbacks.
-        if (![0, 1].includes(guide.getActiveIndex() ?? 0)) {
+        const activeStep = getActiveTutorialStep(guide);
+        if (activeStep !== 'create' && activeStep !== 'days') {
           guide.moveNext();
         }
       },
       onPrevClick: () => {
-        if ([3, 5].includes(guide.getActiveIndex() ?? 0)) {
+        if (getActiveTutorialStep(guide) === 'add-place') {
           guide.movePrevious();
         }
       },
@@ -154,15 +162,41 @@ function getDynamicTutorialTarget(
     const element =
       document.querySelector('[data-tutorial="add-place"]') ??
       document.querySelector('[data-tutorial="place-search"]');
-    return element ? { element, index: 3 } : null;
+    return element ? { element, index: tutorialStepIndex('add-place') } : null;
   }
   if (step === 'optimize') {
     const element =
       document.querySelector('[data-tutorial="optimize-run"]') ??
       document.querySelector('[data-tutorial="optimize"]');
-    return element ? { element, index: 4 } : null;
+    return element ? { element, index: tutorialStepIndex('optimize') } : null;
+  }
+  if (step === 'optimize-running') {
+    const element = document.querySelector(
+      '[data-tutorial="optimize-running"]',
+    );
+    return element
+      ? { element, index: tutorialStepIndex('optimize-running') }
+      : null;
+  }
+  if (step === 'optimize-result') {
+    const element =
+      document.querySelector(
+        '.route-apply-confirmation [data-tutorial="optimize-result"]',
+      ) ?? document.querySelector('[data-tutorial="optimize-result"]');
+    return element
+      ? { element, index: tutorialStepIndex('optimize-result') }
+      : null;
   }
   return null;
+}
+
+function getActiveTutorialStep(guide: Driver): TutorialStep | undefined {
+  const index = guide.getActiveIndex();
+  return index === undefined ? undefined : TUTORIAL_STEPS[index];
+}
+
+function tutorialStepIndex(step: TutorialStep): number {
+  return TUTORIAL_STEPS.indexOf(step);
 }
 
 function TutorialExitDialog({
@@ -174,12 +208,14 @@ function TutorialExitDialog({
 }) {
   const L = useL();
   const titleId = useId();
+  const descriptionId = useId();
   const cancelRef = useRef<HTMLButtonElement>(null);
   return (
     <Dialog
       className="tutorial-exit-dialog"
       role="alertdialog"
       labelledBy={titleId}
+      describedBy={descriptionId}
       initialFocusRef={cancelRef}
       onClose={onCancel}
     >
@@ -191,7 +227,10 @@ function TutorialExitDialog({
             <path d="M10.3 3.8 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.8a2 2 0 0 0-3.4 0Z" />
           </svg>
         </span>
-        <h2 id={titleId}>{L('common:tutorial.action.skip')}</h2>
+        <div className="tutorial-exit-copy">
+          <h2 id={titleId}>{L('common:tutorial.action.skip')}</h2>
+          <p id={descriptionId}>{L('common:tutorial.exit.description')}</p>
+        </div>
       </div>
       <div className="tutorial-dialog-actions">
         <Button ref={cancelRef} onClick={onCancel}>

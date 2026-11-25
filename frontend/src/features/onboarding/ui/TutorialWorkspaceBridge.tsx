@@ -42,10 +42,10 @@ export function TutorialWorkspaceBridge({
         attempted.current = tripId;
         onOpenTrip(tripId);
       } else {
-        tutorial.step(0);
+        tutorial.step('create');
       }
     } else {
-      tutorial.step(0);
+      tutorial.step('create');
     }
   }, [
     tutorial,

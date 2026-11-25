@@ -64,7 +64,7 @@ function EditableMapWorkspace({
       ['search', 'add-place'].includes(tutorial.progress.step) &&
       !trip.days.some((day) => !day.hidden)
     ) {
-      tutorial.step(1);
+      tutorial.step('days');
     }
     if (
       tutorial?.active &&

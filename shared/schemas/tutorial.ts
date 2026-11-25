@@ -1,14 +1,17 @@
 import { z } from 'zod';
 
-export const TUTORIAL_VERSION = 3;
+export const TUTORIAL_VERSION = 4;
 export const TUTORIAL_STEPS = [
   'create',
   'days',
   'search',
   'add-place',
   'optimize',
+  'optimize-running',
+  'optimize-result',
   'ai',
 ] as const;
+export type TutorialStep = (typeof TUTORIAL_STEPS)[number];
 export const tutorialProgressSchema = z
   .strictObject({
     version: z.number().int().positive(),

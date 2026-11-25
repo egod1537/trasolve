@@ -196,18 +196,21 @@ views do not offer a tour. Stable `data-tutorial` anchors belong to the feature
 that renders the actual control. The guide does not synthesize clicks, create
 sample data, submit optimizations, or change travel commands.
 
-Version two has six steps: travel creation, Day/layer creation, place search,
-adding a place to the itinerary, route optimization, and AI chat. Actual creation,
-layer addition, and place addition advance only after their normal application
-actions succeed. Search is prefilled with Seoul Station and uses the existing
-autocomplete/details endpoints with a Seoul-area bias. Continuing from search
-selects a matching station prediction; loading and failure retain the real search
-and retry controls. The spotlight moves to the real Add button when its card
+Version four has eight steps: travel creation, Day/layer creation, place search,
+adding a place to the itinerary, opening route optimization, waiting for the live
+optimization, reviewing/applying its result, and AI chat. Actual creation, layer
+addition, place addition, and result application advance only after their normal
+application actions succeed. Search is prefilled with Seoul Station and uses the
+existing autocomplete/details endpoints with a Seoul-area bias. Continuing from
+search selects a matching station prediction; loading and failure retain the real
+search and retry controls. The spotlight moves to the real Add button when its card
 mounts. Selection alone never adds a place. Completing/skipping cancels the guided
-lookup, and late callbacks cannot clear a skipped/completed marker. Final steps
-introduce the optimization tool and AI button without submitting requests. A saved
-trip is reopened when resuming an unfinished tour; missing or unavailable trips
-fall back to the creation step. Closing the guide records `skipped`.
+lookup, and late callbacks cannot clear a skipped/completed marker. Starting an
+optimization moves the guide to its live status and keeps it there until a final,
+non-live comparison exists. Closing or cancelling the result returns to the
+optimization step; only a successful apply advances to AI. A saved trip is reopened
+when resuming an unfinished tour; missing or unavailable trips fall back to the
+creation step. Closing the guide records `skipped`.
 
 `GET/PUT /api/auth/tutorial` stores version, status, last step, and trip ID for
 the authenticated account. PostgreSQL updates only `users.settings.tutorial`
@@ -225,7 +228,7 @@ default using `opts.tutorialMode` in `shared/config/opts.ts`
 (`VITE_TUTORIAL_MODE=auto|always|off`) or use `?debug=1&tutorial=always`
 (`off`/`auto` are also accepted). Forced and manual replay never persist progress;
 only an explicit reset clears the account marker. Version-one `share` records
-remain readable and restart the version-two tutorial. Old tutorial versions restart;
+remain readable and restart the current tutorial. Old tutorial versions restart;
 newer versions are not overwritten by an older client during automatic playback.
 
 Guide titles, descriptions, buttons, and preference labels reuse registered
@@ -604,9 +607,10 @@ Driver's step animation finishes. This covers asynchronously loaded trip cards,
 container layout changes and scrolling without restarting a step or writing
 progress. Cleanup cancels the animation frame when the guide unmounts.
 
-The six tutorial titles/descriptions and finish/leave labels use dedicated
+The six core tutorial titles/descriptions and finish/leave labels use dedicated
 `common:tutorial.*` keys. Their source is the localization spreadsheet's `common`
-tab, rows 68–81; general feature descriptions are not tutorial instructions.
+tab, rows 68–81. The optimization waiting and result steps reuse the exact existing
+route-optimization status and action keys; no duplicate tutorial copy is maintained.
 
 ## Product surface refinement
 

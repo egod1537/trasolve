@@ -79,7 +79,7 @@ export const MapToolbar = memo(function MapToolbar({
       mapRef.current?.panTo(place.location);
       onSelectPlace(place);
       if (tutorial?.active && tutorial.progress.step === 'search') {
-        tutorial.step(3);
+        tutorial.step('add-place');
       }
     },
     [mapRef, onSelectPlace, tutorial],

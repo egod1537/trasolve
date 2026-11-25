@@ -4,6 +4,7 @@ import {
   TUTORIAL_STEPS,
   TUTORIAL_VERSION,
   type TutorialProgress,
+  type TutorialStep,
 } from '@trasolve/shared';
 import {
   TutorialContext,
@@ -90,11 +91,7 @@ export function TutorialProvider({
   );
 
   const step = useCallback(
-    (index: number) => {
-      const nextStep = TUTORIAL_STEPS[index];
-      if (!nextStep) {
-        return;
-      }
+    (nextStep: TutorialStep) => {
       const current = progressRef.current;
       if (current.status === 'completed' || current.status === 'skipped') {
         return;
@@ -134,7 +131,11 @@ export function TutorialProvider({
     (expected: 'days' | 'add-place') => {
       const current = progressRef.current;
       if (current.step === expected && current.status === 'in-progress') {
-        step(TUTORIAL_STEPS.findIndex((value) => value === expected) + 1);
+        const index = TUTORIAL_STEPS.findIndex((value) => value === expected);
+        const nextStep = TUTORIAL_STEPS[index + 1];
+        if (nextStep) {
+          step(nextStep);
+        }
       }
     },
     [step],

@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { TutorialProgress } from '@trasolve/shared';
+import type { TutorialProgress, TutorialStep } from '@trasolve/shared';
 import type { TutorialMode } from '../opts';
 
 export type TutorialController = {
@@ -10,7 +10,7 @@ export type TutorialController = {
   mode: TutorialMode;
   loading: boolean;
   error: boolean;
-  step(index: number): void;
+  step(step: TutorialStep): void;
   created(tripId: string): void;
   completeStep(step: 'days' | 'add-place'): void;
   restart(): void;

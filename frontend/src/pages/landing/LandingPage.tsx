@@ -207,6 +207,7 @@ function DemoChoiceDialog({
 }) {
   const L = useL();
   const titleId = useId();
+  const descriptionId = useId();
   const continueRef = useRef<HTMLButtonElement>(null);
   if (!open) {
     return null;
@@ -215,6 +216,7 @@ function DemoChoiceDialog({
     <Dialog
       className="landing-demo-choice"
       labelledBy={titleId}
+      describedBy={descriptionId}
       initialFocusRef={continueRef}
       onClose={onClose}
     >
@@ -229,7 +231,7 @@ function DemoChoiceDialog({
         </span>
         <div className="landing-demo-choice-heading">
           <span className="landing-demo-choice-eyebrow">{NL('DEMO')}</span>
-          <h2 id={titleId}>{L('common:landing.action.startTrip')}</h2>
+          <h2 id={titleId}>{L('common:landing.demoChoice.title')}</h2>
         </div>
         <IconButton
           className="landing-demo-choice-close"
@@ -240,8 +242,8 @@ function DemoChoiceDialog({
           onClick={onClose}
         />
       </header>
-      <p className="landing-demo-choice-description">
-        {L('common:landing.hero.description')}
+      <p id={descriptionId} className="landing-demo-choice-description">
+        {L('common:landing.demoChoice.description')}
       </p>
       <div className="landing-demo-choice-actions">
         <Button
@@ -251,10 +253,10 @@ function DemoChoiceDialog({
           startIcon={<FolderOpenIcon />}
           onClick={onContinue}
         >
-          {L('common:hero.text.gettingStarted')}
+          {L('common:landing.demoChoice.action.continue')}
         </Button>
         <Button startIcon={<RefreshIcon />} onClick={onReset}>
-          {L('admin:common.reset')}
+          {L('common:landing.demoChoice.action.resetAndStart')}
         </Button>
       </div>
     </Dialog>

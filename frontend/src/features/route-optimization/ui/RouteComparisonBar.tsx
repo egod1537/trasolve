@@ -202,6 +202,7 @@ function RouteApplyConfirmation({
           {L('common:action.cancel')}
         </Button>
         <Button
+          data-tutorial="optimize-result"
           variant="primary"
           loading={comparison.applying}
           disabled={

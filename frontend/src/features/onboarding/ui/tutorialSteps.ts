@@ -2,8 +2,18 @@ import { matchesLayoutMaxWidth } from '@/shared/config/mobileLayout';
 import type { DriveStep } from 'driver.js';
 import type { Localize } from '@/shared/i18n';
 
+type TutorialSide = 'bottom' | 'right';
+
 export function tutorialSteps(L: Localize): DriveStep[] {
   const side = matchesLayoutMaxWidth(700) ? 'bottom' : 'right';
+  return [
+    ...tripSetupSteps(L, side),
+    ...optimizationSteps(L, side),
+    aiStep(L, side),
+  ];
+}
+
+function tripSetupSteps(L: Localize, side: TutorialSide): DriveStep[] {
   return [
     {
       element: '[data-tutorial="create-trip"]',
@@ -49,6 +59,11 @@ export function tutorialSteps(L: Localize): DriveStep[] {
         showButtons: ['previous', 'next', 'close'],
       },
     },
+  ];
+}
+
+function optimizationSteps(L: Localize, side: TutorialSide): DriveStep[] {
+  return [
     {
       element: () =>
         document.querySelector<HTMLElement>('[data-tutorial="optimize-run"]') ??
@@ -63,13 +78,47 @@ export function tutorialSteps(L: Localize): DriveStep[] {
       },
     },
     {
-      element: '[data-tutorial="ai"]',
+      element: '[data-tutorial="optimize-running"]',
       disableActiveInteraction: false,
+      allowedElements: ['.route-review-controls'],
       popover: {
         side,
-        title: L('common:tutorial.ai.title'),
-        description: L('common:tutorial.ai.description'),
+        title: L(
+          'routeOptimization:routeOptimizationProgressDialog.getTitle.text.optimizingRoute',
+        ),
+        description: L(
+          'routeOptimization:routeOptimizationModal.text.awaitingOptimizationResults',
+        ),
+        showButtons: ['close'],
+      },
+    },
+    {
+      element: '[data-tutorial="optimize-result"]',
+      disableActiveInteraction: false,
+      allowedElements: ['.route-apply-confirmation'],
+      popover: {
+        side,
+        title: L(
+          'routeOptimization:routeOptimizationModal.action.applyThisResult',
+        ),
+        description: L(
+          'routeOptimization:routeOptimizationModal.description.compareCurrentRouteOptimizedRouteBy',
+        ),
+        showButtons: ['close'],
       },
     },
   ];
+}
+
+function aiStep(L: Localize, side: TutorialSide): DriveStep {
+  return {
+    element: '[data-tutorial="ai"]',
+    disableActiveInteraction: false,
+    popover: {
+      side,
+      title: L('common:tutorial.ai.title'),
+      description: L('common:tutorial.ai.description'),
+      showButtons: ['next'],
+    },
+  };
 }

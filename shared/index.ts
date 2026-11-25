@@ -4,6 +4,7 @@ export {
   tutorialProgressSchema,
   initialTutorialProgress,
   type TutorialProgress,
+  type TutorialStep,
 } from './schemas/tutorial.js';
 
 export {
