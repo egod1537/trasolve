@@ -1,9 +1,13 @@
 import { google } from 'googleapis';
 import { isLocalizationSheet } from './generateResources.js';
+import { readLocalizationXlsx } from './xlsx.js';
 import type { RawLocalizationSheet, SheetCell } from './types.js';
 
 const SHEETS_READONLY_SCOPE =
   'https://www.googleapis.com/auth/spreadsheets.readonly';
+const PUBLIC_EXPORT_CONTENT_TYPE =
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+const PUBLIC_EXPORT_LIMIT_BYTES = 10 * 1024 * 1024;
 
 type ServiceAccountCredentials = {
   client_email: string;
@@ -17,14 +21,8 @@ type ReadSpreadsheetOptions = {
 };
 
 function parseServiceAccountCredentials(
-  value: string | undefined,
+  value: string,
 ): ServiceAccountCredentials {
-  if (!value?.trim()) {
-    throw new Error(
-      'GOOGLE_SERVICE_ACCOUNT_JSON is required. See infra/localization/README.md.',
-    );
-  }
-
   let parsed: unknown;
   try {
     parsed = JSON.parse(value);
@@ -78,6 +76,21 @@ export async function readLocalizationSpreadsheet({
   spreadsheetId,
   serviceAccountJson,
 }: ReadSpreadsheetOptions): Promise<RawLocalizationSheet[]> {
+  if (!serviceAccountJson?.trim()) {
+    return readPublicLocalizationSpreadsheet(spreadsheetId);
+  }
+  return readAuthenticatedLocalizationSpreadsheet({
+    spreadsheetId,
+    serviceAccountJson,
+  });
+}
+
+async function readAuthenticatedLocalizationSpreadsheet({
+  spreadsheetId,
+  serviceAccountJson,
+}: ReadSpreadsheetOptions & { serviceAccountJson: string }): Promise<
+  RawLocalizationSheet[]
+> {
   const credentials = parseServiceAccountCredentials(serviceAccountJson);
   const auth = new google.auth.GoogleAuth({
     credentials,
@@ -124,4 +137,40 @@ export async function readLocalizationSpreadsheet({
     });
   }
   return result;
+}
+
+async function readPublicLocalizationSpreadsheet(
+  spreadsheetId: string,
+): Promise<RawLocalizationSheet[]> {
+  const exportUrl = new URL(
+    `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/export`,
+  );
+  exportUrl.searchParams.set('format', 'xlsx');
+  const response = await fetch(exportUrl, {
+    redirect: 'follow',
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!response.ok) {
+    throw new Error(
+      `Public spreadsheet export failed with HTTP ${response.status}. Share the configured Sheet with anyone who has the link, or set GOOGLE_SERVICE_ACCOUNT_JSON for a private Sheet.`,
+    );
+  }
+  const contentType = response.headers.get('content-type')?.split(';')[0];
+  if (contentType !== PUBLIC_EXPORT_CONTENT_TYPE) {
+    throw new Error(
+      `Public spreadsheet export returned unexpected content type "${contentType ?? 'unknown'}". Check the Sheet sharing settings.`,
+    );
+  }
+  const contentLength = Number(response.headers.get('content-length'));
+  if (
+    Number.isFinite(contentLength) &&
+    contentLength > PUBLIC_EXPORT_LIMIT_BYTES
+  ) {
+    throw new Error('Public spreadsheet export exceeds the 10 MiB limit.');
+  }
+  const contents = await response.arrayBuffer();
+  if (contents.byteLength > PUBLIC_EXPORT_LIMIT_BYTES) {
+    throw new Error('Public spreadsheet export exceeds the 10 MiB limit.');
+  }
+  return readLocalizationXlsx(contents);
 }

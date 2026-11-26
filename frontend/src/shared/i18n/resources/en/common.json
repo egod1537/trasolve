@@ -82,6 +82,14 @@
       "startTrip": "Start planning",
       "viewExample": "See an example"
     },
+    "demoChoice": {
+      "action": {
+        "continue": "Continue",
+        "resetAndStart": "Reset and start over"
+      },
+      "description": "Data from a previous demo user is still here. You can continue with it or reset the data and start over.",
+      "title": "Continue the previous demo?"
+    },
     "example": {
       "heading": "From places to plans.",
       "title": "A day in Tokyo"
@@ -156,6 +164,7 @@
   "tutorial": {
     "action": {
       "finish": "Finish tutorial",
+      "restart": "Restart tutorial",
       "skip": "Leave tutorial"
     },
     "addPlace": {
@@ -173,6 +182,9 @@
     "days": {
       "description": "Choose Add layer to create your first day. Layers help you organize places by date.",
       "title": "Add a layer"
+    },
+    "exit": {
+      "description": "Leave the tutorial? You can restart it anytime from the Getting started button in Settings."
     },
     "optimize": {
       "description": "After adding several places, try route optimization. It helps arrange your stops based on transport and visit times.",

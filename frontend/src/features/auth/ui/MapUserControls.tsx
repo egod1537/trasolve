@@ -14,10 +14,7 @@ import { TokenBalanceControl, useBilling } from '@/features/billing';
 import { PreferencesModal } from '@/features/preferences';
 import { useL } from '@/shared/i18n';
 import { trackEvent } from '@/shared/analytics';
-
-function initialOf(name: string): string {
-  return name.trim().slice(0, 1).toUpperCase() || '?';
-}
+import { ProfileAvatar } from './ProfileAvatar';
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -199,16 +196,12 @@ export function MapUserControls({
           }}
         >
           {user ? (
-            user.pictureUrl ? (
-              <img
-                className="map-profile-avatar-image"
-                src={user.pictureUrl}
-                alt=""
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              initialOf(displayName ?? '?')
-            )
+            <ProfileAvatar
+              displayName={displayName ?? '?'}
+              pictureUrl={user.pictureUrl}
+              demo={user.demo}
+              imageClassName="map-profile-avatar-image"
+            />
           ) : (
             <PersonIcon />
           )}
@@ -222,15 +215,11 @@ export function MapUserControls({
             {state.status === 'signed-in' ? (
               <div className="map-profile-menu-header">
                 <span className="map-profile-menu-avatar" aria-hidden="true">
-                  {state.user.pictureUrl ? (
-                    <img
-                      src={state.user.pictureUrl}
-                      alt=""
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    initialOf(displayName ?? '?')
-                  )}
+                  <ProfileAvatar
+                    displayName={displayName ?? '?'}
+                    pictureUrl={state.user.pictureUrl}
+                    demo={state.user.demo}
+                  />
                 </span>
                 <span className="map-profile-menu-identity">
                   <span className="map-profile-menu-name">{displayName}</span>

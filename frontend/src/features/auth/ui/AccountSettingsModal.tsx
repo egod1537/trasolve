@@ -9,6 +9,7 @@ import { StatusBadge } from '@/shared/ui/StatusBadge';
 import '@/features/auth/ui/account-settings.css';
 import { NL, useL } from '@/shared/i18n';
 import { AccountConsentDetails } from './AccountConsentDetails';
+import { ProfileAvatar } from './ProfileAvatar';
 
 type Props = {
   user: AuthUser;
@@ -54,21 +55,13 @@ export function AccountSettingsModal({
       </header>
 
       <div className="account-settings-identity">
-        {user.pictureUrl ? (
-          <img
-            className="account-settings-avatar-image"
-            src={user.pictureUrl}
-            alt=""
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <span className="account-settings-avatar-fallback" aria-hidden="true">
-            {(user.name ?? user.email ?? user.id)
-              .trim()
-              .slice(0, 1)
-              .toUpperCase()}
-          </span>
-        )}
+        <ProfileAvatar
+          displayName={user.name ?? user.email ?? user.id}
+          pictureUrl={user.pictureUrl}
+          demo={user.demo}
+          imageClassName="account-settings-avatar-image"
+          fallbackClassName="account-settings-avatar-fallback"
+        />
         <div className="account-settings-identity-text">
           <strong className="account-settings-name">
             {user.name ?? user.email ?? user.id}

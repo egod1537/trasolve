@@ -2,10 +2,12 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { ANALYTICS_SCREENS, ANALYTICS_TARGETS } from '@trasolve/shared';
 import { buildInfo, isBuildMetadataVisible } from '@/shared/config/buildInfo';
 import { NL, useL } from '@/shared/i18n';
+import { ProfileAvatar } from '@/features/auth';
 
 type HeaderProfile = {
   displayName: string;
   pictureUrl?: string;
+  demo?: boolean;
 };
 
 type Props = {
@@ -145,15 +147,11 @@ export function Header({
                 disabled={loggingOut}
                 onClick={() => setProfileMenuOpen((current) => !current)}
               >
-                {profile.pictureUrl ? (
-                  <img
-                    src={profile.pictureUrl}
-                    alt=""
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  profile.displayName.trim().slice(0, 1).toUpperCase() || '?'
-                )}
+                <ProfileAvatar
+                  displayName={profile.displayName}
+                  pictureUrl={profile.pictureUrl}
+                  demo={profile.demo}
+                />
               </button>
               {profileMenuOpen && (
                 <div

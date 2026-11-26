@@ -37,6 +37,7 @@ type LandingPageProps = {
   headerProfile: {
     displayName: string;
     pictureUrl?: string;
+    demo?: boolean;
   } | null;
   headerActionLabel: string;
   authLoading: boolean;
@@ -154,6 +155,7 @@ export function LandingPage() {
                 displayName:
                   state.user.name ?? state.user.email ?? state.user.id,
                 pictureUrl: state.user.pictureUrl,
+                demo: state.user.demo,
               }
             : null
         }

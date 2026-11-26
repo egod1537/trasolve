@@ -6,6 +6,11 @@
       }
     }
   },
+  "chatWebImages": {
+    "ariaLabel": {
+      "webImageSearchResults": "Вэб зургийн хайлтын үр дүн"
+    }
+  },
   "mapAiButton": {
     "actionLabel": {
       "text": {

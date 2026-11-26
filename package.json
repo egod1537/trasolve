@@ -43,6 +43,7 @@
     "concurrently": "^10.0.5",
     "dependency-cruiser": "^18.7.2",
     "eslint": "^10.10.0",
+    "fflate": "^0.8.3",
     "googleapis": "^180.0.0",
     "oxlint": "^1.81.0",
     "prettier": "^3.9.6",

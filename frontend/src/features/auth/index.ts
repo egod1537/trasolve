@@ -6,6 +6,7 @@ export { useCurrentUser, type CurrentUserState } from './model/useCurrentUser';
 export { useDemoMapEntry } from './model/useDemoMapEntry';
 export { MapUserControls } from './ui/MapUserControls';
 export { DemoBadge } from './ui/DemoBadge';
+export { ProfileAvatar } from './ui/ProfileAvatar';
 export { useLoginDialog } from './model/loginDialogContext';
 export { LoginDialogProvider } from './ui/LoginDialogProvider';
 export { ConsentGate } from './ui/ConsentGate';

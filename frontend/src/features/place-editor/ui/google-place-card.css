@@ -2,7 +2,11 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  height: var(--map-detail-card-height);
+  height: min(
+    var(--map-detail-card-height),
+    520px,
+    calc(var(--app-viewport-height, 100dvh) - 180px)
+  );
   min-height: 0;
   overflow: hidden;
 }

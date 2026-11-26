@@ -6,6 +6,11 @@
       }
     }
   },
+  "chatWebImages": {
+    "ariaLabel": {
+      "webImageSearchResults": "ウェブ画像検索結果"
+    }
+  },
   "mapAiButton": {
     "actionLabel": {
       "text": {

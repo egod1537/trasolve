@@ -6,6 +6,11 @@
       }
     }
   },
+  "chatWebImages": {
+    "ariaLabel": {
+      "webImageSearchResults": "Web image search results"
+    }
+  },
   "mapAiButton": {
     "actionLabel": {
       "text": {

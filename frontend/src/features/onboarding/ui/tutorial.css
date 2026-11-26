@@ -97,6 +97,12 @@
   border-top: 1px solid var(--color-border-floating);
   border-left: 1px solid var(--color-border-floating);
 }
+body.tutorial-route-optimization .driver-overlay {
+  opacity: 0;
+}
+body.tutorial-route-optimization .route-optimization-modal-backdrop {
+  background: transparent;
+}
 .tutorial-preferences {
   display: grid;
   gap: 10px;
@@ -104,12 +110,9 @@
 .tutorial-reentry-button {
   position: fixed;
   z-index: 800;
+  top: 50%;
   right: max(1rem, env(safe-area-inset-right));
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  box-shadow: var(--shadow-map-overlay);
-}
-.tutorial-reentry-dialog {
-  width: min(420px, calc(100vw - 2rem));
+  transform: translateY(-50%);
   box-shadow: var(--shadow-map-overlay);
 }
 .tutorial-exit-dialog {
@@ -163,14 +166,6 @@
   stroke-linejoin: round;
   stroke-width: 1.7;
 }
-.tutorial-reentry-dialog h2,
-.tutorial-reentry-dialog p {
-  margin: 0;
-}
-.tutorial-reentry-dialog {
-  display: grid;
-  gap: 1rem;
-}
 .tutorial-dialog-actions {
   display: flex;
   justify-content: flex-end;
@@ -188,7 +183,6 @@
   }
   .tutorial-reentry-button {
     right: max(0.75rem, env(safe-area-inset-right));
-    bottom: max(5rem, env(safe-area-inset-bottom));
   }
   .tutorial-exit-dialog {
     gap: 20px;

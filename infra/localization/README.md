@@ -25,17 +25,20 @@ localization data and contains the complete standard schema. Empty tabs and
 clearly unrelated administrative tabs are ignored. A localization-looking tab
 with malformed headers fails the sync instead of being silently skipped.
 
-## Authentication
+## Access
 
-1. Create a Google Cloud service account in a project with the Google Sheets API
-   enabled.
-2. Share the spreadsheet with the service account's `client_email` as a Viewer.
-3. Put the full service-account JSON on one line in
-   `GOOGLE_SERVICE_ACCOUNT_JSON`.
+No credential is required when the configured spreadsheet is shared with
+anyone who has the link. The sync command downloads its public XLSX export and
+runs the same localization validation and generation pipeline.
+
+For a private spreadsheet, create a Google Cloud service account in a project
+with the Google Sheets API enabled, share the spreadsheet with its
+`client_email` as a Viewer, and put the full service-account JSON on one line in
+`GOOGLE_SERVICE_ACCOUNT_JSON`.
 
 The command reads environment variables from the current process. It also loads
-the ignored root `.env.local` file when present. See the fake values in
-`.env.example` for the expected shape.
+the ignored root `.env.local` file when present. When
+`GOOGLE_SERVICE_ACCOUNT_JSON` is empty, it automatically uses public export.
 
 Never commit a service-account key file, a real JSON credential, an API token,
 or a populated `.env.local` file.

@@ -6,6 +6,11 @@
       }
     }
   },
+  "chatWebImages": {
+    "ariaLabel": {
+      "webImageSearchResults": "웹 이미지 검색 결과"
+    }
+  },
   "mapAiButton": {
     "actionLabel": {
       "text": {

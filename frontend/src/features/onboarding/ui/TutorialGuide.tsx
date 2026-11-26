@@ -7,12 +7,14 @@ import {
 } from '@trasolve/shared';
 import { useL } from '@/shared/i18n';
 import { useTutorial } from '../model/tutorialContext';
-import { tutorialSteps } from './tutorialSteps';
+import { resolveOptimizeResultTarget, tutorialSteps } from './tutorialSteps';
 import { trackTutorialLayout } from './trackTutorialLayout';
 import 'driver.js/dist/driver.css';
 import './tutorial.css';
 import { Button } from '@/shared/ui/Button';
 import { Dialog } from '@/shared/ui/Dialog';
+
+const optimizationTutorialClass = 'tutorial-route-optimization';
 
 export function TutorialGuide() {
   const L = useL();
@@ -69,6 +71,14 @@ export function TutorialGuide() {
         exit.addEventListener('click', () => requestExit());
         popover.footer.append(exit);
       },
+      onHighlightStarted: (element, _step, { index }) => {
+        const highlightedStep =
+          index === undefined ? undefined : TUTORIAL_STEPS[index];
+        syncOptimizationTutorialBackdrop(highlightedStep);
+        if (highlightedStep === 'add-place' && element) {
+          revealTutorialTarget(element, guide);
+        }
+      },
       onHighlighted: (_element, _step, { index }) => {
         if (!disposed && index !== undefined) {
           const highlightedStep = TUTORIAL_STEPS[index];
@@ -78,9 +88,13 @@ export function TutorialGuide() {
         }
       },
       onNextClick: () => {
-        // Creation and Day addition advance only through their success callbacks.
+        // Action steps advance only through their success callbacks.
         const activeStep = getActiveTutorialStep(guide);
-        if (activeStep !== 'create' && activeStep !== 'days') {
+        if (
+          activeStep !== 'create' &&
+          activeStep !== 'days' &&
+          activeStep !== 'add-place'
+        ) {
           guide.moveNext();
         }
       },
@@ -95,6 +109,7 @@ export function TutorialGuide() {
       },
     });
     instance.current = guide;
+    syncOptimizationTutorialBackdrop(current.current.progress.step);
     guide.drive(
       Math.max(
         0,
@@ -128,6 +143,7 @@ export function TutorialGuide() {
       disposed = true;
       stopTracking();
       observer.disconnect();
+      syncOptimizationTutorialBackdrop();
       instance.current = null;
       guide.destroy();
     };
@@ -159,9 +175,7 @@ function getDynamicTutorialTarget(
   step: TutorialProgress['step'],
 ): { element: Element; index: number } | null {
   if (step === 'add-place') {
-    const element =
-      document.querySelector('[data-tutorial="add-place"]') ??
-      document.querySelector('[data-tutorial="place-search"]');
+    const element = document.querySelector('[data-tutorial="add-place"]');
     return element ? { element, index: tutorialStepIndex('add-place') } : null;
   }
   if (step === 'optimize') {
@@ -179,10 +193,7 @@ function getDynamicTutorialTarget(
       : null;
   }
   if (step === 'optimize-result') {
-    const element =
-      document.querySelector(
-        '.route-apply-confirmation [data-tutorial="optimize-result"]',
-      ) ?? document.querySelector('[data-tutorial="optimize-result"]');
+    const element = resolveOptimizeResultTarget();
     return element
       ? { element, index: tutorialStepIndex('optimize-result') }
       : null;
@@ -197,6 +208,42 @@ function getActiveTutorialStep(guide: Driver): TutorialStep | undefined {
 
 function tutorialStepIndex(step: TutorialStep): number {
   return TUTORIAL_STEPS.indexOf(step);
+}
+
+function syncOptimizationTutorialBackdrop(
+  step?: TutorialProgress['step'],
+): void {
+  document.body.classList.toggle(
+    optimizationTutorialClass,
+    step === 'optimize' ||
+      step === 'optimize-running' ||
+      step === 'optimize-result',
+  );
+}
+
+function revealTutorialTarget(element: Element, guide: Driver): void {
+  const scrollViewport = element.closest<HTMLElement>('.ui-scroll-viewport');
+  if (!scrollViewport) {
+    return;
+  }
+
+  scrollViewport.scrollTop = scrollViewport.scrollHeight;
+
+  const refresh = () => {
+    if (
+      !guide.isActive() ||
+      !element.isConnected ||
+      !scrollViewport.isConnected
+    ) {
+      return;
+    }
+    guide.refresh();
+  };
+
+  window.requestAnimationFrame(() => {
+    refresh();
+    window.requestAnimationFrame(refresh);
+  });
 }
 
 function TutorialExitDialog({

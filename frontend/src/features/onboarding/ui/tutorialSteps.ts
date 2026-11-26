@@ -13,6 +13,15 @@ export function tutorialSteps(L: Localize): DriveStep[] {
   ];
 }
 
+export function resolveOptimizeResultTarget(): HTMLElement | null {
+  return (
+    document.querySelector<HTMLElement>(
+      '.route-apply-confirmation [data-tutorial="optimize-result"]',
+    ) ??
+    document.querySelector<HTMLElement>('[data-tutorial="optimize-result"]')
+  );
+}
+
 function tripSetupSteps(L: Localize, side: TutorialSide): DriveStep[] {
   return [
     {
@@ -51,12 +60,11 @@ function tripSetupSteps(L: Localize, side: TutorialSide): DriveStep[] {
         document.querySelector<HTMLElement>('[data-tutorial="add-place"]') ??
         document.querySelector<HTMLElement>('[data-tutorial="place-search"]')!,
       disableActiveInteraction: false,
-      allowedElements: ['.map-place-search-results'],
       popover: {
         side,
         title: L('common:tutorial.addPlace.title'),
         description: L('common:tutorial.addPlace.description'),
-        showButtons: ['previous', 'next', 'close'],
+        showButtons: ['previous', 'close'],
       },
     },
   ];
@@ -93,7 +101,7 @@ function optimizationSteps(L: Localize, side: TutorialSide): DriveStep[] {
       },
     },
     {
-      element: '[data-tutorial="optimize-result"]',
+      element: () => resolveOptimizeResultTarget()!,
       disableActiveInteraction: false,
       allowedElements: ['.route-apply-confirmation'],
       popover: {
