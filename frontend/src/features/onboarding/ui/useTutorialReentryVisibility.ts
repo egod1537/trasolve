@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState, type RefObject } from 'react';
 
 const collisionCheckIntervalMs = 500;
 const sampleInset = 2;
+const floatingTags = new Set(['ASIDE', 'DIALOG']);
 const floatingRoles = new Set([
   'alert',
   'alertdialog',
@@ -150,6 +151,9 @@ function isFloatingLayout(
     const rect = current.getBoundingClientRect();
     if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
       continue;
+    }
+    if (floatingTags.has(current.tagName)) {
+      return true;
     }
     const role = current.getAttribute('role');
     if (role && floatingRoles.has(role)) {
