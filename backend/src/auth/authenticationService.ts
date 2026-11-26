@@ -29,6 +29,11 @@ export interface PendingIdentity {
   readonly linkUserId?: string;
 }
 
+export interface SessionAuthorization {
+  readonly demo: boolean;
+  readonly requiresConsent: boolean;
+}
+
 export class ConsentRequiredError extends Error {
   public constructor(public readonly identity: PendingIdentity) {
     super('Explicit consent is required before completing sign-in.');
@@ -66,6 +71,21 @@ export class AuthenticationService {
     return user ? mapAuthUser(user) : undefined;
   }
 
+  public async getSessionAuthorization(
+    userId: string,
+  ): Promise<SessionAuthorization | undefined> {
+    const user = await this.repository.getUserById(userId);
+    if (!user) {
+      return undefined;
+    }
+    const demo = user.issuer === demoGuestIssuer;
+    const consentExempt = demo || user.issuer === debugGuestIssuer;
+    return {
+      demo,
+      requiresConsent: !consentExempt && !(await this.getConsent(userId)),
+    };
+  }
+
   public getConsent(userId: string): Promise<AuthConsentRecord | undefined> {
     return this.repository.getConsent(
       userId,
@@ -75,11 +95,8 @@ export class AuthenticationService {
   }
 
   public async requiresConsent(userId: string): Promise<boolean> {
-    const user = await this.repository.getUserById(userId);
     return (
-      !user ||
-      (![debugGuestIssuer, demoGuestIssuer].includes(user.issuer) &&
-        !(await this.getConsent(userId)))
+      (await this.getSessionAuthorization(userId))?.requiresConsent ?? true
     );
   }
 

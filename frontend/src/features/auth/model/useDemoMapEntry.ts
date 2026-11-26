@@ -16,7 +16,7 @@ export function useDemoMapEntry(
     if (!signedOut) {
       return;
     }
-    if (status?.automatic || (requested && status?.available === true)) {
+    if (requested && status?.available === true) {
       void login(window.location.pathname + window.location.search, {
         requested,
       });

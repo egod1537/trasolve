@@ -3,7 +3,6 @@ import { authUserSchema } from './auth.js';
 
 export const demoStatusSchema = z.strictObject({
   available: z.boolean(),
-  automatic: z.boolean(),
   active: z.boolean(),
   hasPreviousActivity: z.boolean(),
   exampleTripId: z.string().nullable(),

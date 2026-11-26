@@ -63,7 +63,7 @@ export function LandingPage() {
   const debugGuestMode = isDebugGuestMode(window.location.search);
   const demoRequested = isDemoModeRequested();
   const demoEntryAvailable = Boolean(
-    demoStatus?.automatic || (demoRequested && demoStatus?.available === true),
+    demoRequested && demoStatus?.available === true,
   );
   const [demoChoiceOpen, setDemoChoiceOpen] = useState(false);
   useScreenView(ANALYTICS_SCREENS.landing);

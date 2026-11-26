@@ -151,7 +151,7 @@
   },
   "survey": {
     "action": {
-      "open": "설문조사 해주기",
+      "open": "설문조사 하기",
       "openNewTab": "새 탭에서 설문 열기"
     },
     "dialog": {

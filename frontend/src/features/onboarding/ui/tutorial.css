@@ -228,7 +228,9 @@ body.tutorial-route-optimization .route-optimization-modal-backdrop {
     padding: 18px;
   }
   .tutorial-reentry-actions {
+    top: max(calc(4.5rem + env(safe-area-inset-top)), calc(50% - 10.5rem));
     right: max(0.75rem, env(safe-area-inset-right));
+    transform: none;
   }
   .tutorial-survey-dialog {
     width: calc(100vw - 1.5rem);

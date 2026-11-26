@@ -18,13 +18,11 @@ import {
 } from '../auth/httpCookies.js';
 import { sessionCookieName, readSessionSecret } from '../auth/sessionCookie.js';
 import type { SessionService } from '../auth/sessionService.js';
-import {
-  isDemoModeAutomatic,
-  isDemoQueryEnabled,
-} from '../configuration/demoMode.js';
+import { isDemoQueryEnabled } from '../configuration/demoMode.js';
 import type { TripController } from '../trip/tripController.js';
 import type { TripRepository } from '../trip/tripRepository.js';
 import { createDemoExampleTrip } from './demoExampleTrip.js';
+import { hasDemoRequestContext } from './demoRequestContext.js';
 
 const workspaceCookieName = 'trasolve_demo_workspace';
 const cookiePath = '/';
@@ -74,8 +72,9 @@ export class DemoModeHttpService {
       }
       const input = await this.readInput(request);
       if (
-        !isDemoModeAutomatic() &&
-        !(isDemoQueryEnabled() && input.requested)
+        !isDemoQueryEnabled() ||
+        !input.requested ||
+        !hasDemoRequestContext(request)
       ) {
         this.send(response, 404, { error: { code: 'DEMO_MODE_DISABLED' } });
         return;
@@ -134,8 +133,7 @@ export class DemoModeHttpService {
     return identity
       ? this.statusForUser(identity.userId, false)
       : demoStatusSchema.parse({
-          available: isDemoModeAutomatic() || isDemoQueryEnabled(),
-          automatic: isDemoModeAutomatic(),
+          available: isDemoQueryEnabled(),
           active: false,
           hasPreviousActivity: false,
           exampleTripId: null,
@@ -161,8 +159,7 @@ export class DemoModeHttpService {
         tutorial.status !== 'not-started'),
     );
     return demoStatusSchema.parse({
-      available: isDemoModeAutomatic() || isDemoQueryEnabled(),
-      automatic: isDemoModeAutomatic(),
+      available: isDemoQueryEnabled(),
       active,
       hasPreviousActivity,
       exampleTripId: workspace?.exampleTripId ?? null,

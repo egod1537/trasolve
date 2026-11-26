@@ -12,10 +12,6 @@ function readBoolean(name: string, fallback = false): boolean {
   throw new Error(`${name} must be true or false.`);
 }
 
-export function isDemoModeAutomatic(): boolean {
-  return readBoolean('DEMO_MODE', process.env.NODE_ENV !== 'production');
-}
-
 export function isDemoQueryEnabled(): boolean {
   return readBoolean(
     'DEMO_QUERY_ENABLED',

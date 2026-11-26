@@ -8,11 +8,12 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw
-from render_v5 import (W,H,S,FPS,DURATION,ROOT,OUT,NAMES,TIMES,BEFORE,AFTER,imgs,audio,
+from render_v5 import (W,H,S,DURATION,ROOT,OUT,NAMES,TIMES,BEFORE,AFTER,imgs,audio,
     box,circ,line,text,font,xy,sc,rgb,clamp,smooth,reveal,lerp,poly_partial)
 
 INK='#13223c'; WHITE='#ffffff'; BLUE='#2463eb'; LAV='#c7b9ff'; VIOLET='#7453df'
 RED='#d96360'; MUTED='#61748f'; DARK='#101d36'
+FPS=60
 CUTS=[0,4,8,12,16,22,26,30,35,40,45,50,54,60,65,68,71,75]
 
 def p(t,a=0,d=.6): return reveal(t,a,d)
@@ -71,15 +72,15 @@ def rings(im,x,y,t,col,r=29):
         if q<.96:circ(im,x,y,r+q*30,None,col,1)
 
 @lru_cache(maxsize=20)
-def screenshot(i,w):
+def screenshot(i,pixel_width):
     src=imgs[i]
-    return src.resize((sc(w),round(sc(w)*src.height/src.width)),Image.Resampling.LANCZOS)
+    return src.resize((pixel_width,round(pixel_width*src.height/src.width)),Image.Resampling.LANCZOS)
 
 def shot(im,i,cx,cy,w,t,accent=None):
     q=p(t,0,.75);cx+=22*(1-q);cy+=30*(1-q)
-    # Quantized slow push-in: move the complete screenshot rather than crop its attribution.
-    w=round(w*(.94+.06*smooth(t/3.6))/4)*4
-    pic=screenshot(i,w);h=pic.height/S;x=cx-w/2;y=cy-h/2
+    # Scale at the output-pixel level so the slow push-in stays smooth at 60 fps.
+    pixel_width=sc(w*(.94+.06*smooth(t/3.6)))
+    pic=screenshot(i,pixel_width);w=pic.width/S;h=pic.height/S;x=cx-w/2;y=cy-h/2
     box(im,x-11,y-22,w+22,h+40,'#becde5',19)
     box(im,x-7,y-28,w+14,h+35,WHITE,17,'#c9d9ee')
     for j in range(3):circ(im,x+9+j*12,y-13,3.3,'#ccd8e8')

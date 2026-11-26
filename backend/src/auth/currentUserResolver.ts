@@ -1,7 +1,11 @@
 import type { IncomingMessage } from 'node:http';
+import { hasDemoRequestContext } from '../demo/demoRequestContext.js';
 import { readSessionSecret } from './sessionCookie.js';
 import type { SessionService } from './sessionService.js';
-import type { AuthenticationService } from './authenticationService.js';
+import type {
+  AuthenticationService,
+  SessionAuthorization,
+} from './authenticationService.js';
 
 export class AuthenticationRequiredError extends Error {
   public constructor() {
@@ -19,11 +23,16 @@ export class CurrentUserResolver {
   public resolve(request: IncomingMessage): Promise<string | undefined> {
     let resolved = this.users.get(request);
     if (!resolved) {
-      resolved = this.resolveSession(request).then(async (userId) =>
-        userId && !(await this.authentication.requiresConsent(userId))
-          ? userId
-          : undefined,
-      );
+      resolved = this.resolveSession(request).then(async (userId) => {
+        if (!userId) {
+          return undefined;
+        }
+        const authorization = await this.resolveAuthorization(request, userId);
+        if (!authorization || authorization.requiresConsent) {
+          return undefined;
+        }
+        return userId;
+      });
       this.users.set(request, resolved);
     }
     return resolved;
@@ -32,7 +41,24 @@ export class CurrentUserResolver {
   public resolveSession(request: IncomingMessage): Promise<string | undefined> {
     let resolved = this.sessionUsers.get(request);
     if (!resolved) {
-      resolved = this.sessions.resolveUserId(readSessionSecret(request));
+      resolved = this.sessions
+        .resolveUserId(readSessionSecret(request))
+        .then(async (userId) => {
+          if (!userId) {
+            return undefined;
+          }
+          const authorization = await this.resolveAuthorization(
+            request,
+            userId,
+          );
+          if (!authorization) {
+            return undefined;
+          }
+          if (authorization.demo && !hasDemoRequestContext(request)) {
+            return undefined;
+          }
+          return userId;
+        });
       this.sessionUsers.set(request, resolved);
     }
     return resolved;
@@ -58,6 +84,22 @@ export class CurrentUserResolver {
     }
   }
 
+  private resolveAuthorization(
+    request: IncomingMessage,
+    userId: string,
+  ): Promise<SessionAuthorization | undefined> {
+    let resolved = this.authorizations.get(request);
+    if (!resolved) {
+      resolved = this.authentication.getSessionAuthorization(userId);
+      this.authorizations.set(request, resolved);
+    }
+    return resolved;
+  }
+
+  private readonly authorizations = new WeakMap<
+    IncomingMessage,
+    Promise<SessionAuthorization | undefined>
+  >();
   private readonly users = new WeakMap<
     IncomingMessage,
     Promise<string | undefined>

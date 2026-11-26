@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RouteComparisonData } from '../model/routeComparison';
-import { getRouteDistanceChange } from '../model/routeComparisonMetrics';
+import { getRouteComparisonMetrics } from '../model/routeComparisonMetrics';
 import { getLanguage, useL } from '@/shared/i18n';
 
 type Notice = { revision: number; savedMeters: number };
 
-/** One replaceable notice above the controls, measured from the preceding visible route. */
+/** One replaceable notice above the controls, measured from the original route. */
 export function RouteDistanceChangeToast({
   data,
 }: {
@@ -36,7 +36,7 @@ export function RouteDistanceChangeToast({
     ) {
       return;
     }
-    const savedMeters = getRouteDistanceChange(before, data);
+    const savedMeters = getRouteComparisonMetrics(data).metersSaved;
     setNotice(
       savedMeters !== null && Math.abs(savedMeters) >= 1
         ? { revision: ++revision.current, savedMeters }
