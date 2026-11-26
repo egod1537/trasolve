@@ -149,6 +149,15 @@
   "status": {
     "error": "오류"
   },
+  "survey": {
+    "action": {
+      "open": "설문조사 해주기",
+      "openNewTab": "새 탭에서 설문 열기"
+    },
+    "dialog": {
+      "title": "Trasolve 설문조사"
+    }
+  },
   "themeControl": {
     "ariaLabel": {
       "theme": "테마: {{label}}"

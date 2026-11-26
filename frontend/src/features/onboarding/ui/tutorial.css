@@ -107,13 +107,59 @@ body.tutorial-route-optimization .route-optimization-modal-backdrop {
   display: grid;
   gap: 10px;
 }
-.tutorial-reentry-button {
+.tutorial-reentry-actions {
   position: fixed;
   z-index: 800;
   top: 50%;
   right: max(1rem, env(safe-area-inset-right));
-  transform: translateY(-50%);
+  display: grid;
+  width: max-content;
+  gap: 8px;
+  transform: translateY(-19px);
+}
+.tutorial-reentry-actions[data-layout-obscured='true'] {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.tutorial-reentry-actions .ui-button {
+  width: 100%;
   box-shadow: var(--shadow-map-overlay);
+}
+.tutorial-survey-dialog {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(720px, calc(100vw - 2rem));
+  height: min(760px, calc(100dvh - 2rem));
+  overflow: hidden;
+  box-shadow: var(--shadow-map-overlay);
+}
+.tutorial-survey-dialog-header,
+.tutorial-survey-dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--color-map-overlay-surface);
+}
+.tutorial-survey-dialog-header {
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+}
+.tutorial-survey-dialog-header h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.tutorial-survey-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--color-surface);
+}
+.tutorial-survey-dialog-actions {
+  justify-content: flex-end;
+  border-top: 1px solid var(--color-border);
 }
 .tutorial-exit-dialog {
   display: grid;
@@ -181,8 +227,15 @@ body.tutorial-route-optimization .route-optimization-modal-backdrop {
     overscroll-behavior: contain;
     padding: 18px;
   }
-  .tutorial-reentry-button {
+  .tutorial-reentry-actions {
     right: max(0.75rem, env(safe-area-inset-right));
+  }
+  .tutorial-survey-dialog {
+    width: calc(100vw - 1.5rem);
+    height: calc(100dvh - 1.5rem);
+  }
+  .tutorial-survey-dialog-actions .ui-button {
+    flex: 1;
   }
   .tutorial-exit-dialog {
     gap: 20px;

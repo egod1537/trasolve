@@ -149,6 +149,15 @@
   "status": {
     "error": "Алдаа"
   },
+  "survey": {
+    "action": {
+      "open": "Судалгаанд оролцох",
+      "openNewTab": "Судалгааг шинэ табад нээх"
+    },
+    "dialog": {
+      "title": "Trasolve судалгаа"
+    }
+  },
   "themeControl": {
     "ariaLabel": {
       "theme": "Сэдэв: {{label}}"

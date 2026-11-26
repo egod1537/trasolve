@@ -149,6 +149,15 @@
   "status": {
     "error": "Error"
   },
+  "survey": {
+    "action": {
+      "open": "Take the survey",
+      "openNewTab": "Open survey in new tab"
+    },
+    "dialog": {
+      "title": "Trasolve survey"
+    }
+  },
   "themeControl": {
     "ariaLabel": {
       "theme": "Theme: {{label}}"

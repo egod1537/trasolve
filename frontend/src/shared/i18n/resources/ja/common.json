@@ -149,6 +149,15 @@
   "status": {
     "error": "エラー"
   },
+  "survey": {
+    "action": {
+      "open": "アンケートに回答する",
+      "openNewTab": "アンケートを新しいタブで開く"
+    },
+    "dialog": {
+      "title": "Trasolve アンケート"
+    }
+  },
   "themeControl": {
     "ariaLabel": {
       "theme": "テーマ：{{label}}"

@@ -4,6 +4,8 @@ interface ImportMetaEnv {
   readonly VITE_GOOGLE_MAPS_API_KEY?: string;
   readonly VITE_GOOGLE_MAPS_MAP_ID?: string;
   readonly VITE_SENTRY_DSN?: string;
+  readonly VITE_SURVEY_FORM_DEBUG_URL?: string;
+  readonly VITE_SURVEY_FORM_PRODUCTION_URL?: string;
   readonly VITE_BUILD_CHANNEL?: string;
   readonly VITE_GIT_BRANCH?: string;
   readonly VITE_GIT_SHA?: string;
