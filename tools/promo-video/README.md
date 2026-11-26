@@ -1,16 +1,21 @@
-# Trasolve 75초 소개 영상 (v6)
+# Trasolve 75초 소개 영상 (v7)
 
 Python 3, Pillow, NumPy, FFmpeg, Noto Sans CJK TTC가 필요합니다.
 
 ```sh
 python -m pip install -r requirements.txt
-python render_v6.py --preview
-python render_v6.py
+python render_v7.py --preview
+python render_v7.py
 ```
 
-영상은 `Trasolve_75s_v6.mp4`에 저장됩니다. 환경 변수 `TRASOLVE_FONT_REGULAR`, `TRASOLVE_FONT_BOLD`로 폰트 경로를 지정할 수 있습니다. `TRASOLVE_FONT_INDEX`(기본값 1)로 TTC 인덱스를 변경할 수 있습니다. Windows/macOS에서는 설치된 폰트 경로를 지정하세요.
+영상은 `Trasolve_75s_v7.mp4`에 저장됩니다. 환경 변수 `TRASOLVE_FONT_REGULAR`, `TRASOLVE_FONT_BOLD`로 폰트 경로를 지정할 수 있습니다. `TRASOLVE_FONT_INDEX`(기본값 1)로 TTC 인덱스를 변경할 수 있습니다. Windows/macOS에서는 설치된 폰트 경로를 지정하세요.
 
 서비스의 npm 빌드와 독립적으로 실행됩니다. 최종 MP4와 `work/`의 렌더링 결과는 Git에서 제외합니다. 원본 캡처의 지도 출처 표시는 유지하세요.
+
+## v7 변경 사항
+- Google 지도와 네이버 지도의 일반 구간 길찾기가 여행 조건에 맞는 방문 순서를 정해주지 않는다는 점을 명시.
+- Trasolve는 구간 길찾기는 물론 방문 순서까지 최적화한다는 비교 카피를 브랜드 등장 및 최적화 도입부에 반영.
+- v6의 75초 타임라인, 모션, 실제 캡처 및 음악을 유지. `render_v6.py`는 이전 버전 재현을 위해 보존.
 
 ## v6 변경 사항
 - 중앙 타이포그래피, 전체 화면 연결 그래픽, 가로형 조건 카드, 좌우 캡처 비교, AI 오비탈 그래픽 등 장면별 레이아웃을 분리.
