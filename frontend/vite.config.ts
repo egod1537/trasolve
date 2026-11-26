@@ -1,7 +1,12 @@
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
-import { defineConfig, loadEnv } from 'vite';
+import {
+  defineConfig,
+  loadEnv,
+  type PreviewServer,
+  type ViteDevServer,
+} from 'vite';
 import { mobileLayout } from './build/mobileLayout';
 import { localizationPreload } from './build/localizationPreload';
 
@@ -44,6 +49,16 @@ function parseBuildChannel(value: string): BuildChannel | undefined {
   }
 
   return undefined;
+}
+
+function servePoster(server: ViteDevServer | PreviewServer) {
+  server.middlewares.use((request, _response, next) => {
+    request.url = request.url?.replace(
+      /^\/poster\/?(?=\?|$)/,
+      '/poster/index.html',
+    );
+    next();
+  });
 }
 
 const proxy = {
@@ -95,7 +110,15 @@ export default defineConfig(({ command, mode, isPreview }) => {
   );
 
   return {
-    plugins: [react(), localizationPreload()],
+    plugins: [
+      react(),
+      localizationPreload(),
+      {
+        name: 'poster-route',
+        configureServer: servePoster,
+        configurePreviewServer: servePoster,
+      },
+    ],
     css: { postcss: { plugins: [mobileLayout()] } },
     resolve: {
       alias: {

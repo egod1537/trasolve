@@ -4,6 +4,9 @@
 }
 
 :3000 {
+	@poster path /poster /poster/
+	rewrite @poster /poster/index.html
+
 	handle /api/* {
 		reverse_proxy backend:3000
 	}
