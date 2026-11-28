@@ -19,9 +19,9 @@ PREVIEW_TIMES = [2.8, 7, 10, 14.4, 18.4, 21.3, 24.7, 28.6, 33.7, 38.7,
 
 def visit_question(elapsed):
     im = v8.bg("warm").copy()
-    v8.center(im, 640, 150, "관광지를 어떤 순서로 방문해야", 55, v8.INK,
+    v8.center(im, 640, 150, "하루에 관광지 세 곳을 다 둘러보려면,", 55, v8.INK,
               q=v8.p(elapsed))
-    v8.center(im, 640, 231, "하루를 효율적으로 보낼 수 있을까요?", 56, v8.INK,
+    v8.center(im, 640, 231, "어떤 순서로 가는 게 좋을까요?", 56, v8.INK,
               q=v8.p(elapsed, .15))
     stops = [(270, 450, "경복궁"), (640, 400, "봉은사"), (1010, 450, "석촌호수")]
     for i, (x, y, name) in enumerate(stops):
