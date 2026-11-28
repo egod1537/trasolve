@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 import render_v8 as v8
 
@@ -37,10 +37,39 @@ def visit_question(elapsed):
     return im
 
 
+@lru_cache(maxsize=1)
+def directions_heading():
+    labels = [("google-maps-icon.png", "구글 지도와"),
+              ("naver-map-icon.png", "네이버 지도의 일반 길찾기")]
+    font = v8.font(31, True)
+    icon_size = v8.sc(43)
+    icon_gap, group_gap = v8.sc(10), v8.sc(17)
+    widths = [round(font.getlength(label)) for _, label in labels]
+    width = sum(widths) + len(labels) * (icon_size + icon_gap) + group_gap
+    heading = Image.new("RGBA", (width, icon_size + v8.sc(8)))
+    draw = ImageDraw.Draw(heading)
+    mid_y = heading.height // 2
+    x = 0
+    for (filename, label), label_width in zip(labels, widths):
+        with Image.open(v8.ROOT / "assets" / filename) as source:
+            icon = source.resize((icon_size, icon_size), Image.Resampling.LANCZOS)
+        heading.alpha_composite(icon, (x, mid_y - icon_size // 2))
+        x += icon_size + icon_gap
+        draw.text((x, mid_y), label, fill="#bfd6ff", font=font, anchor="lm")
+        x += label_width + group_gap
+    return heading
+
+
 def directions_comparison(elapsed):
     im = v8.bg("dark").copy()
-    v8.center(im, 640, 75, "구글 지도와 네이버 지도의 일반 길찾기", 31, "#bfd6ff",
-              q=v8.p(elapsed))
+    heading = directions_heading()
+    reveal = v8.p(elapsed)
+    x = (im.width - heading.width) // 2
+    y = v8.sc(75 + 20 * (1 - reveal)) - heading.height // 2
+    alpha = heading.getchannel("A")
+    if reveal < 1:
+        alpha = alpha.point(lambda value: round(value * reveal))
+    im.paste(heading, (x, y), alpha)
     v8.center(im, 640, 161, "두 장소 사이의 길을 알려줍니다.", 56, v8.WHITE,
               q=v8.p(elapsed, .12))
     points = [(238, 384), (398, 384), (476, 306), (669, 306), (747, 384), (1034, 384)]
