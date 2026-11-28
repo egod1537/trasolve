@@ -114,6 +114,8 @@ def create_renderer(capture_dir):
             index = min(last_index, round((t - CAPTURE_START) * v8.FPS))
             with Image.open(capture_dir / f"{index:03d}.jpg") as still:
                 return still.convert("RGB")
+        if t >= 71:
+            return v8.closing(t, site_url="trasolve.one")
         return v8.frame(t)
 
     @lru_cache(maxsize=len(CUTS))

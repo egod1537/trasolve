@@ -283,7 +283,7 @@ def ai(t):
     return im
 
 
-def closing(t):
+def closing(t, *, site_url='trasolve.mangagaki.net'):
     if t<71:
         u=t-68;im=bg('blue').copy();center(im,640,87,'여행을 설계하는 두 가지 방법',47,WHITE,q=p(u))
         for j,(head,en,col) in enumerate([('방문 순서 최적화','Visit Order Optimization',BLUE),('AI 여행 플래너','AI Travel Planner',VIOLET)]):
@@ -297,7 +297,7 @@ def closing(t):
         u=t-71;im=bg('light').copy();orbit(im,640,286,u,'#d1e0fa','#80adf7',(110,180,252))
         pts=[(535,282),(610,225),(745,274)];path(im,curve(pts[0],pts[1],22)+curve(pts[1],pts[2],40)[1:],p(u,.05,.8),BLUE,6,True)
         for x,y in pts:circ(im,x,y,12,WHITE,BLUE,4)
-        center(im,640,364,'Trasolve',88,INK,q=p(u,.1,.7));center(im,640,478,'가고 싶은 곳, 이어지는 여행.',43,BLUE,q=p(u,.35,.7));center(im,640,559,'trasolve.mangagaki.net',24,MUTED,q=p(u,.65,.7))
+        center(im,640,364,'Trasolve',88,INK,q=p(u,.1,.7));center(im,640,478,'가고 싶은 곳, 이어지는 여행.',43,BLUE,q=p(u,.35,.7));center(im,640,559,site_url,24,MUTED,q=p(u,.65,.7))
     return im
 
 
