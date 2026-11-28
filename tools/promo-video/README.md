@@ -1,16 +1,23 @@
-# Trasolve 75초 소개 영상 (v8, FHD 60 FPS)
+# Trasolve 75초 소개 영상 (v9, FHD 60 FPS)
 
 Python 3, Pillow, NumPy, FFmpeg, Noto Sans CJK TTC가 필요합니다.
 
 ```sh
 python -m pip install -r requirements.txt
-python render_v8.py --preview
-python render_v8.py
+python render_v9.py --preview
+python render_v9.py
 ```
 
-영상은 `Trasolve_75s_v8.mp4`에 저장됩니다. 환경 변수 `TRASOLVE_FONT_REGULAR`, `TRASOLVE_FONT_BOLD`로 폰트 경로를 지정할 수 있습니다. `TRASOLVE_FONT_INDEX`(기본값 1)로 TTC 인덱스를 변경할 수 있습니다. Windows/macOS에서는 설치된 폰트 경로를 지정하세요.
+영상은 `Trasolve_75s_v9.mp4`에 저장됩니다. 환경 변수 `TRASOLVE_FONT_REGULAR`, `TRASOLVE_FONT_BOLD`로 폰트 경로를 지정할 수 있습니다. `TRASOLVE_FONT_INDEX`(기본값 1)로 TTC 인덱스를 변경할 수 있습니다. Windows/macOS에서는 설치된 폰트 경로를 지정하세요.
 
 서비스의 npm 빌드와 독립적으로 실행됩니다. 최종 MP4와 `work/`의 렌더링 결과는 Git에서 제외합니다. 원본 캡처의 지도 출처 표시는 유지하세요.
+
+## v9 변경 사항
+
+- 0–8.5초에 장소 검색과 “어떤 순서로 방문해야 하루를 효율적으로 보낼 수 있을까요?”라는 질문을 별도 장면으로 배치합니다.
+- 8.5–22초에 구글 지도와 네이버 지도의 일반 길찾기, 여행자가 정해야 하는 방문 순서, 영업시간·체류시간·이동시간을 고려하는 Trasolve를 차례로 소개합니다.
+- 40–45초에 팀의 11월 시연 녹화본 `route.mp4`를 사용합니다. 실행 버튼부터 최종 결과까지의 약 12초를 5초로 편집했습니다. 탐색 대기 구간을 빠르게 재생하며, 지도에 나타나는 중간 경로는 서비스의 탐색 미리보기입니다.
+- 편집한 5초 소스는 `assets/route-optimization.mp4`에 포함되어 있습니다. 렌더링할 때 사이트 로그인이나 원본 영상이 필요하지 않습니다. `--preview`는 장면별 미리보기를 `work/v9_contact.jpg`에 저장합니다.
 
 ## v8 변경 사항
 - 60 FPS로 렌더링하고 화면 캡처 확대의 4단위 양자화를 제거해 이동을 부드럽게 처리.

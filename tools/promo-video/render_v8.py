@@ -104,10 +104,12 @@ def clock(im,x,y,r,t,mode):
     circ(im,x,y,5,BLUE)
 
 
-def opening(t):
+def opening(t, *, first_line='가고 싶은 곳을',
+            conditions_title='고려할 조건은 하나가 아닙니다.',
+            conditions_summary='순서와 시간, 함께 계산해야 합니다.'):
     if t<4:
         u=t;im=bg('light').copy()
-        center(im,640,100,'가고 싶은 곳을',61,INK,q=p(u));center(im,640,174,'찾는 건 쉽습니다.',69,BLUE,q=p(u,.2))
+        center(im,640,100,first_line,61,INK,q=p(u));center(im,640,174,'찾는 건 쉽습니다.',69,BLUE,q=p(u,.2))
         q=p(u,.5,.6);y=248+30*(1-q);box(im,325,y,630,65,WHITE,32,'#c5d6ef',2)
         circ(im,361,y+32,12,None,BLUE,2);line(im,[(369,y+41),(381,y+53)],BLUE,3)
         s='서울 가볼 만한 곳';n=int(len(s)*clamp((u-.65)/.9));text(im,400,y+32,s[:n]+('|' if n<len(s) else ''),25,INK,True,'lm')
@@ -155,7 +157,7 @@ def opening(t):
         center(im,640,607,'여행 조건에 맞는 방문 순서를 정해주지 않습니다.',35,'#b94e49',q=q)
         center(im,640,641,'방문 순서는 여행자가 직접 결정해야 합니다.',18,MUTED,False,q)
     else:
-        u=t-12;im=bg('light').copy();center(im,640,85,'고려할 조건은 하나가 아닙니다.',52,INK,q=p(u))
+        u=t-12;im=bg('light').copy();center(im,640,85,conditions_title,52,INK,q=p(u))
         for j,(head,val) in enumerate([('관광지 운영 시간','09:00 – 18:00'),('장소별 체류 시간','1시간 30분'),('대중교통 이동 시간','35분')]):
             q=p(u,.15+j*.24,.7);x=75+j*390;y=180+65*(1-q)
             box(im,x+4,y+9,350,326,'#dae5f8',25);box(im,x,y,350,326,WHITE,25,'#d9e5fa');cx=x+175;cy=y+106
@@ -165,7 +167,7 @@ def opening(t):
                 for a in [-18,18]:circ(im,cx+a,cy+13,5,BLUE);line(im,[(cx+a,cy+27),(cx+a*1.3,cy+41)],BLUE,3)
                 for k in range(3):line(im,[(cx-94-(u*40+k*15)%35,cy-28+k*20),(cx-76,cy-28+k*20)],'#8eb3f2',2)
             center(im,cx,y+208,head,23,MUTED);center(im,cx,y+258,val,31,INK)
-        center(im,640,605,'순서와 시간, 함께 계산해야 합니다.',36,BLUE,q=p(u,1.25))
+        center(im,640,605,conditions_summary,36,BLUE,q=p(u,1.25))
     return im
 
 
@@ -309,11 +311,11 @@ def frame(t):
 @lru_cache(maxsize=18)
 def previous(cut):return frame(cut-1/FPS)
 
-def render_frame(t):
-    im=frame(t)
-    for index,cut in enumerate(CUTS[1:-1]):
+def render_frame(t, frame_at=frame, previous_at=previous, cuts=CUTS):
+    im=frame_at(t)
+    for index,cut in enumerate(cuts[1:-1]):
         if cut<=t<cut+.33:
-            q=smooth((t-cut)/.33);old=previous(cut)
+            q=smooth((t-cut)/.33);old=previous_at(cut)
             if index%3==0:
                 shift=round(W*q);result=im.copy()
                 if shift<W:result.paste(old.crop((shift,0,W,H)),(0,0))
@@ -329,23 +331,24 @@ def render_frame(t):
     return im
 
 
-def preview():
-    times=[2.8,6.8,10.9,14.7,19.8,24.7,28.6,33.7,38.7,41.3,42.5,44.5,48.5,52.7,57.5,62.7,67.2,69.8,73.4]
+def preview(render=render_frame, version='v8', times=None):
+    if times is None:
+        times=[2.8,6.8,10.9,14.7,19.8,24.7,28.6,33.7,38.7,41.3,42.5,44.5,48.5,52.7,57.5,62.7,67.2,69.8,73.4]
     sheet=Image.new('RGB',(1920,math.ceil(len(times)/4)*294),'#e0e7f1');d=ImageDraw.Draw(sheet)
     for i,t in enumerate(times):
-        im=render_frame(t);x=i%4*480;y=i//4*294
+        im=render(t);x=i%4*480;y=i//4*294
         sheet.paste(im.resize((480,270),Image.Resampling.LANCZOS),(x,y));d.text((x+8,y+275),f'{t:.1f}s',fill=INK)
-    sheet.save(OUT/'v8_contact.jpg',quality=92)
+    sheet.save(OUT/f'{version}_contact.jpg',quality=92)
 
 
-def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--preview',action='store_true');ap.add_argument('--output',type=Path,default=ROOT/'Trasolve_75s_v8.mp4');args=ap.parse_args()
-    if args.preview:preview();return
+def main(render=render_frame, version='v8', preview_times=None):
+    ap=argparse.ArgumentParser();ap.add_argument('--preview',action='store_true');ap.add_argument('--output',type=Path,default=ROOT/f'Trasolve_75s_{version}.mp4');args=ap.parse_args()
+    if args.preview:preview(render,version,preview_times);return
     a=audio();cmd=['ffmpeg','-y','-hide_banner','-loglevel','error','-f','rawvideo','-pix_fmt','rgb24','-s',f'{W}x{H}','-r',str(FPS),'-i','-','-i',str(a),'-c:v','libx264','-preset','veryfast','-crf','19','-pix_fmt','yuv420p','-threads','3','-c:a','aac','-b:a','192k','-movflags','+faststart','-t',str(DURATION),str(args.output)]
     proc=subprocess.Popen(cmd,stdin=subprocess.PIPE);start=time.monotonic()
     try:
         for i in range(FPS*DURATION):
-            proc.stdin.write(render_frame(i/FPS).tobytes())
+            proc.stdin.write(render(i/FPS).tobytes())
             if i%150==0:print(f'{i}/{FPS*DURATION} frames | {time.monotonic()-start:.1f}s',flush=True)
     finally:proc.stdin.close()
     if proc.wait():raise RuntimeError('ffmpeg failed')
